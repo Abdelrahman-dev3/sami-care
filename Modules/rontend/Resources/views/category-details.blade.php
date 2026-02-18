@@ -213,7 +213,7 @@
           box-shadow: 0 8px 30px rgba(0,0,0,0.2);
           z-index: 9999;
           display: grid !important;
-          grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
           gap: 20px;
       }
 

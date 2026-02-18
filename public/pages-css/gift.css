@@ -84,8 +84,8 @@
         .service-grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
-            gap: 16px;
-            padding: 10px;
+            gap: 37px;
+            padding: 10px 51px;
         }
 
         .service-card {
@@ -95,6 +95,7 @@
             transition: 0.3s ease;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
             height: 139px;
+            overflow: hidden;
         }
 
         .service-card.selected {
