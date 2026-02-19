@@ -20,6 +20,9 @@
         background: white;
         color: black;
     }
+    .desc11{
+        color: black !important;
+    }
     /* From Uiverse.io by ErzenXz */ 
     .toggle-switch {
       position: relative;
