@@ -383,36 +383,50 @@ class BookingCartController extends Controller
     
     public function addToCart(Request $request, $id)
     {
-        $qty = $request->query('qty', 1);
+        $qty = (int) $request->query('qty', 1);
 
-        if($qty < 1){
+        if ($qty < 1) {
             return response()->json([
-                'status' => 'فشلت العملية',
-                'message' => 'رقم خاطئ'
+                'status' => 'failed',
+                'message' => 'Invalid quantity',
             ], 422);
         }
-        
+
         $product = Product::findOrFail($id);
-    
-        // check stock
-        $stock = $product->stock_qty ?? 0;
-    
+        $stock = (int) ($product->stock_qty ?? 0);
+
         if ($qty > $stock) {
             return response()->json([
-                'status' => 'فشلت العملية',
-                'message' => 'الكمية غير متاحة'
+                'status' => 'failed',
+                'message' => 'Quantity is not available',
             ], 422);
         }
-    
-        $exist = Cart::where(['user_id' => auth()->id(),'product_id' => $id])->first();
-    
+
+        $exist = Cart::where([
+            'user_id' => auth()->id(),
+            'product_id' => $id,
+        ])->first();
+
         if ($exist) {
+            $newQty = ((int) $exist->qty) + $qty;
+
+            if ($newQty > $stock) {
+                return response()->json([
+                    'status' => 'failed',
+                    'message' => 'Quantity is not available',
+                ], 422);
+            }
+
+            $exist->update([
+                'qty' => $newQty,
+            ]);
+
             return response()->json([
-                'status' => 'فشلت العملية',
-                'message' => 'المنتج موجود بالفعل في السلة'
+                'status' => 'success',
+                'message' => 'Product quantity increased in cart',
             ]);
         }
-    
+
         Cart::create([
             'user_id' => auth()->id(),
             'location_id' => 1,
@@ -420,9 +434,10 @@ class BookingCartController extends Controller
             'product_variation_id' => null,
             'qty' => $qty,
         ]);
-    
+
         return response()->json([
-            'message' => 'تم إضافة المنتج إلى السلة بنجاح'
+            'status' => 'success',
+            'message' => 'Product added to cart successfully',
         ]);
     }
 
