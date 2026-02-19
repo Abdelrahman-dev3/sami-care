@@ -248,6 +248,11 @@
         border: 2px solid #e9e9e9;
     }
   </style>
+  @php
+      $codDepositPercent = (float) \App\Models\Setting::get('cod_deposit_percent', 30);
+      $codDepositPercent = max(0, min(100, $codDepositPercent));
+      $codDepositPercentText = rtrim(rtrim(number_format($codDepositPercent, 2, '.', ''), '0'), '.');
+  @endphp
             @if(request()->has('ids'))
         <style>
             /* wrapper */
@@ -627,7 +632,7 @@
                         </div>
                             <span class="iconify" data-icon="iconoir:hand-card" style="font-size: 30px;color: #979797;"></span> {{__('messagess.cash_on_delivery')}}
                         </div>
-                        <div class="flex-fill muted"> {{__('messagess.wallet_balance_requirement')}} </div>
+                        <div class="flex-fill muted"> {{ __('messagess.wallet_balance_requirement', ['percent' => $codDepositPercentText]) }} </div>
                     </div>
                 </div>
             </div>
@@ -727,11 +732,15 @@
   </form>
      <script>
         let totalBeforeDiscount = {{$totalPrice + getBookingTaxamount($totalPrice, 0, null)['total_tax_amount'] + ($pageName == 'cart' ? getTaxamount($productsAmount)['total_tax_amount'] : 0)}};
+        const codDepositPercent = Number(@json($codDepositPercent));
+        const codDepositPercentText = @json($codDepositPercentText);
+        const codWalletWarning = @json(__('messagess.wallet_balance_requirement_notify', ['percent' => $codDepositPercentText]));
         
         document.querySelectorAll('.method').forEach(method => {
             method.addEventListener('click', function () {
                 const radio = this.querySelector('input[type="radio"]');
                 if (radio) radio.checked = true;
+                enforceCodWalletRequirement();
                 toggleSubMethodsForCod();
             });
         });
@@ -754,6 +763,23 @@
 
             updateTotal();
         }
+
+        function enforceCodWalletRequirement() {
+            const selectedMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value;
+            if (selectedMethod !== 'cod') return true;
+
+            const walletAmount = parseFloat(document.getElementById('wallet').dataset.amount || 0);
+            const requiredDeposit = (totalBeforeDiscount * codDepositPercent) / 100;
+
+            if (walletAmount + 0.0001 < requiredDeposit) {
+                const cardMethod = document.querySelector('input[name="paymentMethod"][value="card"]');
+                if (cardMethod) cardMethod.checked = true;
+                toastr.error(codWalletWarning);
+                return false;
+            }
+
+            return true;
+        }
         
         function updateTotal() {
             let walletCheckbox = document.querySelector('input[name="wallet"]');
@@ -775,7 +801,15 @@
         document.querySelector('input[name="wallet"]').addEventListener('change', updateTotal);
         document.querySelector('input[name="loyalty"]').addEventListener('change', updateTotal);
         document.querySelectorAll('input[name="paymentMethod"]').forEach(el => {
-            el.addEventListener('change', toggleSubMethodsForCod);
+            el.addEventListener('change', () => {
+                enforceCodWalletRequirement();
+                toggleSubMethodsForCod();
+            });
+        });
+        document.querySelector('form[action="{{ route('payment-chanal') }}"]')?.addEventListener('submit', function (e) {
+            if (!enforceCodWalletRequirement()) {
+                e.preventDefault();
+            }
         });
         toggleSubMethodsForCod();
         

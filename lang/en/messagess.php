@@ -89,7 +89,8 @@ return [
     'use_wallet' => 'Use Wallet',
     'use_loyalty_points' => 'Use Loyalty Points',
     'cash_on_delivery' => 'Cash on Delivery',
-    'wallet_balance_requirement' => 'A wallet balance of at least 30% of the total service value is required',
+    'wallet_balance_requirement' => 'A wallet balance of at least :percent% of the total amount is required',
+    'wallet_balance_requirement_notify' => 'Cash on delivery requires at least :percent% in wallet. Please top up and try again.',
 
     'number_of_items' => 'Number of items',
     'valid_until' => 'Valid until',
@@ -610,3 +611,4 @@ return [
     'completed' => 'Completed',
     'WheelOfFortune' => 'Wheel Of Fortune',
 ];
+

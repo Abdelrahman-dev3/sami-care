@@ -7,6 +7,7 @@ use App\Services\Payment\PaymentFinalizerService;
 use App\Services\Payment\Strategies\CardPaymentStrategy;
 use App\Services\Payment\Strategies\TabbyPaymentStrategy;
 use App\Services\Payment\Strategies\TamaraPaymentStrategy;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -52,7 +53,9 @@ class PaymentchanalController extends Controller
         }
 
         $finalTotal = (float) ($totalData['total'] ?? 0);
-        $requiredDeposit = round($finalTotal * 0.30, 2);
+        $codDepositPercent = (float) Setting::get('cod_deposit_percent', 30);
+        $codDepositPercent = max(0, min(100, $codDepositPercent));
+        $requiredDeposit = round($finalTotal * ($codDepositPercent / 100), 2);
 
         try {
             DB::transaction(function () use ($userId, $typePage, $totalData, $finalTotal, $requiredDeposit) {
@@ -63,7 +66,9 @@ class PaymentchanalController extends Controller
                 
                 if ($walletBalance < $requiredDeposit) {
                     throw ValidationException::withMessages([
-                        'paymentMethod' => __('messagess.wallet_balance_requirement'),
+                        'paymentMethod' => __('messagess.wallet_balance_requirement', [
+                            'percent' => rtrim(rtrim(number_format($codDepositPercent, 2, '.', ''), '0'), '.'),
+                        ]),
                     ]);
                 }
 
@@ -100,7 +105,7 @@ class PaymentchanalController extends Controller
                 );
 
                 BookingTransaction::where('external_transaction_id', 'INV-' . $invoiceId)
-                    ->update(['transaction_type' => 'cash_on_delivery_30_percent']);
+                    ->update(['transaction_type' => 'cash_on_delivery_deposit_percent']);
             });
 
             return view('components.frontend.status.CAPTURED');

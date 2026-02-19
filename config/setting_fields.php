@@ -71,6 +71,15 @@ return [
                 'value' => 'Dummy Text ', // default value if you want
             ],
             [
+                'type' => 'number',
+                'data' => 'int',
+                'name' => 'cod_deposit_percent',
+                'label' => 'Cash On Delivery Deposit Percent',
+                'rules' => 'nullable|numeric|min:0|max:100',
+                'class' => '',
+                'value' => 30,
+            ],
+            [
                 'type' => 'text', // input fields type
                 'data' => 'general', // data type, string, int, boolean
                 'name' => 'google_analytics', // unique name for field
