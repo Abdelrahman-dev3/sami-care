@@ -16,6 +16,9 @@
       --surface:#f6f6f6;
       --radius:12px;
     }
+    .notify{
+        background: white
+    }
     /* From Uiverse.io by ErzenXz */ 
     .toggle-switch {
       position: relative;
@@ -463,7 +466,7 @@
                             if (data.success) {
                                 location.reload();
                             } else {
-                                alert('حدث خطأ أثناء الحذف');
+                                createNotify({ title: 'خطأ', desc: '{{ __('messagess.failed_to_remove_item') }}' });
                             }
                         })
                         .catch(err => console.log(err));
@@ -774,7 +777,7 @@
             if (walletAmount + 0.0001 < requiredDeposit) {
                 const cardMethod = document.querySelector('input[name="paymentMethod"][value="card"]');
                 if (cardMethod) cardMethod.checked = true;
-                toastr.error(codWalletWarning);
+                createNotify({ title: 'خطأ', desc: codWalletWarning });
                 return false;
             }
 
@@ -828,8 +831,7 @@
             .then(response => response.json())
             .then(data => {
                 if (data.valid) {
-                    toastr.success("{{ __('messagess.coupon_applied') }}: " + couponCode);
-        
+                    createNotify({ title: 'نجاح', desc: "{{ __('messagess.coupon_applied') }}: " + couponCode });
                     let discount = 0;
                     if (data.discount_type === 'percent') {
                         discount = (totalBeforeDiscount * parseFloat(data.discount_percentage)) / 100;
@@ -848,9 +850,9 @@
                     
                     updateTotal();
                 } else {
-                    toastr.error("{{ __('messagess.invalid_coupon') }}");
+                    createNotify({ title: 'خطأ', desc: "{{ __('messagess.invalid_coupon') }}" });
                 }
             })
-            .catch(() => { toastr.error("{{ __('messagess.error_occurred') }}"); });
+            .catch(() => { createNotify({ title: 'خطأ', desc: "{{ __('messagess.error_occurred') }}" }); });
         });
     </script>

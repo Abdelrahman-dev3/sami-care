@@ -610,5 +610,6 @@ return [
     'wheel_history_no_reward' => 'Wheel spin without reward',
     'completed' => 'Completed',
     'WheelOfFortune' => 'Wheel Of Fortune',
-];
+    'failed_to_remove_item' => 'Failed to remove item from cart. Please try again.',
+    ];
 
