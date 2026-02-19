@@ -388,7 +388,7 @@ class BookingCartController extends Controller
         if ($qty < 1) {
             return response()->json([
                 'status' => 'failed',
-                'message' => 'Invalid quantity',
+                'message' => __('messages.cart_invalid_quantity'),
             ], 422);
         }
 
@@ -398,7 +398,7 @@ class BookingCartController extends Controller
         if ($qty > $stock) {
             return response()->json([
                 'status' => 'failed',
-                'message' => 'Quantity is not available',
+                'message' => __('messages.cart_quantity_unavailable'),
             ], 422);
         }
 
@@ -413,7 +413,7 @@ class BookingCartController extends Controller
             if ($newQty > $stock) {
                 return response()->json([
                     'status' => 'failed',
-                    'message' => 'Quantity is not available',
+                    'message' => __('messages.cart_quantity_unavailable'),
                 ], 422);
             }
 
@@ -423,7 +423,7 @@ class BookingCartController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Product quantity increased in cart',
+                'message' => __('messages.cart_product_quantity_increased'),
             ]);
         }
 
@@ -437,7 +437,7 @@ class BookingCartController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Product added to cart successfully',
+            'message' => __('messages.cart_product_added'),
         ]);
     }
 

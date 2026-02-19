@@ -14,6 +14,7 @@ use Modules\Product\Models\Cart;
 use Modules\Product\Models\Order;
 use Modules\Product\Models\OrderGroup;
 use Modules\Product\Models\OrderItem;
+use Modules\Product\Models\Product;
 use App\Models\GiftCard;
 use Illuminate\Support\Facades\DB;
 use App\Models\Setting;
@@ -138,20 +139,33 @@ class PaymentFinalizerService
      
      private function convertCartToOrders(int $userId): array
     {
-        $carts = Cart::with('product')->where('user_id', $userId)->get();
+        $carts = Cart::with('product')
+            ->where('user_id', $userId)
+            ->lockForUpdate()
+            ->get();
+
         if ($carts->isEmpty()) {
             return [
                 'order_group_ids' => [],
                 'order_ids' => [],
             ];
         }
-    
+
+        // Lock product rows to prevent concurrent checkout from overselling stock.
+        $productIds = $carts->pluck('product_id')->unique()->values();
+        $products = Product::whereIn('id', $productIds)
+            ->lockForUpdate()
+            ->get()
+            ->keyBy('id');
+
         // Check stock availability
         foreach ($carts as $cart) {
-            $stock = $cart->product->stock_qty ?? 0;
+            $product = $products->get($cart->product_id);
+            $stock = (int) ($product->stock_qty ?? 0);
+
             if ($cart->qty > $stock) {
                 return [
-                    'error' => $cart->product->name . ' is out of stock'
+                    'error' => __('messages.cart_product_out_of_stock', ['product' => $cart->product->name])
                 ];
             }
         }
@@ -182,20 +196,21 @@ class PaymentFinalizerService
     
         /** ---------------- Order Items ---------------- */
         foreach ($carts as $cart) {
+            $product = $products->get($cart->product_id);
+
             $item = new OrderItem();
             $item->order_id = $order->id;
             $item->product_variation_id = 0;
             $item->product_id = $cart->product_id;
             $item->qty = $cart->qty;
-            $item->unit_price = $cart->product->min_price
-                ?? $cart->product->max_price
+            $item->unit_price = $product->min_price
+                ?? $product->max_price
                 ?? 0;
             $item->total_tax = 0;
             $item->total_price = $item->unit_price * $item->qty;
             $item->save();
     
             // Update product stats
-            $product = $cart->product;
             $product->total_sale_count += $item->qty;
             $product->stock_qty -= $item->qty;
             $product->save();
