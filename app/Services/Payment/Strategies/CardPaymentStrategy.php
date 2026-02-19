@@ -22,7 +22,7 @@ class CardPaymentStrategy
                 'loyalty' => (bool) $request->loyalty,
                 'gift_code' => $request->gift_code,
             ],
-            'payment_source' => $request->payment_source,
+            'payment_source' => $request->payment_source ?? 'src_card',
             'final_before_sub' => $request->total ?? 0,
             'discountAmount' => $request->discountAmount ?? 0,
             'cart_ids' => [],

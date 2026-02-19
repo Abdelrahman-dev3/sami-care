@@ -820,7 +820,7 @@
             const couponCode = input.value.trim();
         
             if (!couponCode) {
-                toastr.error("{{ __('messagess.enter_coupon_code') }}");
+                createNotify({ title: 'خطأ', desc: '{{ __('messagess.enter_coupon_code') }}' });
                 return;
             }
         
