@@ -17,7 +17,8 @@
       --radius:12px;
     }
     .notify{
-        background: white
+        background: white;
+        color: black;
     }
     /* From Uiverse.io by ErzenXz */ 
     .toggle-switch {
