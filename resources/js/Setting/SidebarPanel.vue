@@ -50,6 +50,10 @@
                   class="fa fa-dollar fa-lg mr-2"></i>{{ $t('setting_sidebar.lbl_currency_setting') }} </router-link>
             </div>
             <div class="mb-3" :class="hasPermissions('setting_commission') ? 'active-menu' : ''"
+              id="Settings.cod-settings" v-if="hasPermissions('setting_commission')" @click="toggle()"><router-link
+                :to="{ name: 'Settings.cod-settings' }" class="btn btn-border"><i class="fa-solid fa-hand-holding-dollar"></i>{{
+                  $t('setting_sidebar.lbl_cod_settings') }}</router-link></div>
+            <div class="mb-3" :class="hasPermissions('setting_commission') ? 'active-menu' : ''"
               id="Settings.commission" v-if="hasPermissions('setting_commission')" @click="toggle()"><router-link
                 :to="{ name: 'Settings.commission' }" class="btn btn-border"><i class="fa fa-percent fa-lg mr-2"></i>{{
                   $t('setting_sidebar.lbl_commission') }}</router-link></div>

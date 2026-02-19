@@ -8,6 +8,7 @@ import NotificationSetting from '@/Setting/SectionPages/NotificationSetting.vue'
 import IntegrationPage from '@/Setting/SectionPages/IntegrationPage.vue'
 import CustomFieldsPage from '@/Setting/SectionPages/CustomFieldsPage.vue'
 import CurrencySettingPage from '@/Setting/SectionPages/CurrencySettingPage.vue'
+import CodSettingsPage from '@/Setting/SectionPages/CodSettingsPage.vue'
 import CommissionPage from '@/Setting/SectionPages/CommissionPage.vue'
 import BussinessHours from '@/Setting/SectionPages/BussinessHours.vue'
 import PaymentMethod from '@/Setting/SectionPages/PaymentMethod.vue'
@@ -98,6 +99,12 @@ const routes = [
         name: 'Settings.currency-settings',
         meta: { permission: 'setting_currency' },
         component: CurrencySettingPage
+      },
+      {
+        path: 'cod-settings',
+        name: 'Settings.cod-settings',
+        meta: { permission: 'setting_commission' },
+        component: CodSettingsPage
       },
       {
         path: 'commission',

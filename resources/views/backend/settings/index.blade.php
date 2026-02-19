@@ -93,5 +93,9 @@
   </style>
 @endpush
 @push('after-scripts')
-<script src="{{ asset('js/setting-vue.min.js')}}"></script>
+@php
+    $settingsVuePath = public_path('js/setting-vue.min.js');
+    $settingsVueVersion = file_exists($settingsVuePath) ? filemtime($settingsVuePath) : time();
+@endphp
+<script src="{{ asset('js/setting-vue.min.js') }}?v={{ $settingsVueVersion }}"></script>
 @endpush

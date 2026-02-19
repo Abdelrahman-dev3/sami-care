@@ -11,6 +11,7 @@ return [
     'lbl_integration' => 'Integration',
     'lbl_custom_field' => 'Custom Fields',
     'lbl_currency_setting' => 'Currency Setting',
+    'lbl_cod_settings' => 'COD Settings',
     'lbl_commission' => 'Commission',
     'lbl_holiday' => 'Holiday',
     'lbl_bussiness' => 'Business Hours',
