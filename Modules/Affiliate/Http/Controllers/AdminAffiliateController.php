@@ -8,7 +8,7 @@ use Modules\Affiliate\Models\Affiliate;
 use Modules\Tracking\Models\Conversion;
 use Modules\Tracking\Models\Visitor;
 
-    class AffiliateControllerAdmin extends Controller
+    class AffiliateAdminController extends Controller
     {
         public function dashboard()
         {
