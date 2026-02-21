@@ -8,8 +8,7 @@ use Modules\Affiliate\Models\Affiliate;
 use Modules\Tracking\Models\Conversion;
 use Modules\Tracking\Models\Visitor;
 
-if (!class_exists(__NAMESPACE__ . '\\AdminAffiliateController', false)) {
-    class AdminAffiliateController extends Controller
+    class AffiliateControllerAdmin extends Controller
     {
         public function dashboard()
         {
@@ -85,9 +84,3 @@ if (!class_exists(__NAMESPACE__ . '\\AdminAffiliateController', false)) {
                 ->with('info', __('affiliate.withdrawals_coming_soon'));
         }
     }
-}
-
-if (!class_exists(__NAMESPACE__ . '\\AffiliateAdminController', false)) {
-    class_alias(__NAMESPACE__ . '\\AdminAffiliateController', __NAMESPACE__ . '\\AffiliateAdminController');
-}
-

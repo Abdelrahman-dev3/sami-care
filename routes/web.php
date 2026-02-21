@@ -48,7 +48,7 @@
     use App\Models\Branch;
     use App\Models\BookingCart;
     
-    use Modules\Affiliate\Http\Controllers\AdminAffiliateController;
+    use Modules\Affiliate\Http\Controllers\AffiliateControllerAdmin;
     use Modules\Employee\Http\Controllers\Backend\EmployeesController;
     
     use App\Providers\RouteServiceProvider;
@@ -399,11 +399,11 @@
     
 
     Route::middleware(['auth'])->prefix('app/affiliate')->name('affiliate.')->group(function () {
-        Route::get('/statistics', [AdminAffiliateController::class, 'dashboard'])->name('statistics');
-        Route::post('/settings', [AdminAffiliateController::class, 'updateSettings'])->name('settings.update');
-        Route::get('/members', [AdminAffiliateController::class, 'members'])->name('members');
-        Route::get('/conversions', [AdminAffiliateController::class, 'conversions'])->name('conversions');
-        Route::get('/withdrawals', [AdminAffiliateController::class, 'withdrawals'])->name('withdrawals');
+        Route::get('/statistics', [AffiliateControllerAdmin::class, 'dashboard'])->name('statistics');
+        Route::post('/settings', [AffiliateControllerAdmin::class, 'updateSettings'])->name('settings.update');
+        Route::get('/members', [AffiliateControllerAdmin::class, 'members'])->name('members');
+        Route::get('/conversions', [AffiliateControllerAdmin::class, 'conversions'])->name('conversions');
+        Route::get('/withdrawals', [AffiliateControllerAdmin::class, 'withdrawals'])->name('withdrawals');
     });
     Route::middleware(['auth'])->group(function () {
         Route::get('/app/gift', [GiftController::class, 'index'])->name('app.gift');
