@@ -59,5 +59,6 @@ return [
     'Financial report' => 'Financial report',
     'Payment Transactions' => 'Payment Transactions',
     'invoice'     => 'Invoices', 
-    'Coupon Report' => 'Coupon Report'
-];
+    'Coupon Report' => 'Coupon Report',
+    'affiliate' => 'Affiliate',
+    ];

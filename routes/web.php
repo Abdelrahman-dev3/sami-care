@@ -401,9 +401,6 @@
     Route::middleware(['auth'])->prefix('app/affiliate')->name('affiliate.')->group(function () {
         Route::get('/statistics', [AffiliateAdminController::class, 'dashboard'])->name('statistics');
         Route::post('/settings', [AffiliateAdminController::class, 'updateSettings'])->name('settings.update');
-        Route::get('/members', [AffiliateAdminController::class, 'members'])->name('members');
-        Route::get('/conversions', [AffiliateAdminController::class, 'conversions'])->name('conversions');
-        Route::get('/withdrawals', [AffiliateAdminController::class, 'withdrawals'])->name('withdrawals');
     });
     Route::middleware(['auth'])->group(function () {
         Route::get('/app/gift', [GiftController::class, 'index'])->name('app.gift');

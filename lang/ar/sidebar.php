@@ -59,5 +59,6 @@ return [
     'Financial report' => 'تقرير مالي',
     'Payment Transactions' => 'عمليات الدفع',
     'invoice'     => 'الفواتير',
-    'Coupon Report' => 'تقارير الكوبونات'
+    'Coupon Report' => 'تقارير الكوبونات',
+    'affiliate' => 'التسويق بالعمولة',
 ];
