@@ -429,7 +429,7 @@
                         card.className = 'service-card';
                         card.dataset.service = service.id;
                         card.innerHTML = `
-                            <img src="${service.image}" alt="${serviceName}" style="position: absolute;width: 100%;height: 100%;border-radius: 6px;object-fit: cover;object-position: center;"">
+                            <img src="${service.image}" alt="${serviceName}" style="position: absolute;width: 100%;height: 100%;border-radius: 6px;object-fit: cover;object-position: center;""> 
                             <h4 style="position: absolute;top: 78px;width: 100%;text-align: center;font-size: 21px;color: white;">${serviceName}</h4>`;
                             
                         card.addEventListener('click', () => {
