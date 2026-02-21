@@ -534,19 +534,6 @@
                                         const subTotal = service.subServices.reduce((subSum, sub) => subSum + sub.price, 0);
                                         return sum + subTotal;
                                     }, 0);
-                                    setTimeout(() => {
-                                        currentStep++;
-                                        updateUI();
-                                        updateSummarySteps();
-                                    
-                                        setTimeout(() => {
-                                            const firstSummaryCard = document.querySelector('.sammary-steps .summary-card');
-                                            if (firstSummaryCard) {
-                                                firstSummaryCard.click();
-                                            }
-                                        }, 300);
-                                    }, 500);
-
                                 }
                             }
                         });

@@ -543,18 +543,6 @@
                             
                             updateSummarySteps();
                             
-                            if (validateCurrentStep()) {
-                                if (currentStep < 3) {
-                                    currentStep = 3;
-                                    updateUI();
-                                    setTimeout(() => {
-                                        const firstSummaryCard = document.querySelector('.sammary-steps .summary-card');
-                                        if (firstSummaryCard) {
-                                            firstSummaryCard.click();
-                                        }
-                                    }, 300);
-                                }
-                            }
                         });
                         massageContainer.appendChild(card);
                         if(subServiceId && parseInt(subServiceId) == service.id){
@@ -975,26 +963,6 @@
                         });
                     }
                 });
-                if (!isSummaryStage) {
-                    const addServiceBtn = document.createElement('button');
-                    addServiceBtn.textContent = currentLang === 'ar' ? '\u0627\u0636\u0641 \u062E\u062F\u0645\u0629 \u062C\u062F\u064A\u062F\u0629' : 'Add New Service';
-                    addServiceBtn.style.cssText = `
-                        margin-top: 15px;
-                        background: #4a90e2;
-                        color: white;
-                        border: none;
-                        padding: 8px 15px;
-                        border-radius: 6px;
-                        cursor: pointer;
-                        font-weight: bold;
-                    `;
-                    addServiceBtn.addEventListener('click', () => {
-                        currentStep = 2;
-                        updateUI();
-                    });
-                    
-                    summaryContainer.appendChild(addServiceBtn);
-                }
             });
         }
 
