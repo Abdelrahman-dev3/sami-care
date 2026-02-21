@@ -20,21 +20,9 @@ use Modules\Tracking\Models\Visitor;
             $commissionValue = setting('affiliate_commission_value', 3);
             $commissionApplyType = setting('affiliate_commission_apply_type', 'recurring');
 
-            $topAffiliates = Affiliate::withCount('conversions')
-                ->orderByDesc('conversions_count')
-                ->limit(5)
-                ->get();
+            $topAffiliates = Affiliate::withCount('conversions')->orderByDesc('conversions_count')->limit(5)->get();
 
-            return view('affiliate::admin.dashboard', compact(
-                'totalAffiliates',
-                'totalVisitors',
-                'totalConversions',
-                'totalEarnings',
-                'topAffiliates',
-                'commissionCalcType',
-                'commissionValue',
-                'commissionApplyType'
-            ));
+            return view('affiliate::admin.dashboard', compact('totalAffiliates','totalVisitors','totalConversions','totalEarnings','topAffiliates','commissionCalcType','commissionValue','commissionApplyType'));
         }
 
         public function updateSettings(Request $request)
@@ -52,35 +40,5 @@ use Modules\Tracking\Models\Visitor;
             return redirect()
                 ->route('affiliate.statistics')
                 ->with('success', __('affiliate.settings_saved'));
-        }
-
-        public function members(Request $request)
-        {
-            $query = Affiliate::query();
-
-            if ($request->filled('search')) {
-                $query->whereHas('user', function ($q) use ($request) {
-                    $q->where('name', 'like', '%' . $request->search . '%')
-                        ->orWhere('email', 'like', '%' . $request->search . '%');
-                });
-            }
-
-            $affiliates = $query->with('user')->paginate(20);
-
-            return view('affiliate::admin.members', compact('affiliates'));
-        }
-
-        public function conversions(Request $request)
-        {
-            $conversions = Conversion::with('affiliate.user')->latest()->paginate(20);
-
-            return view('affiliate::admin.conversions', compact('conversions'));
-        }
-
-        public function withdrawals(Request $request)
-        {
-            return redirect()
-                ->route('affiliate.statistics')
-                ->with('info', __('affiliate.withdrawals_coming_soon'));
         }
     }

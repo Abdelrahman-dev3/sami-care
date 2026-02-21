@@ -251,7 +251,7 @@
 <div class="af-shell">
     <aside id="affiliateSidebar" class="af-sidebar">
         <div class="af-brand">
-            <img src="{{ asset('images/JOSPA.webp') }}" alt="logo">
+            <img src="{{ asset('images/samilogo.png') }}" alt="logo">
             <div>
                 <strong>{{ app_name() }}</strong>
                 <small>{{ __('affiliate.affiliate_area') }}</small>

@@ -3,6 +3,25 @@
 @section('title', __('affiliate.admin_dashboard_title'))
 
 @section('content')
+<style>
+    .affiliate-settings-form .form-label {
+        margin-bottom: 8px;
+        font-weight: 600;
+    }
+
+    .affiliate-settings-form .form-control {
+        padding: 12px 14px;
+        min-height: 48px;
+        border-radius: 10px;
+    }
+
+    .affiliate-settings-form .btn {
+        padding: 11px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+</style>
+
 <div class="container-fluid">
     <div class="row">
         <div class="col-lg-3 col-md-6 mb-3">
@@ -46,7 +65,7 @@
                     <h5 class="mb-0">{{ __('affiliate.referral_settings') }}</h5>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('affiliate.settings.update') }}" method="POST">
+                    <form action="{{ route('affiliate.settings.update') }}" method="POST" class="affiliate-settings-form">
                         @csrf
                         <div class="row g-3">
                             <div class="col-md-4">
