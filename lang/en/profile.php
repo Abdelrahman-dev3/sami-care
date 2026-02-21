@@ -113,4 +113,6 @@ return [
     'change_image' => 'Change Image',
     'e_wallet' => 'E-Wallet',
     'success_update' => 'Profile updated successfully',
-];
+
+    'become_affiliate' => 'Join Affiliate Program',
+    ];

@@ -38,6 +38,7 @@ class ProfileController extends Controller
 
         $wallet = Wallet::where('user_id', $user->id)->first();
         $balance = $wallet ? $wallet->amount : 0.00;
+        $referralBalance = optional($user->affiliate)->wallet_available ?? 0.00;
 
         $points = LoyaltyPoint::where('user_id', $user->id)->value('points') ?? 0;
 
@@ -48,7 +49,7 @@ class ProfileController extends Controller
             ->whereNull('deleted_by')
             ->get();
             
-        return view('components.frontend.auth.profile', compact('user', 'balance', 'points' , 'bookings' , 'pending' , 'completed' , 'coupons', 'completedGift'));
+        return view('components.frontend.auth.profile', compact('user', 'balance', 'referralBalance', 'points' , 'bookings' , 'pending' , 'completed' , 'coupons', 'completedGift'));
     }
 
     public function update(Request $request, $id)

@@ -16,10 +16,14 @@ class Conversion extends Model
      */
     protected $fillable = [
         'affiliate_id',
+        'referred_user_id',
         'visitor_id',
         'order_id',
         'amount',
         'commission',
+        'commission_type',
+        'commission_value',
+        'commission_apply_type',
         'status',
     ];
 
@@ -31,5 +35,10 @@ class Conversion extends Model
     public function visitor()
     {
         return $this->belongsTo(Visitor::class);
+    }
+
+    public function referredUser()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'referred_user_id');
     }
 }

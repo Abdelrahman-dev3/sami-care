@@ -19,6 +19,7 @@ use App\Models\GiftCard;
 use Illuminate\Support\Facades\DB;
 use App\Models\Setting;
 use Illuminate\Support\Str;
+use App\Services\AffiliateCommissionService;
 
 class PaymentFinalizerService
 {
@@ -64,6 +65,9 @@ class PaymentFinalizerService
 
             // Create Invoice
             $invoiceId = $this->storeInvoice($userId, $discountAmount,$tax ,$paidAmount, $cartIds , $giftIds , $product_ids , $couponCode , $paymentMethod);
+
+            // Apply referral commission for successful purchases.
+            app(AffiliateCommissionService::class)->handleSuccessfulPurchase($userId, $invoiceId, $paidAmount);
 
             //  Create Booking Transactions
             $this->createTransactions( $cartIds ,  'INV-' . $invoiceId, $paymentMethod ?? 'Sub Methods');

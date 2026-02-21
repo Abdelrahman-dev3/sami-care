@@ -80,7 +80,14 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::controller(AuthController::class)->group(function () {
     Route::post('register', 'register');
-    Route::post('login', 'login');
+    // or ||
+    Route::post('send-register-otp', 'sendRegisterOtp');
+    
+    Route::post('resend-register-otp', 'resendRegisterOtp');
+    
+    Route::post('verify-register-otp', 'verifyRegisterOtp');
+
+
     Route::post('signup', 'signup');
     Route::post('social-login', 'socialLogin');
     Route::post('forgot-password', 'forgotPassword');

@@ -32,10 +32,8 @@ Route::group(['prefix' => ''], function () {
         Route::group(['prefix' => 'payment'], function () {
             Route::get('/', [PaymentController::class, 'index'])->name('paymentMethods');
         });
-        Route::get('/become-affiliate', [FrontendController::class, 'becomeAffiliate'])
-            ->name('frontend.become.affiliate');
+        Route::get('/become-affiliate', [FrontendController::class, 'becomeAffiliate'])->name('frontend.become.affiliate');
 
-        Route::post('/become-affiliate', [FrontendController::class, 'activateAffiliate'])
-            ->name('frontend.become.affiliate.submit');
+        Route::post('/become-affiliate', [FrontendController::class, 'activateAffiliate'])->name('frontend.become.affiliate.submit');
     });
 });

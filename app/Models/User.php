@@ -27,6 +27,7 @@ use Spatie\Permission\Traits\HasRoles;
 use Modules\Wallet\Models\Wallet;
 use Modules\BussinessHour\Models\Shift;
 use Modules\Affiliate\Models\Affiliate;
+use Modules\Tracking\Models\Conversion;
 
 class User extends Authenticatable implements HasMedia, MustVerifyEmail
 {
@@ -64,6 +65,7 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
         'country',
         'last_notification_seen',
         'user_setting',
+        'referred_by_affiliate_id',
     ];
 
     protected $guarded = [
@@ -309,6 +311,16 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
     public function affiliate()
     {
         return $this->hasOne(Affiliate::class);
+    }
+
+    public function referredByAffiliate()
+    {
+        return $this->belongsTo(Affiliate::class, 'referred_by_affiliate_id');
+    }
+
+    public function referralConversions()
+    {
+        return $this->hasMany(Conversion::class, 'referred_user_id');
     }
 
     public function isAffiliate()

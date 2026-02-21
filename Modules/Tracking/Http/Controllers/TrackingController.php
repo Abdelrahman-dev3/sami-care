@@ -4,11 +4,9 @@ namespace Modules\Tracking\Http\Controllers;
 
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use App\Http\Controllers\Controller;
-use Modules\Tracking\Models\Visitor;
-use Illuminate\Http\RedirectResponse;
 use Modules\Affiliate\Models\Affiliate;
+use Modules\Tracking\Models\Visitor;
 
 class TrackingController extends Controller
 {
@@ -20,12 +18,17 @@ class TrackingController extends Controller
             return redirect('/');
         }
 
+        if (auth()->check() && (int) auth()->id() === (int) $affiliate->user_id) {
+            return redirect('/');
+        }
+
         $token = session('affiliate_token');
 
         if (!$token) {
             $token = Str::uuid()->toString();
             session(['affiliate_token' => $token]);
         }
+        session(['affiliate_id' => $affiliate->id]);
 
         Visitor::firstOrCreate(
             ['token' => $token],
@@ -36,9 +39,9 @@ class TrackingController extends Controller
             ]
         );
 
-        return view('tracking::redirect', [
-            'token' => $token,
-            'redirectTo' => $id ? url('/product/' . $id) : url('/'),
-        ]);
+        cookie()->queue(cookie('affiliate_token', $token, 60 * 24 * 30));
+
+        $redirectTo = $id ? url('/product/' . $id) : url('/');
+        return redirect()->to($redirectTo);
     }
 }

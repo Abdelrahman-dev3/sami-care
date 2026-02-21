@@ -90,26 +90,26 @@
         </div>
         </div>
     </div>
-    <!--<div class="text-center mb-4">-->
-    <!--    <a href="{{ route('frontend.become.affiliate') }}"-->
-    <!--    style="color: #BF9456;-->
-    <!--            font-weight: 600;-->
-    <!--            text-decoration: none;-->
-    <!--            font-size: 16px;">-->
-    <!--        <i class="fa-solid fa-handshake me-1"></i>-->
-    <!--        انضم إلى برنامج الشركاء-->
-    <!--    </a>-->
-    <!--</div>-->
+    <div class="text-center mb-4">
+        <a href="{{ route('frontend.become.affiliate') }}"
+        style="color: #BF9456;
+                font-weight: 600;
+                text-decoration: none;
+                font-size: 16px;">
+            <i class="fa-solid fa-handshake me-1"></i>
+            {{ __('profile.become_affiliate') }}
+          </a>
+    </div>
 
     <div class="stats-box">
         <div class="stat-item">
           <h6> <span class="stat-icon"><img src="{{ asset('images/icons/vesa.png') }}"></span>{{ __('profile.wallet') }}</h6>
           <div><span class="stat-value">{{$balance}}</span> <span class="stat-unit">{{ __('profile.currency') }}</span> <button type="button" style="border: none;background: #f0f8ff00;font-size: 18px;" data-bs-toggle="modal" data-bs-target="#depositModal">+</button></div>
         </div>
-        <!--<div class="stat-item">-->
-        <!--  <h6><span class="stat-icon"><img src="{{ asset('images/icons/vesa.png') }}"></span> {{ __('profile.referral_balance') }}</h6>-->
-        <!--  <div><span class="stat-value">0</span> <span class="stat-unit">{{ __('profile.currency') }}</span> <span class="text-muted">+</span></div>-->
-        <!--</div>-->
+        <div class="stat-item">
+          <h6><span class="stat-icon"><img src="{{ asset('images/icons/vesa.png') }}"></span> {{ __('profile.referral_balance') }}</h6>
+          <div><span class="stat-value">{{ number_format($referralBalance ?? 0, 2) }}</span> <span class="stat-unit">{{ __('profile.currency') }}</span></div>
+        </div>
         <div class="stat-item">
           <h6><span class="stat-icon"><img src="{{ asset('images/icons/gift.png') }}"></span>{{ __('profile.loyalty_points') }}</h6>
           <div><span class="stat-value">{{ $points }}</span> <span class="stat-unit">{{ __('profile.point') }}</span></div>

@@ -52,6 +52,8 @@ class AffiliateController extends Controller
             ->limit(5)
             ->get();
 
+        $referralLink = route('affiliate.track', ['ref_code' => $affiliate->ref_code]);
+
         return view('affiliate::dashboard', compact(
             'affiliate',
             'totalVisitors',
@@ -61,7 +63,8 @@ class AffiliateController extends Controller
             // 'topLinks',
             'chartLabels',
             'chartData',
-            'lastConversions'
+            'lastConversions',
+            'referralLink'
         ));
     }
 

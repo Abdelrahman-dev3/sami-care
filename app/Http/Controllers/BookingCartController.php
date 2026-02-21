@@ -21,6 +21,7 @@ use App\Models\GiftCard;
 use Illuminate\Support\Str;
 use Modules\Product\Models\Product;
 use Modules\Product\Models\Cart;
+use App\Services\AffiliateCommissionService;
 
 
 
@@ -269,7 +270,8 @@ class BookingCartController extends Controller
             }
     
             $this->addLoyaltyPoints($user->id, $charge['amount']);
-            $this->storeInvoice($user->id, $discountAmount, $loyaltyDiscount, $finalTotal, $cartIds , $gift_ids);
+            $invoiceId = $this->storeInvoice($user->id, $discountAmount, $loyaltyDiscount, $finalTotal, $cartIds , $gift_ids);
+            app(AffiliateCommissionService::class)->handleSuccessfulPurchase($user->id, $invoiceId, (float) $finalTotal);
             $this->paymentSuccess( $cartIds , $tapId , 'card');
     
             Booking::where('user_id', $user->id)
@@ -313,9 +315,9 @@ class BookingCartController extends Controller
         $loyalty->save();
     }
 
-    private function storeInvoice($userId, $discountAmount, $loyaltyDiscount, $finalTotal, $cartIds , $gift_ids = null)
+    private function storeInvoice($userId, $discountAmount, $loyaltyDiscount, $finalTotal, $cartIds , $gift_ids = null): int
     {
-        Invoice::create([
+        $invoice = Invoice::create([
             'user_id' => $userId,
             'cart_ids' => json_encode($cartIds),
             'gift_ids' => json_encode($gift_ids),
@@ -323,6 +325,8 @@ class BookingCartController extends Controller
             'loyalty_points_discount' => $loyaltyDiscount,
             'final_total' => $finalTotal,
         ]);
+
+        return (int) $invoice->id;
     }
 
     public function checkLoyaltyPoints(Request $request)

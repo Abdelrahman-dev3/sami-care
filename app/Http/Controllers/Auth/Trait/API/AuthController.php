@@ -9,9 +9,11 @@ use App\Http\Resources\LoginResource;
 use App\Http\Resources\RegisterResource;
 use App\Http\Resources\SocialLoginResource;
 use App\Models\User;
+use App\Services\TaqnyatSmsService;
 use Auth;
 use Hash;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Password;
 
 class AuthController extends Controller
@@ -20,13 +22,7 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        $user = $this->registerTrait($request);
-        $success['token'] = $user->createToken(setting('app_name'))->plainTextToken;
-        $success['name'] = $user->name;
-
-        $userResource = new RegisterResource($user);
-
-        return $this->sendResponse($userResource, __('messages.register_successfull'));
+        return $this->sendRegisterOtp($request);
     }
 
     /**
@@ -36,7 +32,7 @@ class AuthController extends Controller
      */
 public function login(LoginRequest $request)
 {
-    $user = User::withTrashed()->where('email', $request->input('email'))->first();
+    $user = User::withTrashed()->where('mobile', $request->input('mobile'))->first();
 
     if ($user == null) {
         return response()->json([
@@ -45,7 +41,7 @@ public function login(LoginRequest $request)
         ]);
     }
 
-    if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
+    if (Auth::attempt(['mobile' => $request->mobile, 'password' => $request->password])) {
         $user = Auth::user();
 
         if ($user->is_banned == 1 || $user->status == 0) {
@@ -54,9 +50,6 @@ public function login(LoginRequest $request)
                 'message' => __('messages.login_error')
             ]);
         }
-
-        // تم حذف التحقق من الدور هنا
-
         $user['api_token'] = $user->createToken(setting('app_name'))->plainTextToken;
 
         $loginResource = new LoginResource($user);
@@ -317,34 +310,139 @@ public function login(LoginRequest $request)
     
 public function signup(Request $request)
 {
-    $validated = $request->validate([
-        'first_name' => 'required|string|max:255',
-        'last_name' => 'required|string|max:255',
-        'mobile' => 'required|string|max:20|unique:users,mobile',
-        'email' => 'required|email|unique:users,email',
-        'password' => 'required|string|min:6|confirmed',
-    ]);
-
-    $user = User::create([
-        'first_name' => $validated['first_name'],
-        'last_name' => $validated['last_name'],
-        'mobile' => $validated['mobile'],
-        'email' => $validated['email'],
-        'password' => Hash::make($validated['password']),
-    ]);
-
-    // تأكد من تعيين الدور بشكل صحيح
-    $user->assignRole('user');
-
-    // إعادة بيانات المستخدم مع التأكد من وجود الدور
-    $user->load('roles');
+    $user = $this->registerCustomer($request);
+    $user['api_token'] = $user->createToken(setting('app_name'))->plainTextToken;
 
     return response()->json([
         'status' => true,
-        'message' => 'User registered successfully',
-        'data' => $user,
-    ]);
+        'message' => __('messages.register_successfull'),
+        'data' => new RegisterResource($user),
+    ], 200);
 }
 
+public function sendRegisterOtp(Request $request)
+{
+    $validated = $request->validate([
+        'username' => ['required', 'string', 'max:191', 'unique:users,username'],
+        'mobile' => ['required', 'string', 'max:20', 'unique:users,mobile'],
+    ]);
+
+    $smsService = new TaqnyatSmsService();
+    $phone = $smsService->validatePhoneNumber($validated['mobile']);
+
+    if (! $phone) {
+        return $this->sendError(__('messagess.invalid_phone'), [], 422);
+    }
+
+    $dailyKey = 'register_otp_count_'.$phone.'_'.date('Y-m-d');
+    $dailyCount = (int) Cache::get($dailyKey, 0);
+
+    if ($dailyCount >= 3) {
+        return $this->sendError(__('messagess.sms_daily_limit_reached'), [], 429);
+    }
+
+    $otp = (string) 1111;//random_int(1000, 9999);
+
+    Cache::put('register_otp_'.$phone, [
+        'username' => $validated['username'],
+        'otp' => $otp,
+    ], now()->addMinutes(5));
+    Cache::put($dailyKey, $dailyCount + 1, now()->endOfDay());
+
+    $message = __('messagess.otp_sms', ['code' => $otp]);
+    // $sent = $smsService->sendSms($phone, $message);
+
+    // if ($sent === false) {
+    //     return $this->sendError(__('messagess.sms_failed'), [], 500);
+    // }
+
+    return $this->sendResponse([
+        'mobile' => $phone,
+        'expires_in' => 300,
+    ], __('messages.otp_sent'));
+}
+
+public function resendRegisterOtp(Request $request)
+{
+    return $this->sendRegisterOtp($request);
+}
+
+public function verifyRegisterOtp(Request $request)
+{
+    $validated = $request->validate([
+        'mobile' => ['required', 'string', 'max:20'],
+        'otp' => ['required', 'digits:4'],
+    ]);
+
+    $smsService = new TaqnyatSmsService();
+    $phone = $smsService->validatePhoneNumber($validated['mobile']);
+
+    if (! $phone) {
+        return $this->sendError(__('messagess.invalid_phone'), [], 422);
+    }
+
+    $cached = Cache::get('register_otp_'.$phone);
+
+    if (! $cached || ! isset($cached['otp'], $cached['username'])) {
+        return $this->sendError(__('messagess.session_expired'), [], 422);
+    }
+
+    $attemptKey = 'register_otp_attempts_'.$phone;
+    $attempts = (int) Cache::get($attemptKey, 0);
+
+    if ($attempts >= 5) {
+        Cache::forget('register_otp_'.$phone);
+        Cache::forget($attemptKey);
+
+        return $this->sendError(__('auth.throttle', ['seconds' => 300, 'minutes' => 5]), [], 429);
+    }
+
+    if ((string) $cached['otp'] !== (string) $validated['otp']) {
+        Cache::put($attemptKey, $attempts + 1, now()->addMinutes(5));
+
+        return $this->sendError('Invalid OTP code.', [], 422);
+    }
+
+    Cache::forget('register_otp_'.$phone);
+    Cache::forget($attemptKey);
+
+    if (User::where('mobile', $phone)->exists() || User::where('username', $cached['username'])->exists()) {
+        return $this->sendError(__('validation.unique', ['attribute' => 'mobile/username']), [], 422);
+    }
+
+    $user = User::create([
+        'first_name' => $cached['username'],
+        'last_name' => '',
+        'username' => $cached['username'],
+        'mobile' => $phone,
+        'email_verified_at' => now(),
+        'status' => 1,
+    ]);
+
+    $user->assignRole('user');
+    $user['api_token'] = $user->createToken(setting('app_name'))->plainTextToken;
+
+    return $this->sendResponse(new RegisterResource($user), __('messages.register_successfull'));
+}
+
+private function registerCustomer(Request $request): User
+{
+    $validated = $request->validate([
+        'username' => ['required', 'string', 'max:191', 'unique:users,username'],
+        'mobile' => ['required', 'string', 'max:20', 'unique:users,mobile'],
+    ]);
+
+    $user = User::create([
+        'first_name' => $validated['username'],
+        'last_name' => '',
+        'username' => $validated['username'],
+        'mobile' => $validated['mobile'],
+        'status' => 1,
+    ]);
+
+    $user->assignRole('user');
+
+    return $user;
+}
 
 }
