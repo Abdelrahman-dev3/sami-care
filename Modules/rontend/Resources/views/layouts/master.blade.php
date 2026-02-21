@@ -117,8 +117,8 @@
         }
         .close-wheel{
             position: absolute;
-            top: 20%;
-            right: 35%;
+            top: 20% !important;
+            right: 35% !important;
             font-size: 30px;
             color: #fff;
             cursor: pointer;
