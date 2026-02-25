@@ -48,11 +48,11 @@
         :root {
             <?php
             $rootColors = setting('root_colors'); // Assuming the setting() function retrieves the JSON string
-            
+
             // Check if the JSON string is not empty and can be decoded
             if (!empty($rootColors) && is_string($rootColors)) {
                 $colors = json_decode($rootColors, true);
-            
+
                 // Check if decoding was successful and the colors array is not empty
                 if (json_last_error() === JSON_ERROR_NONE && is_array($colors) && count($colors) > 0) {
                     foreach ($colors as $key => $value) {
@@ -94,6 +94,7 @@
             }
         </script>
     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+
     <script>
         window.auth_permissions = <?php echo json_encode($permissions, 15, 512) ?>
     </script>

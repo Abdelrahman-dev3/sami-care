@@ -114,6 +114,7 @@
                         <select name="gift_type" class="form-select" required>
                             <option value="">{{ __('wheel.select_type') }}</option>
                             <option value="points">{{ __('wheel.points') }}</option>
+                            <option value="wallet_balance">{{ __('wheel.wallet balance') }}</option>
                         </select>
                     </div>
 
@@ -159,14 +160,27 @@
                                     </button>
                                 </form>
                                 <div class="reward-icon fs-3">⭐</div>
-                                <h6 class="mt-2">{{ $prize->type ?? '-' }}</h6>
+                                <h6 class="mt-2">{{ str_replace('_', ' ', $prize->type) ?? '-' }}</h6>
                                 <p class="mb-1">{{ number_format($prize->reward_value, 0) }}</p>
                                 <small>
                                     @if ($lang === 'ar')
-                                        تهانينا لقد حصلت على {{ number_format($prize->reward_value, 0) }} نقطة هدية تستخدمهم
+                                        تهانينا لقد حصلت على {{ number_format($prize->reward_value, 0) }}
+                                       @if($prize->type=="points")
+                                        نقطة
+                                        @else
+                                        رصيد محفظة
+                                        @endif
+                                        هدية تستخدمهم
                                         للخصم على خدمات Sami
                                     @else
-                                        Congratulations! You have earned {{ number_format($prize->reward_value, 0) }} gift points
+                                        Congratulations! You have earned {{ number_format($prize->reward_value, 0) }}
+                                        gift
+                                        @if($prize->type=="points")
+                                            points
+                                        @else
+                                            wallet balance
+                                        @endif
+
                                         to use for discounts on services
                                     @endif
                                 </small>

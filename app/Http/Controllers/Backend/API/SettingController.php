@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Modules\Currency\Models\Currency;
 use Modules\Page\Models\Page;
 use Modules\Page\Transformers\PageResource;
@@ -146,16 +147,16 @@ class SettingController extends Controller
         }
         if ($request->user_id) {
             $user = User::withTrashed()->find($request->user_id);
-            
+
             if ($user && $user->trashed()) {
-                $response['is_user_authorized'] = false; 
+                $response['is_user_authorized'] = false;
             } elseif ($user) {
-                $response['is_user_authorized'] = true; 
+                $response['is_user_authorized'] = true;
             } else {
-                $response['is_user_authorized'] = false; 
+                $response['is_user_authorized'] = false;
             }
         } else {
-            $response['is_user_authorized'] = false; 
+            $response['is_user_authorized'] = false;
         }
 
         $response['pages'] = PageResource::collection($pages);
@@ -171,5 +172,77 @@ class SettingController extends Controller
 
         return response()->json($response);
     }
+
+    // GET: /get-visibility-settings
+    public function getVisibilitySettings()
+    {
+        $setting = Setting::where('name', 'service_duration_visibility')->first();
+
+        return response()->json([
+            'status' => true,
+            'data' => [
+                // Convert string '1'/'0' from DB to Boolean for Vue switch
+                'show_duration' => $setting ? (bool)$setting->val : false
+            ]
+        ]);
+    }
+
+    // POST: /update-service-duration-visibility
+    public function updateVisibility(Request $request)
+    {
+        $request->validate([
+            'show_duration' => 'required|boolean'
+        ]);
+
+        $setting = Setting::updateOrCreate(
+            ['name' => 'service_duration_visibility'],
+            [
+                'val' => $request->show_duration ? '1' : '0',
+                'type' => 'boolean',
+                'updated_by' => Auth::id(), // Tracking who changed it
+            ]
+        );
+
+        return response()->json([
+            'status' => true,
+            'message' => __('messages.update_form', ['form' => __('Service Visibility')]),
+            'data' => $setting
+        ]);
+    }
+
+    // GET: /api/get-service-duration-value
+    public function getDurationValue()
+    {
+        $setting = Setting::where('name', 'service_duration_minutes')->first();
+        return response()->json([
+            'status' => true,
+            'data' => [
+                'duration' => $setting ? $setting->val : '0'
+            ]
+        ]);
+    }
+
+// POST: /api/update-service-duration-value
+    public function updateDurationValue(Request $request)
+    {
+        $request->validate([
+            'duration' => 'required|numeric|min:0'
+        ]);
+
+        Setting::updateOrCreate(
+            ['name' => 'service_duration_minutes'],
+            [
+                'val' => $request->duration,
+                'type' => 'number',
+                'updated_by' => auth()->id(),
+            ]
+        );
+
+        return response()->json([
+            'status' => true,
+            'message' => __('Duration updated successfully')
+        ]);
+    }
+
 
 }

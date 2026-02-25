@@ -119,6 +119,7 @@
                         <select name="gift_type" class="form-select" required>
                             <option value=""><?php echo e(__('wheel.select_type')); ?></option>
                             <option value="points"><?php echo e(__('wheel.points')); ?></option>
+                            <option value="wallet_balance"><?php echo e(__('wheel.wallet balance')); ?></option>
                         </select>
                     </div>
 
@@ -167,14 +168,29 @@
                                     </button>
                                 </form>
                                 <div class="reward-icon fs-3">⭐</div>
-                                <h6 class="mt-2"><?php echo e($prize->type ?? '-'); ?></h6>
+                                <h6 class="mt-2"><?php echo e(str_replace('_', ' ', $prize->type) ?? '-'); ?></h6>
                                 <p class="mb-1"><?php echo e(number_format($prize->reward_value, 0)); ?></p>
                                 <small>
                                     <?php if($lang === 'ar'): ?>
-                                        تهانينا لقد حصلت على <?php echo e(number_format($prize->reward_value, 0)); ?> نقطة هدية تستخدمهم
+                                        تهانينا لقد حصلت على <?php echo e(number_format($prize->reward_value, 0)); ?>
+
+                                       <?php if($prize->type=="points"): ?>
+                                        نقطة
+                                        <?php else: ?>
+                                        رصيد محفظة
+                                        <?php endif; ?>
+                                        هدية تستخدمهم
                                         للخصم على خدمات Sami
                                     <?php else: ?>
-                                        Congratulations! You have earned <?php echo e(number_format($prize->reward_value, 0)); ?> gift points
+                                        Congratulations! You have earned <?php echo e(number_format($prize->reward_value, 0)); ?>
+
+                                        gift
+                                        <?php if($prize->type=="points"): ?>
+                                            points
+                                        <?php else: ?>
+                                            wallet balance
+                                        <?php endif; ?>
+
                                         to use for discounts on services
                                     <?php endif; ?>
                                 </small>

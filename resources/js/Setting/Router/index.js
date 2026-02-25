@@ -11,6 +11,8 @@ import CurrencySettingPage from '@/Setting/SectionPages/CurrencySettingPage.vue'
 import CodSettingsPage from '@/Setting/SectionPages/CodSettingsPage.vue'
 import CommissionPage from '@/Setting/SectionPages/CommissionPage.vue'
 import BussinessHours from '@/Setting/SectionPages/BussinessHours.vue'
+import CartDuration from '@/Setting/SectionPages/CartDuration.vue'
+import ServiceDuration from '@/Setting/SectionPages/ServiceDuration.vue'
 import PaymentMethod from '@/Setting/SectionPages/PaymentMethod.vue'
 import LanguagePage from '@/Setting/SectionPages/LanguagePage.vue'
 import MiscSettingPage from '@/Setting/SectionPages/MiscSettingPage.vue'
@@ -124,6 +126,19 @@ const routes = [
         meta: { permission: 'setting_bussiness_hours' },
         component: BussinessHours
       },
+      {
+        path: 'cart-duration',
+        name: 'Settings.cart-duration',
+        meta: { permission: 'setting_cart_duration' },
+        component: CartDuration
+      },
+      {
+        path: 'duration-visibility',
+        name: 'Settings.duration-visibility',
+        meta: { permission: 'setting_duration_visibility' },
+        component: ServiceDuration
+      },
+
       {
         path: 'shifts-bussiness',
         name: 'Settings.shifts-bussiness',

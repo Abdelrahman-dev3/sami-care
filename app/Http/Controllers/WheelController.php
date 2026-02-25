@@ -14,12 +14,12 @@ use Illuminate\Http\Request;
 class WheelController extends Controller
 {
     public function index(){
-    
+
         $prizes = Wheel::all();
         $wheelDisplayIntervalDays = (int) Setting::get('wheel_display_interval_days', 1);
 
         return view('backend.wheel.index_datatable', compact('prizes', 'wheelDisplayIntervalDays'));
-        
+
     }
 
     public function store(Request $request){
@@ -32,7 +32,7 @@ class WheelController extends Controller
 
             return redirect()->back()->with('success', __('wheel.interval_saved_successfully'));
         }
-    
+
         $request->validate([
             'gift_type' => 'required|string|max:255',
             'reward_value' => 'required|numeric|min:1',
@@ -43,12 +43,12 @@ class WheelController extends Controller
             'reward_value.numeric' => 'قيمة المكافأة يجب أن تكون رقمًا.',
             'reward_value.min' => 'قيمة المكافأة يجب ألا تقل عن 1.',
         ]);
-        
+
         Wheel::create([
             'type' =>  $request->gift_type,
             'reward_value' => $request->reward_value
         ]);
-        
+
         return redirect()->back()->with('success', __('wheel.The_award_has_been_added_successfully'));
     }
 
@@ -161,18 +161,18 @@ class WheelController extends Controller
 
         return $response;
     }
-    
+
     public function destroy_all(){
-    
+
         Wheel::truncate();
-        
+
         return redirect()->back()->with('success', __('wheel.success_delete_all'));
     }
-    
+
     public function destroy($id){
         $prize = Wheel::findOrFail($id);
         $prize->delete();
         return redirect()->back()->with('success', __('wheel.The_award_has_been_deleted_successfully'));
     }
 }
- 
+
