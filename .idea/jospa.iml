@@ -7,9 +7,69 @@
       <sourceFolder url="file://$MODULE_DIR$/database/seeders" isTestSource="false" packagePrefix="Database\Seeders\" />
       <sourceFolder url="file://$MODULE_DIR$/app" isTestSource="false" packagePrefix="App\" />
       <sourceFolder url="file://$MODULE_DIR$/tests" isTestSource="true" packagePrefix="Tests\" />
-      <sourceFolder url="file://$MODULE_DIR$/spec" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/tests/Unit" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/tests/Feature" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Affiliate/" isTestSource="false" packagePrefix="Modules\Affiliate\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Affiliate/app" isTestSource="false" packagePrefix="Modules\Affiliate\App\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Affiliate/database/factories" isTestSource="false" packagePrefix="Modules\Affiliate\Database\Factories\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Affiliate/database/seeders" isTestSource="false" packagePrefix="Modules\Affiliate\Database\Seeders\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Affiliate/tests" isTestSource="true" packagePrefix="Modules\Affiliate\Tests\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Bank/" isTestSource="false" packagePrefix="Modules\Bank\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Bank/app" isTestSource="false" packagePrefix="Modules\Bank\App\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Bank/database/factories" isTestSource="false" packagePrefix="Modules\Bank\Database\Factories\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Bank/database/seeders" isTestSource="false" packagePrefix="Modules\Bank\Database\Seeders\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Bank/tests" isTestSource="true" packagePrefix="Modules\Bank\Tests\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Booking/" isTestSource="false" packagePrefix="Modules\Booking\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/BussinessHour/" isTestSource="false" packagePrefix="Modules\BussinessHour\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Category/" isTestSource="false" packagePrefix="Modules\Category\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Commission/" isTestSource="false" packagePrefix="Modules\Commission\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Constant/" isTestSource="false" packagePrefix="Modules\Constant\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Currency/" isTestSource="false" packagePrefix="Modules\Currency\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/CustomField/" isTestSource="false" packagePrefix="Modules\CustomField\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Customer/" isTestSource="false" packagePrefix="Modules\Customer\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Earning/" isTestSource="false" packagePrefix="Modules\Earning\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Employee/" isTestSource="false" packagePrefix="Modules\Employee\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Frontend/" isTestSource="false" packagePrefix="Modules\Frontend\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Frontend/app" isTestSource="false" packagePrefix="Modules\Frontend\App\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Frontend/database/factories" isTestSource="false" packagePrefix="Modules\Frontend\Database\Factories\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Frontend/database/seeders" isTestSource="false" packagePrefix="Modules\Frontend\Database\Seeders\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Frontend/tests" isTestSource="true" packagePrefix="Modules\Frontend\Tests\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Holiday/" isTestSource="false" packagePrefix="Modules\Holiday\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Installer/" isTestSource="false" packagePrefix="Modules\Installer\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Language/" isTestSource="false" packagePrefix="Modules\Language\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/LikeModule/" isTestSource="false" packagePrefix="Modules\LikeModule\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Location/" isTestSource="false" packagePrefix="Modules\Location\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Logistic/" isTestSource="false" packagePrefix="Modules\Logistic\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/MenuBuilder/" isTestSource="false" packagePrefix="Modules\MenuBuilder\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/NotificationTemplate/" isTestSource="false" packagePrefix="Modules\NotificationTemplate\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Package/" isTestSource="false" packagePrefix="Modules\Package\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Page/" isTestSource="false" packagePrefix="Modules\Page\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Product/" isTestSource="false" packagePrefix="Modules\Product\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Promotion/" isTestSource="false" packagePrefix="Modules\Promotion\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/QuickBooking/" isTestSource="false" packagePrefix="Modules\QuickBooking\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Service/" isTestSource="false" packagePrefix="Modules\Service\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Slider/" isTestSource="false" packagePrefix="Modules\Slider\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Subscriptions/" isTestSource="false" packagePrefix="Modules\Subscriptions\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Tag/" isTestSource="false" packagePrefix="Modules\Tag\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Tax/" isTestSource="false" packagePrefix="Modules\Tax\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Tip/" isTestSource="false" packagePrefix="Modules\Tip\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Tracking/" isTestSource="false" packagePrefix="Modules\Tracking\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Tracking/app" isTestSource="false" packagePrefix="Modules\Tracking\App\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Tracking/database/factories" isTestSource="false" packagePrefix="Modules\Tracking\Database\Factories\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Tracking/database/seeders" isTestSource="false" packagePrefix="Modules\Tracking\Database\Seeders\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Tracking/tests" isTestSource="true" packagePrefix="Modules\Tracking\Tests\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/WEmployee/" isTestSource="false" packagePrefix="Modules\Employee\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Wallet/" isTestSource="false" packagePrefix="Modules\Wallet\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Wallet/app" isTestSource="false" packagePrefix="Modules\Wallet\App\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Wallet/database/factories" isTestSource="false" packagePrefix="Modules\Wallet\Database\Factories\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Wallet/database/seeders" isTestSource="false" packagePrefix="Modules\Wallet\Database\Seeders\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/Wallet/tests" isTestSource="true" packagePrefix="Modules\Wallet\Tests\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/World/" isTestSource="false" packagePrefix="Modules\World\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/rontend/" isTestSource="false" packagePrefix="Modules\Frontend\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/rontend/app" isTestSource="false" packagePrefix="Modules\Frontend\App\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/rontend/database/factories" isTestSource="false" packagePrefix="Modules\Frontend\Database\Factories\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/rontend/database/seeders" isTestSource="false" packagePrefix="Modules\Frontend\Database\Seeders\" />
+      <sourceFolder url="file://$MODULE_DIR$/Modules/rontend/tests" isTestSource="true" packagePrefix="Modules\Frontend\Tests\" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/barryvdh/laravel-dompdf" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/barryvdh/laravel-ide-helper" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/barryvdh/reflection-docblock" />
@@ -214,6 +274,8 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/web-token/jwt-signature-algorithm-ecdsa" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/web-token/jwt-util-ecc" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/yajra/laravel-datatables-oracle" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/doctrine/cache" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/webmozart/assert" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
