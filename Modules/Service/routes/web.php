@@ -57,6 +57,7 @@ Route::group(['prefix' => 'app', 'as' => 'backend.', 'middleware' => ['auth']], 
         Route::post('/gallery-images/{id}', [ServicesController::class, 'uploadGalleryImages']);
         Route::post('bulk-action', [ServicesController::class, 'bulk_action'])->name('bulk_action');
         Route::post('update-status/{id}', [ServicesController::class, 'update_status'])->name('update_status');
+        Route::post('update-freeze/{id}', [ServicesController::class, 'update_freeze'])->name('update_freeze');
         Route::get('export', [ServicesController::class, 'export'])->name('export');
         Route::post('uniqueServices', [ServicesController::class, 'uniqueServices'])->name('uniqueServices');
     });

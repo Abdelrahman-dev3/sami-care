@@ -420,6 +420,7 @@ return [
     'total_revenue' => 'Data Filter Wise Total Revenue',
     'total_appointment_count' => 'Data Filter Wise Total of Appointments Count',
     'data_not_available' => 'Data is not available in this Table',
+    'not_available_now' => 'Currently unavailable',
     'coupon_view' => 'View Coupon',
     'data_not_found' => ' No data found',
     "processing" => "Processing...",

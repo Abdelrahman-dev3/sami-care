@@ -1,14 +1,21 @@
 
-<div class="position-relative rounded-4 overflow-hidden shadow" style="height: 350px;">
+@php
+  $isFrozen = isset($is_frozen) && $is_frozen;
+@endphp
+<div class="position-relative rounded-4 overflow-hidden shadow" style="height: 350px;{{ $isFrozen ? 'opacity: 0.6;' : '' }}">
     <img src="{{ $image ?? asset('images/frontend/card 11.png') }}" alt="{{ $name ?? 'Category' }}" class="w-100 h-100" style="object-fit: cover;">
     <div class="position-absolute top-0 start-0 w-100 h-100" style="background: linear-gradient(to top, rgba(0,0,0,0.6) 40%, rgba(0,0,0,0.0) 100%);"></div>       
 
     <!-- Pricing badge -->
     <div class="position-absolute top-0 m-3 px-3 py-1 rounded-pill text-white"
          style="cursor: pointer;width: 77.8px;height: 32.4px;text-align: center;line-height: 2;font-weight: bold;font-size: 13.6px;"
-         data-bs-toggle="modal"   
-         data-bs-target="#pricingModal"
-         @if(isset($category_id)) onclick="showCategoryServices({{ $category_id }})" @endif>
+         @if($isFrozen)
+            onclick="return showUnavailableMessage(event)"
+         @else
+            data-bs-toggle="modal"
+            data-bs-target="#pricingModal"
+            @if(isset($category_id)) onclick="showCategoryServices({{ $category_id }})" @endif
+         @endif>
         {{ __('messagess.pricing') }}
     </div>
 
@@ -42,7 +49,11 @@
     <div class="position-absolute start-50 translate-middle-x w-100 d-flex justify-content-center px-5" style="bottom: 25px;" id="te">
         <div class="d-flex gap-3 text-white w-100 justify-content-center">
             @if(isset($category_id))
-                <a href="{{ route('frontend.category.details', $category_id) }}" class="btn btn-light rounded-pill px-4 py-2 col-6 text-center m-0 d-flex align-items-center justify-content-center" style="font-size: 15.2px;font-weight: bold;background-color: #ffffff00;height: 42.8px;color: white !important;width: 90%;">{{ __('messagess.details') }}</a>
+                @if($isFrozen)
+                    <a href="#" onclick="return showUnavailableMessage(event)" class="btn btn-light rounded-pill px-4 py-2 col-6 text-center m-0 d-flex align-items-center justify-content-center" style="font-size: 15.2px;font-weight: bold;background-color: #ffffff00;height: 42.8px;color: white !important;width: 90%;">{{ __('messagess.details') }}</a>
+                @else
+                    <a href="{{ route('frontend.category.details', $category_id) }}" class="btn btn-light rounded-pill px-4 py-2 col-6 text-center m-0 d-flex align-items-center justify-content-center" style="font-size: 15.2px;font-weight: bold;background-color: #ffffff00;height: 42.8px;color: white !important;width: 90%;">{{ __('messagess.details') }}</a>
+                @endif
             @else
                 <a href="#" class="btn btn-light rounded-pill px-4 py-2 col-6 text-center m-0 d-flex align-items-center justify-content-center" style="font-size: 15.2px;font-weight: bold;width: 159px;background-color: var(--primary-color);height: 42.8px;">{{ __('messagess.details') }}</a>
             @endif

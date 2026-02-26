@@ -145,6 +145,13 @@ class CategoriesController extends Controller
         return response()->json(['status' => true, 'message' => __('branch.status_update')]);
     }
 
+    public function update_freeze(Request $request, Category $id)
+    {
+        $id->update(['is_frozen' => $request->status]);
+
+        return response()->json(['status' => true, 'message' => __('branch.status_update')]);
+    }
+
     public function index_data(Datatables $datatable, Request $request)
     {
         $module_name = $this->module_name;
@@ -191,6 +198,18 @@ class CategoriesController extends Controller
                     </div>
                 ';
             })
+            ->editColumn('freeze', function ($row) {
+                $checked = '';
+                if ($row->is_frozen) {
+                    $checked = 'checked="checked"';
+                }
+
+                return '
+                    <div class="form-check form-switch ">
+                        <input type="checkbox" data-url="'.route('backend.categories.update_freeze', $row->id).'" data-token="'.csrf_token().'" class="switch-status-change form-check-input"  id="datatable-freeze-row-'.$row->id.'"  name="freeze" value="'.$row->id.'" '.$checked.'>
+                    </div>
+                ';
+            })
             ->editColumn('updated_at', function ($data) {
                 $module_name = $this->module_name;
 
@@ -218,7 +237,7 @@ class CategoriesController extends Controller
         // Custom Fields For export
         $customFieldColumns = CustomField::customFieldData($datatable, Category::CUSTOM_FIELD_MODEL, null);
 
-        return $datatable->rawColumns(array_merge(['action', 'status', 'image', 'check', 'name'], $customFieldColumns))
+        return $datatable->rawColumns(array_merge(['action', 'status', 'freeze', 'image', 'check', 'name'], $customFieldColumns))
             ->toJson();
     }
 
@@ -313,6 +332,18 @@ class CategoriesController extends Controller
                     </div>
                 ';
             })
+            ->editColumn('freeze', function ($row) {
+                $checked = '';
+                if ($row->is_frozen) {
+                    $checked = 'checked="checked"';
+                }
+
+                return '
+                    <div class="form-check form-switch ">
+                        <input type="checkbox" data-url="'.route('backend.categories.update_freeze', $row->id).'" data-token="'.csrf_token().'" class="switch-status-change form-check-input" id="datatable-freeze-row-'.$row->id.'" name="freeze" value="'.$row->id.'" '.$checked.'>
+                    </div>
+                ';
+            })
             ->editColumn('updated_at', function ($data) {
                 $diff = Carbon::now()->diffInHours($data->updated_at);
     
@@ -335,7 +366,7 @@ class CategoriesController extends Controller
     
         // Custom Fields For export
         $customFieldColumns = CustomField::customFieldData($datatable, Category::CUSTOM_FIELD_MODEL, null);
-        return $datatable->rawColumns(array_merge(['action', 'status', 'image', 'check'], $customFieldColumns))
+        return $datatable->rawColumns(array_merge(['action', 'status', 'freeze', 'image', 'check'], $customFieldColumns))
             ->toJson();
     }
     

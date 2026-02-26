@@ -180,6 +180,13 @@ class ServicesController extends Controller
         return response()->json(['status' => true, 'message' => __('branch.status_update')]);
     }
 
+    public function update_freeze(Request $request, Service $id)
+    {
+        $id->update(['is_frozen' => $request->status]);
+
+        return response()->json(['status' => true, 'message' => __('branch.status_update')]);
+    }
+
     public function index_data(Datatables $datatable, Request $request)
     {
         $userId = Auth()->user()->id;
@@ -248,6 +255,18 @@ class ServicesController extends Controller
                     </div>
                 ';
             })
+            ->editColumn('freeze', function ($row) {
+                $checked = '';
+                if ($row->is_frozen) {
+                    $checked = 'checked="checked"';
+                }
+
+                return '
+                    <div class="form-check form-switch ">
+                        <input type="checkbox" data-url="' . route('backend.services.update_freeze', $row->id) . '" data-token="' . csrf_token() . '" class="switch-status-change form-check-input"  id="datatable-freeze-row-' . $row->id . '"  name="freeze" value="' . $row->id . '" ' . $checked . '>
+                    </div>
+                ';
+            })
             ->editColumn('category_id', function ($data) {
                 $category = isset($data->category->name) ? $data->category->name : '-';
                 if (isset($data->sub_category->name)) {
@@ -283,7 +302,7 @@ class ServicesController extends Controller
         // Custom Fields For export
         $customFieldColumns = CustomField::customFieldData($datatable, Service::CUSTOM_FIELD_MODEL, null);
 
-        return $datatable->rawColumns(array_merge(['action', 'image', 'status', 'check', 'branches_count', 'employee_count'], $customFieldColumns))
+        return $datatable->rawColumns(array_merge(['action', 'image', 'status', 'freeze', 'check', 'branches_count', 'employee_count'], $customFieldColumns))
             ->toJson();
     }
 

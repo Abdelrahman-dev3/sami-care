@@ -197,6 +197,14 @@
               orderable: true,
              visible: false,
            },
+            {
+              data: 'freeze',
+              name: 'freeze',
+              orderable: false,
+              searchable: false,
+              title: "{{ __('service.lbl_freeze') }}",
+              width: '5%'
+            },
 
         ]
 

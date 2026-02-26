@@ -107,6 +107,7 @@
             { data: 'updated_at', name: 'updated_at',  title: "{{ __('category.lbl_updated_at') }}", width: '15%'},
             { data: 'created_at', name: 'created_at',  title: "{{ __('category.lbl_created_at') }}",width: '15%' },
             { data: 'status', name: 'status', orderable: true,  searchable: true, title: "{{ __('category.lbl_status') }}",width: '5%'},
+            { data: 'freeze', name: 'freeze', orderable: false, searchable: false, title: "{{ __('category.lbl_freeze') }}", width: '5%'},
 
         ]
 

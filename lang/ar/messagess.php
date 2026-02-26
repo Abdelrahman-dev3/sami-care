@@ -568,5 +568,6 @@ return [
     'wheel_history_no_reward' => 'تدوير عجلة الحظ بدون مكافأة',
     'failed_to_remove_item' => 'فشل في إزالة العنصر من السلة. حاول مرة أخرى.',
     
+    'not_available_now' => 'لا يتوفر حاليا',
 ];
 

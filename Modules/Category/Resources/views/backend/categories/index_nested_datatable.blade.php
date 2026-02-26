@@ -117,6 +117,7 @@
             { data: 'created_at', name: 'created_at',  title: "{{ __('category.lbl_created_at') }}",width: '15%', orderable: true },
             { data: 'updated_at', name: 'updated_at', title: "{{ __('category.lbl_updated_at') }}" ,width: '15%', orderable: true },
             { data: 'status', name: 'status',  searchable: true, title: "{{ __('category.lbl_status') }}" ,width: '5%', orderable: false },
+            { data: 'freeze', name: 'freeze',  searchable: false, title: "{{ __('category.lbl_freeze') }}" ,width: '5%', orderable: false },
         ]
 
         const actionColumn = [

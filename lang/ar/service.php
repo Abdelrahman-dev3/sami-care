@@ -11,6 +11,7 @@ return [
     'lbl_sub_category' => 'الفئة الفرعية',
     'lbl_feature_image' => 'صورة مميزة',
     'lbl_status' => 'الحالة',
+    'lbl_freeze' => 'تجميد',
     'lbl_category_id' => 'الفئة',
     'lbl_duration' => 'المدة',
     'lbl_branches' => 'الفروع',

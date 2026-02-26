@@ -24,7 +24,8 @@
                             'price_range' => $category->services && $category->services->count() > 0 && $category->services->whereNotNull('default_price')->count() > 0 ?
                                 'SR ' . number_format($category->services->whereNotNull('default_price')->min('default_price'), 2) . ' - SR ' . number_format($category->services->whereNotNull('default_price')->max('default_price'), 2) :
                                 __('messagess.contact_for_pricing'),
-                            'category_id' => $category->id
+                            'category_id' => $category->id,
+                            'is_frozen' => $category->is_frozen
                         ])
                     </div>
                 @endforeach
@@ -89,6 +90,7 @@
 
 <script>
     const currentLang = '{{ app()->getLocale() }}';
+    const notAvailableMessage = @json(__('messagess.not_available_now'));
 </script>
 
 <script>
@@ -152,6 +154,18 @@ function showCategoryServices(categoryId) {
         .catch(() => {
             contentDiv.innerHTML = `<div class="text-center text-danger"><p>${currentLang === 'ar' ? 'حدث خطأ أثناء تحميل الخدمات' : 'Error loading services'}</p></div>`;
         });
+}
+
+function showUnavailableMessage(event) {
+    if (event && typeof event.preventDefault === 'function') {
+        event.preventDefault();
+    }
+    if (typeof createNotify === 'function') {
+        createNotify({ title: '', desc: notAvailableMessage });
+    } else {
+        alert(notAvailableMessage);
+    }
+    return false;
 }
 
     document.addEventListener('DOMContentLoaded', function() {

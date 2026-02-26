@@ -7,6 +7,7 @@ return [
     'lbl_parent_category' => 'Select Category',
     'lbl_category_name' => 'Sub-Category Name',
     'lbl_status' => 'Status',
+    'lbl_freeze' => 'Freeze',
     'lbl_name' => 'Name',
     'lbl_category' => 'Category',
     'lbl_updated_at' => 'Updated At',
