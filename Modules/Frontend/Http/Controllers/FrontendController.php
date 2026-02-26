@@ -30,6 +30,7 @@ class FrontendController extends Controller
     public function index()
     {
 
+
         // Fetch active services for the homepage
         $services = Service::with(['category', 'media'])
             ->where('status', 1)
@@ -66,7 +67,10 @@ class FrontendController extends Controller
         $intervalDays = max((int) Setting::get('wheel_display_interval_days', 1), 1);
         $shouldShowWheel = $this->shouldShowWheel($intervalDays);
 
-        return view('frontend::index', compact('services', 'categories', 'packages' , 'products' , 'prizes', 'shouldShowWheel', 'intervalDays'));
+        $setting = DB::table('settings')->where('name', 'service_duration_visibility')->first();
+        $showDuration = $setting ? (bool) $setting->val : false;
+
+        return view('frontend::index', compact('showDuration','services', 'categories', 'packages' , 'products' , 'prizes', 'shouldShowWheel', 'intervalDays'));
     }
 
     /**

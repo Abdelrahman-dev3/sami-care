@@ -21,16 +21,17 @@
 <?php $component = $__componentOriginal428ce2b846773f91eb7dd13597a849fe; ?>
 <?php unset($__componentOriginal428ce2b846773f91eb7dd13597a849fe); ?>
 <?php endif; ?>
+
     <?php if (isset($component)) { $__componentOriginal46776d0b7db5693fe6a82b4f364cd987 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal46776d0b7db5693fe6a82b4f364cd987 = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.frontend.services-section','data' => ['services' => $services,'categories' => $categories]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.frontend.services-section','data' => ['services' => $services,'categories' => $categories,'showDuration' => $showDuration]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
 <?php $component->withName('frontend.services-section'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag && $constructor = (new ReflectionClass(Illuminate\View\AnonymousComponent::class))->getConstructor()): ?>
 <?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['services' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($services),'categories' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($categories)]); ?>
+<?php $component->withAttributes(['services' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($services),'categories' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($categories),'showDuration' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($showDuration)]); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginal46776d0b7db5693fe6a82b4f364cd987)): ?>
@@ -61,6 +62,7 @@
 <?php $component = $__componentOriginalfc63de52e08f3d4397c936ba02c6fea4; ?>
 <?php unset($__componentOriginalfc63de52e08f3d4397c936ba02c6fea4); ?>
 <?php endif; ?>
+
     <?php if (isset($component)) { $__componentOriginal7aeab9953e2daca09d5e26e5c5d5626a = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal7aeab9953e2daca09d5e26e5c5d5626a = $attributes; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.frontend.premium-packages-section','data' => ['packages' => $packages]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>

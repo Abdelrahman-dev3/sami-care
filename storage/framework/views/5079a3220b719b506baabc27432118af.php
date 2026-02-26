@@ -9,15 +9,15 @@
         <?php if(language_direction() == 'rtl'): ?>
             <link rel="stylesheet" href="<?php echo e(asset('css/rtl.css')); ?>">
         <?php endif; ?>
-        
+
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-        <link href="https://fonts.googleapis.com/css2?family=Lemonada:wght@300;400;500;600;700&display=swap" rel="stylesheet"> 
-    
+        <link href="https://fonts.googleapis.com/css2?family=Lemonada:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
         <!-- Icons -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet"/>
-        
+
         <link rel="stylesheet" href="<?php echo e(asset('pages-css/book-page.css')); ?>">
     </head>
 
@@ -44,6 +44,7 @@
             </svg>
             <div class="text" data-text="Loading"></div>
         </div>
+
         <!-- Content -->
         <div class="content">
             <!-- Progress Bar -->
@@ -72,8 +73,9 @@
             <div id="step1" class="step-content">
                 <div class="location-form">
                     <div class="form-group">
-                        <label class="top-label"> 
-                            <?php echo e(__('messagess.select_branch')); ?> 
+                        <label class="top-label">
+                            <?php echo e(__('messagess.select_branch')); ?>
+
                         </label>
                         <br>
                         <select class="w-100-mob" name="State">
@@ -82,7 +84,7 @@
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </select>
                         <div class="branch-cards">
-                            
+
                         </div>
                     </div>
                 </div>
@@ -104,8 +106,9 @@
             </div>
             <!-- Step 3: Staff Selection -->
             <div id="step3" class="step-content hidden">
-                <label class="top-label" style="width: 58%;margin: auto;"> 
-                    <?php echo e(__('messagess.select_service_provider')); ?> 
+                <label class="top-label" style="width: 58%;margin: auto;">
+                    <?php echo e(__('messagess.select_service_provider')); ?>
+
                 </label>
                 <br>
                 <div class="sammary-steps"></div>
@@ -116,7 +119,8 @@
             <!-- Step 4: Date & Time Selection -->
             <div id="step4" class="step-content hidden">
                 <label class="top-label" style="width: 58%;margin: auto;">
-                    <?php echo e(__('messagess.select_time_and_date_for_services')); ?> 
+                    <?php echo e(__('messagess.select_time_and_date_for_services')); ?>
+
                 </label>
                 <div class="sammary-steps" style="margin: 40px 0;"></div>
                 <div class="Date-Time-Mob" style="display: flex;justify-content: space-between;">
@@ -147,7 +151,7 @@
                                 <div class="time-section" id="morning-section">
                                     <div class="time-grid" id="morning-grid"></div>
                                 </div>
-    
+
                                 
                                 <div class="time-section mt-4" id="afternoon-section">
                                     <div class="time-grid" id="afternoon-grid"></div>
@@ -160,10 +164,10 @@
             <!-- Step 5:  Payment Selection -->
             <div id="step5" class="step-content hidden">
                 <div class="booking-payment">
-                    
+
                 </div>
             </div>
-            
+
             <div class="step-content hidden2" id="summaryCard" style="height: 800px;">
 
             </div>
@@ -179,19 +183,19 @@
     <?php echo $__env->make('components.frontend.footer', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
     <script>
         const translations = { next: "<?php echo e(__('messagess.next')); ?>", complete: "<?php echo e(__('messagess.complete')); ?>"};
-        
+
         // Application State
         let currentStep = 1;
-        let maxSteps = 5; 
-        
+        let maxSteps = 5;
+
         let selectedData = {
             branch: null,
             branchName: null,
-            services: []    
+            services: []
         };
-        
+
         let fanaltotal = 0;
-        
+
         const summaryCard = document.getElementById('summaryCard');
 
         // DOM Elements
@@ -206,23 +210,23 @@
 
         // Initialize Calendar
         let currentDate = new Date();
-        
+
         const prevBn = document.getElementById('prevMonth');
         const nextBn = document.getElementById('nextMonth');
-        
+
         prevBn.addEventListener('click', () => {
             currentDate.setMonth(currentDate.getMonth() - 1);
             generateCalendar(activeSubId, activeStaffId);
         });
-        
+
         nextBn.addEventListener('click', () => {
             currentDate.setMonth(currentDate.getMonth() + 1);
             generateCalendar(activeSubId, activeStaffId);
         });
-        
-        
+
+
         let selectedDate = null;
-        
+
         function initializeApp() {
 
             const urlParams = new URLSearchParams(window.location.search);
@@ -230,7 +234,7 @@
 
             if(branchId) {
                 selectedData.branch = branchId;
-                currentStep = 2; 
+                currentStep = 2;
                 updateUI();
                 fetchServiceGroups();
             }
@@ -299,14 +303,14 @@
         const eveningBtn = document.getElementById('eveningBtn');
         const morningTimes = document.getElementById('morning-grid');
         const eveningTimes = document.getElementById('afternoon-grid');
-        
+
         morningBtn.addEventListener('click', () => {
           morningBtn.classList.add('active');
           eveningBtn.classList.remove('active');
           morningTimes.style.display = 'flex';
           eveningTimes.style.display = 'none';
         });
-        
+
         eveningBtn.addEventListener('click', () => {
           eveningBtn.classList.add('active');
           morningBtn.classList.remove('active');
@@ -317,11 +321,11 @@
         function showLoader() {
             document.getElementById("wifi-loader").style.display = "flex";
         }
-        
+
         function hideLoader() {
             document.getElementById("wifi-loader").style.display = "none";
         }
- 
+
         function fetchbranch(cityId) {
             showLoader();
             fetch(`/branchs/${cityId}`)
@@ -336,29 +340,29 @@
                         console.log(branch)
                         const card = document.createElement('div');
                         card.className = "branch-card";
-                        
+
                         card.innerHTML = `
                           <label class="branch-option">
                             <input type="radio" name="branch" value="${branch.id}" hidden>
-                        
+
                             <div class="branch-image">
                                 <img src="${branch.feature_image}">
                             </div>
-                        
+
                             <div class="branch-info">
                               <h5 class="branch-name">${branch.name[lang]}</h5>
                               <p style="font-size: 11px;margin-top: 15px;font-weight: 600;">${branch.description}</p>
                             </div>
                           </label>
                         `;
-                            
+
                         card.addEventListener('click', (e) => {
                             document.querySelectorAll('.branch-card').forEach(c => c.classList.remove('selected'));
                             card.classList.add('selected');
                             selectedData = {
                                 branch: null,
                                 branchName: null,
-                                services: []    
+                                services: []
                             };
                             selectedData.branch = branch.id;
                             selectedData.branchName = branch.name[lang];
@@ -379,7 +383,7 @@
                        hideLoader()
                 });
         }
-        
+
         function fetchServiceGroups() {
             showLoader();
             fetch(`/service-groups`)
@@ -403,9 +407,9 @@
                         card.className = 'service-card';
                         card.dataset.service = service.id;
                         card.innerHTML = `
-                            <img src="${service.image}" alt="${serviceName}" style="position: absolute;width: 100%;height: 100%;border-radius: 6px;object-fit: cover;object-position: center;""> 
+                            <img src="${service.image}" alt="${serviceName}" style="position: absolute;width: 100%;height: 100%;border-radius: 6px;object-fit: cover;object-position: center;"">
                             <h4 style="position: absolute;top: 78px;width: 100%;text-align: center;font-size: 21px;color: white;">${serviceName}</h4>`;
-                            
+
                         card.addEventListener('click', () => {
                         document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
                         card.classList.add('selected');
@@ -445,15 +449,15 @@
                     if (!document.querySelector('#serviceSearch')) {
                         const searchWrapper = document.createElement('div');
                         searchWrapper.className = 'search-box';
-        
+
                         const searchInput = document.createElement('input');
                         searchInput.type = 'text';
                         searchInput.id = 'serviceSearch';
                         searchInput.placeholder = lang === 'ar' ? 'ابحث عن الخدمة...' : 'Search service...';
-        
+
                         searchWrapper.appendChild(searchInput);
                         massageContainer.parentNode.insertBefore(searchWrapper, massageContainer);
-        
+
                         searchInput.addEventListener('input', function () {
                             const query = this.value.toLowerCase();
                             document.querySelectorAll('.massage-card').forEach(card => {
@@ -467,7 +471,7 @@
                     data.forEach(service => {
                         let serviceName = '';
                         let serviceLocation = '';
-                        
+
                         if (typeof service.name === 'object') {
                             serviceName = service.name[lang] || service.name['en'];
                         } else {
@@ -497,21 +501,23 @@
                             ${service.description[lang] ? `
                                 <div class="massage-location">
                                     <label style="font-size:16px;color: gray;line-height: 1.5;font-style: normal;" class="tooltip-label">
-                                        ${lang === 'ar' ? 'الوصف' : 'Description'} 
+                                        ${lang === 'ar' ? 'الوصف' : 'Description'}
                                         <i class="fas fa-question-circle"></i>
                                         <span class="tooltip-text">${service.description[lang]}</span>
                                     </label>
                                 </div>` : ""}
+                        <?php if($showDuration): ?>
                             <div class="massage-duration"> <span style="font-weight: 200;"> ${lang === 'ar' ? 'مدة الجلسة :' : 'Session Duration:'} </span> ${service.duration_min} ${lang === 'ar' ? 'دقائق' : 'Minutes'}</div>
+                        <?php endif; ?>
                             <div class="massage-price"> <span style="font-weight: 200;"> ${lang === 'ar' ? 'السعر :' : 'price :'} </span>${parseInt(service.default_price)} ${lang === 'ar' ? 'ريال' : 'SAR'}</div>
                         `;
                         card.addEventListener('click', (e) => {
                             if (e.target.classList.contains('massage-book-btn')) return;
-                        
+
                             card.classList.toggle('selected');
-                        
+
                             let parentGroup = selectedData.services.find(s => s.id == serviceGroupId);
-                        
+
                             if (!parentGroup) {
                                 selectedData.services.push({
                                     id: serviceGroupId,
@@ -521,11 +527,11 @@
                                 });
                                 parentGroup = selectedData.services.find(s => s.id == serviceGroupId);
                             }
-                        
+
                             if (!parentGroup.subServices) parentGroup.subServices = [];
-                        
+
                             const exists = parentGroup.subServices.find(sub => sub.id === service.id);
-                        
+
                             if (exists) {
                                 parentGroup.subServices = parentGroup.subServices.filter(sub => sub.id !== service.id);
                             } else {
@@ -536,14 +542,14 @@
                                     price: parseInt(service.default_price)
                                 });
                             }
-                        
+
                             fanaltotal = selectedData.services.reduce((sum, service) => {
                                 const subTotal = service.subServices.reduce((subSum, sub) => subSum + sub.price, 0);
                                 return sum + subTotal;
                             }, 0);
-                            
+
                             updateSummarySteps();
-                            
+
                         });
                         massageContainer.appendChild(card);
                         if(subServiceId && parseInt(subServiceId) == service.id){
@@ -600,11 +606,11 @@
                         card.addEventListener('click', () => {
                             document.querySelectorAll('.staff-card').forEach(c => c.classList.remove('selected'));
                             card.classList.add('selected');
-                        
+
                             let parentService = selectedData.services.find(s =>
                                 s.subServices.some(subSrv => subSrv.id === subserve)
                             );
-                        
+
                             if (parentService) {
                                 let currentSub = parentService.subServices.find(subSrv => subSrv.id === subserve);
                                 if (currentSub) {
@@ -613,14 +619,14 @@
                                     updateSummarySteps();
                                 }
                             }
-                        
+
                             let count = 0;
                             selectedData.services.forEach(s => count += s.subServices.length);
-                        
+
                             if (count === 1) {
                                 currentStep = 4;
                                 updateUI();
-                        
+
                                 const firstSummaryCard = document.querySelector('.summary-card');
                                 if (firstSummaryCard) {
                                     firstSummaryCard.classList.add('selected-card');
@@ -642,7 +648,7 @@
         function generateCalendar(subserve = null , staffId = null) {
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth();
-        
+
             // Update calendar title
             const months = [
                 '<?php echo e(__("messagess.january")); ?>',
@@ -659,7 +665,7 @@
                 '<?php echo e(__("messagess.december")); ?>'
             ];
             document.getElementById('calendarTitle').textContent = `${months[month]} ${year}`;
-        
+
             // Days of week names
             const weekDays = [
                 '<?php echo e(__("messagess.sunday")); ?>',
@@ -670,32 +676,32 @@
                 '<?php echo e(__("messagess.friday")); ?>',
                 '<?php echo e(__("messagess.saturday")); ?>'
             ];
-        
+
             // Generate calendar days
             const daysContainer = document.getElementById('calendarDays');
             daysContainer.innerHTML = '';
-        
-            const firstDay = new Date(year, month, 1);          
-            const lastDay = new Date(year, month + 1, 0);   
-        
-            for (let d = firstDay.getDate(); d <= lastDay.getDate(); d++) { 
-                const date = new Date(year, month, d); 
-        
+
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+
+            for (let d = firstDay.getDate(); d <= lastDay.getDate(); d++) {
+                const date = new Date(year, month, d);
+
                 const dayElement = document.createElement('div');
                 dayElement.className = 'calendar-day';
-        
+
                 // اسم اليوم
                 const dayName = document.createElement('div');
                 dayName.className = 'calendar-day-name';
                 dayName.textContent = weekDays[date.getDay()];
                 dayElement.appendChild(dayName);
-        
+
                 // رقم اليوم
                 const dayNumber = document.createElement('div');
                 dayNumber.className = 'calendar-day-number';
                 dayNumber.textContent = d;
                 dayElement.appendChild(dayNumber);
-        
+
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
                 if (date < today) {
@@ -704,7 +710,7 @@
                     dayElement.addEventListener('click', () => {
                         document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected'));
                         dayElement.classList.add('selected');
-                    
+
                         const selectedDateFormatted = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
                         selectedDate = new Date(date);
 
@@ -719,19 +725,19 @@
                                 });
                             });
                         }
-                    
+
                     });
 
                 }
-        
+
                 if (selectedDate && date.toDateString() === selectedDate.toDateString()) {
                     dayElement.classList.add('selected');
                 }
-        
+
                 daysContainer.appendChild(dayElement);
             }
         }
-        
+
         //   document.getElementById('scrollLeft').addEventListener('click', () => {
         //     document.getElementById('calendarDays').scrollBy({ left: -100, behavior: 'smooth' });
         //   });
@@ -759,7 +765,7 @@
                     const afternoonGrid = document.querySelector('#afternoon-grid');
                     let hasMorning = false;
                     let hasAfternoon = false;
-                    
+
                     if (!morningGrid || !afternoonGrid) {
                         console.error('❌ عناصر الوقت غير موجودة في الصفحة.');
                         return;
@@ -769,10 +775,10 @@
                     afternoonGrid.innerHTML = '';
 
                     if (data.length === 0) {
-                        const noTimesText = currentLang === 'ar' 
-                            ? 'لا توجد مواعيد متاحة لهذا اليوم.' 
+                        const noTimesText = currentLang === 'ar'
+                            ? 'لا توجد مواعيد متاحة لهذا اليوم.'
                             : 'No available times for this day.';
-                        
+
                         morningGrid.innerHTML = `<p>${noTimesText}</p>`;
                         afternoonGrid.innerHTML = `<p>${noTimesText}</p>`;
                         hideLoader();
@@ -785,7 +791,7 @@
                         slot.className = 'time-slot';
                         slot.textContent = time;
                         slot.dataset.time = time;
-            
+
                         slot.addEventListener('click', () => {
                             document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
                             slot.classList.add('selected');
@@ -799,7 +805,7 @@
                                 });
 
                         });
-            
+
                         if (hour < 12) {
                             hasMorning = true;
                             morningGrid.appendChild(slot);
@@ -809,15 +815,15 @@
                         }
                     });
                     if (!hasMorning) {
-                        const noMorningText = currentLang === 'ar' 
-                            ? 'لا توجد مواعيد صباحية متاحة.' 
+                        const noMorningText = currentLang === 'ar'
+                            ? 'لا توجد مواعيد صباحية متاحة.'
                             : 'No morning slots available.';
                         morningGrid.innerHTML = `<p>${noMorningText}</p>`;
                     }
-                    
+
                     if (!hasAfternoon) {
-                        const noAfternoonText = currentLang === 'ar' 
-                            ? 'لا توجد مواعيد مسائية متاحة.' 
+                        const noAfternoonText = currentLang === 'ar'
+                            ? 'لا توجد مواعيد مسائية متاحة.'
                             : 'No afternoon slots available.';
                         afternoonGrid.innerHTML = `<p>${noAfternoonText}</p>`;
                     }
@@ -835,19 +841,19 @@
             const summaryContainers = document.querySelectorAll('.sammary-steps');
             summaryContainers.forEach(summaryContainer => {
                 summaryContainer.innerHTML = '';
-            
+
                 summaryContainer.style.display = "grid";
                 summaryContainer.style.gridTemplateColumns = "repeat(3, minmax(250px, 1fr))";
                 summaryContainer.style.gap = "15px";
-        
+
                 if (!selectedData.services || selectedData.services.length === 0) {
-                    const noServicesText = currentLang === 'ar' 
-                        ? 'لم يتم اختيار أي خدمات بعد' 
+                    const noServicesText = currentLang === 'ar'
+                        ? 'لم يتم اختيار أي خدمات بعد'
                         : 'No services selected yet';
                     summaryContainer.innerHTML = `<p style="color: gray;">${noServicesText}</p>`;
                     return;
                 }
-        
+
                 selectedData.services.forEach(service => {
                     if (service.subServices && service.subServices.length > 0) {
                         service.subServices.forEach(sub => {
@@ -855,53 +861,53 @@
                             card.className = 'summary-card';
                             card.style.cssText = `border-radius:10px;padding:20px;background:white;cursor:pointer;transition:0.2s ease-in-out;border: 2px solid #FFFFFF;
                             `;
-                            
+
                             card.onmouseenter = () => card.style.boxShadow = "0 4px 10px rgba(0,0,0,0.1)";
                             card.onmouseleave = () => card.style.boxShadow = "none";
-                            
+
                             const header = `
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                                     <div>
                                         <strong style="font-size:16px; color:#979797;">${service.name}</strong>
                                         <p style="margin:5px 0 0; font-size:14px; color:#979797;">${sub.name}</p>
                                     </div>
-                                    <img src="${service.image || 'https://via.placeholder.com/60'}" 
-                                         alt="${service.name}" 
+                                    <img src="${service.image || 'https://via.placeholder.com/60'}"
+                                         alt="${service.name}"
                                          style="width:60px; height:60px; border-radius:8px; object-fit:cover;">
                                 </div>
                             `;
-        
+
                              const details = `
                             <div style="margin-top:10px;">
                                 <label style="font-size:13px; color:#979797;">${currentLang === 'ar' ? 'الموظف:' : 'Staff:'}</label>
                                 <input class="OI" type="text" value="${sub.staffName || ''}" disabled
                                        style="width:100%; padding:8px; margin-bottom:10px; border:1px solid #D9D9D9; border-radius:6px; box-sizing:border-box;">
-                            
+
                                 <div class="row g-2 justify-content-between">
-                                
+
                                     <div class="col-6 position-relative">
                                         <input type="date"
                                                value="${sub.date || ''}"
                                                disabled
                                                class="form-control pe-5 text-end border rounded-2">
-                                
+
                                         <span class="iconify position-absolute top-50 end-0 translate-middle-y me-2 "
                                               data-icon="uit-calendar"></span>
                                     </div>
-                                
+
                                     <div class="col-6 position-relative">
                                         <input type="time"
                                                value="${sub.time || ''}"
                                                disabled
                                                class="form-control pe-5 text-end  border rounded-2">
-                                
+
                                         <span class="iconify position-absolute top-50 end-0 translate-middle-y me-2 "
                                               data-icon="weui-time-outlined"></span>
                                     </div>
-                                
+
                                 </div>
 
-                            
+
                                 <div style="text-align:right; font-weight:bold; color:#CF9233; margin-top:8px;">
                                     ${currentLang === 'ar' ? 'السعر:' : 'Price:'} ${sub.price || 0} ${currentLang === 'ar' ? 'ريال' : 'SAR'}
                                 </div>
@@ -927,7 +933,7 @@
                                         serviceCard.classList.remove('selected');
                                     }
                                     service.subServices = service.subServices.filter(subSrv => subSrv.id !== sub.id);
-                                    
+
                                     if (service.subServices.length === 0) {
                                         selectedData.services = selectedData.services.filter(s => s !== service);
                                     }
@@ -935,7 +941,7 @@
                                     updateUI();
 
                                     if (!selectedData.services || selectedData.services.length === 0) {
-                                        currentStep = 2; 
+                                        currentStep = 2;
                                         updateUI();
                                     }
                                 });
@@ -945,7 +951,7 @@
                             if (deleteBtn) {
                                 card.appendChild(deleteBtn);
                             }
-        
+
                             card.addEventListener('click', () => {
                                 if (currentStep === 3) {
                                     document.querySelectorAll('.summary-card').forEach(c => c.classList.remove('selected-card'));
@@ -959,7 +965,7 @@
                                     generateCalendar(sub.id , sub.staffId);
                                 }
                             });
-        
+
                             summaryContainer.appendChild(card);
                         });
                     }
@@ -986,7 +992,7 @@
                 });
             });
         }
-        
+
         function validateCurrentStep() {
             switch (currentStep) {
                 case 1:
@@ -1006,10 +1012,10 @@
                     }
                     break;
                 case 3:
-                    let allHaveStaff = selectedData.services.every(service => 
+                    let allHaveStaff = selectedData.services.every(service =>
                         (service.subServices || []).every(sub => sub.staffId)
                     );
-                    
+
                     if (!allHaveStaff) {
                       alert("من فضلك اختر موظف لكل خدمة فرعية");
                       return false;
@@ -1041,7 +1047,7 @@
                     <div class="w-100-mob" style="border-radius: 15px;width: 71%;min-height: 900px;background: white;position: absolute;top: 56%;left: 50%;transform: translate(-50%, -50%);padding: 45px;">
                         <div style="text-align: center;margin: 0 0 30px 0px;">
                             <label style="color: black;font-size: 20px;font-weight: bold;">
-                                ${lang === 'ar' ? 'ملخص حجز الخدمات من عناية سامي ' : 'Summary of service booking from  sami'} 
+                                ${lang === 'ar' ? 'ملخص حجز الخدمات من عناية سامي ' : 'Summary of service booking from  sami'}
                             </label>
                         </div>
                         <div class="sammary-steps"></div>
@@ -1069,34 +1075,34 @@
                             </div>
                             <?php endif; ?>
                             <div class="two-btn">
-                            
+
                                 <button class=" dis-btn btn-e btn-filled" onclick="completeBooking('payment')">
-                                     ${lang === 'ar' ? 'ادفع الآن' : 'Pay now :'}      
+                                     ${lang === 'ar' ? 'ادفع الآن' : 'Pay now :'}
                                      <img src="<?php echo e(asset('images/icons/vesa.png')); ?>">
                                 </button>
                                 <button class=" dis-btn btn-e btn-outline" onclick="completeBooking('cart')">
                                     <img class="mdi-lightcart" src="<?php echo e(asset('images/icons/mdi-light-cart.svg')); ?>" alt="mdi-light:cart">
-                                     ${lang === 'ar' ? 'اضافة للسلة' : 'Add to cart'}      
+                                     ${lang === 'ar' ? 'اضافة للسلة' : 'Add to cart'}
                                 </button>
-                                
+
                             </div>
                     </div>
                 </div>
                 `;
                 updateSummarySteps()
         }
-                
+
         function completeBooking(btn) {
 
             const payload = {
-                ...selectedData, 
+                ...selectedData,
                 btn_value: btn
             };
             fetch(`/cart`, {
               method: 'POST',
               headers: {
-                'Content-Type': 'application/json', 
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content 
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
               },
               body: JSON.stringify(payload)
             })
@@ -1112,22 +1118,22 @@
                     createNotify({ title: 'تم تحويل الحجز إلى حجز مؤقت', desc: 'برجاء تسجيل الدخول لتحويل الحجز إلى حجز دائم'
                     });
                     setTimeout(() => {
-                        window.location.href = '/signin'; 
+                        window.location.href = '/signin';
                     }, 3000);
                 }
 
                 if(btn == 'cart'){
                     createNotify({ title: 'تمت العملية بنجاح', desc: data.message  });
                       setTimeout(() => {
-                        window.location.href = '/cart'; 
+                        window.location.href = '/cart';
                       }, 3000);
                 }
                 if(btn == 'payment' && !data.need_login){
                       setTimeout(() => {
-                        window.location.href = '/payment?ids=1'; 
+                        window.location.href = '/payment?ids=1';
                       }, 1500);
                 }
-            
+
             })
             .catch(error => {
               console.error('❌ خطأ أثناء الإرسال:', error);

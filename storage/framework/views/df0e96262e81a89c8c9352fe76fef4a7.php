@@ -126,22 +126,22 @@
             z-index: 1000000;
             transition: 0.3s;
         }
-        
+
         .close-wheel:hover{
             color: #CF9233;
         }
     </style>
-    
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    
+
 </head>
 
 <body class="<?php echo e(auth()->user()->user_setting['theme_scheme'] ?? ''); ?>">
     <div class="WheelOfFortune">
-        <div class="Wheel"> 
+        <div class="Wheel">
             <span class="close-wheel" id="close-wheel">&times;</span>
             <div class="Wheel-img">
             <svg id="wheel-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="250" height="250">
@@ -160,7 +160,7 @@
                 <path id="s9" d="M250,250 L0,250 A250,250 0 0,1 33.494,125 Z" fill="#4E4E4B"/>
                 <path id="s10" d="M250,250 L33.494,125 A250,250 0 0,1 125,33.494 Z" fill="#B89743"/>
                 <path id="s11" d="M250,250 L125,33.494 A250,250 0 0,1 250,0 Z" fill="#4E4E4B"/>
-                
+
                 <text x="291.411" y="95.452" font-size="28" font-family="Segoe UI Emoji, Noto Color Emoji, sans-serif" text-anchor="middle" dominant-baseline="central" fill="#fff">🎁</text>
                 <text x="363.137" y="136.863" font-size="28" font-family="Segoe UI Emoji, Noto Color Emoji, sans-serif" text-anchor="middle" dominant-baseline="central" fill="#fff"></text>
                 <text x="404.548" y="208.589" font-size="28" font-family="Segoe UI Emoji, Noto Color Emoji, sans-serif" text-anchor="middle" dominant-baseline="central" fill="#fff">🎁</text>
@@ -174,7 +174,7 @@
                 <text x="136.863" y="136.863" font-size="28" font-family="Segoe UI Emoji, Noto Color Emoji, sans-serif" text-anchor="middle" dominant-baseline="central" fill="#fff">🎁</text>
                 <text x="208.589" y="95.452" font-size="28" font-family="Segoe UI Emoji, Noto Color Emoji, sans-serif" text-anchor="middle" dominant-baseline="central" fill="#fff"></text>
               </g>
-            
+
               <defs>
                 <radialGradient id="inner-shadow" cx="50%" cy="50%">
                   <stop offset="60%" stop-color="rgba(0,0,0,0.0)"/>
@@ -182,7 +182,7 @@
                 </radialGradient>
               </defs>
               <circle cx="250" cy="250" r="250" fill="url(#inner-shadow)"/>
-            
+
             </svg>
 
                 <svg class="arrow-wheel" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="70" height="200">
@@ -196,7 +196,7 @@
                       <stop offset="1" stop-color="#222"/>
                     </radialGradient>
                   </defs>
-                
+
                   <polygon points="100,20 130,80 70,80" fill="url(#gold)" />
                   <circle cx="100" cy="120" r="50" fill="url(#centerGrad)" stroke="url(#gold)" stroke-width="8"/>
                 </svg>
@@ -212,7 +212,7 @@
 
                 </button>
             <?php endif; ?>
-            
+
             <?php if(auth()->guard()->guest()): ?>
                 <button type="button" class="hid-wheel" onclick="showLoginAlert()">
                     <?php echo e(__('messagess.spin_the_wheel')); ?>
@@ -321,6 +321,7 @@
             });
         }
 </script>
+
     <script>
         const lang = "<?php echo e(app()->getLocale()); ?>";
         const wheelWrapper = document.querySelector(".WheelOfFortune");
@@ -338,7 +339,7 @@
         let isSpinning = false;
 
         const closeWheelBtn = document.getElementById("close-wheel");
-        
+
         if (closeWheelBtn) {
             closeWheelBtn.addEventListener("click", () => {
                 wheelWrapper.style.display = "none";

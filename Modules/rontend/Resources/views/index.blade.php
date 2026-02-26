@@ -2,8 +2,10 @@
 
 @section('content')
     <x-frontend.learn-about-section />
-    <x-frontend.services-section :services="$services" :categories="$categories" />
+
+    <x-frontend.services-section :services="$services" :categories="$categories" :showDuration="$showDuration"/>
     <x-frontend.gift-section />
+
     <x-frontend.premium-packages-section :packages="$packages" />
     <x-frontend.product-section :products="$products" />
     <x-frontend.slider />

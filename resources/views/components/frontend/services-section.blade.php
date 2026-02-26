@@ -125,7 +125,9 @@ function showCategoryServices(categoryId) {
                         <td>${serviceName}</td>
                         <td>${categoryName}</td>
                         <td>${parseFloat(service.default_price).toFixed(2)}</td>
+                       @if($showDuration)
                         <td>${service.duration_min}</td>
+                        @endif
                       </tr>
                     `;
                 });
@@ -137,7 +139,9 @@ function showCategoryServices(categoryId) {
                       <th>${currentLang === 'ar' ? 'الخدمة' : 'Service'}</th>
                       <th>${currentLang === 'ar' ? 'الفئة' : 'Category'}</th>
                       <th>${currentLang === 'ar' ? 'السعر' : 'Price'}</th>
+                     @if($showDuration)
                       <th>${currentLang === 'ar' ? 'المدة' : 'Duration'}</th>
+                      @endif
                     </tr>
                   </thead>
                   <tbody>
