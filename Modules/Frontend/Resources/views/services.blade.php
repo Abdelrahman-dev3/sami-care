@@ -31,7 +31,7 @@
 
     <style>
         .swiper-pagination-bullet-active {
-            background-color: #BF9456; 
+            background-color: #BF9456;
             opacity: 1;
         }
     </style>
@@ -52,7 +52,7 @@
                 </div>
             @endforeach
         </div>
-    
+
         <!-- Pagination -->
         <div class="swiper-pagination"></div>
     </div>

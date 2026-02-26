@@ -238,4 +238,5 @@ function showCategoryServices(categoryId) {
                 contentDiv.innerHTML = `<div class="text-center text-danger"><p><?php echo e(__('messagess.error_loading_services')); ?></p></div>`;
             });
     }
-</script><?php /**PATH D:\projects\php8\cityart\samiCare\sami-care\resources\views/components/frontend/services-section.blade.php ENDPATH**/ ?>
+</script>
+<?php /**PATH D:\projects\php8\cityart\samiCare\sami-care\resources\views/components/frontend/services-section.blade.php ENDPATH**/ ?>

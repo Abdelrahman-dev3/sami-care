@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 class CalanderBookingController extends Controller
 {
     public function getservices(){
+
         $services = Service::all();
         return $services;
     }

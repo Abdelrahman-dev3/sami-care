@@ -144,6 +144,7 @@
             </div>
         </div>
 
+        @dd($showDuration)
         <!-- Services Section -->
         <div class="mb-4">
             <h3 class="mb-4" style="color: var(--primary-color);">
@@ -170,10 +171,16 @@
                                 SR {{ number_format($service->default_price ?? 0, 2) }}
                             </div>
 
-                            <div class="service-info">
-                                <i class="fas fa-clock"></i>
-                                <span>{{ $service->duration_min ?? 0 }} {{ __('messagess.minutes') }}</span>
-                            </div>
+{{--                            <div class="service-info">--}}
+{{--                                <i class="fas fa-clock"></i>--}}
+{{--                                <span>{{ $service->duration_min ?? 0 }} {{ __('messagess.minutes') }}</span>--}}
+{{--                            </div>--}}
+                            @if($showDuration)
+                                <div class="service-info">
+                                    <i class="fas fa-clock"></i>
+                                    <span>{{ $service->duration_min ?? 0 }} {{ __('messagess.minutes') }}</span>
+                                </div>
+                            @endif
 
                             @if($service->sub_category)
                                 <div class="service-info">
@@ -222,7 +229,10 @@
                       <th>Service</th>
                       <th>Sub Category</th>
                       <th>Price (SR)</th>
-                      <th>Duration (minutes)</th>
+{{--                      <th>Duration (minutes)</th>--}}
+                        @if($showDuration)
+                            <th>Duration (minutes)</th>
+                        @endif
                     </tr>
                   </thead>
                   <tbody>
@@ -231,7 +241,10 @@
                           <td>{{ $service->name }}</td>
                           <td>{{ $service->sub_category ? $service->sub_category->name : 'N/A' }}</td>
                           <td>{{ number_format($service->default_price, 2) }}</td>
-                          <td>{{ $service->duration_min }}</td>
+{{--                          <td>{{ $service->duration_min }}</td>--}}
+                            @if($showDuration)
+                                <td>{{ $service->duration_min }}</td>
+                            @endif
                         </tr>
                     @endforeach
                   </tbody>

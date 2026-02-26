@@ -1,14 +1,14 @@
-@php
+<?php
     $currentLocale = session('locale', app()->getLocale());
-@endphp
+?>
 <!DOCTYPE html>
-<html lang="{{ app()->getLocale() }}" dir="{{ language_direction() }}" class="theme-fs-sm">
+<html lang="<?php echo e(app()->getLocale()); ?>" dir="<?php echo e(language_direction()); ?>" class="theme-fs-sm">
 
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
 
-    <title>{{ $category->name }} - {{ __('messagess.category_details') }}</title>
+    <title><?php echo e($category->name); ?> - <?php echo e(__('messagess.category_details')); ?></title>
 
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,17 +19,17 @@
 
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 
-    <link rel="stylesheet" href="{{ mix('css/libs.min.css') }}">
-    <link rel="stylesheet" href="{{ mix('css/backend.css') }}">
-    @if (language_direction() == 'rtl')
-        <link rel="stylesheet" href="{{ asset('css/rtl.css') }}">
-    @endif
-    <link rel="stylesheet" href="{{ asset('custom-css/frontend.css') }}">
+    <link rel="stylesheet" href="<?php echo e(mix('css/libs.min.css')); ?>">
+    <link rel="stylesheet" href="<?php echo e(mix('css/backend.css')); ?>">
+    <?php if(language_direction() == 'rtl'): ?>
+        <link rel="stylesheet" href="<?php echo e(asset('css/rtl.css')); ?>">
+    <?php endif; ?>
+    <link rel="stylesheet" href="<?php echo e(asset('custom-css/frontend.css')); ?>">
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.5/font/bootstrap-icons.css" rel="stylesheet">
-    @stack('after-styles')
+    <?php echo $__env->yieldPushContent('after-styles'); ?>
 
     <style>
         body {
@@ -509,7 +509,7 @@
 </head>
 
 <body>
-    @include('components.frontend.progress-bar')
+    <?php echo $__env->make('components.frontend.progress-bar', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
     <div id="wifi-loader" style="display:none;">
         <svg class="circle-outer" viewBox="0 0 86 86">
             <circle class="back" cx="43" cy="43" r="40"></circle>
@@ -527,14 +527,14 @@
         <div class="text" data-text="Loading"></div>
     </div>
     <div class="position-relative vh-17">
-        @include('components.frontend.second-navbar')
+        <?php echo $__env->make('components.frontend.second-navbar', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
     </div>
 
     <!-- image && sumary-->
      <div class="service-container" data-aos="fade-up">
     <div class="service-content">
-      <h4> {{ __('messagess.nav_services') }}</h4>
-      <h2>{{$category->name}}</h2>
+      <h4> <?php echo e(__('messagess.nav_services')); ?></h4>
+      <h2><?php echo e($category->name); ?></h2>
       <div class="stars">
         <i class="fa-solid fa-star"></i>
         <i class="fa-solid fa-star"></i>
@@ -542,54 +542,54 @@
         <i class="fa-solid fa-star"></i>
         <i class="fa-solid fa-star"></i>
       </div>
-      <h3>{{ __('service.description') }}:</h3>
-      <p> {{ $category->description[$currentLocale] ?? __('messagess.category_description_default', ['name' => $category->name]) }} </p>
+      <h3><?php echo e(__('service.description')); ?>:</h3>
+      <p> <?php echo e($category->description[$currentLocale] ?? __('messagess.category_description_default', ['name' => $category->name])); ?> </p>
     </div>
     <div class="service-image">
-      <img src="{{ asset($category->feature_image) }}" alt="{{$category->name}}">
+      <img src="<?php echo e(asset($category->feature_image)); ?>" alt="<?php echo e($category->name); ?>">
     </div>
   </div>
 
     <!-- main serves card-->
 <div class="container my-5">
     <div class="row row-cols-1 row-cols-md-3 row-cols-lg-5 g-3 p-3">
-        @foreach($allCat as $Cat)
+        <?php $__currentLoopData = $allCat; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $Cat): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
             <div class="col">
-                <a href="{{ url('services/category/' . $Cat->id) }}" style="text-decoration-line: none;">
+                <a href="<?php echo e(url('services/category/' . $Cat->id)); ?>" style="text-decoration-line: none;">
                     <div class="galary"
-                                style="background-image: url('{{ $Cat->feature_image ? asset($Cat->feature_image) : asset('images/av3.webp') }}');"
+                                style="background-image: url('<?php echo e($Cat->feature_image ? asset($Cat->feature_image) : asset('images/av3.webp')); ?>');"
                                 background-size: cover;
                                 background-position: center;
                                 height: 200px;
                                 border-radius: 18px !important;
-                                @if($Cat->id == $category->id) border: 4px #CF9233 solid; @endif">
+                                <?php if($Cat->id == $category->id): ?> border: 4px #CF9233 solid; <?php endif; ?>">
 
                         <!-- Overlay -->
                         <div class="overlay d-flex align-items-end justify-content-center"
                              style="width: 100%; height: 100%; border-radius: 12px;
                                     background: linear-gradient(to top, rgba(0,0,0,0.6) 40%, rgba(0,0,0,0.0) 100%);">
-                            <h3 class="text-white text-center m-2">{{ $Cat->name }}</h3>
+                            <h3 class="text-white text-center m-2"><?php echo e($Cat->name); ?></h3>
                         </div>
                     </div>
                 </a>
             </div>
-        @endforeach
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
     </div>
 </div>
 
     <!-- sub serves card-->
 <div class="container my-5">
-    @if($category->services && $category->services->count() > 0)
+    <?php if($category->services && $category->services->count() > 0): ?>
         <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-3 p-3">
-            @foreach($category->services as $service)
+            <?php $__currentLoopData = $category->services; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $service): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                 <div class="col position-relative" style="min-height: 260px;">
-                    <div class="galary" style="background-image: url({{  $service->feature_image ?? asset('images/pages/Rectangle%2042520.png') }});
+                    <div class="galary" style="background-image: url(<?php echo e($service->feature_image ?? asset('images/pages/Rectangle%2042520.png')); ?>);
                                 background-size: cover;
                                 background-position: center;
                                 height: 100%; "></div>
                     <div class="cont">
-                        <h1>{{ $service->name }}</h1>
-                            @php
+                        <h1><?php echo e($service->name); ?></h1>
+                            <?php
                               $description = $service->description;
 
                               if (is_string($description)) {
@@ -599,42 +599,42 @@
                               if (!is_array($description)) {
                                   $description = [];
                               }
-                            @endphp
-                        @if(!empty($description[$currentLocale]))
-                          <div class="descrip">{{ Str::limit($description[$currentLocale], 120) ?? '' }}</div>
-                        @endif
+                            ?>
+                        <?php if(!empty($description[$currentLocale])): ?>
+                          <div class="descrip"><?php echo e(Str::limit($description[$currentLocale], 120) ?? ''); ?></div>
+                        <?php endif; ?>
 
                         <div class="price_min">
-                            <div> <img style="width: 15px;margin: 0 7px;" src="{{ asset('/images/icons/Vector (3).png') }}"> {{ $service->default_price }} {{ __('messagess.SAR') }}</div>
-                            @if($showDuration)
-                            <span><img style="width: 15px;margin: 0 7px;" src="{{ asset('/images/icons/Vector (4).png') }}"> {{ $service->duration_min ?? 0 }} {{ __('messagess.minutes') }} </span>
-                       @endif
+                            <div> <img style="width: 15px;margin: 0 7px;" src="<?php echo e(asset('/images/icons/Vector (3).png')); ?>"> <?php echo e($service->default_price); ?> <?php echo e(__('messagess.SAR')); ?></div>
+                            <?php if($showDuration): ?>
+                            <span><img style="width: 15px;margin: 0 7px;" src="<?php echo e(asset('/images/icons/Vector (4).png')); ?>"> <?php echo e($service->duration_min ?? 0); ?> <?php echo e(__('messagess.minutes')); ?> </span>
+                       <?php endif; ?>
                         </div>
 
                         <div class="m-btn">
-                        <a onclick="selectMainService_sub({{ $id }} , {{ $service->id }})" class="more-btn-hero">
-                            <p style="font-weight: 100;color:white;font-size: 16px;margin: 0 13px;font-family: 'Zain', sans-serif;"><img style="width: 15px;margin: 0 7px;" src="{{ asset('images/icons/Vector (2).png') }}" > {{ __('messagess.book_now') }} </p>
+                        <a onclick="selectMainService_sub(<?php echo e($id); ?> , <?php echo e($service->id); ?>)" class="more-btn-hero">
+                            <p style="font-weight: 100;color:white;font-size: 16px;margin: 0 13px;font-family: 'Zain', sans-serif;"><img style="width: 15px;margin: 0 7px;" src="<?php echo e(asset('images/icons/Vector (2).png')); ?>" > <?php echo e(__('messagess.book_now')); ?> </p>
                         </a>
                         </div>
                     </div>
                 </div>
-            @endforeach
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
         </div>
-    @else
+    <?php else: ?>
         <div class="text-center py-5">
-            <p>{{ __('messagess.no_services_in_category') }}</p>
+            <p><?php echo e(__('messagess.no_services_in_category')); ?></p>
         </div>
-    @endif
+    <?php endif; ?>
 </div>
 
     <div id="branchContainer" style="display:none !important;"></div>
     <!-- Footer -->
-    @include('components.frontend.footer')
+    <?php echo $__env->make('components.frontend.footer', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
 
 
     <!-- ملفات JS -->
-    <script src="{{ mix('js/backend.js') }}"></script>
-    <script src="{{ mix('js/app.js') }}"></script>
+    <script src="<?php echo e(mix('js/backend.js')); ?>"></script>
+    <script src="<?php echo e(mix('js/app.js')); ?>"></script>
       <!-- FontAwesome -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
 
@@ -705,10 +705,10 @@ fetch(`/api/services/service/branch/${subServiceId}`)
 
             card.innerHTML = `
                 <img src="${branch.feature_image}"
-                     alt="${branch.name['{{ app()->getLocale() }}']}"
+                     alt="${branch.name['<?php echo e(app()->getLocale()); ?>']}"
                      style="width:100%; height:200px; object-fit:cover;">
 
-                <h5>${branch.name['{{ app()->getLocale() }}']}</h5>
+                <h5>${branch.name['<?php echo e(app()->getLocale()); ?>']}</h5>
                 <p>${branch.description}</p>
             `;
 
@@ -729,7 +729,8 @@ fetch(`/api/services/service/branch/${subServiceId}`)
   }
 
 </script>
-    @stack('after-scripts')
+    <?php echo $__env->yieldPushContent('after-scripts'); ?>
 </body>
 
 </html>
+<?php /**PATH D:\projects\php8\cityart\samiCare\sami-care\Modules/rontend\Resources/views/category-details.blade.php ENDPATH**/ ?>
