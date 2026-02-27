@@ -5,6 +5,7 @@ return [
     'gift_type' => 'نوع الهدية',
     'select_type' => 'اختر النوع',
     'points' => 'نقاط ولاء',
+    'wallet balance' => 'رصيد محفظة',
     'add_new_reward' => 'إضافة جائزة جديدة',
     'reward_value' => 'قيمة المكافأة',
     'enter_value' => 'أدخل القيمة',

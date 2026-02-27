@@ -82,9 +82,9 @@ Route::controller(AuthController::class)->group(function () {
     Route::post('register', 'register');
     // or ||
     Route::post('send-register-otp', 'sendRegisterOtp');
-    
+
     Route::post('resend-register-otp', 'resendRegisterOtp');
-    
+
     Route::post('verify-register-otp', 'verifyRegisterOtp');
 
 
@@ -144,5 +144,16 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::post('/bookings', [HomeBookingController::class, 'store']);
     Route::get('/details/{id}', [SaloneBookController::class, 'show']);
     Route::get('/pay-now', [HomeBookingController::class, 'createPayment']);
+
+    // Route to fetch the current visibility status
+    Route::get('/get-visibility-settings', [SettingController::class, 'getVisibilitySettings']);
+
+    // Route to update the visibility status
+    Route::post('/update-service-duration-visibility', [SettingController::class, 'updateVisibility']);
+
+// Duration value routes
+    Route::get('/get-service-duration-value', [SettingController::class, 'getDurationValue']);
+    Route::post('/update-service-duration-value', [SettingController::class, 'updateDurationValue']);
 });
 Route::post('app-configuration', [SettingController::class, 'appConfiguraton']);
+

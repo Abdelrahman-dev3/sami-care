@@ -20,11 +20,12 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        $schedule->command('queue:work --tries=3 --stop-when-empty')->withoutOverlapping();
+//        $schedule->command('queue:work --tries=3 --stop-when-empty')->withoutOverlapping();
 
-        $schedule->command('migrate:fresh --seed')->hourlyAt(2);
+//        $schedule->command('migrate:fresh --seed')->hourlyAt(2);
 
-        $schedule->command('cart:cleanup')->hourly();
+//        $schedule->command('cart:cleanup')->hourly();
+        $schedule->command('basket:clear-expired')->everyMinute();
     }
 
     /**

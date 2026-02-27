@@ -390,7 +390,7 @@
         position: absolute;
         left: 0;
       }
-          
+
         .service-content {
           font-family: 'Almarai';
           flex: 1;
@@ -401,7 +401,7 @@
           flex-direction: column;
           justify-content: center;
         }
-    
+
         .stars {
           margin: 15px 0;
         }
@@ -606,7 +606,9 @@
 
                         <div class="price_min">
                             <div> <img style="width: 15px;margin: 0 7px;" src="{{ asset('/images/icons/Vector (3).png') }}"> {{ $service->default_price }} {{ __('messagess.SAR') }}</div>
+                            @if($showDuration)
                             <span><img style="width: 15px;margin: 0 7px;" src="{{ asset('/images/icons/Vector (4).png') }}"> {{ $service->duration_min ?? 0 }} {{ __('messagess.minutes') }} </span>
+                       @endif
                         </div>
 
                         <div class="m-btn">
@@ -702,8 +704,8 @@ fetch(`/api/services/service/branch/${subServiceId}`)
             card.className = 'branch-card';
 
             card.innerHTML = `
-                <img src="${branch.feature_image}" 
-                     alt="${branch.name['{{ app()->getLocale() }}']}" 
+                <img src="${branch.feature_image}"
+                     alt="${branch.name['{{ app()->getLocale() }}']}"
                      style="width:100%; height:200px; object-fit:cover;">
 
                 <h5>${branch.name['{{ app()->getLocale() }}']}</h5>

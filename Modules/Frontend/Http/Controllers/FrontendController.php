@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 use Modules\Service\Models\Service;
 use Modules\Category\Models\Category;
 use Modules\Package\Models\Package;
@@ -28,12 +29,14 @@ class FrontendController extends Controller
      */
     public function index()
     {
+
+
         // Fetch active services for the homepage
         $services = Service::with(['category', 'media'])
             ->where('status', 1)
             ->take(6)
             ->get();
-        
+
 
         // Fetch active products for the homepage
         $products = Product::with(['media' , 'categories'])
@@ -64,7 +67,10 @@ class FrontendController extends Controller
         $intervalDays = max((int) Setting::get('wheel_display_interval_days', 1), 1);
         $shouldShowWheel = $this->shouldShowWheel($intervalDays);
 
-        return view('frontend::index', compact('services', 'categories', 'packages' , 'products' , 'prizes', 'shouldShowWheel', 'intervalDays'));
+        $setting = DB::table('settings')->where('name', 'service_duration_visibility')->first();
+        $showDuration = $setting ? (bool) $setting->val : false;
+
+        return view('frontend::index', compact('showDuration','services', 'categories', 'packages' , 'products' , 'prizes', 'shouldShowWheel', 'intervalDays'));
     }
 
     /**
@@ -119,6 +125,7 @@ class FrontendController extends Controller
      */
     public function services()
     {
+
         $ads = Ad::where('page' , 'services')->where('status', 1)->get();
          // Fetch active services for the homepage
          $services = Service::with(['category', 'media'])
@@ -161,7 +168,7 @@ class FrontendController extends Controller
         ->whereNull('product_categories.deleted_at')
         ->where('product_categories.status', 1)
         ->get();
-        
+
         $products = Product::where('status', 1)
             ->whereNull('deleted_at')
             ->orderByDesc('total_sale_count')
@@ -207,8 +214,10 @@ class FrontendController extends Controller
                 $query->where('status', 1);
             }])
             ->get();
+        $setting = DB::table('settings')->where('name', 'service_duration_visibility')->first();
+        $showDuration = $setting ? (bool) $setting->val : false;
 
-        return view('frontend::category-details', compact('category', 'relatedCategories' , 'allCat' , 'id'));
+        return view('frontend::category-details', compact('category', 'relatedCategories' , 'allCat' , 'id','showDuration'));
     }
 
     /**
@@ -382,7 +391,7 @@ class FrontendController extends Controller
             'message' => 'Package details retrieved successfully'
         ]);
     }
-    
+
     private function shouldShowWheel(int $intervalDays): bool
     {
         $query = LoyaltyPointTransaction::query()
@@ -405,7 +414,7 @@ class FrontendController extends Controller
 
         return Carbon::now()->greaterThanOrEqualTo($lastSpin->created_at->copy()->addDays($intervalDays));
     }
-    
+
      public function becomeAffiliate()
     {
         $user = auth()->user();

@@ -4,6 +4,7 @@ return [
     'gift_type' => 'Gift Type',
     'select_type' => 'Select Type',
     'points' => 'Loyalty Points',
+    'wallet balance' => 'wallet balance',
     'add_new_reward' => 'Add New Reward',
     'reward_value' => 'Reward Value',
     'enter_value' => 'Enter Value',
@@ -23,4 +24,5 @@ return [
     'every_30_days' => 'Every 30 days',
     'save_interval' => 'Save Interval',
     'interval_saved_successfully' => 'Wheel display interval saved successfully',
+
 ];
