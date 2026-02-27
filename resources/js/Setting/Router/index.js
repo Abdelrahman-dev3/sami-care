@@ -23,6 +23,7 @@ import UnauthRole from '@/Setting/Components/UnauthRole.vue'
 import InvoiceSetting from '@/Setting/SectionPages/InvoiceSetting.vue'
 import HolidayPage from '@/Setting/SectionPages/HolidayPage.vue'
 import ShiftsBussiness from '@/Setting/SectionPages/ShiftsBussiness.vue'
+import HomeThemePage from '@/Setting/SectionPages/HomeThemePage.vue'
 
 //This is WorkHours routes
 import WorkHours from '@/Setting/SectionPages/WorkHours.vue'
@@ -125,6 +126,12 @@ const routes = [
         name: 'Settings.bussiness-hours',
         meta: { permission: 'setting_bussiness_hours' },
         component: BussinessHours
+      },
+      {
+        path: 'home-theme',
+        name: 'Settings.home-theme',
+        meta: { permission: 'setting_general' },
+        component: HomeThemePage
       },
       {
         path: 'cart-duration',
