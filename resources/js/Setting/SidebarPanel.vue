@@ -122,6 +122,12 @@
                 class="fa-solid fa-clock"></i>{{ $t('setting_sidebar.lbl_bussiness') }}
               </router-link>
             </div>
+            <div class="mb-3" :class="hasPermissions('setting_general') ? 'active-menu' : ''"
+                 id="Settings.home-theme" v-if="hasPermissions('setting_general')" @click="toggle()">
+              <router-link :to="{ name: 'Settings.home-theme' }" class="btn btn-border"><i
+                class="fa-solid fa-palette"></i>Homepage Theme
+              </router-link>
+            </div>
 
             <!-- This is setting_work_hours -->
             <div class="mb-3" :class="hasPermissions('setting_work_hours') ? 'active-menu' : ''"

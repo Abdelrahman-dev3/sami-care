@@ -612,5 +612,6 @@ return [
     'completed' => 'Completed',
     'WheelOfFortune' => 'Wheel Of Fortune',
     'failed_to_remove_item' => 'Failed to remove item from cart. Please try again.',
-    ];
+    'not_available_now' => 'Currently unavailable',
+];
 

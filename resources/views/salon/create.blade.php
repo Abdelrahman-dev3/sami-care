@@ -201,6 +201,7 @@
         const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
         const currentLang = "{{ app()->getLocale() }}";
+        const notAvailableMessage = @json(__('messagess.not_available_now'));
         let activeSubId = null;
         let activeStaffId = null;
 
@@ -321,7 +322,14 @@
         function hideLoader() {
             document.getElementById("wifi-loader").style.display = "none";
         }
-
+        
+        function showUnavailableMessage() {
+            if (typeof createNotify === 'function') {
+                createNotify({ title: '', desc: notAvailableMessage });
+                return;
+            }
+            alert(notAvailableMessage);
+        }
         function fetchbranch(cityId) {
             showLoader();
             fetch(`/branchs/${cityId}`)
@@ -391,6 +399,7 @@
                     const urlParams = new URLSearchParams(window.location.search);
                     const mainServiceId = urlParams.get('mainService_id');
                     data.forEach(service => {
+                        const isFrozen = Number(service.is_frozen) === 1;
                         let serviceName = '';
                         try {
                             const parsedName = JSON.parse(service.name);
@@ -401,12 +410,19 @@
 
                         const card = document.createElement('div');
                         card.className = 'service-card';
+                        if (isFrozen) {
+                            card.style.opacity = '0.6';
+                        }
                         card.dataset.service = service.id;
                         card.innerHTML = `
                             <img src="${service.image}" alt="${serviceName}" style="position: absolute;width: 100%;height: 100%;border-radius: 6px;object-fit: cover;object-position: center;"">
                             <h4 style="position: absolute;top: 78px;width: 100%;text-align: center;font-size: 21px;color: white;">${serviceName}</h4>`;
 
                         card.addEventListener('click', () => {
+                        if (isFrozen) {
+                            showUnavailableMessage();
+                            return;
+                        }
                         document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
                         card.classList.add('selected');
                         const exists = selectedData.services.some(s => s.id === service.id);
@@ -465,6 +481,7 @@
                     const urlParams = new URLSearchParams(window.location.search);
                     const subServiceId = urlParams.get('subService_id');
                     data.forEach(service => {
+                        const isFrozen = Number(service.is_frozen) === 1;
                         let serviceName = '';
                         let serviceLocation = '';
 
@@ -488,6 +505,9 @@
 
                         const card = document.createElement('div');
                         card.className = 'massage-card';
+                        if (isFrozen) {
+                            card.style.opacity = '0.6';
+                        }
                         card.dataset.massage = service.id;
                         card.dataset.main = serviceGroupId;
 
@@ -508,6 +528,10 @@
                             <div class="massage-price"> <span style="font-weight: 200;"> ${lang === 'ar' ? 'السعر :' : 'price :'} </span>${parseInt(service.default_price)} ${lang === 'ar' ? 'ريال' : 'SAR'}</div>
                         `;
                         card.addEventListener('click', (e) => {
+                            if (isFrozen) {
+                                showUnavailableMessage();
+                                return;
+                            }
                             if (e.target.classList.contains('massage-book-btn')) return;
 
                             card.classList.toggle('selected');

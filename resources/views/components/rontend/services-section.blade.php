@@ -17,7 +17,8 @@
                             'price_range' => $category->services && $category->services->count() > 0 && $category->services->whereNotNull('default_price')->count() > 0 ?
                                 'SR ' . number_format($category->services->whereNotNull('default_price')->min('default_price'), 2) . ' - SR ' . number_format($category->services->whereNotNull('default_price')->max('default_price'), 2) :
                                 __('messages.contact_for_pricing'),
-                            'category_id' => $category->id
+                            'category_id' => $category->id,
+                            'is_frozen' => $category->is_frozen
                         ])
                     </div>
                 @endforeach
@@ -80,7 +81,20 @@
 
 <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 <script>
+    const notAvailableMessage = @json(__('messages.not_available_now'));
     AOS.init({ once: true });
+
+    function showUnavailableMessage(event) {
+        if (event && typeof event.preventDefault === 'function') {
+            event.preventDefault();
+        }
+        if (typeof createNotify === 'function') {
+            createNotify({ title: '', desc: notAvailableMessage });
+        } else {
+            alert(notAvailableMessage);
+        }
+        return false;
+    }
 
     function showCategoryServices(categoryId) {
         const modal = new bootstrap.Modal(document.getElementById('pricingModal'));

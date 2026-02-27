@@ -144,7 +144,6 @@
             </div>
         </div>
 
-        @dd($showDuration)
         <!-- Services Section -->
         <div class="mb-4">
             <h3 class="mb-4" style="color: var(--primary-color);">
@@ -197,10 +196,16 @@
                             <!--@endif-->
 
                             <div class="mt-3">
-                                <a href="{{ route('frontend.service.details', $service->id) }}"
-                                   class="btn btn-outline-primary btn-sm">
-                                    <i class="fas fa-info-circle me-1"></i>{{ __('messagess.view_details') }}
-                                </a>
+                                @if($service->is_frozen)
+                                    <a href="#" onclick="return showUnavailableMessage(event)" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-info-circle me-1"></i>{{ __('messagess.view_details') }}
+                                    </a>
+                                @else
+                                    <a href="{{ route('frontend.service.details', $service->id) }}"
+                                       class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-info-circle me-1"></i>{{ __('messagess.view_details') }}
+                                    </a>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -264,6 +269,18 @@
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
         AOS.init({ once: true, duration: 800 });
+        const notAvailableMessage = @json(__('messagess.not_available_now'));
+        function showUnavailableMessage(event) {
+            if (event && typeof event.preventDefault === 'function') {
+                event.preventDefault();
+            }
+            if (typeof createNotify === 'function') {
+                createNotify({ title: '', desc: notAvailableMessage });
+            } else {
+                alert(notAvailableMessage);
+            }
+            return false;
+        }
 
         // Fix modal backdrop issue
         document.addEventListener('DOMContentLoaded', function() {

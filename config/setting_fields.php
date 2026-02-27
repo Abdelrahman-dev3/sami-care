@@ -71,6 +71,22 @@ return [
                 'value' => 'Dummy Text ', // default value if you want
             ],
             [
+                'type' => 'select', // input fields type
+                'data' => 'general', // data type, string, int, boolean
+                'name' => 'home_theme', // unique name for field
+                'label' => 'Homepage Theme', // you know what label it is
+                'rules' => 'nullable', // validation rule of laravel
+                'class' => '', // any class for input
+                'value' => 'none', // default value if you want
+                'options' => [
+                    'none' => 'None',
+                    'ramadan' => 'Ramadan',
+                    'eid_aladha' => 'Eid Al-Adha',
+                    'eid_alfitr' => 'Eid Al-Fitr',
+                    'saudi_national_day' => 'Saudi National Day',
+                ],
+            ],
+            [
                 'type' => 'number',
                 'data' => 'int',
                 'name' => 'cod_deposit_percent',

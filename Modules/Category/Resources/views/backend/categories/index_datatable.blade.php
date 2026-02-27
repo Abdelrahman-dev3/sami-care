@@ -44,6 +44,9 @@
               </div>
             </div>
             <x-slot name="toolbar">
+              <a href="{{ route('backend.categories.order') }}" class="btn btn-outline-secondary">
+                <i class="fa-solid fa-grip-vertical"></i> {{ __('messages.order_categories') }}
+              </a>
               <div>
                   <div class="datatable-filter" style="width: 100%; display: inline-block;">
                       {{$filter['status']}}
@@ -107,6 +110,7 @@
             { data: 'updated_at', name: 'updated_at',  title: "{{ __('category.lbl_updated_at') }}", width: '15%'},
             { data: 'created_at', name: 'created_at',  title: "{{ __('category.lbl_created_at') }}",width: '15%' },
             { data: 'status', name: 'status', orderable: true,  searchable: true, title: "{{ __('category.lbl_status') }}",width: '5%'},
+            { data: 'freeze', name: 'freeze', orderable: false, searchable: false, title: "{{ __('category.lbl_freeze') }}", width: '5%'},
 
         ]
 

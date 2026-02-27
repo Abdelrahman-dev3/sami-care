@@ -35,6 +35,7 @@ class CategoriesController extends Controller
         ]);
         $this->middleware(['permission:view_category'])->only('index');
         $this->middleware(['permission:view_subcategory'])->only('index_nested');
+        $this->middleware(['permission:edit_category'])->only('order', 'update_order');
     }
 
     /**
@@ -70,6 +71,30 @@ class CategoriesController extends Controller
         $export_url = route('backend.categories.export');
 
         return view('category::backend.categories.index_datatable', compact('module_name', 'filter', 'module_action', 'columns', 'customefield', 'export_import', 'export_columns', 'export_url'));
+    }
+
+    public function order()
+    {
+        $categories = Category::whereNull('parent_id')
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
+
+        return view('category::backend.categories.order', compact('categories'));
+    }
+
+    public function update_order(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        if (!is_array($ids) || empty($ids)) {
+            return response()->json(['status' => false, 'message' => __('branch.invalid_action')]);
+        }
+
+        foreach ($ids as $index => $id) {
+            Category::where('id', $id)->update(['sort_order' => $index + 1]);
+        }
+
+        return response()->json(['status' => true, 'message' => __('messages.bulk_update')]);
     }
 
     /**
@@ -145,6 +170,13 @@ class CategoriesController extends Controller
         return response()->json(['status' => true, 'message' => __('branch.status_update')]);
     }
 
+    public function update_freeze(Request $request, Category $id)
+    {
+        $id->update(['is_frozen' => $request->status]);
+
+        return response()->json(['status' => true, 'message' => __('branch.status_update')]);
+    }
+
     public function index_data(Datatables $datatable, Request $request)
     {
         $module_name = $this->module_name;
@@ -191,6 +223,18 @@ class CategoriesController extends Controller
                     </div>
                 ';
             })
+            ->editColumn('freeze', function ($row) {
+                $checked = '';
+                if ($row->is_frozen) {
+                    $checked = 'checked="checked"';
+                }
+
+                return '
+                    <div class="form-check form-switch ">
+                        <input type="checkbox" data-url="'.route('backend.categories.update_freeze', $row->id).'" data-token="'.csrf_token().'" class="switch-status-change form-check-input"  id="datatable-freeze-row-'.$row->id.'"  name="freeze" value="'.$row->id.'" '.$checked.'>
+                    </div>
+                ';
+            })
             ->editColumn('updated_at', function ($data) {
                 $module_name = $this->module_name;
 
@@ -218,7 +262,7 @@ class CategoriesController extends Controller
         // Custom Fields For export
         $customFieldColumns = CustomField::customFieldData($datatable, Category::CUSTOM_FIELD_MODEL, null);
 
-        return $datatable->rawColumns(array_merge(['action', 'status', 'image', 'check', 'name'], $customFieldColumns))
+        return $datatable->rawColumns(array_merge(['action', 'status', 'freeze', 'image', 'check', 'name'], $customFieldColumns))
             ->toJson();
     }
 
@@ -313,6 +357,18 @@ class CategoriesController extends Controller
                     </div>
                 ';
             })
+            ->editColumn('freeze', function ($row) {
+                $checked = '';
+                if ($row->is_frozen) {
+                    $checked = 'checked="checked"';
+                }
+
+                return '
+                    <div class="form-check form-switch ">
+                        <input type="checkbox" data-url="'.route('backend.categories.update_freeze', $row->id).'" data-token="'.csrf_token().'" class="switch-status-change form-check-input" id="datatable-freeze-row-'.$row->id.'" name="freeze" value="'.$row->id.'" '.$checked.'>
+                    </div>
+                ';
+            })
             ->editColumn('updated_at', function ($data) {
                 $diff = Carbon::now()->diffInHours($data->updated_at);
     
@@ -335,7 +391,7 @@ class CategoriesController extends Controller
     
         // Custom Fields For export
         $customFieldColumns = CustomField::customFieldData($datatable, Category::CUSTOM_FIELD_MODEL, null);
-        return $datatable->rawColumns(array_merge(['action', 'status', 'image', 'check'], $customFieldColumns))
+        return $datatable->rawColumns(array_merge(['action', 'status', 'freeze', 'image', 'check'], $customFieldColumns))
             ->toJson();
     }
     

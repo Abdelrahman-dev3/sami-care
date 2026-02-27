@@ -22,6 +22,7 @@ class ServiceResource extends JsonResource
             'duration_min' => $this->duration_min,
             'default_price' => $this->default_price,
             'status' => $this->status,
+            'is_frozen' => $this->is_frozen,
             'category_id' => $this->category_id,
             'category_name' => optional($this->category)->name,
             'sub_category_id' => $this->sub_category_id,

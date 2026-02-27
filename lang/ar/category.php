@@ -30,5 +30,6 @@ return [
     'all_categories' => 'جميع التصنيفات',
     "placeholder_name"=> "أدخل اسم الفئة",
     "placeholder_parent_category"=> "اختر الفئة الرئيسية",
-    "placeholder_parent_brand"=> "اختر العلامات التجارية الرئيسية"
+    "placeholder_parent_brand"=> "اختر العلامات التجارية الرئيسية",
+    'lbl_freeze' => 'تجميد',
 ];

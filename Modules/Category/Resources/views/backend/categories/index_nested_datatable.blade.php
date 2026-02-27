@@ -39,7 +39,10 @@
                   {{--          </button>--}}
                 </div>
               </div>
-                <x-slot name="toolbar">
+            <x-slot name="toolbar">
+                    <a href="{{ route('backend.categories.order') }}" class="btn btn-outline-secondary">
+                      <i class="fa-solid fa-grip-vertical"></i> {{ __('messages.order_categories') }}
+                    </a>
                     <div>
                         <div class="datatable-filter">
                           <select name="column_category" id="column_category" class="select2 form-control" data-filter="select" style="width: 100%">
@@ -117,6 +120,7 @@
             { data: 'created_at', name: 'created_at',  title: "{{ __('category.lbl_created_at') }}",width: '15%', orderable: true },
             { data: 'updated_at', name: 'updated_at', title: "{{ __('category.lbl_updated_at') }}" ,width: '15%', orderable: true },
             { data: 'status', name: 'status',  searchable: true, title: "{{ __('category.lbl_status') }}" ,width: '5%', orderable: false },
+            { data: 'freeze', name: 'freeze',  searchable: false, title: "{{ __('category.lbl_freeze') }}" ,width: '5%', orderable: false },
         ]
 
         const actionColumn = [

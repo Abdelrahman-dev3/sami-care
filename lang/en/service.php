@@ -11,6 +11,7 @@ return [
     'lbl_sub_category' => 'Sub Category',
     'lbl_feature_image' => 'Feature Image',
     'lbl_status' => 'Status',
+    'lbl_freeze' => 'Freeze',
     'lbl_category_id' => 'Category',
     'lbl_duration' => 'Duration',
     'lbl_branches' => 'Branches',

@@ -51,14 +51,13 @@ class PaymentchanalController extends Controller
         if (isset($totalData['error'])) {
             return redirect()->back()->with('error', $totalData['error']);
         }
-
         $finalTotal = (float) ($totalData['total'] ?? 0);
         $codDepositPercent = (float) Setting::get('cod_deposit_percent', 30);
         $codDepositPercent = max(0, min(100, $codDepositPercent));
         $requiredDeposit = round($finalTotal * ($codDepositPercent / 100), 2);
-
+        
         try {
-            DB::transaction(function () use ($userId, $typePage, $totalData, $finalTotal, $requiredDeposit) {
+            DB::transaction(function () use ($userId, $typePage, $totalData, $finalTotal, $requiredDeposit , $codDepositPercent, $request) {
                 
                 $wallet = Wallet::where('user_id', $userId)->where('status', 1)->lockForUpdate()->first();
 

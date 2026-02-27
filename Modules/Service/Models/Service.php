@@ -20,7 +20,7 @@ class Service extends BaseModel
     use HasTranslations;
     protected $table = 'services';
 
-    protected $fillable = ['slug', 'odoo_id', 'name', 'description', 'duration_min', 'default_price', 'category_id', 'sub_category_id','is_visible', 'status'];
+    protected $fillable = ['slug', 'odoo_id', 'name', 'description', 'duration_min', 'default_price', 'category_id', 'sub_category_id', 'is_visible', 'is_frozen', 'status'];
 
     protected $appends = ['feature_image'];
 
@@ -35,6 +35,7 @@ class Service extends BaseModel
         'category_id' => 'integer',
         'sub_category_id' => 'integer',
         'status' => 'integer',
+        'is_frozen' => 'integer',
 
     ];
 
