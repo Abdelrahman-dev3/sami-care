@@ -2,8 +2,9 @@
 
 namespace App\Console\Commands;
 
+
 use Illuminate\Console\Command;
-use Modules\Booking\Models\BookingCart;
+use Modules\Booking\Models\BookingService;
 use Carbon\Carbon;
 
 class CleanupCartCommand extends Command
@@ -31,7 +32,7 @@ class CleanupCartCommand extends Command
     {
         $expirationTime = Carbon::now()->subHours(24);
 
-        $count = BookingCart::where('created_at', '<', $expirationTime)->delete();
+        $count = BookingService::where('created_at', '<', $expirationTime)->delete();
 
         $this->info("Deleted {$count} old cart items.");
 

@@ -151,6 +151,15 @@
               </router-link>
             </div>
 
+            <!-- This is points_validity_duration -->
+            <div class="mb-3" :class="hasPermissions('setting_points_validity') ? 'active-menu' : ''"
+                 id="Settings.points-validity" v-if="hasPermissions('setting_points_validity')" @click="toggle()">
+              <router-link :to="{ name: 'Settings.points-validity' }" class="btn btn-border">
+                <i class="fa-solid fa-gear"></i>
+                {{ $t('setting_sidebar.lbl_points_validity') }}
+              </router-link>
+            </div>
+
 
             <div class="mb-3" :class="hasPermissions('setting_payment_method') ? 'active-menu' : ''"
                  id="Settings.payment-method" v-if="hasPermissions('setting_payment_method')" @click="toggle()">

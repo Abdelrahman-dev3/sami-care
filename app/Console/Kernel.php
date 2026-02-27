@@ -26,6 +26,7 @@ class Kernel extends ConsoleKernel
 
 //        $schedule->command('cart:cleanup')->hourly();
         $schedule->command('basket:clear-expired')->everyMinute();
+        $schedule->command('loyalty:expire-points')->daily();
     }
 
     /**
