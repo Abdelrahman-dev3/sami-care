@@ -334,16 +334,14 @@
                         const result = await response.json();
 
                         if (!response.ok || !result.status) {
+                            // This displays the 'Next eligible date' or error from backend
                             finalValue.innerHTML = `<h5 style="font-size:22px;font-weight:bold;">${result.message || wheelSpinError}</h5>`;
                             hideWheelInputs();
                             return;
                         }
 
-                        if (result.won) {
-                            finalValue.innerHTML = `<h5 style="font-size:22px;font-weight:bold;">${result.message || wheelCongrats}</h5>`;
-                        } else {
-                            finalValue.innerHTML = `<h5 style="font-size:22px;font-weight:bold;">${result.message || wheelNotWinner}</h5>`;
-                        }
+                        // result.message now comes fully formatted from the Controller (see below)
+                        finalValue.innerHTML = `<h5 style="font-size:22px;font-weight:bold;">${result.message}</h5>`;
 
                         hideWheelInputs();
                     } catch (error) {

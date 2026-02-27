@@ -63,7 +63,12 @@ class FrontendController extends Controller
             ->get();
 
         // Fetch Wheel homepage
-        $prizes = Wheel::pluck('reward_value');
+//        $prizes = Wheel::pluck('reward_value');
+        $prizes = Wheel::query()
+            ->where('reward_value', '>', 0)
+            ->select('reward_value', 'type') // Get both type and value
+            ->get();
+//        dd($prizes);
         $intervalDays = max((int) Setting::get('wheel_display_interval_days', 1), 1);
         $shouldShowWheel = $this->shouldShowWheel($intervalDays);
 

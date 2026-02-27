@@ -71,6 +71,7 @@ return [
     'booked' => 'Booked',
     'get_your_gift' => 'Get your gift',
     'wheel_congrats' => 'Congratulations! You have earned :points gift points to use for discounts on services.',
+    'wheel_congrats_wallet'=>'Congratulations! You have earned :amount gift balance to use for discounts on services.',
     'spin_the_wheel_to_get_your_gift' => 'Spin the wheel to get your gift',
     'spin_the_wheel' => 'Spin the wheel',
     'completed' => 'Completed',
@@ -106,7 +107,7 @@ return [
     'expiration_date' => 'Expiration Date',
     'month' => 'Month',
     'year' => 'Year',
-    'lang' => 'lang' , 
+    'lang' => 'lang' ,
     'apply' => 'Apply',
     'total_amount' => 'Total amount',
     'confirm_payment' => 'Confirm payment',
@@ -196,8 +197,8 @@ return [
     'code_applied' => 'Gift Code applied successfully',
     'invalid_coupon_for_service' => 'Invalid coupon for this service.',
     'error_occurred' => 'An error occurred. Please try again.',
-    'invoice'     => 'Invoices', 
-    'coupondes'     => 'Coupons', 
+    'invoice'     => 'Invoices',
+    'coupondes'     => 'Coupons',
     'available' => 'Available Coupons',
     'owned'     => 'Owned Coupons',
     'cart_item_deleted' => 'Item removed from cart.',
@@ -303,7 +304,7 @@ return [
     'prices_and_services' => 'Prices and Services',
     'category_title' => 'Our :name Services',
     'category_description_default' => 'Explore our comprehensive :name services designed to meet your needs with professional care and attention to detail.',
-    'booking_summary' => 'Booking Summary',   
+    'booking_summary' => 'Booking Summary',
     'district' => 'District',
     'branch' => 'Branch',
     'gender' => 'Gender',
@@ -361,7 +362,7 @@ return [
   'october' => 'October',
   'november' => 'November',
   'december' => 'December',
-  
+
   'select_time' => 'Select Time',
   'month_title' => 'July 2025',
   'weekdays' => [
@@ -597,7 +598,7 @@ return [
   'title_1'      => 'At Sami Relaxation Care',
   'description_1'=> 'We believe that personal care is not a luxury, but a lifestyle. We are a specialized center offering a complete range of men’s grooming services including haircuts, skincare treatments, pedicures, Moroccan baths, massage sessions, and spa services—all in a comfortable and elegant environment designed for relaxation and rejuvenation.',
   'title_2'      => 'We Use the Latest Equipment and Techniques',
-  'description_2'=> 'In the world of grooming and beauty, we are committed to applying the highest standards of hygiene and safety. Our team consists of carefully trained professionals with extensive experience in delivering high-quality services that meet the needs of every client.  
+  'description_2'=> 'In the world of grooming and beauty, we are committed to applying the highest standards of hygiene and safety. Our team consists of carefully trained professionals with extensive experience in delivering high-quality services that meet the needs of every client.
     At Sami Care, your satisfaction is our top priority. We invite you to enjoy an exceptional experience that offers true relaxation and lasting comfort.',
    'wheel_congrats' => 'Congratulations! You have earned :points gift points to use for discounts on services.',
     'spin_the_wheel_to_get_your_gift' => 'Spin the wheel to get your gift',
