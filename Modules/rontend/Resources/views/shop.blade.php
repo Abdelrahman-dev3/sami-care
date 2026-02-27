@@ -44,10 +44,20 @@
             object-fit: cover;
             border-radius: 8px;
         }
+        .shop-swiper-nav {
+            color: #BF9456;
+        }
+        .shop-swiper-nav::after {
+            font-size: 18px;
+            font-weight: bold;
+        }
         @media (max-width: 768px) {
             .swiper-slide img{
                 width: 100%;
                 object-fit: contain;
+            }
+            .shop-swiper-nav {
+                display: none;
             }
 
         }
@@ -196,6 +206,8 @@
 
             <!-- Pagination -->
             <div class="swiper-pagination"></div>
+            <div class="swiper-button-prev shop-swiper-nav"></div>
+            <div class="swiper-button-next shop-swiper-nav"></div>
         </div>
 
     <!-- Page Content -->
@@ -341,6 +353,10 @@
         pagination: {
             el: ".swiper-pagination",
             clickable: true, // النقط قابلة للنقر للتنقل
+        },
+        navigation: {
+            nextEl: ".swiper-button-next",
+            prevEl: ".swiper-button-prev",
         },
     });
 </script>

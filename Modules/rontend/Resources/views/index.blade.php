@@ -1,6 +1,7 @@
 @extends('frontend::layouts.master')
 
 @section('content')
+    <x-frontend.home-theme />
     <x-frontend.learn-about-section />
 
     <x-frontend.services-section :services="$services" :categories="$categories" :showDuration="$showDuration"/>

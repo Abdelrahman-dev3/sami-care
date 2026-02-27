@@ -13,6 +13,14 @@
 
     <InputField :label="$t('setting_general_page.lbl_inquiry_email')" :value="inquriy_email" v-model="inquriy_email" :errorMessage="errors.inquriy_email"></InputField>
     <InputField :label="$t('setting_general_page.lbl_site_description')" :value="site_description" v-model="site_description" :errorMessage="errors.site_description"></InputField>
+    <div class="form-group mb-3">
+      <label class="form-label">Homepage Theme</label>
+      <select class="form-select" v-model="home_theme">
+        <option v-for="option in homeThemeOptions" :key="option.value" :value="option.value">
+          {{ option.label }}
+        </option>
+      </select>
+    </div>
     <InputField type="number" :label="$t('setting_general_page.lbl_cod_deposit_percent')" :value="cod_deposit_percent" v-model="cod_deposit_percent" :errorMessage="errors.cod_deposit_percent"></InputField>
 
     <div class="row">
@@ -222,6 +230,7 @@ const setFormData = (data) => {
         inquriy_email: data.inquriy_email || '',
         site_description: data.site_description || '',
         cod_deposit_percent: data.cod_deposit_percent ?? 30,
+        home_theme: data.home_theme || 'none',
         logo: '',
         mini_logo: '',
         dark_logo: '',
@@ -264,6 +273,7 @@ const { value: helpline_number } = useField('helpline_number')
 const { value: copyright_text } = useField('copyright_text')
 const { value: inquriy_email } = useField('inquriy_email')
 const { value: site_description } = useField('site_description')
+const { value: home_theme } = useField('home_theme')
 const { value: cod_deposit_percent } = useField('cod_deposit_percent')
 const { value: logo } = useField('logo')
 const { value: mini_logo } = useField('mini_logo')
@@ -279,7 +289,15 @@ const { value: bussiness_address_postal_code } = useField('bussiness_address_pos
 const { value: bussiness_address_latitude } = useField('bussiness_address_latitude')
 const { value: bussiness_address_longitude } = useField('bussiness_address_longitude')
 //fetch data
-const data = 'app_name,footer_text,helpline_number,copyright_text,inquriy_email,site_description,cod_deposit_percent,logo,mini_logo,dark_logo,dark_mini_logo,favicon,ui_text,bussiness_address_postal_code,bussiness_address_line_1,bussiness_address_line_2,bussiness_address_country,bussiness_address_state,bussiness_address_city,bussiness_address_latitude,bussiness_address_longitude'
+const data = 'app_name,footer_text,helpline_number,copyright_text,inquriy_email,site_description,home_theme,cod_deposit_percent,logo,mini_logo,dark_logo,dark_mini_logo,favicon,ui_text,bussiness_address_postal_code,bussiness_address_line_1,bussiness_address_line_2,bussiness_address_country,bussiness_address_state,bussiness_address_city,bussiness_address_latitude,bussiness_address_longitude'
+
+const homeThemeOptions = [
+  { label: 'None', value: 'none' },
+  { label: 'Ramadan', value: 'ramadan' },
+  { label: 'Eid Al-Adha', value: 'eid_aladha' },
+  { label: 'Eid Al-Fitr', value: 'eid_alfitr' },
+  { label: 'Saudi National Day', value: 'saudi_national_day' }
+]
 onMounted(() => {
   createRequest(GET_URL(data)).then((response) => {
     setFormData(response)
