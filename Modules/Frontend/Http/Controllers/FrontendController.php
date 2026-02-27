@@ -153,8 +153,9 @@ class FrontendController extends Controller
             ->whereDate('end_date', '>=', now())
             ->take(6)
             ->get();
-
-        return view('frontend::services', compact('categories', 'services', 'packages' , 'ads'));
+        $setting = DB::table('settings')->where('name', 'service_duration_visibility')->first();
+        $showDuration = $setting ? (bool) $setting->val : false;
+        return view('frontend::services', compact('showDuration','categories', 'services', 'packages' , 'ads'));
     }
 
     /**
