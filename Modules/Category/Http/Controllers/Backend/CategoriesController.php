@@ -35,6 +35,7 @@ class CategoriesController extends Controller
         ]);
         $this->middleware(['permission:view_category'])->only('index');
         $this->middleware(['permission:view_subcategory'])->only('index_nested');
+        $this->middleware(['permission:edit_category'])->only('order', 'update_order');
     }
 
     /**
@@ -70,6 +71,30 @@ class CategoriesController extends Controller
         $export_url = route('backend.categories.export');
 
         return view('category::backend.categories.index_datatable', compact('module_name', 'filter', 'module_action', 'columns', 'customefield', 'export_import', 'export_columns', 'export_url'));
+    }
+
+    public function order()
+    {
+        $categories = Category::whereNull('parent_id')
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
+
+        return view('category::backend.categories.order', compact('categories'));
+    }
+
+    public function update_order(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        if (!is_array($ids) || empty($ids)) {
+            return response()->json(['status' => false, 'message' => __('branch.invalid_action')]);
+        }
+
+        foreach ($ids as $index => $id) {
+            Category::where('id', $id)->update(['sort_order' => $index + 1]);
+        }
+
+        return response()->json(['status' => true, 'message' => __('messages.bulk_update')]);
     }
 
     /**

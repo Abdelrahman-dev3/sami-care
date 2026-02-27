@@ -39,7 +39,10 @@
                   {{--          </button>--}}
                 </div>
               </div>
-                <x-slot name="toolbar">
+            <x-slot name="toolbar">
+                    <a href="{{ route('backend.categories.order') }}" class="btn btn-outline-secondary">
+                      <i class="fa-solid fa-grip-vertical"></i> {{ __('messages.order_categories') }}
+                    </a>
                     <div>
                         <div class="datatable-filter">
                           <select name="column_category" id="column_category" class="select2 form-control" data-filter="select" style="width: 100%">

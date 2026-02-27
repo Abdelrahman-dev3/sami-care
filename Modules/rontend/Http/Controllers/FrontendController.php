@@ -31,6 +31,8 @@ class FrontendController extends Controller
             ->with(['services' => function($query) {
                 $query->where('status', 1);
             }])
+            ->orderBy('sort_order')
+            ->orderBy('id')
             ->take(6)
             ->get();
 
@@ -69,6 +71,8 @@ class FrontendController extends Controller
             ->with(['services' => function($query) {
                 $query->where('status', 1);
             }])
+            ->orderBy('sort_order')
+            ->orderBy('id')
             ->take(6)
             ->get();
 
@@ -97,6 +101,8 @@ class FrontendController extends Controller
         $relatedCategories = Category::where('status', 1)
             ->where('id', '!=', $id)
             ->whereNull('parent_id')
+            ->orderBy('sort_order')
+            ->orderBy('id')
             ->take(4)
             ->get();
 

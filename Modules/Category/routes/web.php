@@ -41,6 +41,8 @@ Route::group(['prefix' => 'app', 'as' => 'backend.', 'middleware' => ['auth']], 
         Route::post('bulk-action', [CategoriesController::class, 'bulk_action'])->name('bulk_action');
         Route::post('update-status/{id}', [CategoriesController::class, 'update_status'])->name('update_status');
         Route::post('update-freeze/{id}', [CategoriesController::class, 'update_freeze'])->name('update_freeze');
+        Route::get('order', [CategoriesController::class, 'order'])->name('order');
+        Route::post('order', [CategoriesController::class, 'update_order'])->name('order.update');
         Route::get('export', [CategoriesController::class, 'export'])->name('export');
     });
     Route::get('sub-categories.export', [CategoriesController::class, 'subCategoryExport'])->name('sub-categories.export');

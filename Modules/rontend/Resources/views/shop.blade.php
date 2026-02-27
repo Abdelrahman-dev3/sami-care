@@ -75,9 +75,10 @@
             margin: 25px;
         }
         .categories-list {
-            display: flex;
-            justify-content: space-evenly;
-            flex-wrap: wrap;
+            padding: 10px 0 20px;
+        }
+        .categories-list .swiper-wrapper {
+            align-items: center;
         }
         .category-item {
             width: 110px;
@@ -151,9 +152,6 @@
 
         /* موبايل */
         @media (max-width: 768px) {
-            .categories-list {
-                gap: 15px;
-            }
             .category-item {
                 width: 85px;
             }
@@ -205,13 +203,17 @@
     {{-- الأقسام --}}
     <section class="categories">
         <h2 class="section-title">{{ __('messagess.categories') }}</h2>
-        <div class="categories-list">
-            @foreach($categories as $category)
-                <div class="category-item" data-id="{{$category->id}}" data-aos="fade-up">
-                    <img src="{{ $category->feature_image }}" alt="{{ $category->name }}">
-                    <p>{{ $category->name }}</p>
-                </div>
-            @endforeach
+        <div class="swiper categories-list categories-swiper">
+            <div class="swiper-wrapper">
+                @foreach($categories as $category)
+                    <div class="swiper-slide">
+                        <div class="category-item" data-id="{{$category->id}}" data-aos="fade-up">
+                            <img src="{{ $category->feature_image }}" alt="{{ $category->name }}">
+                            <p>{{ $category->name }}</p>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
         </div>
     </section>
 
@@ -274,6 +276,22 @@
     AOS.init({ once: true });
 
     document.addEventListener('DOMContentLoaded', () => {
+      new Swiper(".categories-swiper", {
+        slidesPerView: 6,
+        spaceBetween: 20,
+        loop: true,
+        autoplay: {
+          delay: 2500,
+          disableOnInteraction: false,
+        },
+        breakpoints: {
+          0: { slidesPerView: 3, spaceBetween: 12 },
+          576: { slidesPerView: 4, spaceBetween: 16 },
+          768: { slidesPerView: 5, spaceBetween: 18 },
+          1024: { slidesPerView: 6, spaceBetween: 20 },
+        }
+      });
+
       const categories = document.querySelectorAll('.category-item');
       const sections = document.querySelectorAll('.category-products');
       if (sections.length) sections[0].style.display = 'block';

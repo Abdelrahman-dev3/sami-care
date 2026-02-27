@@ -44,6 +44,9 @@
               </div>
             </div>
             <x-slot name="toolbar">
+              <a href="{{ route('backend.categories.order') }}" class="btn btn-outline-secondary">
+                <i class="fa-solid fa-grip-vertical"></i> {{ __('messages.order_categories') }}
+              </a>
               <div>
                   <div class="datatable-filter" style="width: 100%; display: inline-block;">
                       {{$filter['status']}}

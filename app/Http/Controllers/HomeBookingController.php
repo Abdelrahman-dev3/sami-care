@@ -61,7 +61,7 @@ class HomeBookingController extends Controller
             $query->where('is_visible', 1);
         }
     
-        $groups = $query->get()->map(function ($item) {
+        $groups = $query->orderBy('sort_order')->orderBy('id')->get()->map(function ($item) {
     
             $media = DB::table('media')
                 ->where('model_type', 'Modules\\Category\\Models\\Category')
