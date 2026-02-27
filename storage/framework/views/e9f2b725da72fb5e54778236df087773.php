@@ -1,21 +1,21 @@
 <!DOCTYPE html>
-<html lang="{{ app()->getLocale() }}" dir="{{ language_direction() }}" class="theme-fs-sm">
+<html lang="<?php echo e(app()->getLocale()); ?>" dir="<?php echo e(language_direction()); ?>" class="theme-fs-sm">
 
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
 
-    <title>@yield('title') | {{ app_name() }}</title>
+    <title><?php echo $__env->yieldContent('title'); ?> | <?php echo e(app_name()); ?></title>
 
-    <link rel="stylesheet" href="{{ mix('css/libs.min.css') }}">
-    <link rel="stylesheet" href="{{ mix('css/backend.css') }}">
-    @if (language_direction() == 'rtl')
-        <link rel="stylesheet" href="{{ asset('css/rtl.css') }}">
-    @endif
-    <link rel="stylesheet" href="{{ asset('custom-css/frontend.css') }}">
+    <link rel="stylesheet" href="<?php echo e(mix('css/libs.min.css')); ?>">
+    <link rel="stylesheet" href="<?php echo e(mix('css/backend.css')); ?>">
+    <?php if(language_direction() == 'rtl'): ?>
+        <link rel="stylesheet" href="<?php echo e(asset('css/rtl.css')); ?>">
+    <?php endif; ?>
+    <link rel="stylesheet" href="<?php echo e(asset('custom-css/frontend.css')); ?>">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 
-    @stack('after-styles')
+    <?php echo $__env->yieldPushContent('after-styles'); ?>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Zain:ital,wght@0,200;0,300;0,400;0,700;0,800;0,900;1,300;1,400&display=swap" rel="stylesheet">
@@ -176,25 +176,44 @@
             display: none !important;
         }
     </style>
-    <link rel="stylesheet" href="{{ asset('custom-css/cart-sidebar.css') }}">
+    <link rel="stylesheet" href="<?php echo e(asset('custom-css/cart-sidebar.css')); ?>">
 </head>
 <body>
-<x-frontend.cart-sidebar />
-    @include('components.frontend.progress-bar')
-    @include('components.frontend.notifications')
+<?php if (isset($component)) { $__componentOriginale64d5aa5503a59d98392532b139a3f6d = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginale64d5aa5503a59d98392532b139a3f6d = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.frontend.cart-sidebar','data' => []] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
+<?php $component->withName('frontend.cart-sidebar'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag && $constructor = (new ReflectionClass(Illuminate\View\AnonymousComponent::class))->getConstructor()): ?>
+<?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginale64d5aa5503a59d98392532b139a3f6d)): ?>
+<?php $attributes = $__attributesOriginale64d5aa5503a59d98392532b139a3f6d; ?>
+<?php unset($__attributesOriginale64d5aa5503a59d98392532b139a3f6d); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginale64d5aa5503a59d98392532b139a3f6d)): ?>
+<?php $component = $__componentOriginale64d5aa5503a59d98392532b139a3f6d; ?>
+<?php unset($__componentOriginale64d5aa5503a59d98392532b139a3f6d); ?>
+<?php endif; ?>
+    <?php echo $__env->make('components.frontend.progress-bar', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
+    <?php echo $__env->make('components.frontend.notifications', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
 
     <div class="position-relative" style="height: 17vh;">
 
-        @include('components.frontend.second-navbar')
+        <?php echo $__env->make('components.frontend.second-navbar', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
     </div>
     <!-- Swiper -->
         <div class="swiper mySwiper" style="display: flex; justify-content: center; align-items: center; margin-top: 37px;">
             <div class="swiper-wrapper">
-                @foreach($ads as $ad)
+                <?php $__currentLoopData = $ads; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $ad): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <div class="swiper-slide">
-                        <img src="{{ asset($ad->image) }}">
+                        <img src="<?php echo e(asset($ad->image)); ?>">
                     </div>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </div>
 
             <!-- Pagination -->
@@ -203,26 +222,26 @@
 
     <!-- Page Content -->
     <main>
-    {{-- الأقسام --}}
+    
     <section class="categories">
-        <h2 class="section-title">{{ __('messagess.categories') }}</h2>
+        <h2 class="section-title"><?php echo e(__('messagess.categories')); ?></h2>
         <div class="categories-list">
-            @foreach($categories as $category)
-                <div class="category-item" data-id="{{$category->id}}" data-aos="fade-up">
-                    <img src="{{ $category->feature_image }}" alt="{{ $category->name }}">
-                    <p>{{ $category->name }}</p>
+            <?php $__currentLoopData = $categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $category): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <div class="category-item" data-id="<?php echo e($category->id); ?>" data-aos="fade-up">
+                    <img src="<?php echo e($category->feature_image); ?>" alt="<?php echo e($category->name); ?>">
+                    <p><?php echo e($category->name); ?></p>
                 </div>
-            @endforeach
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
         </div>
     </section>
 
-    @foreach($categories as $category)
-        @if($category->products->count())
-            <section class="category-products" data-category-id="{{$category->id}}" data-aos="fade-up">
-                <h2 class="section-title">{{ $category->name }}</h2>
+    <?php $__currentLoopData = $categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $category): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+        <?php if($category->products->count()): ?>
+            <section class="category-products" data-category-id="<?php echo e($category->id); ?>" data-aos="fade-up">
+                <h2 class="section-title"><?php echo e($category->name); ?></h2>
                 <div class="products-grid">
-                    @foreach($category->products as $product)
-                        @include('components.frontend.products-card', [
+                    <?php $__currentLoopData = $category->products; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $product): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <?php echo $__env->make('components.frontend.products-card', [
                             'image' => $product->feature_image,
                             'name' => $product->name,
                             'des' => $product->short_description,
@@ -230,20 +249,20 @@
                             'categories' => $product->categories,
                             'min_price' => $product->min_price,
                             'max_price' => $product->max_price,
-                        ])
-                    @endforeach
+                        ], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </div>
             </section>
-        @endif
-    @endforeach
+        <?php endif; ?>
+    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
-    @if(isset($products) && $products->count() > 0)
-    <h2 class="section-title">{{ __('messagess.Bestselling products') }}</h2>
+    <?php if(isset($products) && $products->count() > 0): ?>
+    <h2 class="section-title"><?php echo e(__('messagess.Bestselling products')); ?></h2>
         <div class="row" style="width: 92%;margin: auto;">
-            @foreach($products as $index => $product)
-                <div class="col-12 col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="{{ $index * 100 }}">
+            <?php $__currentLoopData = $products; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $product): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <div class="col-12 col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="<?php echo e($index * 100); ?>">
 
-                    @include('components.frontend.products-card', [
+                    <?php echo $__env->make('components.frontend.products-card', [
                         'image' => $product->feature_image,
                         'name' => $product->name,
                         'des' => $product->short_description,
@@ -251,15 +270,15 @@
                         'categories' => $product->categories,
                         'min_price' => $product->min_price,
                         'max_price' => $product->max_price,
-                    ])
+                    ], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
                 </div>
-            @endforeach
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
         </div>
-    <a href="{{ route('frontend.Shop') }}" class="more-btn">
-        <p style="color:white;font-size: 16px;margin: 0 13px;">{{ __('product.learn_more') }}</p>
+    <a href="<?php echo e(route('frontend.Shop')); ?>" class="more-btn">
+        <p style="color:white;font-size: 16px;margin: 0 13px;"><?php echo e(__('product.learn_more')); ?></p>
         <span class="arrow" style="color: white;"><span class="iconify" data-icon="tabler:arrow-left" data-width="22"></span></span>
     </a>
-    @endif
+    <?php endif; ?>
 </div>
 
     </main>
@@ -267,10 +286,10 @@
     <div class="position-relative" style="height: 17vh;">
     </div>
     <!-- Footer -->
-    @include('components.frontend.footer')
+    <?php echo $__env->make('components.frontend.footer', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-    <script src="{{ asset('custom-js/cart-sidebar.js') }}"></script>
+    <script src="<?php echo e(asset('custom-js/cart-sidebar.js')); ?>"></script>
     <script>
     AOS.init({ once: true });
 
@@ -331,3 +350,4 @@
 </script>
 </body>
 </html>
+<?php /**PATH D:\projects\php8\cityart\samiCare\sami-care\Modules/rontend\Resources/views/shop.blade.php ENDPATH**/ ?>

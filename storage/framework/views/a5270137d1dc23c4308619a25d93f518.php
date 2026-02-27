@@ -20,7 +20,7 @@
                             'categories' => $product->categories,
                             'min_price' => $product->min_price,
                             'max_price' => $product->max_price,
-                        ], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?> 
+                        ], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
                     </div>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </div>
@@ -43,15 +43,18 @@
             .then(response => response.json())
             .then(data => {
                 createNotify({ title: data.status , desc: data.message });
+                CartSidebar.refresh();   // re-fetch cart data + update badge
+                CartSidebar.open();
             })
             .catch(error => {
                 createNotify({ title: data.status, desc: data.message });
             });
     }
     function shownav(){
-        createNotify({ 
-            title: "<?php echo e(__('product.notification')); ?>", 
-            desc: "<?php echo e(__('product.login_required_feature')); ?>" 
+        createNotify({
+            title: "<?php echo e(__('product.notification')); ?>",
+            desc: "<?php echo e(__('product.login_required_feature')); ?>"
         });
     }
-</script><?php /**PATH D:\projects\php8\cityart\samiCare\sami-care\resources\views/components/frontend/product-section.blade.php ENDPATH**/ ?>
+</script>
+<?php /**PATH D:\projects\php8\cityart\samiCare\sami-care\resources\views/components/frontend/product-section.blade.php ENDPATH**/ ?>
