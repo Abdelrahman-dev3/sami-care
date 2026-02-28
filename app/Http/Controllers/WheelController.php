@@ -209,12 +209,10 @@ class WheelController extends Controller
             }
         }
 
-//        $segment = random_int(0, 11);
-//        $winningSegments = [1, 3, 5, 7, 9, 11];
-//        $isWinningSegment = in_array($segment, $winningSegments, true);
+        $segment = random_int(0, 11);
+        $winningSegments = [1, 3, 5, 7, 9, 11];
+        $isWinningSegment = in_array($segment, $winningSegments, true);
 
-        $winningSegments=$segment=1;
-        $isWinningSegment=true;
         // 1. Fetch both the value and the type
         $availableRewards = Wheel::query()
             ->where('reward_value', '>', 0)

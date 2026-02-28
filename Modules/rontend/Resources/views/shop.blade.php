@@ -184,9 +184,10 @@
             display: none !important;
         }
     </style>
-
+    <link rel="stylesheet" href="{{ asset('custom-css/cart-sidebar.css') }}">
 </head>
 <body>
+<x-frontend.cart-sidebar />
     @include('components.frontend.progress-bar')
     @include('components.frontend.notifications')
 
@@ -264,7 +265,7 @@
                         'categories' => $product->categories,
                         'min_price' => $product->min_price,
                         'max_price' => $product->max_price,
-                    ]) 
+                    ])
                 </div>
             @endforeach
         </div>
@@ -283,7 +284,7 @@
     @include('components.frontend.footer')
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-
+    <script src="{{ asset('custom-js/cart-sidebar.js') }}"></script>
     <script>
     AOS.init({ once: true });
 
@@ -332,6 +333,8 @@
             .then(response => response.json())
             .then(data => {
                 createNotify({ title: data.status, desc: data.message });
+                CartSidebar.refresh();   // re-fetch cart data + update badge
+                CartSidebar.open();
             })
             .catch(error => {
                 createNotify({ title: data.status, desc: data.message });

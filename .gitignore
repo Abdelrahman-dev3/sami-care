@@ -8,3 +8,4 @@
 *.log
 /storage/framework/views/*
 /storage/framework/sessions/*
+/public/js/setting-vue.min.js

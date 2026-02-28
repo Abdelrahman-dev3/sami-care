@@ -136,7 +136,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-
+    <link rel="stylesheet" href="{{ asset('custom-css/cart-sidebar.css') }}">
 </head>
 
 <body class="{{ auth()->user()->user_setting['theme_scheme'] ?? '' }}">
@@ -228,6 +228,8 @@
     </header>
 
     <main>
+        {{-- Cart Sidebar Component --}}
+        <x-frontend.cart-sidebar />
         @yield('content')
     </main>
 
@@ -235,6 +237,7 @@
 
     <script src="{{ mix('js/backend.js') }}"></script>
     <script src="{{ mix('js/app.js') }}"></script>
+    <script src="{{ asset('custom-js/cart-sidebar.js') }}"></script>
     <script>
         function showLoginAlert() {
             createNotify({

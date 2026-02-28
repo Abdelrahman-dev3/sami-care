@@ -116,7 +116,7 @@ return [
     'write_your_reply_here' => 'اكتب ردك هنا...',
     'message_sent_success' => 'رد على',
     'message_sent_success' => 'تم إرسال الرسالة بنجاح!',
-    'select_at_least_one' => 'يرجى اختيار رسالة واحدة على الأقل.', 
+    'select_at_least_one' => 'يرجى اختيار رسالة واحدة على الأقل.',
     'messages_deleted_success' => 'تم حذف الرسائل المحددة بنجاح.',
     'no_valid_action' => 'لم يتم اختيار إجراء صالح.',
     'client_message' => 'رسالة العميل',
@@ -485,7 +485,7 @@ return [
     'confirm_delete' => 'هل أنت متأكد أنك تريد حذف هذه الهدية؟',
     'confirm_delete_invice' => 'هل أنت متأكد أنك تريد حذف هذه الفاتورة؟',
     'gift_deleted_successfully' => 'تم حذف الهدية بنجاح.',
-    
+
     'cart_empty' => 'السلة فارغة.',
     'payment_success' => 'تم الدفع بنجاح.',
     'payment_failed' => 'فشل الدفع، حاول مرة أخرى.',
@@ -494,7 +494,7 @@ return [
     'duplicate_payment' => 'تم تنفيذ عملية الدفع بالفعل ولا يمكن تكرارها',
     'login_required_to_continue' => 'يرجى تسجيل الدخول لإكمال الحجز.',
     'otp_sent' => 'تم إرسال كود التحقق إلى موبايلك',
-    
+
     'gift_cards_list' => 'قائمة بطاقات الهدايا',
     'gift_empty_state' => 'لا توجد بطاقات هدايا حتى الآن.',
     'gift_ticket_title' => 'بطاقة اهداء',
@@ -528,7 +528,7 @@ return [
     'confirm_delete' => 'هل أنت متأكد أنك تريد حذف هذه الهدية؟',
     'confirm_delete_invice' => 'هل أنت متأكد أنك تريد حذف هذه الفاتورة؟',
     'gift_deleted_successfully' => 'تم حذف الهدية بنجاح.',
-    
+
     'cart_empty' => 'السلة فارغة.',
     'payment_success' => 'تم الدفع بنجاح.',
     'payment_failed' => 'فشل الدفع، حاول مرة أخرى.',
@@ -549,8 +549,27 @@ return [
 
     'alert' => 'تنبيه',
     'login_required' => 'يرجى تسجيل الدخول للاستفادة من هذه الميزة',
+
     'not_available_now' => 'لا يتوفر حاليا',
     'order_categories' => 'ترتيب الأقسام',
     'save_order' => 'حفظ الترتيب',
     'drag_to_order' => 'اسحب وأسقط لتحديد ترتيب ظهور الأقسام.',
+
+    'cart'             => 'السلة',
+    'close'            => 'إغلاق',
+    'cart_empty'       => 'سلتك فارغة',
+    'products'         => 'المنتجات',
+    'services'         => 'الخدمات',
+    'discount_coupon'  => 'كوبون الخصم',
+    'enter_coupon'     => 'أدخل كوبون الخصم...',
+    'apply'            => 'تطبيق',
+    'order_summary'    => 'ملخص الطلب',
+    'products_count'   => 'عدد المنتجات',
+    'services_count'   => 'عدد الخدمات',
+    'subtotal'         => 'المجموع الجزئي',
+    'discount'         => 'الخصم',
+    'final_price'      => 'السعر النهائي',
+    'go_to_cart'       => 'الذهاب إلى السلة',
+    'remove'           => 'حذف',
+
 ];

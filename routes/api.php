@@ -154,6 +154,12 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 // Duration value routes
     Route::get('/get-service-duration-value', [SettingController::class, 'getDurationValue']);
     Route::post('/update-service-duration-value', [SettingController::class, 'updateDurationValue']);
+
+// points validity routes
+    Route::get('/get-points-validity', [SettingController::class, 'getPointsValidity']);
+    Route::post('/update-points-validity', [SettingController::class, 'updatePointsValidity']);
+
+
 });
 Route::post('app-configuration', [SettingController::class, 'appConfiguraton']);
 

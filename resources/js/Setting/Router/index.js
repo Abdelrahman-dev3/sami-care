@@ -12,6 +12,7 @@ import CodSettingsPage from '@/Setting/SectionPages/CodSettingsPage.vue'
 import CommissionPage from '@/Setting/SectionPages/CommissionPage.vue'
 import BussinessHours from '@/Setting/SectionPages/BussinessHours.vue'
 import CartDuration from '@/Setting/SectionPages/CartDuration.vue'
+import PointsValidity from '@/Setting/SectionPages/PointsValidity.vue'
 import ServiceDuration from '@/Setting/SectionPages/ServiceDuration.vue'
 import PaymentMethod from '@/Setting/SectionPages/PaymentMethod.vue'
 import LanguagePage from '@/Setting/SectionPages/LanguagePage.vue'
@@ -139,6 +140,13 @@ const routes = [
         meta: { permission: 'setting_cart_duration' },
         component: CartDuration
       },
+      {
+        path: 'points-validity',
+        name: 'Settings.points-validity',
+        meta: { permission: 'setting_points_validity' },
+        component: PointsValidity
+      },
+
       {
         path: 'duration-visibility',
         name: 'Settings.duration-visibility',
