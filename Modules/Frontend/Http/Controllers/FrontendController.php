@@ -14,6 +14,7 @@ use Modules\Product\Models\ProductCategory;
 use App\Models\Term;
 use App\Models\Ad;
 use App\Models\Wheel;
+use App\Models\Setting;
 
 
 class FrontendController extends Controller
