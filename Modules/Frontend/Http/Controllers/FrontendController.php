@@ -54,7 +54,14 @@ class FrontendController extends Controller
             ->get();
 
         // Fetch Wheel homepage
-        $prizes = Wheel::pluck('reward_value');
+//        $prizes = Wheel::pluck('reward_value');
+        $prizes = Wheel::query()
+            ->where('reward_value', '>', 0)
+            ->select('reward_value', 'type') // Get both type and value
+            ->get();
+//        dd($prizes);
+        $intervalDays = max((int) Setting::get('wheel_display_interval_days', 1), 1);
+        $shouldShowWheel = $this->shouldShowWheel($intervalDays);
 
         return view('frontend::index', compact('services', 'categories', 'packages' , 'products' , 'prizes'));
     }
@@ -136,8 +143,9 @@ class FrontendController extends Controller
             ->basePackages()
             ->take(6)
             ->get();
-
-        return view('frontend::services', compact('categories', 'services', 'packages' , 'ad'));
+        $setting = DB::table('settings')->where('name', 'service_duration_visibility')->first();
+        $showDuration = $setting ? (bool) $setting->val : false;
+        return view('frontend::services', compact('showDuration','categories', 'services', 'packages' , 'ads'));
     }
 
     /**
