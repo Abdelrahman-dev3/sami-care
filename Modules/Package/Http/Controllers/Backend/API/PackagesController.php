@@ -22,7 +22,7 @@ class PackagesController extends Controller
     public function Package(Request $request){
       $today = Carbon::today();
       $nextWeek = $today->copy()->addWeek();
-      $data = Package::with('service','service.services','branch','media')->whereDate('end_date', '>=', $today);
+      $data = Package::with('service','service.services','branch','media')->activeForFrontend();
 
       
          // Filter by service_id
@@ -55,7 +55,7 @@ class PackagesController extends Controller
         // Filter by expiring_in_next_week
         if ($request->has('expiry')) {
             $data->whereHas('userPackage.package', function ($query) use ($nextWeek) {
-                $query->where('end_date', '<=', $nextWeek);
+                $query->whereNotNull('end_date')->where('end_date', '<=', $nextWeek);
             })->with(['userPackage.booking.user']);
         }
         $user_id = $request->user_id ?? null;

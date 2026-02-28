@@ -26,6 +26,7 @@ class PackageFactory extends Factory
     {
         return [
             'name' => substr($this->faker->text(15), 0, -1),
+            'type' => \Modules\Package\Models\Package::TYPE_PACKAGE,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ];

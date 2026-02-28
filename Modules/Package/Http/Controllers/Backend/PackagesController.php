@@ -100,42 +100,41 @@ class PackagesController extends Controller
                 // If branch_id is provided, filter by it
                 return $query->where('branch_id', $branchId);
             })
+            ->where('status', 1)
+            ->activeForFrontend()
             ->selectRaw("*, JSON_EXTRACT(name, '$.\"{$locale}\"') as name") 
             ->get();
 
         $data = [];
-        $today = date('Y-m-d');
         foreach ($query_data as $row) {
-            if ($row->status == 1 && $row->end_date >= $today) {
-                $services = [];
-                foreach ($row->service as $service) {
-                    if ($service->qty > 0) {
-                        $services[] = [
-                            'id' => $service->id,
-                            'service_name' => $service->service_name,
-                            'service_id' => $service->service_id,
-                            'quantity' => $service->qty,
-                            'duration_min' => $service->services->duration_min,
-                            'service_price' => $service->service_price,
-                            'purchase_date' => $row->start_date,
-                            'discount_price' => $service->discounted_price
-                        ];
-                    }
-                }
-                if ($services) {
-                    $data[] = [
-                        'id' => $row->id,
-                        'name' => $row->name,
-                        'description' => $row->description,
-                        'services' => $services,
-                        'branch_name' => $row->branch->name[$locale] ?? '',
-                        'package_price' => $row->package_price,
+            $services = [];
+            foreach ($row->service as $service) {
+                if ($service->qty > 0) {
+                    $services[] = [
+                        'id' => $service->id,
+                        'service_name' => $service->service_name,
+                        'service_id' => $service->service_id,
+                        'quantity' => $service->qty,
+                        'duration_min' => $service->services->duration_min,
+                        'service_price' => $service->service_price,
                         'purchase_date' => $row->start_date,
-                        'start_date' => $row->start_date,
-                        'end_date' => $row->end_date,
-                        'package_validity' => $row->package_validity,
+                        'discount_price' => $service->discounted_price
                     ];
                 }
+            }
+            if ($services) {
+                $data[] = [
+                    'id' => $row->id,
+                    'name' => $row->name,
+                    'description' => $row->description,
+                    'services' => $services,
+                    'branch_name' => $row->branch->name[$locale] ?? '',
+                    'package_price' => $row->package_price,
+                    'purchase_date' => $row->start_date,
+                    'start_date' => $row->start_date,
+                    'end_date' => $row->end_date,
+                    'package_validity' => $row->package_validity,
+                ];
             }
         }
 
@@ -148,12 +147,10 @@ class PackagesController extends Controller
         $query_data = UserPackage::with('userPackageServices.packageService.services', 'package.branch', 'bookingTransaction')->where('user_id', $user_id)->get();
 
         $data = [];
-        $today = date('Y-m-d');
-
         foreach ($query_data as $row) {
             $services = [];
             foreach ($row->userPackageServices as $service) {
-                if ($service->qty > 0 && $row->package->end_date >= $today) {
+                if ($service->qty > 0 && $row->package && $row->package->status == 1 && $row->package->isActiveForFrontend()) {
                     $services[] = [
                         'id' => $service->packageService->id,
                         'user_package_id' => $row->id,
@@ -300,6 +297,14 @@ class PackagesController extends Controller
      */
     public function store(Request $request)
     {
+        $type = $request->input('type', Package::TYPE_PACKAGE);
+        $request['type'] = $type;
+
+        if ($type !== Package::TYPE_OFFER) {
+            $request['start_date'] = null;
+            $request['end_date'] = null;
+        }
+
         if (is_string($request->name) && $this->isJson($request->name)) {
             $request['name'] = json_decode($request->name, true);
         }else {
@@ -375,6 +380,14 @@ class PackagesController extends Controller
      */
     public function update(Request $request, $id)
     {
+        $type = $request->input('type', Package::TYPE_PACKAGE);
+        $request['type'] = $type;
+
+        if ($type !== Package::TYPE_OFFER) {
+            $request['start_date'] = null;
+            $request['end_date'] = null;
+        }
+
         if (is_string($request->name) && $this->isJson($request->name)) {
             $request['name'] = json_decode($request->name, true);
         }else {

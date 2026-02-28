@@ -122,10 +122,10 @@
                 class="fa-solid fa-clock"></i>{{ $t('setting_sidebar.lbl_bussiness') }}
               </router-link>
             </div>
-            <div class="mb-3" :class="hasPermissions('setting_general') ? 'active-menu' : ''"
-                 id="Settings.home-theme" v-if="hasPermissions('setting_general')" @click="toggle()">
+            <div class="mb-3" :class="hasPermissions('setting_theme') ? 'active-menu' : ''"
+                 id="Settings.home-theme" v-if="hasPermissions('setting_theme')" @click="toggle()">
               <router-link :to="{ name: 'Settings.home-theme' }" class="btn btn-border"><i
-                class="fa-solid fa-palette"></i>Homepage Theme
+                class="fa-solid fa-palette"></i>{{ $t('setting_sidebar.lbl_home_theme') }}
               </router-link>
             </div>
 

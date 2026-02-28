@@ -31,10 +31,14 @@ return [
     'lbl_menu' => 'مُنشئ القائمة',
     'lbl_inv_setting' => 'إعدادات الفاتورة',
 
+
     'lbl_points_validity'=> 'مدة صلاحية النقاط',
     'lbl_validity_period' => 'ضبط المدة',
     'days' => 'أيام',
     'months' => 'أشهر',
     'years' => 'سنوات',
-    'lbl_points_validity_hint'=>'بعد انقضاء هذه المدة، تنتهي صلاحية نقاط الولاء لجميع المستخدمين.'
+    'lbl_points_validity_hint'=>'بعد انقضاء هذه المدة، تنتهي صلاحية نقاط الولاء لجميع المستخدمين.',
+
+    'lbl_home_theme' => 'ثيم الصفحة الرئيسية',
+
 ];

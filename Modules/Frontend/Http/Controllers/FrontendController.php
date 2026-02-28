@@ -6,20 +6,15 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
 use Modules\Service\Models\Service;
 use Modules\Category\Models\Category;
 use Modules\Package\Models\Package;
 use Modules\Product\Models\Product;
 use Modules\Product\Models\ProductCategory;
-use App\Models\Ouroffersection;
 use App\Models\Term;
 use App\Models\Ad;
-use App\Models\LoyaltyPointTransaction;
-use App\Models\Setting;
 use App\Models\Wheel;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Auth;
+use App\Models\Setting;
 
 
 class FrontendController extends Controller
@@ -29,14 +24,11 @@ class FrontendController extends Controller
      */
     public function index()
     {
-
-
         // Fetch active services for the homepage
         $services = Service::with(['category', 'media'])
             ->where('status', 1)
             ->take(6)
             ->get();
-
 
         // Fetch active products for the homepage
         $products = Product::with(['media' , 'categories'])
@@ -52,15 +44,13 @@ class FrontendController extends Controller
             ->with(['services' => function($query) {
                 $query->where('status', 1);
             }])
-            ->orderBy('sort_order')
-            ->orderBy('id')
             ->take(6)
             ->get();
 
         // Fetch active packages for the homepage
         $packages = Package::with(['service', 'service.services', 'media'])
             ->where('status', 1)
-            ->whereDate('end_date', '>=', now())
+            ->basePackages()
             ->take(6)
             ->get();
 
@@ -74,10 +64,7 @@ class FrontendController extends Controller
         $intervalDays = max((int) Setting::get('wheel_display_interval_days', 1), 1);
         $shouldShowWheel = $this->shouldShowWheel($intervalDays);
 
-        $setting = DB::table('settings')->where('name', 'service_duration_visibility')->first();
-        $showDuration = $setting ? (bool) $setting->val : false;
-
-        return view('frontend::index', compact('showDuration','services', 'categories', 'packages' , 'products' , 'prizes', 'shouldShowWheel', 'intervalDays'));
+        return view('frontend::index', compact('services', 'categories', 'packages' , 'products' , 'prizes'));
     }
 
     /**
@@ -95,30 +82,33 @@ class FrontendController extends Controller
 
     public function Packages()
 {
-    $ads = Ad::where('page' , 'packages')->where('status', 1)->get();
+    $ad = Ad::select('pack_bannar')->latest()->first();
 
     $packages = Package::with([
         'service',
         'service.services',
         'media',
-        'branch'
+        'branch' // أضفنا علاقة الفرع
     ])
     ->where('status', 1)
-    ->whereDate('end_date', '>=', now())
+    ->basePackages()
     ->get();
 
     return view('frontend::Packages', [
         'packages' => $packages,
-        'ads' => $ads
+        'ad' => $ad
     ]);
 }
 
 
     public function Ouroffers()
     {
-        $pages = Ouroffersection::where('end_date', '>', Carbon::now())->get();
+        $packages = Package::with(['service', 'service.services', 'media', 'branch'])
+            ->where('status', 1)
+            ->offerPackages()
+            ->get();
 
-        return view('frontend::Ouroffers',['pages' => $pages]);
+        return view('frontend::Ouroffers', ['packages' => $packages]);
     }
 
     public function TermsAndConditions()
@@ -132,8 +122,7 @@ class FrontendController extends Controller
      */
     public function services()
     {
-
-        $ads = Ad::where('page' , 'services')->where('status', 1)->get();
+        $ad = Ad::select('serve_bannar')->latest()->first();
          // Fetch active services for the homepage
          $services = Service::with(['category', 'media'])
          ->where('status', 1)
@@ -146,15 +135,13 @@ class FrontendController extends Controller
             ->with(['services' => function($query) {
                 $query->where('status', 1);
             }])
-            ->orderBy('sort_order')
-            ->orderBy('id')
             ->take(6)
             ->get();
 
         // Fetch active packages for the homepage
         $packages = Package::with(['service', 'service.services', 'media'])
             ->where('status', 1)
-            ->whereDate('end_date', '>=', now())
+            ->basePackages()
             ->take(6)
             ->get();
         $setting = DB::table('settings')->where('name', 'service_duration_visibility')->first();
@@ -167,25 +154,19 @@ class FrontendController extends Controller
      */
     public function shop()
     {
-        $ads = Ad::where('page' , 'shop')->where('status', 1)->get();
+        $ad = Ad::select('shop_bannar')->latest()->first();
 
-        // Fetch active products for the homepage
-        $categories = ProductCategory::with(['products' => function ($q) {
-            $q->where('products.status', 1)
-              ->whereNull('products.deleted_at');
-        }])
-        ->whereNull('product_categories.deleted_by')
-        ->whereNull('product_categories.deleted_at')
-        ->where('product_categories.status', 1)
-        ->get();
+            // Fetch active products for the homepage
+    $categories = ProductCategory::with(['products' => function ($q) {
+        $q->where('products.status', 1)
+          ->whereNull('products.deleted_at');
+    }])
+    ->whereNull('product_categories.deleted_by')
+    ->whereNull('product_categories.deleted_at')
+    ->where('product_categories.status', 1)
+    ->get();
 
-        $products = Product::where('status', 1)
-            ->whereNull('deleted_at')
-            ->orderByDesc('total_sale_count')
-            ->take(4)
-            ->get();
-
-        return view('frontend::shop', compact( 'categories' , 'ads' , 'products'));
+        return view('frontend::shop', compact( 'categories' , 'ad'));
     }
 
     public function productDetails($id)
@@ -214,8 +195,6 @@ class FrontendController extends Controller
         $relatedCategories = Category::where('status', 1)
             ->where('id', '!=', $id)
             ->whereNull('parent_id')
-            ->orderBy('sort_order')
-            ->orderBy('id')
             ->take(4)
             ->get();
 
@@ -225,13 +204,9 @@ class FrontendController extends Controller
             ->with(['services' => function($query) {
                 $query->where('status', 1);
             }])
-            ->orderBy('sort_order')
-            ->orderBy('id')
             ->get();
-        $setting = DB::table('settings')->where('name', 'service_duration_visibility')->first();
-        $showDuration = $setting ? (bool) $setting->val : false;
 
-        return view('frontend::category-details', compact('category', 'relatedCategories' , 'allCat' , 'id','showDuration'));
+        return view('frontend::category-details', compact('category', 'relatedCategories' , 'allCat'));
     }
 
     /**
@@ -364,8 +339,16 @@ class FrontendController extends Controller
     public function getPackages(Request $request)
     {
         $query = Package::with(['service', 'service.services', 'media'])
-            ->where('status', 1)
-            ->whereDate('end_date', '>=', now());
+            ->where('status', 1);
+
+        $type = $request->get('type');
+        if ($type === 'offers') {
+            $query->offerPackages();
+        } elseif ($type === 'base') {
+            $query->basePackages();
+        } else {
+            $query->activeForFrontend();
+        }
 
         // Filter by service if provided
         if ($request->has('service_id') && $request->service_id) {
@@ -396,7 +379,7 @@ class FrontendController extends Controller
     {
         $package = Package::with(['service', 'service.services', 'media', 'branch'])
             ->where('status', 1)
-            ->whereDate('end_date', '>=', now())
+            ->activeForFrontend()
             ->findOrFail($id);
 
         return response()->json([
@@ -405,30 +388,6 @@ class FrontendController extends Controller
             'message' => 'Package details retrieved successfully'
         ]);
     }
-
-    private function shouldShowWheel(int $intervalDays): bool
-    {
-        $query = LoyaltyPointTransaction::query()
-            ->where('source', 'wheel');
-
-        if (Auth::check()) {
-            $query->where('user_id', Auth::id());
-        } else {
-            $token = request()->cookie('wheel_guest_token');
-            if (empty($token)) {
-                return true;
-            }
-            $query->where('meta->guest_token', $token);
-        }
-
-        $lastSpin = $query->latest('created_at')->first();
-        if (!$lastSpin || !($lastSpin->created_at instanceof Carbon)) {
-            return true;
-        }
-
-        return Carbon::now()->greaterThanOrEqualTo($lastSpin->created_at->copy()->addDays($intervalDays));
-    }
-
      public function becomeAffiliate()
     {
         $user = auth()->user();

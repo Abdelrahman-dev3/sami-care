@@ -131,7 +131,7 @@ const routes = [
       {
         path: 'home-theme',
         name: 'Settings.home-theme',
-        meta: { permission: 'setting_general' },
+        meta: { permission: 'setting_theme' },
         component: HomeThemePage
       },
       {

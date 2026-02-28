@@ -2,18 +2,18 @@
   <div class="card mt-3">
     <div class="card-body">
       <div class="col-md-12 mb-3">
-        <CardTitle title="Homepage Theme" icon="fa-solid fa-palette"></CardTitle>
+        <CardTitle :title="$t('setting_home_theme.title')" icon="fa-solid fa-palette"></CardTitle>
       </div>
 
       <div class="row align-items-end">
         <div class="form-group col-md-8">
-          <label class="form-label">Homepage Theme</label>
+          <label class="form-label">{{ $t('setting_home_theme.label') }}</label>
           <select class="form-select" v-model="homeTheme" :disabled="isSubmitting">
             <option v-for="option in homeThemeOptions" :key="option.value" :value="option.value">
-              {{ option.label }}
+              {{ t(option.labelKey) }}
             </option>
           </select>
-          <small class="text-muted">Choose the decoration theme for the homepage navbar.</small>
+          <small class="text-muted">{{ $t('setting_home_theme.help') }}</small>
         </div>
 
         <div class="col-md-4">
@@ -29,6 +29,7 @@
 
 <script setup>
 import { onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import CardTitle from '@/Setting/Components/CardTitle.vue'
 import { useRequest } from '@/helpers/hooks/useCrudOpration'
 import { STORE_URL, GET_URL } from '@/vue/constants/setting'
@@ -37,12 +38,14 @@ import { createRequest } from '@/helpers/utilities'
 const homeTheme = ref('none')
 const isSubmitting = ref(false)
 
+const { t } = useI18n()
+
 const homeThemeOptions = [
-  { label: 'None', value: 'none' },
-  { label: 'Ramadan', value: 'ramadan' },
-  { label: 'Eid Al-Adha', value: 'eid_aladha' },
-  { label: 'Eid Al-Fitr', value: 'eid_alfitr' },
-  { label: 'Saudi National Day', value: 'saudi_national_day' }
+  { labelKey: 'setting_home_theme.option_none', value: 'none' },
+  { labelKey: 'setting_home_theme.option_ramadan', value: 'ramadan' },
+  { labelKey: 'setting_home_theme.option_eid_aladha', value: 'eid_aladha' },
+  { labelKey: 'setting_home_theme.option_eid_alfitr', value: 'eid_alfitr' },
+  { labelKey: 'setting_home_theme.option_saudi_national_day', value: 'saudi_national_day' }
 ]
 
 const { storeRequest } = useRequest()
@@ -54,7 +57,7 @@ const displaySubmitMessage = (res) => {
       window.successSnackbar(res.message)
     }
   } else if (window.errorSnackbar) {
-    window.errorSnackbar(res?.message || 'Failed to save')
+    window.errorSnackbar(res?.message || t('setting_home_theme.save_failed'))
   }
 }
 
