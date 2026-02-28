@@ -34,8 +34,7 @@ return [
     'lbl_custom_code' => 'Custom Code',
     'lbl_custom_css_code' => 'Custom Css Code',
     'lbl_custom_js_code' => 'Custom js Code',
-
-
+    'lbl_home_theme' => 'Homepage Theme',
     'lbl_points_validity'=> 'Points Validity Period',
     'lbl_validity_period' => 'Setting period',
     'days' => 'days',
@@ -43,5 +42,6 @@ return [
     'years' => 'years',
     'lbl_points_validity_hint'=>'After this period, loyalty points will expire for all users.',
     'lbl_home_theme' => 'Homepage Theme',
+    'lbl_points_validity_hint'=>'After this period, loyalty points will expire for all users.'
 
 ];
