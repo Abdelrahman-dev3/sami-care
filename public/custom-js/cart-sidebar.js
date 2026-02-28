@@ -78,7 +78,8 @@
     const products = data.products || [];
     const services = data.services || [];
     const gifts    = data.gifts    || [];
-    const total    = products.length + services.length + gifts.length;
+    const packages = data.packages || [];
+    const total    = products.length + services.length + gifts.length + packages.length;
 
     if (total === 0) { showState('empty'); updateBadge(0); return; }
 
@@ -88,13 +89,18 @@
     }
 
     if (services.length) {
-      container.appendChild(sectionHeading('bi-box-seam', t('الخدمات', 'Services')));
+      container.appendChild(sectionHeading('bi-wrench-adjustable', t('الخدمات', 'Services')));
       services.forEach(item => container.appendChild(buildItem(item)));
     }
 
     if (gifts.length) {
       container.appendChild(sectionHeading('bi-gift', t('بطاقات الهدايا', 'Gift Cards')));
       gifts.forEach(item => container.appendChild(buildItem(item)));
+    }
+
+    if (packages.length) {
+      container.appendChild(sectionHeading('bi-box2', t('الباقات', 'Packages')));
+      packages.forEach(item => container.appendChild(buildItem(item)));
     }
 
     /* Summary */
@@ -104,6 +110,7 @@
     setText('cspProductsCount', (s.products_count ?? 0) + ' ' + t('منتج',  'item(s)'));
     setText('cspServicesCount', (s.services_count ?? 0) + ' ' + t('خدمة',  'service(s)'));
     setText('cspGiftsCount',    (s.gifts_count    ?? 0) + ' ' + t('بطاقة', 'card(s)'));
+    setText('cspPackagesCount', (s.packages_count ?? 0) + ' ' + t('باقة',  'package(s)'));
     setText('cspSubtotal',   formatPrice(s.subtotal,  cur));
     setText('cspDiscount',   parseFloat(s.discount || 0) > 0
       ? '- ' + formatPrice(s.discount, cur)
@@ -249,3 +256,36 @@
   };
 
 })();
+
+/* ================================================================
+   Auto-hook: wraps the global addtocart() function so the sidebar
+   opens automatically whenever a product is added — no changes
+   needed in your existing addtocart code.
+   Works ONLY if addtocart is defined BEFORE this script runs,
+   so place cart-sidebar.js last in @stack("after-scripts").
+   If addtocart is defined AFTER, use the manual approach instead
+   (see addtocart_update.js).
+================================================================ */
+document.addEventListener("DOMContentLoaded", function () {
+  if (typeof window.addtocart === "function") {
+    const _original = window.addtocart;
+    window.addtocart = function (product_id) {
+      // Call the original — but intercept the AJAX success
+      // by temporarily wrapping $.ajax if jQuery is present
+      if (window.jQuery) {
+        const _ajax = jQuery.ajax.bind(jQuery);
+        jQuery.ajax = function (options) {
+          const _success = options.success;
+          options.success = function (response) {
+            if (_success) _success.apply(this, arguments);
+            CartSidebar.refresh();
+            CartSidebar.open();
+          };
+          jQuery.ajax = _ajax; // restore immediately
+          return _ajax(options);
+        };
+      }
+      return _original(product_id);
+    };
+  }
+});

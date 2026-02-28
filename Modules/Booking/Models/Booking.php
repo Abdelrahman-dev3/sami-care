@@ -49,14 +49,17 @@ class Booking extends BaseModel
     {
         return $this->belongsTo(\App\Models\Branch::class, 'branch_id')->withTrashed();
     }
- public function createdBy()
+
+    public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');
     }
+
     public function updatedBy()
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
+
     public function deletedBy()
     {
         return $this->belongsTo(User::class, 'deleted_by');
@@ -71,14 +74,16 @@ class Booking extends BaseModel
                             JSON_UNQUOTE(JSON_EXTRACT(services.name, '$.\"$locale\"')) as service_name,
                             'services.*',
                             booking_services.*
-                        ");    }
+                        ");
+    }
 
     public function packages()
     {
         return $this->hasMany(BookingPackages::class, 'booking_id')->with('employee')
             ->leftJoin('packages', 'booking_packages.package_id', 'packages.id')
-            ->select('packages.name as name', 'packages.description', 'booking_packages.*');
+            ->select('packages.name as name', 'packages.*', 'booking_packages.*');
     }
+
     public function userPackageReddem()
     {
         return $this->hasMany(userPackageRedeem::class)->with('package');
@@ -152,6 +157,7 @@ class Booking extends BaseModel
     {
         return $this->hasMany(UserPackage::class);
     }
+
     public function bookingPackages()
     {
         $locale = app()->getLocale();
@@ -190,7 +196,7 @@ class Booking extends BaseModel
               WHEN JSON_UNQUOTE(JSON_EXTRACT(tx.tax_info, \'$.type\')) = \'fixed\' THEN JSON_UNQUOTE(JSON_EXTRACT(tx.tax_info, \'$.tax_amount\'))
               ELSE 0
           END) AS total_tax_amount'),
-          DB::raw('
+            DB::raw('
           COALESCE(SUM(DISTINCT booking_services.service_price), 0) +
           SUM(CASE
               WHEN JSON_UNQUOTE(JSON_EXTRACT(tx.tax_info, \'$.type\')) = \'percent\'
@@ -230,35 +236,36 @@ class Booking extends BaseModel
     }
 
     public static function totalservice($taxAmount, $tipAmount)
-{
-    return self::select(
-        DB::raw('DATE(bookings.start_date_time) AS start_date_time'),
-        DB::raw('COUNT(DISTINCT bookings.id) AS total_bookings'),
-        DB::raw('COALESCE(SUM(booking_services.service_price), 0) as total_service_amount'),
-        DB::raw('
+    {
+        return self::select(
+            DB::raw('DATE(bookings.start_date_time) AS start_date_time'),
+            DB::raw('COUNT(DISTINCT bookings.id) AS total_bookings'),
+            DB::raw('COALESCE(SUM(booking_services.service_price), 0) as total_service_amount'),
+            DB::raw('
             COALESCE(SUM(booking_services.service_price), 0) +
             ' . $taxAmount . ' +
             ' . $tipAmount . ' AS total_amount')
-    )
-        ->leftJoin('booking_services', 'bookings.id', '=', 'booking_services.booking_id')
-        ->where('bookings.status', 'completed')
-        ->groupBy(DB::raw('DATE(bookings.start_date_time)'));
-}
-public static function tipamount()
-{
-    return self::select(
-        DB::raw('DATE(bookings.start_date_time) AS start_date_time'),
-        DB::raw('COUNT(DISTINCT bookings.id) AS total_bookings'),
-        DB::raw('COALESCE(SUM(tip_earnings.tip_amount), 0) AS total_tip_amount')
-    )
-    ->leftJoin('tip_earnings', function ($join) {
-        $join->on('bookings.id', '=', 'tip_earnings.tippable_id')
-            ->where('tip_earnings.tippable_type', '=', 'Modules\\Booking\\Models\\Booking');
-    })
-    ->where('bookings.status', 'completed')
-    ->groupBy(DB::raw('DATE(bookings.start_date_time)'));
+        )
+            ->leftJoin('booking_services', 'bookings.id', '=', 'booking_services.booking_id')
+            ->where('bookings.status', 'completed')
+            ->groupBy(DB::raw('DATE(bookings.start_date_time)'));
+    }
 
-}
+    public static function tipamount()
+    {
+        return self::select(
+            DB::raw('DATE(bookings.start_date_time) AS start_date_time'),
+            DB::raw('COUNT(DISTINCT bookings.id) AS total_bookings'),
+            DB::raw('COALESCE(SUM(tip_earnings.tip_amount), 0) AS total_tip_amount')
+        )
+            ->leftJoin('tip_earnings', function ($join) {
+                $join->on('bookings.id', '=', 'tip_earnings.tippable_id')
+                    ->where('tip_earnings.tippable_type', '=', 'Modules\\Booking\\Models\\Booking');
+            })
+            ->where('bookings.status', 'completed')
+            ->groupBy(DB::raw('DATE(bookings.start_date_time)'));
+
+    }
 
     public static function overallReport()
     {

@@ -8,13 +8,13 @@ use Illuminate\Support\Str;
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>@yield('title') | {{ app_name() }}</title>
-    
+
   <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet"/>
   <link rel="stylesheet" href="{{ mix('css/libs.min.css') }}">
   <link rel="stylesheet" href="{{ mix('css/backend.css') }}">
   @if (language_direction() == 'rtl')<link rel="stylesheet" href="{{ asset('css/rtl.css') }}">@endif
   <link rel="stylesheet" href="{{ asset('custom-css/frontend.css') }}">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"> 
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   @stack('after-styles')
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -41,7 +41,8 @@ use Illuminate\Support\Str;
 </div>
 <div class="container py-5">
   <div class="row g-4">
-    @if($services->count() || $products->count() || $gifts->count() ) 
+
+    @if($services->count() || $products->count() || $gifts->count() || $bookingPackages->count())
     <div class="col-lg-8">
       <div class="order-summary p-3">
         <table class="table align-middle">
@@ -54,6 +55,43 @@ use Illuminate\Support\Str;
             </tr>
           </thead>
           <tbody>
+          @foreach($bookingPackages as $bookingPackage)
+              <tr>
+                  <td class="d-flex align-items-center gap-2">
+                      <div class="product-img"><i class="bi bi-person"></i></div>
+                      <div class="text-start">
+                          <strong>
+
+                              {{ \Illuminate\Support\Str::limit($bookingPackage->package->name, 23) }}
+                          </strong>
+                          <br>
+{{--                          <small class="text-muted">{{ __('messagess.employee') }}: {{ $service->employee->full_name ?? '-' }}</small>--}}
+                      </div>
+                  </td>
+                  <td class="prc">
+                      {{ $bookingPackage->package->package_price }} {{ __('messagess.SR')}}
+                  </td>
+                  <td style="direction: rtl";>
+
+                  </td>
+
+                  <td style="position: relative;font-weight: bold;">
+{{--                      @if($service->discount_amount && $service->discount_amount > 0)--}}
+{{--                          {{ $service->service_price - $service->discount_amount }} {{ __('messagess.SR')}}--}}
+{{--                      @else--}}
+{{--                          {{ $service->service_price }} {{ __('messagess.SR')}}--}}
+{{--                      @endif--}}
+                      {{ $bookingPackage->package->package_price }} {{ __('messagess.SR')}}
+                      <form action="{{ route('cart.destroy', $bookingPackage->booking->id) }}" method="post" style="position: absolute;top: 8px;left: 8px;">
+                          @csrf
+                          @method('DELETE')
+                          <button class="service-delete" title="{{ __('messagess.delete_service') }}">
+                              <i class="fas fa-trash"></i>
+                          </button>
+                      </form>
+                  </td>
+              </tr>
+          @endforeach
           @foreach($services as $item)
               @foreach($item->services as $service)
                 <tr>
@@ -83,7 +121,7 @@ use Illuminate\Support\Str;
                      <button class="co-ser" onclick="checkCoupon(this)">{{ __('messagess.apply_coupon') }}</button>
                    @endif
                   </td>
-                  
+
                   <td style="position: relative;font-weight: bold;">
                   @if($service->discount_amount && $service->discount_amount > 0)
                    {{ $service->service_price - $service->discount_amount }} {{ __('messagess.SR')}}
@@ -119,7 +157,7 @@ use Illuminate\Support\Str;
               <!---->
               <td style="direction: rtl;">
                </td>
-              
+
               <td style="position: relative;font-weight: bold;">
                 {{ ($item->product->min_price ?? $item->product->max_price ?? 0) * $item->qty }} {{ __('messagess.SR')}}
 
@@ -155,7 +193,7 @@ use Illuminate\Support\Str;
               <!---->
               <td style="direction: rtl;">
                </td>
-              
+
               <td style="position: relative;font-weight: bold;">
                 {{ $item->subtotal ?? 0}} {{ __('messagess.SR')}}
 
@@ -181,9 +219,13 @@ use Illuminate\Support\Str;
         </div>
       </div>
     </div>
-    <div class="col-lg-4 side-bar"> 
+    <div class="col-lg-4 side-bar">
       <div class="summary-box">
         <h6 class="text-center mb-3 border-bottom pb-4">{{ __('messagess.service_summary') }}</h6>
+
+          <div class="d-flex justify-content-between mb-2">
+              <span>{{ __('messagess.packages_included') }} :</span><span class="output">{{ $packagesCount }} {{ __('messagess.packages') }}</span>
+          </div>
         <div class="d-flex justify-content-between mb-2">
           <span>{{ __('messagess.services_included') }} :</span><span class="output">{{ $serviceCount }} {{ __('messagess.service') }}</span>
         </div>
@@ -221,7 +263,7 @@ use Illuminate\Support\Str;
     @if (session('success'))
         toastr.success("{{ session('success') }}");
     @endif
-    
+
     @if (session('error'))
         toastr.error("{{ session('error') }}");
     @endif
@@ -232,23 +274,23 @@ use Illuminate\Support\Str;
         const couponCode = input.value.trim();
         const serviceId = input.dataset.serviceId;
         const bookingId = input.dataset.bookingId;
-        
+
         if (!couponCode) {
             toastr.error("{{ __('messagess.enter_coupon_code') }}");
             return;
         }
-        
+
         const url = `/validate-coupon?coupon_code=${encodeURIComponent(couponCode)}&service_id=${serviceId}&booking_id=${bookingId}`;
         fetch(url)
             .then(response => response.json())
             .then(data => {
-                if (data.valid) { 
+                if (data.valid) {
                     toastr.success("{{ __('messagess.coupon_applied') }}: " + " " + couponCode);
                     setTimeout(() => {
                         location.reload();
                     }, 700);
                 } else {
-                    toastr.error("{{ __('messagess.invalid_coupon_for_service') }}"); 
+                    toastr.error("{{ __('messagess.invalid_coupon_for_service') }}");
                 }
             })
             .catch(() => { toastr.error("{{ __('messagess.error_occurred') }}");  });

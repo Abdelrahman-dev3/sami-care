@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 use Modules\Booking\Models\Booking;
 use Modules\Booking\Models\BookingService;
 use Modules\Booking\Models\BookingProduct;
+use Modules\Package\Models\BookingPackages;
 use Modules\Wallet\Models\Wallet;
 use App\Models\LoyaltyPoint;
 use App\Models\LoyaltyPointTransaction;
@@ -65,8 +66,18 @@ class BookingCartController extends Controller
         $gifts     = GiftCard::where('user_id', $userId)->where('payment_status', 0)->get();
         $giftPrice = $gifts->sum(fn($g) => $g->subtotal ?? 0);
 
-        // ── 4. Totals ─────────────────────────────────────────────────
-        $cartTotal  = $servicePrice + $productPrice + $giftPrice;
+        $bookingPackages = BookingPackages::whereHas('booking', function ($query) use ($userId) {
+            $query->where('created_by', $userId)
+                ->whereNotIn('status', ['cancelled', 'completed'])
+                ->where('payment_type', 'cart')
+                ->where('payment_status', 0)
+                ->whereNull('deleted_by');
+        })->with(['package', 'booking'])->get();
+
+        $packagePrice = $bookingPackages->sum(fn($item) => $item->package?->package_price ?? 0);
+
+        // ── 5. Totals ─────────────────────────────────────────────────
+        $cartTotal  = $servicePrice + $productPrice + $giftPrice + $packagePrice;
         $finalPrice = $cartTotal - $discountTotal;
 
         // ── 5. Build JSON ─────────────────────────────────────────────
@@ -138,11 +149,32 @@ class BookingCartController extends Controller
                 ];
             })->values(),
 
+            // ── Packages ──
+            'packages' => $bookingPackages->filter(fn($bp) => $bp->package)->map(function ($bp) {
+                $package = $bp->package;
+                $price   = $package->package_price ?? 0;
+
+                return [
+                    'id'             => $bp->id,
+                    'type'           => 'package',
+                    'name'           => $package->name ?? '—',
+                    'image'          => null,
+                    'original_price' => $price,
+                    'final_price'    => $price,
+                    'discount_amount'=> 0,
+                    'coupon_code'    => null,
+                    'qty'            => 1,
+                    'delete_url'     => route('cart.destroy', $bp->booking->id ?? 0),
+                    'currency'       => 'ر.س',
+                ];
+            })->values(),
+
             // ── Summary ──
             'summary' => [
                 'products_count' => $products->count(),
                 'services_count' => $serviceCount,
                 'gifts_count'    => $gifts->count(),
+                'packages_count' => $bookingPackages->count(),
                 'subtotal'       => number_format($cartTotal,    2, '.', ''),
                 'discount'       => number_format($discountTotal, 2, '.', ''),
                 'final'          => number_format($finalPrice,   2, '.', ''),
@@ -158,10 +190,12 @@ class BookingCartController extends Controller
             'products' => [],
             'services' => [],
             'gifts'    => [],
+            'packages' => [],
             'summary'  => [
                 'products_count' => 0,
                 'services_count' => 0,
                 'gifts_count'    => 0,
+                'packages_count' => 0,
                 'subtotal'       => '0.00',
                 'discount'       => '0.00',
                 'final'          => '0.00',
@@ -184,6 +218,18 @@ class BookingCartController extends Controller
         $servicePrice = $services->sum(function ($item) {
             return $item->service ? ($item->service->service_price ?? 0) : 0;
         });
+        // Fetch booking packages that belong to bookings matching your conditions
+        $bookingPackages = BookingPackages::whereHas('booking', function ($query) use ($userId) {
+            $query->where('created_by', $userId)
+                ->whereNotIn('status', ['cancelled', 'completed'])
+                ->where('payment_type', 'cart')
+                ->where('payment_status', 0)
+                ->whereNull('deleted_by');
+        })->with('package')->get();
+
+        $packagePrice = $bookingPackages->sum(function ($item) {
+            return $item->package ? ($item->package->package_price ?? 0) : 0;
+        });
 
         $products = Cart::with('product')->where(['user_id' => $userId])->get();
 
@@ -196,7 +242,7 @@ class BookingCartController extends Controller
 
         $GiftPrice = $gifts->sum(fn($g) => $g->subtotal ?? 0);
 
-        $cartTotal = $servicePrice + $productPrice + $GiftPrice;
+        $cartTotal = $servicePrice + $productPrice + $GiftPrice +$packagePrice;
 
         $discountTotal = $services->sum(fn($item) =>
             $item->services->sum(fn($s) => $s->discount_amount ?? 0)
@@ -208,8 +254,10 @@ class BookingCartController extends Controller
         $serviceCount = $services->sum(fn($item) => $item->service ? 1 : 0);
 
         $productCount = $products->count();
+        $packagesCount = $bookingPackages->count();
 
-        return view('components.frontend.cart', compact('services' , 'products' , 'finalPrice' , 'discountTotal' , 'serviceCount' , 'productCount', 'gifts'));
+
+        return view('components.frontend.cart', compact('packagesCount','bookingPackages','services' , 'products' , 'finalPrice' , 'discountTotal' , 'serviceCount' , 'productCount', 'gifts'));
     }
 
      public function store(Request $request)

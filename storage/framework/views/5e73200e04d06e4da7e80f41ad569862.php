@@ -8,13 +8,13 @@ use Illuminate\Support\Str;
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><?php echo $__env->yieldContent('title'); ?> | <?php echo e(app_name()); ?></title>
-    
+
   <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet"/>
   <link rel="stylesheet" href="<?php echo e(mix('css/libs.min.css')); ?>">
   <link rel="stylesheet" href="<?php echo e(mix('css/backend.css')); ?>">
   <?php if(language_direction() == 'rtl'): ?><link rel="stylesheet" href="<?php echo e(asset('css/rtl.css')); ?>"><?php endif; ?>
   <link rel="stylesheet" href="<?php echo e(asset('custom-css/frontend.css')); ?>">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"> 
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <?php echo $__env->yieldPushContent('after-styles'); ?>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -41,7 +41,8 @@ use Illuminate\Support\Str;
 </div>
 <div class="container py-5">
   <div class="row g-4">
-    <?php if($services->count() || $products->count() || $gifts->count() ): ?> 
+
+    <?php if($services->count() || $products->count() || $gifts->count() || $bookingPackages->count()): ?>
     <div class="col-lg-8">
       <div class="order-summary p-3">
         <table class="table align-middle">
@@ -54,6 +55,46 @@ use Illuminate\Support\Str;
             </tr>
           </thead>
           <tbody>
+          <?php $__currentLoopData = $bookingPackages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $bookingPackage): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+              <tr>
+                  <td class="d-flex align-items-center gap-2">
+                      <div class="product-img"><i class="bi bi-person"></i></div>
+                      <div class="text-start">
+                          <strong>
+
+                              <?php echo e(\Illuminate\Support\Str::limit($bookingPackage->package->name, 23)); ?>
+
+                          </strong>
+                          <br>
+
+                      </div>
+                  </td>
+                  <td class="prc">
+                      <?php echo e($bookingPackage->package->package_price); ?> <?php echo e(__('messagess.SR')); ?>
+
+                  </td>
+                  <td style="direction: rtl";>
+
+                  </td>
+
+                  <td style="position: relative;font-weight: bold;">
+
+
+
+
+
+                      <?php echo e($bookingPackage->package->package_price); ?> <?php echo e(__('messagess.SR')); ?>
+
+                      <form action="<?php echo e(route('cart.destroy', $bookingPackage->booking->id)); ?>" method="post" style="position: absolute;top: 8px;left: 8px;">
+                          <?php echo csrf_field(); ?>
+                          <?php echo method_field('DELETE'); ?>
+                          <button class="service-delete" title="<?php echo e(__('messagess.delete_service')); ?>">
+                              <i class="fas fa-trash"></i>
+                          </button>
+                      </form>
+                  </td>
+              </tr>
+          <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
           <?php $__currentLoopData = $services; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
               <?php $__currentLoopData = $item->services; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $service): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                 <tr>
@@ -86,7 +127,7 @@ use Illuminate\Support\Str;
                      <button class="co-ser" onclick="checkCoupon(this)"><?php echo e(__('messagess.apply_coupon')); ?></button>
                    <?php endif; ?>
                   </td>
-                  
+
                   <td style="position: relative;font-weight: bold;">
                   <?php if($service->discount_amount && $service->discount_amount > 0): ?>
                    <?php echo e($service->service_price - $service->discount_amount); ?> <?php echo e(__('messagess.SR')); ?>
@@ -126,7 +167,7 @@ use Illuminate\Support\Str;
               <!---->
               <td style="direction: rtl;">
                </td>
-              
+
               <td style="position: relative;font-weight: bold;">
                 <?php echo e(($item->product->min_price ?? $item->product->max_price ?? 0) * $item->qty); ?> <?php echo e(__('messagess.SR')); ?>
 
@@ -166,7 +207,7 @@ use Illuminate\Support\Str;
               <!---->
               <td style="direction: rtl;">
                </td>
-              
+
               <td style="position: relative;font-weight: bold;">
                 <?php echo e($item->subtotal ?? 0); ?> <?php echo e(__('messagess.SR')); ?>
 
@@ -193,9 +234,13 @@ use Illuminate\Support\Str;
         </div>
       </div>
     </div>
-    <div class="col-lg-4 side-bar"> 
+    <div class="col-lg-4 side-bar">
       <div class="summary-box">
         <h6 class="text-center mb-3 border-bottom pb-4"><?php echo e(__('messagess.service_summary')); ?></h6>
+
+          <div class="d-flex justify-content-between mb-2">
+              <span><?php echo e(__('messagess.packages_included')); ?> :</span><span class="output"><?php echo e($packagesCount); ?> <?php echo e(__('messagess.packages')); ?></span>
+          </div>
         <div class="d-flex justify-content-between mb-2">
           <span><?php echo e(__('messagess.services_included')); ?> :</span><span class="output"><?php echo e($serviceCount); ?> <?php echo e(__('messagess.service')); ?></span>
         </div>
@@ -234,7 +279,7 @@ use Illuminate\Support\Str;
     <?php if(session('success')): ?>
         toastr.success("<?php echo e(session('success')); ?>");
     <?php endif; ?>
-    
+
     <?php if(session('error')): ?>
         toastr.error("<?php echo e(session('error')); ?>");
     <?php endif; ?>
@@ -245,27 +290,28 @@ use Illuminate\Support\Str;
         const couponCode = input.value.trim();
         const serviceId = input.dataset.serviceId;
         const bookingId = input.dataset.bookingId;
-        
+
         if (!couponCode) {
             toastr.error("<?php echo e(__('messagess.enter_coupon_code')); ?>");
             return;
         }
-        
+
         const url = `/validate-coupon?coupon_code=${encodeURIComponent(couponCode)}&service_id=${serviceId}&booking_id=${bookingId}`;
         fetch(url)
             .then(response => response.json())
             .then(data => {
-                if (data.valid) { 
+                if (data.valid) {
                     toastr.success("<?php echo e(__('messagess.coupon_applied')); ?>: " + " " + couponCode);
                     setTimeout(() => {
                         location.reload();
                     }, 700);
                 } else {
-                    toastr.error("<?php echo e(__('messagess.invalid_coupon_for_service')); ?>"); 
+                    toastr.error("<?php echo e(__('messagess.invalid_coupon_for_service')); ?>");
                 }
             })
             .catch(() => { toastr.error("<?php echo e(__('messagess.error_occurred')); ?>");  });
     }
 </script>
 </body>
-</html><?php /**PATH D:\projects\php8\cityart\samiCare\sami-care\resources\views/components/frontend/cart.blade.php ENDPATH**/ ?>
+</html>
+<?php /**PATH D:\projects\php8\cityart\samiCare\sami-care\resources\views/components/frontend/cart.blade.php ENDPATH**/ ?>

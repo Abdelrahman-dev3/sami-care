@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="<?php echo e(asset('custom-css/cart-sidebar.css')); ?>">
     <title>Spa Booking</title>
     <style>
         @import url("https://fonts.cdnfonts.com/css/zain");
@@ -20,7 +21,7 @@
             margin: 0;
             padding: 0;
         }
-        
+
         @media (max-width: 768px) {
             .package-container {
                 display: flex;
@@ -745,7 +746,7 @@
             font-weight: 500;
         }
 
-        
+
         .pkg-calendar {
             background: #fff;
             border-radius: 10px;
@@ -848,6 +849,26 @@
     <div class="position-relative" style="height: 17vh;">
         <?php echo $__env->make('components.frontend.second-navbar', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
     </div>
+    <?php if (isset($component)) { $__componentOriginale64d5aa5503a59d98392532b139a3f6d = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginale64d5aa5503a59d98392532b139a3f6d = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.frontend.cart-sidebar','data' => []] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
+<?php $component->withName('frontend.cart-sidebar'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag && $constructor = (new ReflectionClass(Illuminate\View\AnonymousComponent::class))->getConstructor()): ?>
+<?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginale64d5aa5503a59d98392532b139a3f6d)): ?>
+<?php $attributes = $__attributesOriginale64d5aa5503a59d98392532b139a3f6d; ?>
+<?php unset($__attributesOriginale64d5aa5503a59d98392532b139a3f6d); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginale64d5aa5503a59d98392532b139a3f6d)): ?>
+<?php $component = $__componentOriginale64d5aa5503a59d98392532b139a3f6d; ?>
+<?php unset($__componentOriginale64d5aa5503a59d98392532b139a3f6d); ?>
+<?php endif; ?>
     <div class="package-container">
         <div class="right-box">
             <h3 class="title"><?php echo e(__('messagess.our_special_packages')); ?></h3>
@@ -877,7 +898,7 @@
             <p class="branch"><strong><?php echo e($branchName); ?> </strong> : <?php echo e($branchDes); ?></p>
             <p class="price"><strong style="color:white"><?php echo e(__('messagess.price')); ?> :</strong>  <?php echo e($totalService); ?> </p>
             <div style="width:100%;display: flex;justify-content: end;">
-                <button type="button" id="openModalBtn" class="more-btn"><?php echo e(__('messagess.bookNow')); ?></button>
+                <button type="button" id="openModalBtn" class="more-btn"><?php echo e(__('messagess.add_to_cart')); ?></button>
             </div>
         </div>
         <div class="left-img">
@@ -904,10 +925,11 @@
             <div class="pkg-times" id="timeSlots"></div>
 
             <div class="pkg-modal-actions">
-                <button type="button" id="saveBookingBtn" class="pkg-action-btn primary"><?php echo e(__('messagess.bookNow')); ?></button>
+                <button type="button" id="saveBookingBtn" class="pkg-action-btn primary"><?php echo e(__('messagess.add_to_cart')); ?></button>
             </div>
         </div>
     </div>
+    <script src="<?php echo e(asset('custom-js/cart-sidebar.js')); ?>"></script>
     <!-- JS booking modal -->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
@@ -1072,8 +1094,10 @@
                 closeModal();
                 createNotify({
                     title: "Success",
-                    desc: "Booking saved successfully"
+                    desc: "Added To Cart successfully"
                 });
+                CartSidebar.refresh();   // re-fetch cart data + update badge
+                CartSidebar.open();
                 return;
             }
 
@@ -1114,4 +1138,5 @@
     <?php echo $__env->make('components.frontend.footer', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
 
 </body>
-</html><?php /**PATH D:\projects\php8\cityart\samiCare\sami-care\resources\views/home/details.blade.php ENDPATH**/ ?>
+</html>
+<?php /**PATH D:\projects\php8\cityart\samiCare\sami-care\resources\views/home/details.blade.php ENDPATH**/ ?>

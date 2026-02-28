@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="{{ asset('custom-css/cart-sidebar.css') }}">
     <title>Spa Booking</title>
     <style>
         @import url("https://fonts.cdnfonts.com/css/zain");
@@ -20,7 +21,7 @@
             margin: 0;
             padding: 0;
         }
-        
+
         @media (max-width: 768px) {
             .package-container {
                 display: flex;
@@ -745,7 +746,7 @@
             font-weight: 500;
         }
 
-        
+
         .pkg-calendar {
             background: #fff;
             border-radius: 10px;
@@ -848,6 +849,7 @@
     <div class="position-relative" style="height: 17vh;">
         @include('components.frontend.second-navbar')
     </div>
+    <x-frontend.cart-sidebar />
     <div class="package-container">
         <div class="right-box">
             <h3 class="title">{{ __('messagess.our_special_packages') }}</h3>
@@ -877,7 +879,7 @@
             <p class="branch"><strong>{{ $branchName }} </strong> : {{ $branchDes }}</p>
             <p class="price"><strong style="color:white">{{ __('messagess.price') }} :</strong>  {{$totalService}} </p>
             <div style="width:100%;display: flex;justify-content: end;">
-                <button type="button" id="openModalBtn" class="more-btn">{{ __('messagess.bookNow') }}</button>
+                <button type="button" id="openModalBtn" class="more-btn">{{ __('messagess.add_to_cart') }}</button>
             </div>
         </div>
         <div class="left-img">
@@ -904,10 +906,11 @@
             <div class="pkg-times" id="timeSlots"></div>
 
             <div class="pkg-modal-actions">
-                <button type="button" id="saveBookingBtn" class="pkg-action-btn primary">{{ __('messagess.bookNow') }}</button>
+                <button type="button" id="saveBookingBtn" class="pkg-action-btn primary">{{ __('messagess.add_to_cart') }}</button>
             </div>
         </div>
     </div>
+    <script src="{{ asset('custom-js/cart-sidebar.js') }}"></script>
     <!-- JS booking modal -->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
@@ -1072,8 +1075,10 @@
                 closeModal();
                 createNotify({
                     title: "Success",
-                    desc: "Booking saved successfully"
+                    desc: "Added To Cart successfully"
                 });
+                CartSidebar.refresh();   // re-fetch cart data + update badge
+                CartSidebar.open();
                 return;
             }
 

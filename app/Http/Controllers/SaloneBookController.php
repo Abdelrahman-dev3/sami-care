@@ -24,7 +24,7 @@ class SaloneBookController extends Controller
         ->select(
             'packages.*',
             'branches.name as branch_name',
-            'branches.description as branch_description'  
+            'branches.description as branch_description'
         )
         ->where('packages.id', $id)
         ->first();
@@ -32,10 +32,10 @@ class SaloneBookController extends Controller
         if (!$package) {
             abort(404, 'Package not found');
         }
-    
+
         $package = (array) $package;
         $package['name'] = json_decode($package['name'], true);
-    
+
         $services = DB::table('package_services')
             ->join('services', 'package_services.service_id', '=', 'services.id')
             ->select(
@@ -49,13 +49,13 @@ class SaloneBookController extends Controller
             )
             ->where('package_services.package_id', $id)
             ->get();
-            
+
         $media = DB::table('media')
             ->where('model_type', 'Modules\\Package\\Models\\Package')
             ->where('model_id', $package['id'])
             ->where('collection_name', 'package_image')
             ->first();
-        
+
         $package['image'] = $media
             ? asset('storage/' . 'uploads/' . $media->id . '/' . $media->file_name)
             : default_feature_image();
@@ -78,7 +78,7 @@ class SaloneBookController extends Controller
 
     public function getUserCart()
     {
-        $user = auth()->user(); 
+        $user = auth()->user();
         $cartItems = Booking::with('service.service', 'products.product' , 'service.employee')->where('created_by', $user->id)->where('status', 'pending')->where('payment_type', 'payment')->whereNull('deleted_by')->where('payment_status', 0)->get();
 
 
@@ -97,4 +97,4 @@ class SaloneBookController extends Controller
         return response()->json(['success' => false]);
     }
 
-}    
+}

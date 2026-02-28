@@ -560,6 +560,7 @@ return [
     'order_summary'    => 'ملخص الطلب',
     'products_count'   => 'عدد المنتجات',
     'services_count'   => 'عدد الخدمات',
+    'packages_count'   => 'عدد الباقات',
     'subtotal'         => 'المجموع الجزئي',
     'discount'         => 'الخصم',
     'final_price'      => 'السعر النهائي',
