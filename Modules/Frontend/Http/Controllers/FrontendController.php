@@ -213,8 +213,8 @@ class FrontendController extends Controller
             ->get();
         $setting = DB::table('settings')->where('name', 'service_duration_visibility')->first();
         $showDuration = $setting ? (bool) $setting->val : false;
-        
-        return view('frontend::category-details', compact('showDuration','category', 'relatedCategories' , 'allCat'));
+
+        return view('frontend::category-details', compact('id','showDuration','category', 'relatedCategories' , 'allCat'));
     }
 
     /**
