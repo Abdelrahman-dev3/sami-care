@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html dir="{{ app()->getLocale() == 'ar' ? 'rtl' : 'ltr' }}" class="{{ app()->getLocale() }}">
+<html dir="<?php echo e(app()->getLocale() == 'ar' ? 'rtl' : 'ltr'); ?>" class="<?php echo e(app()->getLocale()); ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ mix('css/libs.min.css') }}">
-    <link rel="stylesheet" href="{{ mix('css/backend.css') }}">
-    <link rel="stylesheet" href="{{ asset('custom-css/frontend.css') }}">
+    <link rel="stylesheet" href="<?php echo e(mix('css/libs.min.css')); ?>">
+    <link rel="stylesheet" href="<?php echo e(mix('css/backend.css')); ?>">
+    <link rel="stylesheet" href="<?php echo e(asset('custom-css/frontend.css')); ?>">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <link rel="stylesheet" href="{{ asset('custom-css/cart-sidebar.css') }}">
+    <link rel="stylesheet" href="<?php echo e(asset('custom-css/cart-sidebar.css')); ?>">
     <title>Spa Booking</title>
     <style>
         @import url("https://fonts.cdnfonts.com/css/zain");
@@ -847,70 +847,89 @@
 </head>
 <body>
     <div class="position-relative" style="height: 17vh;">
-        @include('components.frontend.second-navbar')
+        <?php echo $__env->make('components.frontend.second-navbar', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
     </div>
-    <x-frontend.cart-sidebar />
+    <?php if (isset($component)) { $__componentOriginale64d5aa5503a59d98392532b139a3f6d = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginale64d5aa5503a59d98392532b139a3f6d = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.frontend.cart-sidebar','data' => []] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
+<?php $component->withName('frontend.cart-sidebar'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag && $constructor = (new ReflectionClass(Illuminate\View\AnonymousComponent::class))->getConstructor()): ?>
+<?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginale64d5aa5503a59d98392532b139a3f6d)): ?>
+<?php $attributes = $__attributesOriginale64d5aa5503a59d98392532b139a3f6d; ?>
+<?php unset($__attributesOriginale64d5aa5503a59d98392532b139a3f6d); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginale64d5aa5503a59d98392532b139a3f6d)): ?>
+<?php $component = $__componentOriginale64d5aa5503a59d98392532b139a3f6d; ?>
+<?php unset($__componentOriginale64d5aa5503a59d98392532b139a3f6d); ?>
+<?php endif; ?>
     <div class="package-container">
         <div class="right-box">
-            <h3 class="title">{{ __('messagess.our_special_packages') }}</h3>
-            <h1 class="main-title">{{ $package['name'][app()->getLocale()] ?? '' }}</h1>
+            <h3 class="title"><?php echo e(__('messagess.our_special_packages')); ?></h3>
+            <h1 class="main-title"><?php echo e($package['name'][app()->getLocale()] ?? ''); ?></h1>
 
             <div class="stars">
                 <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
             </div>
             <div class="desc">
-                <p>{{ __('branch.lbl_description') }} :</p>
+                <p><?php echo e(__('branch.lbl_description')); ?> :</p>
                 <ul>
-                    <li>{{  $package['description']  }}</li>
+                    <li><?php echo e($package['description']); ?></li>
                 </ul>
             </div>
             <div class="desc">
-                <p>{{ __('messagess.prices_and_services') }} :</p>
-                @foreach($services as $service)
+                <p><?php echo e(__('messagess.prices_and_services')); ?> :</p>
+                <?php $__currentLoopData = $services; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $service): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <div class="service-card">
                         <div class="card-content">
-                            <h3>{{  $service->service_name }}</h3>
-                            <p class="duration">{{ __('messagess.duration', ['minutes' => $service->duration_min]) }}</p>
-                            <p class="service-price">SR {{ $service->discounted_price }}</p>
+                            <h3><?php echo e($service->service_name); ?></h3>
+                            <p class="duration"><?php echo e(__('messagess.duration', ['minutes' => $service->duration_min])); ?></p>
+                            <p class="service-price">SR <?php echo e($service->discounted_price); ?></p>
                         </div>
                     </div>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </div>
-            <p class="branch"><strong>{{ $branchName }} </strong> : {{ $branchDes }}</p>
-            <p class="price"><strong style="color:white">{{ __('messagess.price') }} :</strong>  {{$totalService}} </p>
+            <p class="branch"><strong><?php echo e($branchName); ?> </strong> : <?php echo e($branchDes); ?></p>
+            <p class="price"><strong style="color:white"><?php echo e(__('messagess.price')); ?> :</strong>  <?php echo e($totalService); ?> </p>
             <div style="width:100%;display: flex;justify-content: end;">
-                <button type="button" id="openModalBtn" class="more-btn">{{ __('messagess.add_to_cart') }}</button>
+                <button type="button" id="openModalBtn" class="more-btn"><?php echo e(__('messagess.add_to_cart')); ?></button>
             </div>
         </div>
         <div class="left-img">
-            <img src="{{ $package['image'] }}" alt="">
+            <img src="<?php echo e($package['image']); ?>" alt="">
         </div>
     </div>
     <div id="bookingModal" class="pkg-modal" aria-hidden="true">
         <div class="pkg-modal-card" role="dialog" aria-modal="true">
             <button type="button" class="pkg-modal-close" id="closeModalBtn">×</button>
-            <div class="pkg-modal-title">{{ __('messagess.bookNow') }}</div>
+            <div class="pkg-modal-title"><?php echo e(__('messagess.bookNow')); ?></div>
 
             <div class="pkg-box">
-                <div class="pkg-field-label">{{ __('messagess.select_preferred_day') }} </div>
+                <div class="pkg-field-label"><?php echo e(__('messagess.select_preferred_day')); ?> </div>
                 <input type="hidden" id="dateInput">
                 <div id="calendarContainer" class="pkg-calendar"></div>
             </div>
 
-            <div class="pkg-field-label">{{ __('messagess.select_preferred_time') }} </div>
+            <div class="pkg-field-label"><?php echo e(__('messagess.select_preferred_time')); ?> </div>
             <div class="pkg-period-toggle">
-                <button type="button" class="pkg-period-btn active" data-period="morning">{{ __('messagess.morning') }}</button>
-                <button type="button" class="pkg-period-btn" data-period="evening">{{ __('messagess.afternoon') }}</button>
+                <button type="button" class="pkg-period-btn active" data-period="morning"><?php echo e(__('messagess.morning')); ?></button>
+                <button type="button" class="pkg-period-btn" data-period="evening"><?php echo e(__('messagess.afternoon')); ?></button>
             </div>
 
             <div class="pkg-times" id="timeSlots"></div>
 
             <div class="pkg-modal-actions">
-                <button type="button" id="saveBookingBtn" class="pkg-action-btn primary">{{ __('messagess.add_to_cart') }}</button>
+                <button type="button" id="saveBookingBtn" class="pkg-action-btn primary"><?php echo e(__('messagess.add_to_cart')); ?></button>
             </div>
         </div>
     </div>
-    <script src="{{ asset('custom-js/cart-sidebar.js') }}"></script>
+    <script src="<?php echo e(asset('custom-js/cart-sidebar.js')); ?>"></script>
     <!-- JS booking modal -->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
@@ -926,7 +945,7 @@
     let selectedTime = null;
     let currentPeriod = 'morning';
     let allTimes = [];
-    const fixedStaffId = {{  $package['branch_id'] == 32 ? 266 : 267 }};
+    const fixedStaffId = <?php echo e($package['branch_id'] == 32 ? 266 : 267); ?>;
     let bookingCalendar = null;
 
     function openModal() {
@@ -1044,20 +1063,20 @@
             date: dateInput.value,
             time: selectedTime,
             notes: '',
-            employye_id: "{{  $package['branch_id'] == 32 ? 266 : 267 }}",
-            package_id: "{{ $package['id'] ?? null }}",
-            branch_id: "{{ $package['branch_id'] ?? 0 }}",
-            total_price: "{{ $totalService ?? 0 }}"
+            employye_id: "<?php echo e($package['branch_id'] == 32 ? 266 : 267); ?>",
+            package_id: "<?php echo e($package['id'] ?? null); ?>",
+            branch_id: "<?php echo e($package['branch_id'] ?? 0); ?>",
+            total_price: "<?php echo e($totalService ?? 0); ?>"
         };
 
         try {
-            const res = await fetch("{{ route('package.booking.store') }}", {
+            const res = await fetch("<?php echo e(route('package.booking.store')); ?>", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     "Accept": "application/json",
                     "X-Requested-With": "XMLHttpRequest",
-                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                    "X-CSRF-TOKEN": "<?php echo e(csrf_token()); ?>"
                 },
                 body: JSON.stringify(payload)
             });
@@ -1115,8 +1134,9 @@
     saveBookingBtn.addEventListener('click', savePackageBooking);
     </script>
 
-    @include('components.frontend.notifications')
-    @include('components.frontend.footer')
+    <?php echo $__env->make('components.frontend.notifications', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
+    <?php echo $__env->make('components.frontend.footer', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
 
 </body>
 </html>
+<?php /**PATH D:\projects\php8\cityart\samiCare\sami-care\resources\views/home/details.blade.php ENDPATH**/ ?>
