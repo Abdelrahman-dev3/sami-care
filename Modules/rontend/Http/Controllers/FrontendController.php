@@ -59,6 +59,8 @@ class FrontendController extends Controller
      */
     public function services()
     {
+
+        $ads = Ad::where('page' , 'services')->where('status', 1)->get();
          // Fetch active services for the homepage
          $services = Service::with(['category', 'media'])
          ->where('status', 1)
@@ -71,8 +73,6 @@ class FrontendController extends Controller
             ->with(['services' => function($query) {
                 $query->where('status', 1);
             }])
-            ->orderBy('sort_order')
-            ->orderBy('id')
             ->take(6)
             ->get();
 
@@ -83,9 +83,11 @@ class FrontendController extends Controller
             ->take(6)
             ->get();
 
-        return view('frontend::services', compact('categories', 'services', 'packages'));
+        return view('frontend::services', compact('categories', 'services', 'packages' , 'ads'));
+        $setting = DB::table('settings')->where('name', 'service_duration_visibility')->first();
+        $showDuration = $setting ? (bool) $setting->val : false;
+        return view('frontend::services', compact('showDuration','categories', 'services', 'packages' , 'ads'));
     }
-
     /**
      * Display the category details page with its services.
      */

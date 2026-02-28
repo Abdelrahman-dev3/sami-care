@@ -5,10 +5,11 @@ namespace App\Providers;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Translation\Translator;
 use Illuminate\Support\Facades\URL;
-
+use App\Http\View\Composers\CartCountComposer;
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -59,5 +60,7 @@ class AppServiceProvider extends ServiceProvider
 
             return $trans;
         });
+
+        View::composer('*', CartCountComposer::class);
     }
 }

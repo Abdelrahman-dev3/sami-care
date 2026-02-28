@@ -82,7 +82,7 @@ class FrontendController extends Controller
 
     public function Packages()
 {
-    $ad = Ad::select('pack_bannar')->latest()->first();
+    $ads = Ad::where('page' , 'packages')->where('status', 1)->get();
 
     $packages = Package::with([
         'service',
@@ -96,7 +96,7 @@ class FrontendController extends Controller
 
     return view('frontend::Packages', [
         'packages' => $packages,
-        'ad' => $ad
+        'ads' => $ads
     ]);
 }
 
@@ -107,7 +107,6 @@ class FrontendController extends Controller
             ->where('status', 1)
             ->offerPackages()
             ->get();
-
         return view('frontend::Ouroffers', ['packages' => $packages]);
     }
 
@@ -122,7 +121,7 @@ class FrontendController extends Controller
      */
     public function services()
     {
-        $ad = Ad::select('serve_bannar')->latest()->first();
+        $ads = Ad::where('page' , 'services')->where('status', 1)->get();
          // Fetch active services for the homepage
          $services = Service::with(['category', 'media'])
          ->where('status', 1)
@@ -154,19 +153,25 @@ class FrontendController extends Controller
      */
     public function shop()
     {
-        $ad = Ad::select('shop_bannar')->latest()->first();
+        $ads = Ad::where('page' , 'shop')->where('status', 1)->get();
 
-            // Fetch active products for the homepage
-    $categories = ProductCategory::with(['products' => function ($q) {
-        $q->where('products.status', 1)
-          ->whereNull('products.deleted_at');
-    }])
-    ->whereNull('product_categories.deleted_by')
-    ->whereNull('product_categories.deleted_at')
-    ->where('product_categories.status', 1)
-    ->get();
+        // Fetch active products for the homepage
+        $categories = ProductCategory::with(['products' => function ($q) {
+            $q->where('products.status', 1)
+              ->whereNull('products.deleted_at');
+        }])
+        ->whereNull('product_categories.deleted_by')
+        ->whereNull('product_categories.deleted_at')
+        ->where('product_categories.status', 1)
+        ->get();
 
-        return view('frontend::shop', compact( 'categories' , 'ad'));
+        $products = Product::where('status', 1)
+            ->whereNull('deleted_at')
+            ->orderByDesc('total_sale_count')
+            ->take(4)
+            ->get();
+
+        return view('frontend::shop', compact( 'categories' , 'ads' , 'products'));
     }
 
     public function productDetails($id)

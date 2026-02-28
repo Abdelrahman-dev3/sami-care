@@ -118,6 +118,7 @@ Route::post('/wheel/spin', [WheelController::class, 'spin'])->name('wheel.spin')
 Route::middleware('auth')->group(function () {
 
     Route::get('/giffte', [GiftCardController::class, 'index'])->name('gift.page');
+    Route::get('/cart/sidebar-data', [BookingCartController::class, 'sidebarData'])->name('cart.sidebar');
 
     Route::get('/cart', [BookingCartController::class, 'index'])->name('cart.page');
     Route::delete('/cart/{id}', [BookingCartController::class, 'destroy'])->name('cart.destroy');
@@ -437,6 +438,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/invoices/{id}', [InvoiceController::class, 'destroy'])->name('invoices.destroy');
     Route::get('/reject/{id}', [RejectController::class, 'destroy'])->name('reject.destroy');
     Route::get('/gift/delete/{id}', [GiftController::class, 'destroy'])->name('gift.delete');
+
 });
 
 //  Get quick cart

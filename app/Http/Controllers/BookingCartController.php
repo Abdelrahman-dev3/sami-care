@@ -29,10 +29,150 @@ class BookingCartController extends Controller
 {
 
 
+    public function sidebarData(Request $request)
+    {
+        // Guard: unauthenticated users get an empty cart
+        if (! auth()->check()) {
+            return response()->json($this->emptySidebarResponse());
+        }
+
+        $userId = auth()->id();
+
+        // ── 1. Services ── same query as index() ──────────────────────
+        $services = Booking::with('service.service', 'service.employee')
+            ->where('created_by', $userId)
+            ->whereNotIn('status', ['cancelled', 'completed'])
+            ->where('payment_type', 'cart')
+            ->where('payment_status', 0)
+            ->whereNull('deleted_by')
+            ->get();
+
+        $servicePrice  = $services->sum(fn($b) => $b->service?->service_price ?? 0);
+        $discountTotal = $services->sum(fn($b) => $b->services->sum(fn($s) => $s->discount_amount ?? 0));
+        $serviceCount  = $services->filter(fn($b) => $b->service)->count();
+
+        // ── 2. Products ───────────────────────────────────────────────
+        $products = Cart::with('product')
+            ->where('user_id', $userId)
+            ->get();
+
+        $productPrice = $products->sum(function ($item) {
+            $price = $item->product->max_price ?? $item->product->min_price ?? 0;
+            return $price * ($item->qty ?? 1);
+        });
+
+        // ── 3. Gift Cards ─────────────────────────────────────────────
+        $gifts     = GiftCard::where('user_id', $userId)->where('payment_status', 0)->get();
+        $giftPrice = $gifts->sum(fn($g) => $g->subtotal ?? 0);
+
+        // ── 4. Totals ─────────────────────────────────────────────────
+        $cartTotal  = $servicePrice + $productPrice + $giftPrice;
+        $finalPrice = $cartTotal - $discountTotal;
+
+        // ── 5. Build JSON ─────────────────────────────────────────────
+        return response()->json([
+
+            // ── Products ──
+            'products' => $products->map(function ($item) {
+                $product = $item->product;
+                $price   = $product->max_price ?? $product->min_price ?? 0;
+
+                return [
+                    'id'             => $item->id,
+                    'type'           => 'product',
+                    'name'           => $product->name ?? '—',
+                    'image'          => $product->image
+                        ? asset('storage/' . $product->image)
+                        : null,
+                    'original_price' => $price,
+                    'final_price'    => $price,          // apply coupon logic here if you have one
+                    'discount_amount'=> 0,
+                    'coupon_code'    => null,
+                    'qty'            => $item->qty ?? 1,
+                    'currency'       => 'ر.س',
+                ];
+            })->values(),
+
+            // ── Services ──
+            'services' => $services->filter(fn($b) => $b->service)->map(function ($booking) {
+                $svc      = $booking->service;            // BookingService pivot
+                $info     = $svc->service   ?? null;      // Service model
+                $employee = $svc->employee  ?? null;
+
+                $originalPrice  = $svc->service_price   ?? 0;
+                $discountAmount = $svc->discount_amount  ?? 0;
+
+                return [
+                    'id'             => $booking->id,
+                    'type'           => 'service',
+                    'name'           => $info?->name ?? '—',
+                    'image'          => $info?->image
+                        ? asset('storage/' . $info->image)
+                        : null,
+                    'employee_name'  => $employee?->name ?? null,
+                    'booking_date'   => $booking->date
+                        ? \Carbon\Carbon::parse($booking->date)->translatedFormat('D d M Y')
+                        : null,
+                    'original_price' => $originalPrice,
+                    'final_price'    => $originalPrice - $discountAmount,
+                    'discount_amount'=> $discountAmount,
+                    'coupon_code'    => $booking->coupon_code ?? null,
+                    'qty'            => 1,
+                    'currency'       => 'ر.س',
+                ];
+            })->values(),
+
+            // ── Gift Cards ──
+            'gifts' => $gifts->map(function ($gift) {
+                return [
+                    'id'             => $gift->id,
+                    'type'           => 'gift',
+                    'name'           => $gift->title ?? __('messages.gift_card'),
+                    'image'          => null,
+                    'original_price' => $gift->subtotal ?? 0,
+                    'final_price'    => $gift->subtotal  ?? 0,
+                    'discount_amount'=> 0,
+                    'coupon_code'    => null,
+                    'qty'            => 1,
+                    'currency'       => 'ر.س',
+                ];
+            })->values(),
+
+            // ── Summary ──
+            'summary' => [
+                'products_count' => $products->count(),
+                'services_count' => $serviceCount,
+                'gifts_count'    => $gifts->count(),
+                'subtotal'       => number_format($cartTotal,    2, '.', ''),
+                'discount'       => number_format($discountTotal, 2, '.', ''),
+                'final'          => number_format($finalPrice,   2, '.', ''),
+                'currency'       => 'ر.س',
+            ],
+        ]);
+    }
+
+// ── Private helper ────────────────────────────────────────────────
+    private function emptySidebarResponse(): array
+    {
+        return [
+            'products' => [],
+            'services' => [],
+            'gifts'    => [],
+            'summary'  => [
+                'products_count' => 0,
+                'services_count' => 0,
+                'gifts_count'    => 0,
+                'subtotal'       => '0.00',
+                'discount'       => '0.00',
+                'final'          => '0.00',
+                'currency'       => 'ر.س',
+            ],
+        ];
+    }
     public function index(Request $request)
     {
         $userId = auth()->user()->id;
-        
+
         $services = Booking::with('service.service', 'service.employee')
             ->where('created_by', $userId)
             ->whereNotIn('status', ['cancelled', 'completed'])
@@ -44,27 +184,27 @@ class BookingCartController extends Controller
         $servicePrice = $services->sum(function ($item) {
             return $item->service ? ($item->service->service_price ?? 0) : 0;
         });
-        
+
         $products = Cart::with('product')->where(['user_id' => $userId])->get();
-        
+
         $productPrice = $products->sum(function ($item) {
             $price = $item->product->max_price ?? $item->product->min_price ?? 0;
             return $price * ($item->qty ?? 1);
         });
-        
+
         $gifts = GiftCard::where('user_id', $userId)->where('payment_status', 0 )->get();
 
         $GiftPrice = $gifts->sum(fn($g) => $g->subtotal ?? 0);
-        
+
         $cartTotal = $servicePrice + $productPrice + $GiftPrice;
-        
+
         $discountTotal = $services->sum(fn($item) =>
             $item->services->sum(fn($s) => $s->discount_amount ?? 0)
         );
 
 
         $finalPrice = $cartTotal - $discountTotal;
-        
+
         $serviceCount = $services->sum(fn($item) => $item->service ? 1 : 0);
 
         $productCount = $products->count();
@@ -101,7 +241,7 @@ class BookingCartController extends Controller
                             $price = $sub['price'];
                             $staffId = $sub['staffId'];
                             $startDateTime = \Carbon\Carbon::createFromFormat('Y-m-d H:i', $date . ' ' . $time);
-                            
+
                             $booking = new Booking();
                             if($data['branch'] != 0){
                                 $booking->note = 'العميل: ' . $user->first_name .
@@ -118,7 +258,7 @@ class BookingCartController extends Controller
                             $booking->status          = 'pending';
                             $booking->payment_type       =  $btn_value;
                             $booking->save();
-                            
+
                             //  الحجز التاني
                             $bookingService = new BookingService();
                             $bookingService->booking_id       = $booking->id;
@@ -144,75 +284,75 @@ class BookingCartController extends Controller
                 'message' => __('messages.booking_added_to_cart')
             ], 201);
         }
-    
+
     public function destroy($id)
     {
         $user = auth()->user();
-    
+
         $booking = Booking::find($id);
-    
+
         if (!$booking) {
             return response()->json(['message' => 'Cart item not found'], 404);
         }
-        
+
         $booking->delete();
-    
+
         return redirect()->back()->with('success', __('messages.item_removed_from_cart'));
-    } 
- 
+    }
+
     public function destroy_product($id)
     {
         $user = auth()->user();
-    
+
         $product = Cart::findOrFail($id);
-    
+
         if (!$product) {
             return response()->json(['message' => 'Cart item not found'], 404);
         }
-        
+
         $product->delete();
-    
+
         return redirect()->back()->with('success', __('messages.item_removed_from_cart'));
-    } 
+    }
 
     public function destroy_gift($id)
     {
         $user = auth()->user();
-    
+
         $gift = GiftCard::findOrFail($id);
-    
+
         if (!$gift) {
             return response()->json(['message' => 'Cart item not found'], 404);
         }
-        
-        $gift->delete();
-    
-        return redirect()->back()->with('success', __('messages.item_removed_from_cart'));
-    } 
 
-    
+        $gift->delete();
+
+        return redirect()->back()->with('success', __('messages.item_removed_from_cart'));
+    }
+
+
     public function destroy_All()
     {
         $user = auth()->user();
-        
+
         $bookings = Booking::with('services', 'products')->where('user_id', $user->id)->where('payment_status', 0)->get();
-        
+
         foreach ($bookings as $booking) {
             $booking->services()->delete();
-    
+
             $booking->products()->delete();
-    
+
             $booking->delete();
         }
 
         Cart::where('user_id', $user->id)->delete();
-        
+
         GiftCard::where('user_id', $user->id)->where('payment_status', 0)->delete();
 
         return redirect()->back()->with('success', __('messages.items_removed_from_cart'));
     }
 
-    
+
      public function balance(Request $request)
     {
         $user = $request->user(); // المستخدم الحالي من التوكن
@@ -230,54 +370,54 @@ class BookingCartController extends Controller
     public function handlePaymentResult(Request $request)
     {
         $tapId = $request->get('tap_id');
-    
+
         if (!$tapId) {
             if ($request->expectsJson()) {
                 return response()->json(['status' => false, 'message' => 'No tap_id provided.'], 400);
             }
             return view('components.frontend.status.ERPAY')->with('error', 'No tap_id provided.');
         }
-    
+
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . env('TAP_SECRET_KEY'),
         ])->get("https://api.tap.company/v2/charges/{$tapId}");
-    
+
         $charge = $response->json();
-    
+
         if (isset($charge['status']) && $charge['status'] === 'CAPTURED') {
             $user = auth()->user();
-    
+
             $discountAmount = session('discountAmount', 0);
             $loyaltyDiscount = session('loyaltyDiscount', 0);
             $totalDiscount = $discountAmount + $loyaltyDiscount;
             $finalTotal = session('finalTotal', 0);
-    
+
             $cartIds = Booking::where('user_id', $user->id)
                     ->where('payment_status', 0)
                     ->pluck('id')
                     ->toArray();
-                        
+
             $gift_ids = GiftCard::where('user_id', $user->id)
                     ->where('payment_status', 0)
                     ->pluck('id')
                     ->toArray();
-                        
+
             if ($loyaltyDiscount > 0) {
                 DB::table('loyalty_points')
                     ->where('user_id', $user->id)
                     ->where('points', '>=', $loyaltyDiscount)
                     ->decrement('points', $loyaltyDiscount);
             }
-    
+
             $this->addLoyaltyPoints($user->id, $charge['amount']);
             $invoiceId = $this->storeInvoice($user->id, $discountAmount, $loyaltyDiscount, $finalTotal, $cartIds , $gift_ids);
             app(AffiliateCommissionService::class)->handleSuccessfulPurchase($user->id, $invoiceId, (float) $finalTotal);
             $this->paymentSuccess( $cartIds , $tapId , 'card');
-    
+
             Booking::where('user_id', $user->id)
                 ->where('payment_status', 0)
                 ->update(['payment_status' => 1]);
-            
+
             $this->activateGiftCards($user->id);
 
             if ($request->expectsJson()) {
@@ -287,7 +427,7 @@ class BookingCartController extends Controller
                     'data' => $charge
                 ]);
             }
-    
+
             return view('components.frontend.status.CAPTURED');
         } else {
             if ($request->expectsJson()) {
@@ -297,7 +437,7 @@ class BookingCartController extends Controller
                     'tap_response' => $charge
                 ]);
             }
-    
+
             return view('components.frontend.status.FAILED');
         }
 }
@@ -350,25 +490,25 @@ class BookingCartController extends Controller
             ]);
         }
     }
-    
+
     private function activateGiftCards($userId)
     {
         // sms
         $smsService = new TaqnyatSmsService();
-        
+
         $giftCards = GiftCard::where('user_id', $userId)
             ->where('payment_status', 0)
             ->get();
-    
+
         foreach ($giftCards as $giftCard) {
             $ref = null;
             $balance = 0;
-    
+
             if ($giftCard->delivery_method == 'بطاقة الكترونية') {
                 $ref = 'REF-' . strtoupper(Str::random(8));
                 $balance = $giftCard->subtotal;
             }
-    
+
         $giftCard->update([
                 'payment_status' => 1,
                 'ref'            => $ref,
@@ -376,15 +516,15 @@ class BookingCartController extends Controller
             ]);
 
         $phone = $giftCard->sender_phone;
-    
+
         if ($phone) { $smsService->sendGift($phone, $giftCard->sender_name , 'sender');}
-    
+
         $phone_2 = $giftCard->recipient_phone;
-    
+
         if ($phone_2) {$smsService->sendGift($phone_2, $giftCard->recipient_name , 'recipient' , $ref);}
         }
     }
-    
+
     public function addToCart(Request $request, $id)
     {
         $qty = (int) $request->query('qty', 1);

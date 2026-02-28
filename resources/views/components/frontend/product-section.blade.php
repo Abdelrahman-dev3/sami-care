@@ -19,7 +19,7 @@
                             'categories' => $product->categories,
                             'min_price' => $product->min_price,
                             'max_price' => $product->max_price,
-                        ]) 
+                        ])
                     </div>
                 @endforeach
             </div>
@@ -42,15 +42,17 @@
             .then(response => response.json())
             .then(data => {
                 createNotify({ title: data.status , desc: data.message });
+                CartSidebar.refresh();   // re-fetch cart data + update badge
+                CartSidebar.open();
             })
             .catch(error => {
                 createNotify({ title: data.status, desc: data.message });
             });
     }
     function shownav(){
-        createNotify({ 
-            title: "{{ __('product.notification') }}", 
-            desc: "{{ __('product.login_required_feature') }}" 
+        createNotify({
+            title: "{{ __('product.notification') }}",
+            desc: "{{ __('product.login_required_feature') }}"
         });
     }
 </script>

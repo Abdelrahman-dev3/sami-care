@@ -28,15 +28,7 @@
     <!-- Lightning Progress Bar -->
     @include('components.frontend.progress-bar')
 
-    <!-- Hero Section (30% of screen) -->
-    <div class="position-relative" style="height: 40vh;">
-        <img src="{{ asset('images/frontend/slider1.webp') }}" alt="About Us Hero" class="w-100 h-100" style="object-fit: cover;">
-        <div class="position-absolute top-0 start-0 w-100 h-100" style="background: rgba(0,0,0,0.35);"></div>
-
-        <!-- First Navbar -->
-        @include('components.frontend.navbar')
-
-        <!-- Second Navbar -->
+    <div class="position-relative" style="height: 17vh;">
         @include('components.frontend.second-navbar')
     </div>
 
@@ -46,7 +38,6 @@
             <h2 class="mb-5 text-center" style="font-size: 42px;background: linear-gradient(90deg, #CF9233, #212121);-webkit-background-clip: text;-webkit-text-fill-color: transparent;font-size: 2.5rem; font-weight: bold;">
                 {{ __('messagess.our_offers') }}
             </h2>
-
             @if(isset($packages) && $packages->count() > 0)
                 <div class="row g-4">
                     @foreach($packages as $index => $package)

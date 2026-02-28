@@ -613,5 +613,21 @@ return [
     'WheelOfFortune' => 'Wheel Of Fortune',
     'failed_to_remove_item' => 'Failed to remove item from cart. Please try again.',
     'not_available_now' => 'Currently unavailable',
-];
+    'cart'             => 'cart',
+    'close'            => 'close',
+    'cart_empty'       => 'cart empty',
+    'products'         => 'products',
+    'services'         => 'services',
+    'discount_coupon'  => 'discount coupon',
+    'enter_coupon'     => 'enter coupon...',
+    'apply'            => 'apply',
+    'order_summary'    => 'order summary',
+    'products_count'   => 'products count',
+    'services_count'   => 'services count',
+    'subtotal'         => 'subtotal',
+    'discount'         => 'discount',
+    'final_price'      => 'final priceي',
+    'go_to_cart'       => 'go to cart',
+    'remove'           => 'remove',
+    ];
 

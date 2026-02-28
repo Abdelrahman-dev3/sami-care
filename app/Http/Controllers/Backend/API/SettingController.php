@@ -240,9 +240,60 @@ class SettingController extends Controller
 
         return response()->json([
             'status' => true,
-            'message' => __('Duration updated successfully')
+            'message' => __('messages.updated')
         ]);
     }
 
+
+
+// ─────────────────────────────────────────────
+// Add these two methods to your SettingController
+// (or whichever controller handles settings)
+// ─────────────────────────────────────────────
+
+    public function getPointsValidity()
+    {
+        $validity = Setting::where('name', 'points_validity_value')->first();
+        $unit = Setting::where('name', 'points_validity_unit')->first();
+
+        return response()->json([
+            'status' => true,
+            'data' => [
+                'validity' => $validity?->val ?? null,
+                'unit' => $unit?->val ?? 'months',
+            ]
+        ]);
+    }
+
+    public function updatePointsValidity(Request $request)
+    {
+        $request->validate([
+            'validity' => 'required|numeric|min:1',
+            'unit' => 'required|in:days,months,years',
+        ]);
+
+        Setting::updateOrCreate(
+            ['name' => 'points_validity_value'],
+            [
+                'val' => $request->validity,
+                'type' => 'number',
+                'updated_by' => auth()->id(),
+            ]
+        );
+
+        Setting::updateOrCreate(
+            ['name' => 'points_validity_unit'],
+            [
+                'val' => $request->unit,
+                'type' => 'string',
+                'updated_by' => auth()->id(),
+            ]
+        );
+
+        return response()->json([
+            'status' => true,
+            'message' => __('messages.updated')
+        ]);
+    }
 
 }
