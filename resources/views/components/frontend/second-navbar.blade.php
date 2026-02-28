@@ -84,20 +84,58 @@
                         </svg>
                     </div>
                 @elseif($homeTheme === 'saudi_national_day')
-                    <div class="nav-theme-item nav-theme-flag">
-                        <svg viewBox="0 0 160 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                            <rect x="0" y="20" width="140" height="60" rx="8" fill="#0f6d4f"/>
-                            <rect x="0" y="20" width="140" height="60" rx="8" fill="url(#flagGlow)"/>
+                    <div class="nav-theme-item nav-theme-flag nav-theme-flag-main">
+                        <svg viewBox="0 0 260 150" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                             <defs>
-                                <linearGradient id="flagGlow" x1="0" y1="0" x2="1" y2="1">
-                                    <stop offset="0" stop-color="#ffffff" stop-opacity="0.2"/>
+                                <linearGradient id="flagGlowMain" x1="0" y1="0" x2="1" y2="1">
+                                    <stop offset="0" stop-color="#ffffff" stop-opacity="0.25"/>
                                     <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
                                 </linearGradient>
+                                <linearGradient id="flagShadeMain" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0" stop-color="#118560"/>
+                                    <stop offset="1" stop-color="#0b5f44"/>
+                                </linearGradient>
                             </defs>
-                            <rect x="12" y="52" width="88" height="6" rx="3" fill="#ffffff"/>
-                            <rect x="100" y="48" width="30" height="14" rx="7" fill="#ffffff"/>
+                            <rect x="8" y="20" width="6" height="110" rx="3" fill="#c9c9c9"/>
+                            <path d="M18 30 Q80 16 142 28 T250 30 V112 Q190 126 132 114 T18 112 Z" fill="url(#flagShadeMain)"/>
+                            <path d="M18 30 Q80 16 142 28 T250 30 V112 Q190 126 132 114 T18 112 Z" fill="url(#flagGlowMain)"/>
+                            <path d="M48 60 C80 46 120 46 150 58 C170 66 200 66 222 56" stroke="#ffffff" stroke-width="6" stroke-linecap="round" fill="none"/>
+                            <path d="M56 78 C92 66 120 66 152 76 C172 82 198 82 214 74" stroke="#ffffff" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.85"/>
+                            <rect x="70" y="95" width="140" height="7" rx="3.5" fill="#ffffff"/>
+                            <rect x="60" y="92" width="16" height="12" rx="4" fill="#ffffff"/>
                         </svg>
                     </div>
+                    <div class="nav-theme-item nav-theme-flag nav-theme-flag-side">
+                        <svg viewBox="0 0 220 130" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <defs>
+                                <linearGradient id="flagGlowSide" x1="0" y1="0" x2="1" y2="1">
+                                    <stop offset="0" stop-color="#ffffff" stop-opacity="0.22"/>
+                                    <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+                                </linearGradient>
+                                <linearGradient id="flagShadeSide" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0" stop-color="#138a63"/>
+                                    <stop offset="1" stop-color="#0b5a41"/>
+                                </linearGradient>
+                            </defs>
+                            <rect x="10" y="22" width="5" height="95" rx="2.5" fill="#d0d0d0"/>
+                            <path d="M18 30 Q70 18 122 28 T210 30 V104 Q158 116 118 108 T18 104 Z" fill="url(#flagShadeSide)"/>
+                            <path d="M18 30 Q70 18 122 28 T210 30 V104 Q158 116 118 108 T18 104 Z" fill="url(#flagGlowSide)"/>
+                            <path d="M46 58 C70 48 110 48 140 56 C156 62 178 62 194 54" stroke="#ffffff" stroke-width="5" stroke-linecap="round" fill="none"/>
+                            <rect x="70" y="86" width="98" height="6" rx="3" fill="#ffffff"/>
+                        </svg>
+                    </div>
+                    <div class="nav-theme-item nav-theme-emblem">
+                        <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <g stroke="#d8f5e7" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none">
+                                <path d="M25 80 L95 40"/>
+                                <path d="M25 40 L95 80"/>
+                                <path d="M60 28 L60 70"/>
+                                <path d="M40 38 Q60 18 80 38"/>
+                                <path d="M38 50 Q60 30 82 50"/>
+                            </g>
+                        </svg>
+                    </div>
+                    <div class="nav-theme-item nav-theme-sparkles"></div>
                     <div class="nav-theme-item nav-theme-ribbon"></div>
                 @endif
             </div>

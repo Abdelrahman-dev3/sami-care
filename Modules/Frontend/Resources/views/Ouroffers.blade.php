@@ -22,6 +22,9 @@
         rel="stylesheet">
 </head>
 <body>
+    @php
+        use Carbon\Carbon;
+    @endphp
     <!-- Lightning Progress Bar -->
     @include('components.frontend.progress-bar')
 
@@ -38,8 +41,39 @@
     </div>
 
     <!-- Page Content -->
-    <main>
-        @include('components.frontend.learn-about-section')
+    <main class="py-5">
+        <div class="container" style="padding: 0 5rem;">
+            <h2 class="mb-5 text-center" style="font-size: 42px;background: linear-gradient(90deg, #CF9233, #212121);-webkit-background-clip: text;-webkit-text-fill-color: transparent;font-size: 2.5rem; font-weight: bold;">
+                {{ __('messagess.our_offers') }}
+            </h2>
+
+            @if(isset($packages) && $packages->count() > 0)
+                <div class="row g-4">
+                    @foreach($packages as $index => $package)
+                        <div class="col-12 col-lg-4">
+                            @php
+                                $startDate = $package->start_date ? Carbon::parse($package->start_date)->translatedFormat('d-m-Y') : '-';
+                                $endDate = $package->end_date ? Carbon::parse($package->end_date)->translatedFormat('d-m-Y') : '-';
+                            @endphp
+                            @include('components.frontend.package-card', [
+                                'image' => $package->media->first()->original_url ?? asset('images/frontend/Rectangle 42489.png'),
+                                'name' => $package->name,
+                                'description' => Str::limit($package->description ?? '', 100),
+                                'price' => 'SR ' . number_format($package->package_price ?? 0, 2),
+                                'duration' => $package->duration_min ?? 0 . ' min',
+                                'services_count' => $package->service ? $package->service->count() : 0,
+                                'package_id' => $package->id
+                            ])
+                            <div class="mt-2 text-muted" style="font-size: 0.9rem;">
+                                {!! nl2br(__('messagess.valid_offer', ['start' => $startDate, 'end' => $endDate])) !!}
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @else
+                @include('components.frontend.no-offers')
+            @endif
+        </div>
     </main>
 
     <!-- Footer -->

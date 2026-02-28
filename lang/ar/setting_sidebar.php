@@ -29,4 +29,5 @@ return [
     'lbl_language' => 'إعدادات اللغة',
     'lbl_menu' => 'مُنشئ القائمة',
     'lbl_inv_setting' => 'إعدادات الفاتورة',
+    'lbl_home_theme' => 'ثيم الصفحة الرئيسية',
 ];

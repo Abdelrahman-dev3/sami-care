@@ -327,26 +327,72 @@
         display: block;
     }
     .nav-theme-flag {
-        right: 20px;
-        top: -6px;
-        width: 110px;
         filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.35));
-        animation: flagWave 4s ease-in-out infinite;
         transform-origin: left center;
+    }
+    .nav-theme-flag-main {
+        right: 18px;
+        top: -18px;
+        width: 170px;
+        animation: flagWaveStrong 3.8s ease-in-out infinite;
+    }
+    .nav-theme-flag-side {
+        left: 18px;
+        top: -14px;
+        width: 125px;
+        opacity: 0.9;
+        transform: scaleX(-1);
+        animation: flagWaveAlt 4.6s ease-in-out infinite;
     }
     .nav-theme-flag svg {
         width: 100%;
         height: auto;
         display: block;
     }
+    .nav-theme-emblem {
+        right: 190px;
+        top: -6px;
+        width: 48px;
+        opacity: 0.85;
+        filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.3));
+        animation: emblemPulse 3.2s ease-in-out infinite;
+    }
+    .nav-theme-emblem svg {
+        width: 100%;
+        height: auto;
+        display: block;
+    }
+    .nav-theme-sparkles {
+        left: 220px;
+        right: 220px;
+        top: -4px;
+        height: 52px;
+        background-image:
+            radial-gradient(circle, rgba(214, 255, 231, 0.9) 0 3px, transparent 4px),
+            radial-gradient(circle, rgba(175, 235, 205, 0.9) 0 2px, transparent 3px),
+            radial-gradient(circle, rgba(255, 255, 255, 0.8) 0 2px, transparent 3px);
+        background-size: 40px 20px, 60px 26px, 70px 30px;
+        background-position: 0 0, 20px 6px, 40px 10px;
+        opacity: 0.85;
+        animation: sparklesTwinkle 3.8s ease-in-out infinite;
+    }
     .nav-theme-ribbon {
         left: 180px;
         right: 200px;
-        top: 6px;
-        height: 8px;
-        background: linear-gradient(90deg, rgba(15, 109, 79, 0) 0%, rgba(46, 166, 120, 0.6) 50%, rgba(15, 109, 79, 0) 100%);
+        top: 8px;
+        height: 10px;
+        background: linear-gradient(90deg, rgba(15, 109, 79, 0) 0%, rgba(67, 196, 146, 0.75) 50%, rgba(15, 109, 79, 0) 100%);
         border-radius: 999px;
-        opacity: 0.7;
+        opacity: 0.8;
+    }
+    .theme-saudi_national_day::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 70% -40%, rgba(68, 200, 150, 0.35), transparent 60%),
+                    radial-gradient(circle at 10% -30%, rgba(20, 150, 110, 0.35), transparent 55%);
+        pointer-events: none;
+        z-index: 0;
     }
     @keyframes lanternSwing {
         0% { transform: rotate(-3deg); }
@@ -368,6 +414,22 @@
     @keyframes flagWave {
         0%, 100% { transform: rotate(0deg); }
         50% { transform: rotate(3deg); }
+    }
+    @keyframes flagWaveStrong {
+        0%, 100% { transform: rotate(-1deg); }
+        50% { transform: rotate(4deg); }
+    }
+    @keyframes flagWaveAlt {
+        0%, 100% { transform: scaleX(-1) rotate(1deg); }
+        50% { transform: scaleX(-1) rotate(-4deg); }
+    }
+    @keyframes sparklesTwinkle {
+        0%, 100% { opacity: 0.6; filter: blur(0px); }
+        50% { opacity: 1; filter: blur(0.3px); }
+    }
+    @keyframes emblemPulse {
+        0%, 100% { transform: scale(0.96); opacity: 0.75; }
+        50% { transform: scale(1.05); opacity: 0.95; }
     }
     @media (max-width: 991.98px) {
         .nav-theme-layer {

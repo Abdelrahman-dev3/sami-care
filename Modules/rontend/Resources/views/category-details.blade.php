@@ -504,28 +504,58 @@
           clip-path: inset(0 0 0 100%);
         }
       }
-  </style>
+  
+/* Sami logo loader override */
+#wifi-loader.sami-wifi-loader {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw;
+  height: 100vh;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center;
+  background: rgba(245, 246, 250, 0.92);
+  z-index: 999999;
+  border-radius: 0;
+  margin: 0;
+  padding: 0;
+}
+
+#wifi-loader .sami-wifi-loader__logo {
+  width: 90px;
+  max-width: 38vw;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  animation: sami-logo-slide 1s ease-in-out infinite;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.18));
+  transform-origin: center;
+}
+
+@keyframes sami-logo-slide {
+  0% {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+  55% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+}
+</style>
 
 </head>
 
 <body>
     @include('components.frontend.progress-bar')
-    <div id="wifi-loader" style="display:none;">
-        <svg class="circle-outer" viewBox="0 0 86 86">
-            <circle class="back" cx="43" cy="43" r="40"></circle>
-            <circle class="front" cx="43" cy="43" r="40"></circle>
-            <circle class="new" cx="43" cy="43" r="40"></circle>
-        </svg>
-        <svg class="circle-middle" viewBox="0 0 60 60">
-            <circle class="back" cx="30" cy="30" r="27"></circle>
-            <circle class="front" cx="30" cy="30" r="27"></circle>
-        </svg>
-        <svg class="circle-inner" viewBox="0 0 34 34">
-            <circle class="back" cx="17" cy="17" r="14"></circle>
-            <circle class="front" cx="17" cy="17" r="14"></circle>
-        </svg>
-        <div class="text" data-text="Loading"></div>
-    </div>
+    <div id="wifi-loader" class="sami-wifi-loader" style="display:none;">
+    <img src="{{ asset('images/samilogo.png') }}" alt="loading" class="sami-wifi-loader__logo">
+</div>
     <div class="position-relative vh-17">
         @include('components.frontend.second-navbar')
     </div>

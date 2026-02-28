@@ -33,4 +33,5 @@ return [
     'lbl_custom_code' => 'Custom Code',
     'lbl_custom_css_code' => 'Custom Css Code',
     'lbl_custom_js_code' => 'Custom js Code',
+    'lbl_home_theme' => 'Homepage Theme',
 ];

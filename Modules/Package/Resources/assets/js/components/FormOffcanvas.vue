@@ -49,7 +49,15 @@
                   <Multiselect id="branch_id" v-model="branch_id" :value="branch_id" placeholder="Select Branch" v-bind="singleSelectOption" :options="branch.options" @select="branchSelect" class="form-group"> </Multiselect>
                   <span class="text-danger">{{ errors.branch_id }}</span>
                 </div>
-                <div class="col-md-4">
+                <div class="form-group col-md-4">
+                  <label class="form-label" for="type">{{ $t('package.lbl_type') }}</label><span class="text-danger">*</span>
+                  <select id="type" class="form-control" v-model="type">
+                    <option value="package">{{ $t('package.lbl_type_package') }}</option>
+                    <option value="offer">{{ $t('package.lbl_type_offer') }}</option>
+                  </select>
+                  <span class="text-danger">{{ errors.type }}</span>
+                </div>
+                <div class="col-md-4" v-if="isOffer">
                   <div class="form-group">
                     <label class="form-label" for="start_date">{{ $t('package.lbl_start_at') }}</label><span class="text-danger">*</span>
                     <div class="w-100">
@@ -58,7 +66,7 @@
                     </div>
                   </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-4" v-if="isOffer">
                   <label class="form-label" for="end_date">{{ $t('package.lbl_end_at') }}</label><span class="text-danger">*</span>
                   <div class="w-100">
                     <flat-pickr id="end_date" class="form-control" :config="config" v-model="end_date" :value="end_date" :placeholder="$t('package.lbl_end_at')"></flat-pickr>
@@ -318,6 +326,7 @@ const defaultData = () => {
     // start_date: new Date().toJSON().slice(0, 10),
     end_date: null,
     start_date: null,
+    type: 'package',
     branch_id: '',
     status: 1,
     is_featured: 0,
@@ -357,6 +366,7 @@ const setFormData = (data) => {
       description: data.description,
       start_date: data.start_date,
       end_date: data.end_date,
+      type: data.type || 'package',
       status: data.status ? true : false,
       is_featured: data.is_featured || 0,
       service_id: data.service_id || [],
@@ -399,13 +409,22 @@ const validationSchema = yup.object({
       en: yup.string().required('English name is required')
     }),
   branch_id: yup.string().required('Branch is a required field'),
-  start_date: yup.string().required('Start Date  is required'),
-  end_date: yup.string()
-    .required('End Date is required')
-    .test('is-greater', 'End Date must be greater than Start Date', function (value) {
-      const { start_date } = this.parent;
-      return new Date(value) > new Date(start_date);
-    }),
+  type: yup.string().required('Type is required'),
+  start_date: yup.string().nullable().when('type', {
+    is: 'offer',
+    then: (schema) => schema.required('Start Date  is required'),
+    otherwise: (schema) => schema.nullable()
+  }),
+  end_date: yup.string().nullable().when('type', {
+    is: 'offer',
+    then: (schema) => schema
+      .required('End Date is required')
+      .test('is-greater', 'End Date must be greater than Start Date', function (value) {
+        const { start_date } = this.parent;
+        return new Date(value) > new Date(start_date);
+      }),
+    otherwise: (schema) => schema.nullable()
+  }),
   services: yup.array().of(
     yup.object().shape({
       service_id: yup.number().required('Service selection is required'),
@@ -444,6 +463,7 @@ const { handleSubmit, errors, resetForm } = useForm({
       ar: '',
       en: ''
     },
+    type: 'package'
     // services: selectedServices.value // Initial value for services from selectedServices
   } })
 // const { value: name } = useField('name')
@@ -452,6 +472,7 @@ const { value: nameEn, errorMessage: nameEnError } = useField('name.en')
 const { value: branch_id } = useField('branch_id')
 const { value: status } = useField('status')
 const { value: is_featured } = useField('is_featured')
+const { value: type } = useField('type')
 
 const { value: start_date } = useField('start_date')
 const { value: end_date } = useField('end_date')
@@ -514,6 +535,8 @@ const servicesError = computed(() => {
   }
 });
 
+const isOffer = computed(() => type.value === 'offer');
+
 
 // useField for services
 const { value: services } = useField('services');
@@ -530,6 +553,13 @@ watchEffect(() => {
 
   } else {
       services.value = servicesComputed.value;
+  }
+});
+
+watch(type, (newType) => {
+  if (newType !== 'offer') {
+    start_date.value = null;
+    end_date.value = null;
   }
 });
 </script>
