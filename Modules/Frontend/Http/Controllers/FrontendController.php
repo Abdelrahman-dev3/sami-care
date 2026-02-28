@@ -3,9 +3,12 @@
 namespace Modules\Frontend\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\LoyaltyPointTransaction;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Modules\Service\Models\Service;
 use Modules\Category\Models\Category;
@@ -64,7 +67,8 @@ class FrontendController extends Controller
 //        dd($prizes);
         $intervalDays = max((int) Setting::get('wheel_display_interval_days', 1), 1);
         $shouldShowWheel = $this->shouldShowWheel($intervalDays);
-
+        $setting = DB::table('settings')->where('name', 'service_duration_visibility')->first();
+        $showDuration = $setting ? (bool) $setting->val : false;
         return view('frontend::index', compact('services', 'categories', 'packages' , 'products' , 'prizes'));
     }
 
@@ -406,6 +410,29 @@ class FrontendController extends Controller
         }
 
         return view('frontend::become-affiliate');
+    }
+
+    private function shouldShowWheel(int $intervalDays): bool
+    {
+        $query = LoyaltyPointTransaction::query()
+            ->where('source', 'wheel');
+
+        if (Auth::check()) {
+            $query->where('user_id', Auth::id());
+        } else {
+            $token = request()->cookie('wheel_guest_token');
+            if (empty($token)) {
+                return true;
+            }
+            $query->where('meta->guest_token', $token);
+        }
+
+        $lastSpin = $query->latest('created_at')->first();
+        if (!$lastSpin || !($lastSpin->created_at instanceof Carbon)) {
+            return true;
+        }
+
+        return Carbon::now()->greaterThanOrEqualTo($lastSpin->created_at->copy()->addDays($intervalDays));
     }
 
     public function activateAffiliate()
