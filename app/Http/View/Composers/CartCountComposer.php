@@ -7,6 +7,7 @@ use Modules\Booking\Models\BookingService;
 use App\Models\Cart;
 use App\Models\GiftCard;
 use Illuminate\View\View;
+use Modules\Package\Models\BookingPackages;
 
 /**
  * File: app/Http/View/Composers/CartCountComposer.php
@@ -26,6 +27,7 @@ class CartCountComposer
             // Products in cart
             $productCount = Cart::where('user_id', $userId)->count();
 
+            // Active service bookings in cart
             $services = Booking::with('service.service', 'service.employee')
                 ->where('created_by', $userId)
                 ->whereNotIn('status', ['cancelled', 'completed'])
@@ -33,14 +35,24 @@ class CartCountComposer
                 ->where('payment_status', 0)
                 ->whereNull('deleted_by')
                 ->get();
-            $serviceCount = $services->sum(fn($item) => $item->service ? 1 : 0);
+            $serviceCount  = $services->filter(fn($b) => $b->service)->count();
+           
+
             // Unpaid gift cards
             $giftCount = GiftCard::where('user_id', $userId)
                 ->where('payment_status', 0)
                 ->count();
 
-//            dd( $productCount , $serviceCount , $giftCount);
-            $count = $productCount + $serviceCount + $giftCount;
+            // Booking packages (same conditions as index())
+            $packageCount = BookingPackages::whereHas('booking', function ($q) use ($userId) {
+                $q->where('created_by', $userId)
+                    ->whereNotIn('status', ['cancelled', 'completed'])
+                    ->where('payment_type', 'cart')
+                    ->where('payment_status', 0)
+                    ->whereNull('deleted_by');
+            })->count();
+
+            $count = $productCount + $serviceCount + $giftCount + $packageCount;
         }
 
         $view->with('cartCount', $count);

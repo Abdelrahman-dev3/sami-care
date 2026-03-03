@@ -1,64 +1,41 @@
 <?php
 
 namespace App\Services\Payment;
-use Modules\Booking\Models\Booking;
-use Modules\Product\Models\Cart;
-use App\Models\LoyaltyPoint;
-use App\Models\GiftCard;
 use Modules\Promotion\Models\Coupon;
-use Illuminate\Support\Facades\DB;
-use App\Models\Setting;
 
 class PaymentCalculatorService
 {
-    public function calculateTotal(string $isBuyNow, ?string $couponCode = null): array
+    public function calculateTotal(bool $isBuyNow, ?string $couponCode = null): array
     {
         $total = 0;
         $productTotal = 0;
-        $userId = auth()->id();
-        $cartIds    = [];
-        $giftIds    = [];
-        $productIds = [];
+        $user = auth()->user();
+        $userId = $user?->id;
+        $servicesIds = [];
+        $giftIds     = [];
+        $productIds  = [];
+
+        if (!$userId) {
+            return ['error' => __('auth.unauthenticated')];
+        }
         
-        if ($isBuyNow === 'checkout') {
-                $services = Booking::with('service.service')
-                    ->where('created_by', $userId)
-                    ->whereNotIn('status', ['cancelled', 'completed'])
-                    ->where('payment_type', 'payment')
-                    ->where('payment_status', 0)
-                    ->whereNull('deleted_by')
-                    ->get();
+        if ($isBuyNow) {
+            $services = $user->buyNowBookings()->with('service.service')->get();
             
-            $cartIds = $services->pluck('id')->toArray();
-
-            $total += $services->sum(fn($item) =>
-                ($item->service->service_price ?? 0) - ($item->service->discount_amount ?? 0)
-            );
+            $servicesIds = $services->pluck('id')->toArray();
+            $total += $services->sum(fn($item) => ($item->service->service_price ?? 0) - ($item->service->discount_amount ?? 0));
         } else {
-            $services = Booking::with('service.service')
-                ->where('created_by', $userId)
-                ->whereNotIn('status', ['cancelled', 'completed'])
-                ->where('payment_type', 'cart')
-                ->where('payment_status', 0)
-                ->whereNull('deleted_by')
-                ->get();
-
-            $products = Cart::with('product')->where('user_id', $userId)->get();
-            $gifts    = GiftCard::where('user_id', $userId)->where('payment_status', 0)->get();
+            $services = $user->cartBookings()->with('service.service')->get();
+            $products = $user->cartProducts()->with('product')->get();
+            $gifts    = $user->pendingGiftCards()->get();
             
+            $servicesIds    = $services->pluck('id')->toArray();
             $productIds = $products->pluck('product_id')->toArray();
             $giftIds    = $gifts->pluck('id')->toArray();
-            $cartIds    = $services->pluck('id')->toArray();
 
-            $total += $services->sum(fn($item) =>
-                ($item->service->service_price ?? 0)
-                - ($item->service->discount_amount ?? 0)
-            );
+            $total += $services->sum(fn($item) => ($item->service->service_price ?? 0) - ($item->service->discount_amount ?? 0));
 
-            $productTotal = $products->sum(fn($item) =>
-                (($item->product->max_price ?? $item->product->min_price) ?? 0)
-                * ($item->qty ?? 1)
-            );
+            $productTotal = $products->sum(fn($item) => (($item->product->max_price ?? $item->product->min_price) ?? 0) * ($item->qty ?? 1));
 
             $total += $productTotal;
             $total += $gifts->sum(fn($g) => $g->subtotal ?? 0);
@@ -72,14 +49,10 @@ class PaymentCalculatorService
         if ($couponCode  && $couponCode != '') {
             $coupon = Coupon::where('coupon_code', $couponCode)->where('is_expired', 0)->first();
             if (!$coupon) {
-                return [
-                    'error' => __('messages.invalid_coupon')
-                ];
+                return ['error' => __('messages.invalid_coupon')];
             }
             
-            $discount = $coupon->type === 'percent'
-                ? ($finalTotal * $coupon->discount_percentage) / 100
-                : $coupon->discount_amount;
+            $discount = $coupon->type === 'percent' ? ($finalTotal * $coupon->discount_percentage) / 100 : $coupon->discount_amount;
 
             $finalTotal = max($finalTotal - $discount, 0);
         }
@@ -88,7 +61,7 @@ class PaymentCalculatorService
             'total' => $finalTotal,
             'discountAmount' => $discount,
             'tax' => $tax,
-            'cart_ids'      => $cartIds,
+            'cart_ids'      => $servicesIds,
             'gift_ids'      => $giftIds,
             'product_ids'   => $productIds,
         ];

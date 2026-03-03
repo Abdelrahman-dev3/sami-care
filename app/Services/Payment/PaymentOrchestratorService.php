@@ -19,10 +19,10 @@ class PaymentOrchestratorService
 {
     public function initiate(array $input): array
     {
+        $isBuyNow = $input['isBuyNow'];
         $gateway = $input['gateway'] ?? '';
-        $isBuyNow = $input['isBuyNow'] ?? 'cart';
         $couponCode = $input['coupon_code'] ?? null;
-        $userId = $input['user_id'] ?? auth()->id();
+        $userId = auth()->id();
 
         if (!$userId) {
             return ['status' => 'error', 'message' => __('auth.unauthenticated')];
@@ -87,7 +87,7 @@ class PaymentOrchestratorService
             'token' => (string) Str::uuid(),
             'user_id' => $userId,
             'gateway' => $gateway,
-            'page_type' => $pageType,
+            'page_type' => $isBuyNow,
             'currency' => 'SAR',
             'gross_amount' => $grossAmount,
             'amount' => $remainingAmount,
@@ -186,7 +186,7 @@ class PaymentOrchestratorService
 
     private function handleCod(
         int $userId,
-        string $pageType,
+        string $isBuyNow,
         float $grossAmount,
         float $taxAmount,
         float $discountAmount,
@@ -200,7 +200,7 @@ class PaymentOrchestratorService
         try {
             $invoiceId = null;
 
-            DB::transaction(function () use ($userId, $pageType, $grossAmount, $taxAmount, $discountAmount, $totalData, $couponCode, $requiredDeposit, &$invoiceId, $codDepositPercent) {
+            DB::transaction(function () use ($userId, $isBuyNow, $grossAmount, $taxAmount, $discountAmount, $totalData, $couponCode, $requiredDeposit, &$invoiceId, $codDepositPercent) {
                 $wallet = Wallet::where('user_id', $userId)->where('status', 1)->lockForUpdate()->first();
                 $walletBalance = (float) ($wallet->amount ?? 0);
 
@@ -233,7 +233,7 @@ class PaymentOrchestratorService
                     $grossAmount,
                     $taxAmount,
                     $discountAmount,
-                    $pageType,
+                    $isBuyNow,
                     $totalData['cart_ids'] ?? [],
                     $totalData['gift_ids'] ?? [],
                     'cash on delivery',
@@ -249,7 +249,7 @@ class PaymentOrchestratorService
                 'token' => (string) Str::uuid(),
                 'user_id' => $userId,
                 'gateway' => 'cod',
-                'is_buy_now' => $isBuyNow,
+                'page_type' => $isBuyNow,
                 'currency' => 'SAR',
                 'gross_amount' => $grossAmount,
                 'amount' => 0,

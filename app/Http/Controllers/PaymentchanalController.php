@@ -15,10 +15,10 @@ class PaymentchanalController extends Controller
     {
         $isBuyNow = $request->is_buy_now ?? false;
         $gateway = $request->paymentMethod;
-dd($isBuyNow , $gateway);
+
         $result = app(PaymentOrchestratorService::class)->initiate([
-            'gateway' => $gateway,
             'isBuyNow' => $isBuyNow,
+            'gateway' => $gateway,
             'coupon_code' => $request->invoiceCopon ?? null,
             'wallet' => (bool) $request->wallet,
             'loyalty' => (bool) $request->loyalty,

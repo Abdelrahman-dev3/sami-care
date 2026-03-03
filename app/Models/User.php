@@ -22,12 +22,14 @@ use Modules\Package\Models\BookingPackages;
 use Modules\Service\Models\ServiceEmployee;
 use Modules\Subscriptions\Models\Subscription;
 use Modules\Tip\Models\TipEarning;
+use Modules\Product\Models\Cart;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\Permission\Traits\HasRoles;
 use Modules\Wallet\Models\Wallet;
 use Modules\BussinessHour\Models\Shift;
 use Modules\Affiliate\Models\Affiliate;
 use Modules\Tracking\Models\Conversion;
+use App\Models\GiftCard;
 
 class User extends Authenticatable implements HasMedia, MustVerifyEmail
 {
@@ -160,6 +162,40 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
     public function booking()
     {
         return $this->hasMany(Booking::class, 'user_id', 'id');
+    }
+
+    public function createdBookings()
+    {
+        return $this->hasMany(Booking::class, 'created_by', 'id');
+    }
+
+    public function buyNowBookings()
+    {
+        return $this->createdBookings()
+            ->whereNotIn('status', ['cancelled', 'completed'])
+            ->where('payment_type', 'payment')
+            ->where('payment_status', 0)
+            ->whereNull('deleted_by');
+    }
+
+    public function cartBookings()
+    {
+        return $this->createdBookings()
+            ->whereNotIn('status', ['cancelled', 'completed'])
+            ->where('payment_type', 'cart')
+            ->where('payment_status', 0)
+            ->whereNull('deleted_by');
+    }
+
+    public function cartProducts()
+    {
+        return $this->hasMany(Cart::class, 'user_id', 'id');
+    }
+
+    public function pendingGiftCards()
+    {
+        return $this->hasMany(GiftCard::class, 'user_id', 'id')
+            ->where('payment_status', 0);
     }
 
     public function scopeCalenderResource($query)

@@ -96,6 +96,10 @@
 {{--                    <span class="csp-sum-label">{{ __('messages.discount') }}</span>--}}
 {{--                    <span class="csp-sum-val csp-discount" id="cspDiscount">—</span>--}}
 {{--                </div>--}}
+                <div class="csp-summary-row">
+                    <span class="csp-sum-label">{{ __('messages.packages_count') }}</span>
+                    <span class="csp-sum-val" id="cspPackagesCount">—</span>
+                </div>
                 <div class="csp-summary-row csp-total-row">
                     <span class="csp-sum-label">{{ __('messages.final_price') }}</span>
                     <span class="csp-sum-val csp-final" id="cspFinalPrice">—</span>

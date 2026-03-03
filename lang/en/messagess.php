@@ -572,6 +572,8 @@ return [
   'no_description_available' => 'No description available.',
   'price' => 'Price',
   'services_included' => 'Services Included',
+ 'packages_included' => 'packages Included',
+    'packages'=>'packages',
   'services' => 'Services',
   'error_loading_package_details' => 'An error occurred while loading package details. Please try again.',
   'book_now' => 'Book Now',
@@ -612,6 +614,7 @@ return [
     'completed' => 'Completed',
     'WheelOfFortune' => 'Wheel Of Fortune',
     'failed_to_remove_item' => 'Failed to remove item from cart. Please try again.',
+
     'not_available_now' => 'Currently unavailable',
     'cart'             => 'cart',
     'close'            => 'close',
@@ -624,10 +627,12 @@ return [
     'order_summary'    => 'order summary',
     'products_count'   => 'products count',
     'services_count'   => 'services count',
+    'packages_count'   =>'packages count',
     'subtotal'         => 'subtotal',
     'discount'         => 'discount',
     'final_price'      => 'final priceي',
     'go_to_cart'       => 'go to cart',
     'remove'           => 'remove',
     ];
+
 

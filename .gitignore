@@ -6,6 +6,10 @@
 .env
 .phpunit.result.cache
 *.log
+
+
 /storage/framework/views/*
 /storage/framework/sessions/*
+/public/js/setting-vue.min.js
 /storage/framework/
+

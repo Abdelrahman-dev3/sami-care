@@ -3,9 +3,13 @@
 namespace Modules\Frontend\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\LoyaltyPointTransaction;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Modules\Service\Models\Service;
 use Modules\Category\Models\Category;
 use Modules\Package\Models\Package;
@@ -24,11 +28,14 @@ class FrontendController extends Controller
      */
     public function index()
     {
+
+
         // Fetch active services for the homepage
         $services = Service::with(['category', 'media'])
             ->where('status', 1)
             ->take(6)
             ->get();
+
 
         // Fetch active products for the homepage
         $products = Product::with(['media' , 'categories'])
@@ -50,7 +57,7 @@ class FrontendController extends Controller
         // Fetch active packages for the homepage
         $packages = Package::with(['service', 'service.services', 'media'])
             ->where('status', 1)
-            ->basePackages()
+            ->whereDate('end_date', '>=', now())
             ->take(6)
             ->get();
 
@@ -64,7 +71,10 @@ class FrontendController extends Controller
         $intervalDays = max((int) Setting::get('wheel_display_interval_days', 1), 1);
         $shouldShowWheel = $this->shouldShowWheel($intervalDays);
 
-        return view('frontend::index', compact('services', 'categories', 'packages' , 'products' , 'prizes'));
+        $setting = DB::table('settings')->where('name', 'service_duration_visibility')->first();
+        $showDuration = $setting ? (bool) $setting->val : false;
+
+        return view('frontend::index', compact('showDuration','services', 'categories', 'packages' , 'products' , 'prizes', 'shouldShowWheel', 'intervalDays'));
     }
 
     /**
@@ -210,8 +220,10 @@ class FrontendController extends Controller
                 $query->where('status', 1);
             }])
             ->get();
+        $setting = DB::table('settings')->where('name', 'service_duration_visibility')->first();
+        $showDuration = $setting ? (bool) $setting->val : false;
 
-        return view('frontend::category-details', compact('category', 'relatedCategories' , 'allCat'));
+        return view('frontend::category-details', compact('id','showDuration','category', 'relatedCategories' , 'allCat'));
     }
 
     /**
@@ -403,6 +415,29 @@ class FrontendController extends Controller
         }
 
         return view('frontend::become-affiliate');
+    }
+
+    private function shouldShowWheel(int $intervalDays): bool
+    {
+        $query = LoyaltyPointTransaction::query()
+            ->where('source', 'wheel');
+
+        if (Auth::check()) {
+            $query->where('user_id', Auth::id());
+        } else {
+            $token = request()->cookie('wheel_guest_token');
+            if (empty($token)) {
+                return true;
+            }
+            $query->where('meta->guest_token', $token);
+        }
+
+        $lastSpin = $query->latest('created_at')->first();
+        if (!$lastSpin || !($lastSpin->created_at instanceof Carbon)) {
+            return true;
+        }
+
+        return Carbon::now()->greaterThanOrEqualTo($lastSpin->created_at->copy()->addDays($intervalDays));
     }
 
     public function activateAffiliate()

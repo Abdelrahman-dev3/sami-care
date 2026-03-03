@@ -44,10 +44,20 @@
             object-fit: cover;
             border-radius: 8px;
         }
+        .shop-swiper-nav {
+            color: #BF9456;
+        }
+        .shop-swiper-nav::after {
+            font-size: 18px;
+            font-weight: bold;
+        }
         @media (max-width: 768px) {
             .swiper-slide img{
                 width: 100%;
                 object-fit: contain;
+            }
+            .shop-swiper-nav {
+                display: none;
             }
 
         }
@@ -75,9 +85,10 @@
             margin: 25px;
         }
         .categories-list {
-            display: flex;
-            justify-content: space-evenly;
-            flex-wrap: wrap;
+            padding: 10px 0 20px;
+        }
+        .categories-list .swiper-wrapper {
+            align-items: center;
         }
         .category-item {
             width: 110px;
@@ -151,9 +162,6 @@
 
         /* موبايل */
         @media (max-width: 768px) {
-            .categories-list {
-                gap: 15px;
-            }
             .category-item {
                 width: 85px;
             }
@@ -218,6 +226,8 @@
 
             <!-- Pagination -->
             <div class="swiper-pagination"></div>
+            <div class="swiper-button-prev shop-swiper-nav"></div>
+            <div class="swiper-button-next shop-swiper-nav"></div>
         </div>
 
     <!-- Page Content -->
@@ -225,13 +235,17 @@
     
     <section class="categories">
         <h2 class="section-title"><?php echo e(__('messagess.categories')); ?></h2>
-        <div class="categories-list">
-            <?php $__currentLoopData = $categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $category): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                <div class="category-item" data-id="<?php echo e($category->id); ?>" data-aos="fade-up">
-                    <img src="<?php echo e($category->feature_image); ?>" alt="<?php echo e($category->name); ?>">
-                    <p><?php echo e($category->name); ?></p>
-                </div>
-            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+        <div class="swiper categories-list categories-swiper">
+            <div class="swiper-wrapper">
+                <?php $__currentLoopData = $categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $category): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <div class="swiper-slide">
+                        <div class="category-item" data-id="<?php echo e($category->id); ?>" data-aos="fade-up">
+                            <img src="<?php echo e($category->feature_image); ?>" alt="<?php echo e($category->name); ?>">
+                            <p><?php echo e($category->name); ?></p>
+                        </div>
+                    </div>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+            </div>
         </div>
     </section>
 
@@ -294,6 +308,22 @@
     AOS.init({ once: true });
 
     document.addEventListener('DOMContentLoaded', () => {
+      new Swiper(".categories-swiper", {
+        slidesPerView: 6,
+        spaceBetween: 20,
+        loop: true,
+        autoplay: {
+          delay: 2500,
+          disableOnInteraction: false,
+        },
+        breakpoints: {
+          0: { slidesPerView: 3, spaceBetween: 12 },
+          576: { slidesPerView: 4, spaceBetween: 16 },
+          768: { slidesPerView: 5, spaceBetween: 18 },
+          1024: { slidesPerView: 6, spaceBetween: 20 },
+        }
+      });
+
       const categories = document.querySelectorAll('.category-item');
       const sections = document.querySelectorAll('.category-products');
       if (sections.length) sections[0].style.display = 'block';
@@ -345,6 +375,10 @@
         pagination: {
             el: ".swiper-pagination",
             clickable: true, // النقط قابلة للنقر للتنقل
+        },
+        navigation: {
+            nextEl: ".swiper-button-next",
+            prevEl: ".swiper-button-prev",
         },
     });
 </script>

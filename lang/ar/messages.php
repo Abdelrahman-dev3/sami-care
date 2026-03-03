@@ -549,6 +549,7 @@ return [
 
     'alert' => 'تنبيه',
     'login_required' => 'يرجى تسجيل الدخول للاستفادة من هذه الميزة',
+
     'not_available_now' => 'لا يتوفر حاليا',
     'order_categories' => 'ترتيب الأقسام',
     'save_order' => 'حفظ الترتيب',
@@ -564,9 +565,11 @@ return [
     'order_summary'    => 'ملخص الطلب',
     'products_count'   => 'عدد المنتجات',
     'services_count'   => 'عدد الخدمات',
+    'packages_count'   => 'عدد الباقات',
     'subtotal'         => 'المجموع الجزئي',
     'discount'         => 'الخصم',
     'final_price'      => 'السعر النهائي',
     'go_to_cart'       => 'الذهاب إلى السلة',
     'remove'           => 'حذف',
+
 ];
