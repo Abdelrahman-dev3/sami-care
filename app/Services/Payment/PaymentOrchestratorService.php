@@ -42,16 +42,17 @@ class PaymentOrchestratorService
         $grossAmount = (float) ($totalData['total'] ?? 0);
         $taxAmount = (float) ($totalData['tax'] ?? 0);
         $discountAmount = (float) ($totalData['discountAmount'] ?? 0);
-
+        
+        if ($gateway === 'cod') {
+            return $this->handleCod($userId, $isBuyNow, $grossAmount, $taxAmount, $discountAmount, $totalData, $couponCode);
+        }
+        // Handle sub-methods (wallet, loyalty, gift_code) before main payment
         $submethods = [
             'wallet' => (bool) ($input['wallet'] ?? false),
             'loyalty' => (bool) ($input['loyalty'] ?? false),
             'gift_code' => $input['gift_code'] ?? null,
         ];
 
-        if ($gateway === 'cod') {
-            return $this->handleCod($userId, $isBuyNow, $grossAmount, $taxAmount, $discountAmount, $totalData, $couponCode);
-        }
 
         $subService = app(PaymentSubMethodsService::class);
         $subResult = $subService->apply($userId, new Request($submethods), $grossAmount, false);
@@ -87,7 +88,6 @@ class PaymentOrchestratorService
             'token' => (string) Str::uuid(),
             'user_id' => $userId,
             'gateway' => $gateway,
-            'page_type' => $isBuyNow,
             'currency' => 'SAR',
             'gross_amount' => $grossAmount,
             'amount' => $remainingAmount,
@@ -186,7 +186,7 @@ class PaymentOrchestratorService
 
     private function handleCod(
         int $userId,
-        string $isBuyNow,
+        bool $isBuyNow,
         float $grossAmount,
         float $taxAmount,
         float $discountAmount,

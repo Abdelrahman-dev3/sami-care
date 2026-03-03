@@ -138,6 +138,11 @@
                 <span class="csp-item-discount"></span>
                 <span class="csp-item-coupon"></span>
             </div>
+            <div class="csp-item-qty" style="display:none;">
+                <button type="button" class="csp-qty-btn" data-action="decrease">-</button>
+                <span class="csp-qty-val">1</span>
+                <button type="button" class="csp-qty-btn" data-action="increase">+</button>
+            </div>
             <span class="csp-item-meta"></span>
         </div>
     </div>
@@ -148,6 +153,7 @@
     window.CartSidebarConfig = {
         fetchUrl:    "{{ route('cart.sidebar') }}",
         cartPageUrl: "{{ route('cart.page') }}",
+        updateQtyUrl:"{{ url('/cart/product') }}",
         currency:    "{{ config('app.currency', 'ر.س') }}",
         lang:        "{{ app()->getLocale() }}",
         csrfToken:   document.querySelector('meta[name="csrf-token"]')?.content || '',

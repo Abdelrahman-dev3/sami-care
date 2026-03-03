@@ -443,7 +443,7 @@ body {
 /* Special styling for massage service cards */
 .massage-cards {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(5, 1fr);
     gap: 25px;
     margin: 30px 0;
 }
@@ -1342,10 +1342,8 @@ border:2px solid #BF9456;
 /* Sami logo loader override */
 #wifi-loader.sami-wifi-loader {
   position: fixed !important;
-  inset: 0 !important;
   width: 100vw;
   height: 100vh;
-  display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   text-align: center;

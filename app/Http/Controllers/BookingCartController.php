@@ -353,6 +353,45 @@ class BookingCartController extends Controller
         return redirect()->back()->with('success', __('messages.item_removed_from_cart'));
     }
 
+    public function updateProductQty(Request $request, $id)
+    {
+        $user = auth()->user();
+
+        $cartItem = Cart::where('id', $id)->where('user_id', $user->id)->first();
+        if (! $cartItem) {
+            return response()->json(['message' => 'Cart item not found'], 404);
+        }
+
+        $qty = (int) $request->input('qty', 1);
+
+        if ($qty < 1) {
+            $cartItem->delete();
+            return response()->json([
+                'status' => 'deleted',
+                'qty' => 0,
+            ]);
+        }
+
+        $product = $cartItem->product ?? Product::find($cartItem->product_id);
+        $stock = (int) ($product->stock_qty ?? 0);
+
+        if ($qty > $stock) {
+            return response()->json([
+                'status' => 'failed',
+                'message' => __('messages.cart_quantity_unavailable'),
+            ], 422);
+        }
+
+        $cartItem->update([
+            'qty' => $qty,
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'qty' => $qty,
+        ]);
+    }
+
     public function destroy_gift($id)
     {
         $user = auth()->user();

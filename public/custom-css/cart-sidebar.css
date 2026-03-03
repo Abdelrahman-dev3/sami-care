@@ -14,7 +14,7 @@
   --csp-text-muted:   #aaaaaa;
   --csp-danger:       #ff6b6b;
   --csp-success:      #4ade80;
-  --csp-width:        30%;
+  --csp-width:        27%;
   --csp-min-width:    320px;
   --csp-z:            10505;
   --csp-transition:   .4s cubic-bezier(.4,0,.2,1);
@@ -181,6 +181,26 @@
   background: rgba(207,146,51,.15); border: 1px solid rgba(207,146,51,.4);
   color: var(--csp-accent); font-size: .65rem;
   padding: 2px 7px; border-radius: 50px; font-weight: 700;
+}
+
+.csp-item-qty {
+  display: flex; align-items: center; gap: 8px;
+  margin: 6px 0;
+}
+.csp-qty-btn {
+  width: 26px; height: 26px; border-radius: 6px;
+  border: 1px solid var(--csp-border);
+  background: rgba(255,255,255,.06);
+  color: var(--csp-text); font-weight: 800;
+  display: grid; place-items: center;
+  cursor: pointer; transition: background .2s, transform .12s;
+}
+.csp-qty-btn:hover { background: rgba(255,255,255,.12); transform: translateY(-1px); }
+.csp-qty-btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+.csp-qty-val {
+  min-width: 22px; text-align: center;
+  font-size: .82rem; color: var(--csp-text);
+  font-weight: 700;
 }
 
 .csp-item-meta {

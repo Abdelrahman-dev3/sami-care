@@ -11,6 +11,7 @@
   const cfg = Object.assign({
     fetchUrl:   '/cart/sidebar-data',
     cartPageUrl:'/cart',
+    updateQtyUrl:'/cart/product',
     currency:   'ر.س',
     lang:       document.documentElement.lang || 'ar',
     csrfToken:  document.querySelector('meta[name="csrf-token"]')?.content || '',
@@ -52,6 +53,21 @@
     document.getElementById('cartItemsContainer')?.addEventListener('click', function (e) {
       const btn = e.target.closest('.csp-item-remove');
       if (btn) removeSidebarItem(btn);
+    });
+
+    // Event delegation for qty controls
+    document.getElementById('cartItemsContainer')?.addEventListener('click', function (e) {
+      const btn = e.target.closest('.csp-qty-btn');
+      if (!btn) return;
+
+      const itemEl = btn.closest('.csp-item');
+      if (!itemEl || itemEl.dataset.itemType !== 'product') return;
+
+      const currentQty = parseInt(itemEl.dataset.qty || '1', 10);
+      const action = btn.dataset.action;
+      const nextQty = action === 'increase' ? currentQty + 1 : currentQty - 1;
+
+      updateProductQty(itemEl, nextQty);
     });
   });
 
@@ -134,6 +150,7 @@
 
     el.dataset.itemId   = item.id;
     el.dataset.itemType = item.type;
+    el.dataset.qty      = item.qty ?? 1;
 
     /* Thumb */
     const thumb = el.querySelector('.csp-item-thumb');
@@ -189,10 +206,56 @@
       meta.style.display = parts.length ? '' : 'none';
     }
 
+    /* Qty controls (products only) */
+    const qtyWrap = el.querySelector('.csp-item-qty');
+    if (qtyWrap) {
+      if (item.type === 'product') {
+        const qtyVal = qtyWrap.querySelector('.csp-qty-val');
+        if (qtyVal) qtyVal.textContent = item.qty ?? 1;
+        qtyWrap.style.display = 'flex';
+
+        const decBtn = qtyWrap.querySelector('[data-action="decrease"]');
+        const incBtn = qtyWrap.querySelector('[data-action="increase"]');
+        if (decBtn) decBtn.setAttribute('aria-label', t('ØªÙ‚Ù„ÙŠÙ„ Ø§Ù„ÙƒÙ…ÙŠØ©', 'Decrease quantity'));
+        if (incBtn) incBtn.setAttribute('aria-label', t('Ø²ÙŠØ§Ø¯Ø© Ø§Ù„ÙƒÙ…ÙŠØ©', 'Increase quantity'));
+      } else {
+        qtyWrap.style.display = 'none';
+      }
+    }
+
     return el;
   }
 
   /* ── Remove Item ── */
+  function updateProductQty(itemEl, nextQty) {
+    const id = itemEl?.dataset?.itemId;
+    if (!id) return;
+
+    const url = `${cfg.updateQtyUrl}/${id}/qty`;
+    const btns = itemEl.querySelectorAll('.csp-qty-btn');
+    btns.forEach(b => b.disabled = true);
+
+    fetch(url, {
+      method: 'PATCH',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': cfg.csrfToken,
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+      body: JSON.stringify({ qty: nextQty }),
+    })
+      .then(r => r.json().then(data => ({ ok: r.ok, data })))
+      .then(({ ok }) => {
+        if (!ok) throw new Error('qty-update-failed');
+        loaded = false;
+        fetchCartData();
+      })
+      .catch(() => {
+        btns.forEach(b => b.disabled = false);
+      });
+  }
+
   function removeSidebarItem(btn) {
     const itemEl = btn.closest('.csp-item');
     const id     = itemEl?.dataset.itemId;

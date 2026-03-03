@@ -115,6 +115,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/cart/{id}', [BookingCartController::class, 'destroy'])->name('cart.destroy');
     Route::delete('p/cart/{id}', [BookingCartController::class, 'destroy_product'])->name('p.cart.destroy');
     Route::delete('g/cart/{id}', [BookingCartController::class, 'destroy_gift'])->name('g.cart.destroy');
+    Route::patch('/cart/product/{id}/qty', [BookingCartController::class, 'updateProductQty'])->name('cart.product.qty');
     Route::delete('/cart/destroy/All', [BookingCartController::class, 'destroy_All'])->name('cart.destroyAll');
 
 
