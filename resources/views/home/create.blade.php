@@ -1103,7 +1103,7 @@
                 }
                 if(btn == 'payment' && !data.need_login){
                       setTimeout(() => {
-                        window.location.href = '/payment?ids=1'; 
+                        window.location.href = '/payment?is_buy_now=1'; 
                       }, 1500);
                 }
             

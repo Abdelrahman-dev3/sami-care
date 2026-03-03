@@ -14,6 +14,7 @@ use App\Http\Controllers\MobileVerificationController;
 use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\offersController;
 use App\Http\Controllers\PaymentchanalController;
+use App\Http\Controllers\PaymentCallbackController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ReportsController;
@@ -42,9 +43,6 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
-use App\Services\Payment\Strategies\CardPaymentStrategy;
-use App\Services\Payment\Strategies\TabbyPaymentStrategy;
-use App\Services\Payment\Strategies\TamaraPaymentStrategy;
 
 use App\Models\Branch;
 use App\Models\BookingCart;
@@ -96,15 +94,8 @@ Route::get('/details/{id}', [SaloneBookController::class, 'show'])->name('home.d
 
 Route::controller(PaymentchanalController::class)->group(function () {
     Route::post('/payment-chanal', 'payment')->name('payment-chanal');
-    Route::get('tabby/success/{invoice}', 'tabbySuccess')->name('tabby.success');
-    Route::get('tabby/fail/{invoice}', 'tabbyFail')->name('tabby.fail');
-    Route::get('tabby/cancel/{invoice}', 'tabbyCancel')->name('tabby.cancel');
-
-    Route::get('/tamara/success', [TamaraPaymentStrategy::class, 'success'])->name('tamara.success');
-    Route::get('/tamara/failure', [TamaraPaymentStrategy::class, 'failure'])->name('tamara.failure');
-    Route::get('/tamara/cancel', [TamaraPaymentStrategy::class, 'cancel'])->name('tamara.cancel');
 });
-Route::get('/payment/callback', [CardPaymentStrategy::class, 'callback'])->name('tap.callback');
+Route::get('/payments/callback/{gateway}', [PaymentCallbackController::class, 'handle'])->name('payments.callback');
 
 
 Route::post('/staff/working-hours/{id}', [EmployeesController::class, 'store_working_houer'])->name('staff.working-hours.store');
@@ -137,7 +128,6 @@ Route::middleware('auth')->group(function () {
     Route::put('/profile/{id}/update', [ProfileController::class, 'update'])->name('profile.update');
     Route::post('/logout', [SignController::class, 'logout'])->name('logout');
 
-    Route::get('/success-py-invoice', [BookingCartController::class, 'handlePaymentResult']);
 
 
     Route::get('/loyalty-points/check', [BookingCartController::class, 'checkLoyaltyPoints'])->name('loyalty.check');

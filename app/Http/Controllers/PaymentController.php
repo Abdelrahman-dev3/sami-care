@@ -13,7 +13,7 @@ use App\Models\Setting;
 class PaymentController extends Controller
 {
     public function index(Request $request){
-        $type_page = $request->has('ids') ? 'payment' : 'cart';
+        $type_page = $request->has('is_buy_now') ? 'payment' : 'cart';
         $userId = auth()->user()->id;
         $cartproduct = [];
         $productPrice = 0;

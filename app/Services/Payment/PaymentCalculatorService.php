@@ -11,7 +11,7 @@ use App\Models\Setting;
 
 class PaymentCalculatorService
 {
-    public function calculateTotal(string $typePage, ?string $couponCode = null): array
+    public function calculateTotal(string $isBuyNow, ?string $couponCode = null): array
     {
         $total = 0;
         $productTotal = 0;
@@ -20,7 +20,7 @@ class PaymentCalculatorService
         $giftIds    = [];
         $productIds = [];
         
-        if ($typePage === 'payment') {
+        if ($isBuyNow === 'checkout') {
                 $services = Booking::with('service.service')
                     ->where('created_by', $userId)
                     ->whereNotIn('status', ['cancelled', 'completed'])

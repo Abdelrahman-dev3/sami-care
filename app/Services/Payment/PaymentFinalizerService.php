@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Setting;
 use Illuminate\Support\Str;
 use App\Services\AffiliateCommissionService;
+use App\Services\TaqnyatSmsService;
 
 class PaymentFinalizerService
 {
@@ -74,6 +75,11 @@ class PaymentFinalizerService
 
             //  Update payment status
             Booking::whereIn('id', $cartIds)->update(['payment_status' => 1]);
+
+            // Activate gift cards if any
+            if (!empty($giftIds)) {
+                $this->activateGiftCards($userId, $giftIds);
+            }
         });
 
         return $invoiceId;
@@ -248,5 +254,41 @@ class PaymentFinalizerService
             'discount' => $discountAmount,
             'coupon_id' => $coupon->id,
         ]);
+    }
+
+    private function activateGiftCards(int $userId, array $giftIds): void
+    {
+        $smsService = new TaqnyatSmsService();
+
+        $giftCards = GiftCard::where('user_id', $userId)
+            ->where('payment_status', 0)
+            ->whereIn('id', $giftIds)
+            ->get();
+
+        foreach ($giftCards as $giftCard) {
+            $ref = null;
+            $balance = 0;
+
+            if ($giftCard->delivery_method == 'بطاقة الكترونية') {
+                $ref = 'REF-' . strtoupper(Str::random(8));
+                $balance = $giftCard->subtotal;
+            }
+
+            $giftCard->update([
+                'payment_status' => 1,
+                'ref' => $ref,
+                'balance' => $balance,
+            ]);
+
+            $phone = $giftCard->sender_phone;
+            if ($phone) {
+                $smsService->sendGift($phone, $giftCard->sender_name, 'sender');
+            }
+
+            $phone2 = $giftCard->recipient_phone;
+            if ($phone2) {
+                $smsService->sendGift($phone2, $giftCard->recipient_name, 'recipient', $ref);
+            }
+        }
     }
 }

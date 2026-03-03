@@ -1,27 +1,15 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Models\BookingCart;
-use App\Models\Invoice;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Modules\Booking\Models\Booking;
 use Modules\Booking\Models\BookingService;
-use Modules\Booking\Models\BookingProduct;
-use Modules\Wallet\Models\Wallet;
 use App\Models\LoyaltyPoint;
-use App\Models\LoyaltyPointTransaction;
-use App\Services\TaqnyatSmsService;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Facades\Http;
-use Modules\Booking\Models\BookingTransaction;
 use Carbon\Carbon;
 use App\Models\GiftCard;
-use Illuminate\Support\Str;
 use Modules\Product\Models\Product;
 use Modules\Product\Models\Cart;
-use App\Services\AffiliateCommissionService;
 
 
 
@@ -367,108 +355,6 @@ class BookingCartController extends Controller
         ]);
     }
 
-    public function handlePaymentResult(Request $request)
-    {
-        $tapId = $request->get('tap_id');
-
-        if (!$tapId) {
-            if ($request->expectsJson()) {
-                return response()->json(['status' => false, 'message' => 'No tap_id provided.'], 400);
-            }
-            return view('components.frontend.status.ERPAY')->with('error', 'No tap_id provided.');
-        }
-
-        $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . env('TAP_SECRET_KEY'),
-        ])->get("https://api.tap.company/v2/charges/{$tapId}");
-
-        $charge = $response->json();
-
-        if (isset($charge['status']) && $charge['status'] === 'CAPTURED') {
-            $user = auth()->user();
-
-            $discountAmount = session('discountAmount', 0);
-            $loyaltyDiscount = session('loyaltyDiscount', 0);
-            $totalDiscount = $discountAmount + $loyaltyDiscount;
-            $finalTotal = session('finalTotal', 0);
-
-            $cartIds = Booking::where('user_id', $user->id)
-                    ->where('payment_status', 0)
-                    ->pluck('id')
-                    ->toArray();
-
-            $gift_ids = GiftCard::where('user_id', $user->id)
-                    ->where('payment_status', 0)
-                    ->pluck('id')
-                    ->toArray();
-
-            if ($loyaltyDiscount > 0) {
-                DB::table('loyalty_points')
-                    ->where('user_id', $user->id)
-                    ->where('points', '>=', $loyaltyDiscount)
-                    ->decrement('points', $loyaltyDiscount);
-            }
-
-            $this->addLoyaltyPoints($user->id, $charge['amount']);
-            $invoiceId = $this->storeInvoice($user->id, $discountAmount, $loyaltyDiscount, $finalTotal, $cartIds , $gift_ids);
-            app(AffiliateCommissionService::class)->handleSuccessfulPurchase($user->id, $invoiceId, (float) $finalTotal);
-            $this->paymentSuccess( $cartIds , $tapId , 'card');
-
-            Booking::where('user_id', $user->id)
-                ->where('payment_status', 0)
-                ->update(['payment_status' => 1]);
-
-            $this->activateGiftCards($user->id);
-
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'status' => true,
-                    'message' => 'Payment successful.',
-                    'data' => $charge
-                ]);
-            }
-
-            return view('components.frontend.status.CAPTURED');
-        } else {
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Payment failed or not captured.',
-                    'tap_response' => $charge
-                ]);
-            }
-
-            return view('components.frontend.status.FAILED');
-        }
-}
-
-    public function addLoyaltyPoints($userId, $paidAmount)
-    {
-        $pointsToAdd = floor($paidAmount / 100) * 5;
-
-        if ($pointsToAdd <= 0) {
-            return;
-        }
-
-        $loyalty = LoyaltyPoint::firstOrNew(['user_id' => $userId]);
-        $loyalty->points = ($loyalty->points ?? 0) + $pointsToAdd;
-        $loyalty->save();
-    }
-
-    private function storeInvoice($userId, $discountAmount, $loyaltyDiscount, $finalTotal, $cartIds , $gift_ids = null): int
-    {
-        $invoice = Invoice::create([
-            'user_id' => $userId,
-            'cart_ids' => json_encode($cartIds),
-            'gift_ids' => json_encode($gift_ids),
-            'discount_amount' => $discountAmount,
-            'loyalty_points_discount' => $loyaltyDiscount,
-            'final_total' => $finalTotal,
-        ]);
-
-        return (int) $invoice->id;
-    }
-
     public function checkLoyaltyPoints(Request $request)
     {
         $user = auth()->user();
@@ -477,52 +363,6 @@ class BookingCartController extends Controller
         return response()->json([
             'points' => $points,
         ]);
-    }
-
-    private function paymentSuccess( array $cartIds , $tapId = null , $paymentMethod): void
-    {
-        foreach ($cartIds as $bookingId) {
-            BookingTransaction::create([
-                'booking_id'     => $bookingId,
-                'external_transaction_id' => $tapId,
-                'transaction_type' => $paymentMethod,
-                'payment_status' => 1,
-            ]);
-        }
-    }
-
-    private function activateGiftCards($userId)
-    {
-        // sms
-        $smsService = new TaqnyatSmsService();
-
-        $giftCards = GiftCard::where('user_id', $userId)
-            ->where('payment_status', 0)
-            ->get();
-
-        foreach ($giftCards as $giftCard) {
-            $ref = null;
-            $balance = 0;
-
-            if ($giftCard->delivery_method == 'بطاقة الكترونية') {
-                $ref = 'REF-' . strtoupper(Str::random(8));
-                $balance = $giftCard->subtotal;
-            }
-
-        $giftCard->update([
-                'payment_status' => 1,
-                'ref'            => $ref,
-                'balance'        => $balance,
-            ]);
-
-        $phone = $giftCard->sender_phone;
-
-        if ($phone) { $smsService->sendGift($phone, $giftCard->sender_name , 'sender');}
-
-        $phone_2 = $giftCard->recipient_phone;
-
-        if ($phone_2) {$smsService->sendGift($phone_2, $giftCard->recipient_name , 'recipient' , $ref);}
-        }
     }
 
     public function addToCart(Request $request, $id)

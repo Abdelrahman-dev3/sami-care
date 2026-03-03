@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SaloneBookController;
 use App\Http\Controllers\Backend\UserController;
 use Modules\Service\Http\Controllers\Backend\API\ServiceController;
+use App\Http\Controllers\API\PaymentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -72,7 +73,6 @@ Route::get('/booking-carts/by-day', [CalanderBookingController::class, 'getAllBy
 
 
 
-Route::get('/payment-success', [HomeBookingController::class, 'handlePaymentResult']);
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
@@ -112,7 +112,6 @@ Route::prefix('gift-cards')->group(function () {
 });
 
 Route::get('/success-py-gift', [GiftCardController::class, 'handlePaymentResult']);
-Route::get('/success-py-invoice', [BookingCartController::class, 'handlePaymentResult']);
 
 
 Route::group(['middleware' => 'auth:sanctum'], function () {
@@ -144,6 +143,8 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::post('/bookings', [HomeBookingController::class, 'store']);
     Route::get('/details/{id}', [SaloneBookController::class, 'show']);
     Route::get('/pay-now', [HomeBookingController::class, 'createPayment']);
+    Route::post('/payments/init', [PaymentController::class, 'init']);
+    Route::get('/payments/{token}', [PaymentController::class, 'status']);
 
     // Route to fetch the current visibility status
     Route::get('/get-visibility-settings', [SettingController::class, 'getVisibilitySettings']);

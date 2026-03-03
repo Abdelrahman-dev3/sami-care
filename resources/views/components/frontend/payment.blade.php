@@ -260,7 +260,7 @@
       $codDepositPercent = max(0, min(100, $codDepositPercent));
       $codDepositPercentText = rtrim(rtrim(number_format($codDepositPercent, 2, '.', ''), '0'), '.');
   @endphp
-            @if(request()->has('ids'))
+            @if(request()->has('is_buy_now'))
         <style>
             /* wrapper */
             .cart-wrapper {
@@ -643,8 +643,8 @@
                     </div>
                 </div>
             </div>
-            @if(request()->has('ids'))
-                <input type="hidden" name="ids" value="{{ request('ids') }}">
+            @if(request()->has('is_buy_now'))
+                <input type="hidden" name="is_buy_now" value="{{ request('is_buy_now') }}">
             @endif
 
             <!-- LEFT: summary -->

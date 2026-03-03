@@ -53,7 +53,7 @@ class AuthenticatedSessionController extends Controller
         if ($btn_value === 'cart') {
             return redirect()->to('/cart')->with('success', 'تم تحويل الحجز بنجاح');
         } elseif ($btn_value === 'payment') {
-            return redirect()->to('/payment?ids=1')->with('success', 'تم تحويل الحجز بنجاح');
+            return redirect()->to('/payment?is_buy_now=1')->with('success', 'تم تحويل الحجز بنجاح');
         }
     }
 

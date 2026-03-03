@@ -14,7 +14,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Modules\Package\Models\UserPackage;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Session;
 use Modules\Booking\Models\Booking;
 use Modules\Package\Models\SubmitBookingPackage;
@@ -451,40 +450,7 @@ class HomeBookingController extends Controller
             ]);
         }
 
-    //        Payment Methods
-    public function handlePaymentResult(Request $request)
-    {
-        $tapId = $request->get('tap_id');
-    
-        if (!$tapId) {
-            return response()->json([
-                'status' => false,
-                'message' => 'No tap_id provided.'
-            ], 400);
-        }
-    
-        $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . env('TAP_SECRET_KEY'),
-        ])->get("https://api.tap.company/v2/charges/{$tapId}");
-    
-        $charge = $response->json();
-    
-        if (isset($charge['status']) && $charge['status'] === 'CAPTURED') {
-            return response()->json([
-                'status' => true,
-                'message' => 'Payment captured successfully.',
-                'data' => $charge,
-            ]);
-        } else {
-            return response()->json([
-                'status' => false,
-                'message' => 'Payment failed or was declined.',
-                'data' => $charge,
-            ], 402);
-        }
-    }
-
-/*-----------------------Helper function to filter time---------------------------*/
+    //        Payment Methods\n\n/*-----------------------Helper function to filter time---------------------------*/
     function filterAvailableTimes($availableTimes, $serviceDuration) {
         $filtered = [];
         $serviceDuration = max(1, (int) $serviceDuration);
