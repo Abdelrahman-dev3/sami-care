@@ -117,8 +117,22 @@ class ServicesController extends Controller
             });
         }
 
-        if (isset($category_id)) {
-            $data->where('category_id', $category_id);
+        if (!empty($category_id)) {
+            if (is_array($category_id)) {
+                $category_ids = $category_id;
+            } else {
+                $category_raw = trim((string) $category_id);
+                $decoded = json_decode($category_raw, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                    $category_ids = $decoded;
+                } else {
+                    $category_ids = preg_split('/[,\s]+/', $category_raw, -1, PREG_SPLIT_NO_EMPTY);
+                }
+            }
+
+            if (!empty($category_ids)) {
+                $data->whereIn('category_id', $category_ids);
+            }
         }
 
         if (isset($branch_id)) {

@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\SearchController;
+use App\Http\Controllers\Backend\SearchController;
 use Illuminate\Support\Facades\Route;
 use Modules\Earning\Http\Controllers\Backend\EarningsController;
 

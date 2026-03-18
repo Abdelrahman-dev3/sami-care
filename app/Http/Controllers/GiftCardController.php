@@ -24,7 +24,7 @@ public function index(Request $request)
     $States = State::where('status' , 1)->get();
     $first_States = State::where('status' , 1)->first();
     $suggest = Product::with(['media' , 'categories'])->where('status', 1)->where('is_featured', 1)->where('deleted_at', null)->take(4)->get();
-    return view('salon.gift', compact('b', 'States' ,'first_States' ,'suggest'));
+    return view('frontend.bookings.gift-booking.create', compact('b', 'States' ,'first_States' ,'suggest'));
 }
 
 public function store(Request $request)

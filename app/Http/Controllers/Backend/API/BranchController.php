@@ -20,9 +20,43 @@ use Modules\Employee\Transformers\EmployeeResource;
 use Modules\Employee\Transformers\EmployeeReviewResource;
 use Modules\Service\Models\ServiceBranches;
 use Modules\Tax\Models\Tax;
+use Modules\Category\Models\Category;
 
 class BranchController extends Controller
 {
+    public function baseBranches(Request $request)
+    {
+        $categoryId = (int) $request->query('category_id');
+    
+        $category = null;
+    
+        if ($categoryId > 0) {
+            $category = Category::select('id', 'is_visible')
+                ->where('status', 1)
+                ->whereNull('deleted_at')
+                ->find($categoryId);
+        }
+    
+        $branches = Branch::query()
+            ->where('status', 1)
+            ->whereNull('deleted_by')
+            ->when($categoryId > 0, function ($query) use ($categoryId) {
+                $query->whereHas('services', function ($serviceQuery) use ($categoryId) {
+                    $serviceQuery
+                        ->where('services.status', 1)
+                        ->whereNull('services.deleted_at')
+                        ->where('services.category_id', $categoryId);
+                });
+            })
+            ->get();
+    
+        return response()->json([
+            'branches' => $branches,
+            'category' => $category,
+            'is_visible' => $category?->is_visible
+        ]);
+    }
+
     public function branchList(Request $request)
     {
         $perPage = $request->input('per_page', 10); // Get the number of items per page from the request (default: 10)

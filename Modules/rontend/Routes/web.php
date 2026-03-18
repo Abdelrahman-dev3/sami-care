@@ -36,4 +36,6 @@ Route::group(['prefix' => ''], function () {
 
         Route::post('/become-affiliate', [FrontendController::class, 'activateAffiliate'])->name('frontend.become.affiliate.submit');
     });
+    Route::get('/sami-care-card', [FrontendController::class, 'samiCareCard'])->name('frontend.sami-care-card');
+    Route::get('/sami-care-card/qr', [FrontendController::class, 'samiCareQr'])->name('frontend.sami-care-card.qr');
 });

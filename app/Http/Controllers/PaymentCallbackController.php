@@ -12,7 +12,7 @@ class PaymentCallbackController extends Controller
         $token = $request->query('attempt');
 
         if (!$token) {
-            return view('components.frontend.status.FAILED', [
+            return view('frontend.payment-status.failed', [
                 'message' => __('messages.payment_failed'),
                 'sub' => 'Missing payment token',
             ]);
@@ -21,14 +21,14 @@ class PaymentCallbackController extends Controller
         $result = app(PaymentOrchestratorService::class)->handleCallback($gateway, $token, $request);
 
         if (($result['status'] ?? '') === 'paid') {
-            return view('components.frontend.status.CAPTURED');
+            return view('frontend.payment-status.captured');
         }
 
         $message = $result['status'] === 'cancelled'
             ? __('messages.payment_cancelled')
             : __('messages.payment_failed');
 
-        return view('components.frontend.status.FAILED', [
+        return view('frontend.payment-status.failed', [
             'message' => $message,
         ]);
     }

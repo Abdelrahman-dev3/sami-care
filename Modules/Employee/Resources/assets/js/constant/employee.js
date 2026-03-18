@@ -16,8 +16,12 @@ export const BRANCH_LIST = () => {
 export const SHIFT_LIST = () => {
   return { path: `shift/index_list`, method: 'GET' }
 }
-export const SERVICE_LIST = ({ branch_id = '', category_id = '', employee_id = '',shift_id = '' }) => {
-  return { path: `service/index_list?branch_id=${branch_id}&employee_id=${employee_id}&category_id=${category_id}&shift_id=${shift_id} `, method: 'GET' }
+export const CATEGORY_LIST = () => {
+  return { path: `categories/index_list`, method: 'GET' }
+}
+export const SERVICE_LIST = ({ branch_id = '', category_id = '', employee_id = '', shift_id = '' }) => {
+  const categoryParam = Array.isArray(category_id) ? category_id.join(',') : category_id
+  return { path: `service/index_list?branch_id=${branch_id}&employee_id=${employee_id}&category_id=${encodeURIComponent(categoryParam)}&shift_id=${shift_id} `, method: 'GET' }
 }
 export const COMMISSION_LIST = () => {
   return { path: `commissions/index_list`, method: 'GET' }

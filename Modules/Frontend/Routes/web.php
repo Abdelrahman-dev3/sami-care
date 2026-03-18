@@ -21,4 +21,6 @@ Route::group(['prefix' => ''], function () {
     Route::get('/services/category/{id}', [FrontendController::class, 'categoryDetails'])->name('frontend.category.details');
     Route::get('/services/{id}', [FrontendController::class, 'serviceDetails'])->name('frontend.service.details');
     Route::get('/contact', [FrontendController::class, 'contact'])->name('frontend.contact');
+    Route::get('/sami-care-card', [FrontendController::class, 'samiCareCard'])->name('frontend.sami-care-card');
+    Route::get('/sami-care-card/qr', [FrontendController::class, 'samiCareQr'])->name('frontend.sami-care-card.qr');
 });

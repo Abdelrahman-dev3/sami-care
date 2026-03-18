@@ -254,6 +254,16 @@ class FrontendController extends Controller
         return view('frontend::contact');
     }
 
+    public function samiCareCard()
+    {
+        return view('frontend::sami-care-card');
+    }
+
+    public function samiCareQr()
+    {
+        return view('frontend::sami-care-qr');
+    }
+
     /**
      * Show the form for creating a new resource.
      */

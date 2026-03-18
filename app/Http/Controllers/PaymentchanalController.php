@@ -32,7 +32,7 @@ class PaymentchanalController extends Controller
         }
 
         if (($result['status'] ?? '') === 'paid') {
-            return view('components.frontend.status.CAPTURED');
+            return view('frontend.payment-status.captured');
         }
 
         return redirect()->back()->with('error', $result['message'] ?? __('messages.payment_failed'));

@@ -49,7 +49,7 @@ class ProfileController extends Controller
             ->whereNull('deleted_by')
             ->get();
             
-        return view('components.frontend.auth.profile', compact('user', 'balance', 'referralBalance', 'points' , 'bookings' , 'pending' , 'completed' , 'coupons', 'completedGift'));
+        return view('frontend.profile.index', compact('user', 'balance', 'referralBalance', 'points' , 'bookings' , 'pending' , 'completed' , 'coupons', 'completedGift'));
     }
 
     public function update(Request $request, $id)
@@ -97,56 +97,42 @@ class ProfileController extends Controller
 
     $coupons = Coupon::with('promotion')->where('is_expired', 0)->where('use_limit', '>=', 1)->get();
 
-    return view('components.frontend.auth.coupon', compact('coupons'));
+    return view('frontend.profile.coupons', compact('coupons'));
     }
 
     public function myBookings()
     {
-    $reasons = reject::all();
-
-    $bookings = Booking::with('service.service','service.employee')->where('created_by', auth()->user()->id)->whereNull('deleted_by')->whereNotIn('status', ['completed', 'canceled'])->get();
-
-    $today = now()->toDateString();
-
-    $gifts = GiftCard::where('user_id', auth()->id())->whereDate('created_at', '>=', $today)->where('payment_status', 1 )->get();
-    
-    return view('components.frontend.auth.my-bookings', compact('bookings','reasons','gifts'));
+        $reasons = reject::all();
+        $bookings = Booking::with('service.service','service.employee')->where('created_by', auth()->user()->id)->whereNull('deleted_by')->whereNotIn('status', ['completed', 'canceled'])->get();
+        $today = now()->toDateString();
+        $gifts = GiftCard::where('user_id', auth()->id())->whereDate('created_at', '>=', $today)->where('payment_status', 1 )->get();
+        return view('frontend.profile.bookings.current', compact('bookings','reasons','gifts'));
     }
 
     public function destroy_myBooking(Request $request,$id)
     {
-        $user = auth()->user();
-
         $booking = Booking::find($id);
-
         $booking->delete();
-
         $reasons = $request->input('reasons', []);
-
         foreach ($reasons as $reasonId) {
             $reason = Reject::find($reasonId);
             if ($reason) {
                 $reason->increment('count');
             }
         }
-
         return response()->json(['success' => true, 'message' => __('messagess.item_removed_from_cart')]);
     }
 
     public function complateBookings()
     {
-
-    $bookings = Booking::with('service.service' ,'service.employee')->where('created_by', auth()->user()->id)->whereNull('deleted_by')->where('payment_status', 1)->where('status', '=', 'completed')->get();
-
-    return view('components.frontend.auth.complate-bookings', compact('bookings'));
+        $bookings = Booking::with('service.service' ,'service.employee')->where('created_by', auth()->user()->id)->whereNull('deleted_by')->where('payment_status', 1)->where('status', '=', 'completed')->get();
+        return view('frontend.profile.bookings.completed', compact('bookings'));
     }
 
     public function complateGift()
     {
-
     $gifts = GiftCard::where('user_id', auth()->id())->get();
-
-    return view('components.frontend.auth.complate-gifts', compact('gifts'));
+    return view('frontend.profile.bookings.completed-gifts', compact('gifts'));
     }
 
 }

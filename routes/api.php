@@ -8,16 +8,26 @@ use App\Http\Controllers\Backend\API\DashboardController;
 use App\Http\Controllers\Backend\API\NotificationsController;
 use App\Http\Controllers\Backend\API\SettingController;
 use App\Http\Controllers\Backend\API\UserApiController;
-use App\Http\Controllers\CalanderBookingController;
+use App\Http\Controllers\Backend\CalanderBookingController;
 use App\Http\Controllers\GiftCardController;
 use App\Http\Controllers\HomeBookingController;
 use App\Http\Controllers\BookingCartController;
-use Illuminate\Http\Request;
+use App\Http\Controllers\API\CouponValidationController;
+use App\Http\Controllers\API\SystemUtilityController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\SaloneBookController;
+use App\Http\Controllers\PackageDetailsController;
 use App\Http\Controllers\Backend\UserController;
 use Modules\Service\Http\Controllers\Backend\API\ServiceController;
 use App\Http\Controllers\API\PaymentController;
+use App\Http\Controllers\Api\CategoriesController;
+use App\Http\Controllers\Api\PackagesController;
+use App\Http\Controllers\Api\ShopController;
+use App\Http\Controllers\Api\LoyaltyController;
+use App\Http\Controllers\Api\CouponController;
+use App\Http\Controllers\Api\BookingsController;
+use App\Http\Controllers\Api\MobileCartController;
+use App\Http\Controllers\BookingController;
+use App\Http\Controllers\PackageBookingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -31,31 +41,155 @@ use App\Http\Controllers\API\PaymentController;
 */
 
 
-Route::get('branch-list', [BranchController::class, 'branchList']);
+Route::prefix('Home')->group(function () {
+    Route::controller(CategoriesController::class)->group(function () {
+        Route::get('/categories', 'index');
+    });
+
+    Route::controller(PackagesController::class)->group(function () {
+        Route::get('/packages', 'index');
+    });
+});
+
+Route::prefix('shop')->group(function () {
+    Route::controller(ShopController::class)->group(function () {
+        Route::get('/', 'index');
+    });
+});
+
+Route::controller(LoyaltyController::class)->group(function () {
+    Route::get('/loyalty/point-value', 'index');
+});
+
+Route::controller(CouponController::class)->group(function () {
+    Route::get('/validate-coupon', 'validateCoupon');
+    Route::get('/validate-invoice-coupon', 'validateInvoiceCoupon');
+    Route::get('/available-coupons', 'availableCoupons');
+});
+
+
+Route::controller(BranchController::class)->group(function () {
+    Route::get('branch-list', 'branchList');
+});
 
 // Branch Routes
 Route::prefix('branches')->group(function () {
-    Route::get('/', [BranchController::class, 'branchList']);
-    Route::get('{id}', [BranchController::class, 'branchDetails']);
-    Route::get('{id}/services', [BranchController::class, 'branchService']);
-    Route::get('{id}/reviews', [BranchController::class, 'branchReviews']);
-    Route::get('{id}/employees', [BranchController::class, 'branchEmployee']);
-    Route::get('{id}/gallery', [BranchController::class, 'branchGallery']);
-    Route::get('{id}/config', [BranchController::class, 'branchConfig']);
-    Route::post('{id}/assign', [BranchController::class, 'assign_update']);
-     Route::get('{id}/available-dates', [BranchController::class, 'getAvailableDates']);
+    Route::controller(BranchController::class)->group(function () {
+        Route::get('/', 'branchList');
+        Route::get('{id}', 'branchDetails');
+        Route::get('{id}/services', 'branchService');
+        Route::get('{id}/reviews', 'branchReviews');
+        Route::get('{id}/employees', 'branchEmployee');
+        Route::get('{id}/gallery', 'branchGallery');
+        Route::get('{id}/config', 'branchConfig');
+        Route::post('{id}/assign', 'assign_update');
+        Route::get('{id}/available-dates', 'getAvailableDates');
+    });
 });
+
+Route::controller(BranchController::class)->group(function () {
+    Route::post('verify-slot', 'verifySlot');
+});
+
+Route::controller(SystemUtilityController::class)->group(function () {
+    Route::get('lang/{locale}', 'switchLocale');
+    Route::get('clear-config', 'clearConfig');
+    Route::get('clear-cache', 'clearCache');
+    Route::get('clear-route', 'clearRoute');
+    Route::get('modules-list', 'modulesList');
+    Route::get('clear-view', 'clearView');
+    Route::get('clear-all', 'clearAll');
+    Route::get('storage-link', 'storageLink');
+    Route::get('test-upload', 'testUpload');
+});
+
+Route::get('branch-list', [BranchController::class, 'branchList']);
+
 
 Route::prefix('services')->group(function () {
-    Route::get('service/branch/{id}', [ServiceController::class, 'assign_branch_list']);
+    Route::controller(ServiceController::class)->group(function () {
+        Route::get('/branches/{id}', 'servicesbranches');
+    });
 });
-Route::post('verify-slot', [BranchController::class, 'verifySlot']);
 
 Route::prefix('gift-cards')->group(function () {
-    Route::get('/', [GiftCardController::class, 'index'])->name('gift.page');
-    Route::post('/', [GiftCardController::class, 'store'])->name('gift.create');
-    Route::get('/payment-result', [GiftCardController::class, 'handlePaymentResult'])->name('gift.payment_result');
+    Route::controller(GiftCardController::class)->group(function () {
+        Route::get('/', 'index')->name('gift.page');
+        Route::post('/', 'store')->name('gift.create');
+        Route::get('/payment-result', 'handlePaymentResult')->name('gift.payment_result');
+    });
 });
+
+Route::get('validate-coupon', [CouponValidationController::class, 'validateCoupon']);
+Route::get('validate-invoice-coupon', [CouponValidationController::class, 'validateInvoiceCoupon']);
+
+Route::controller(BookingsController::class)->group(function () {
+    Route::get('/States', 'States');
+    Route::get('/branchs/{id}', 'branchs');
+    Route::get('/service-groups', 'getServiceGroups');
+    Route::get('/services/{serviceGroupId}/{branchId}/bookings', 'getServicesByGroup');
+    Route::get('/staff', 'getstaff');
+    Route::get('/available/{date}/{staffId}', 'getAvailableTimes');
+});
+
+Route::controller(AuthController::class)->group(function () {
+    Route::post('register', 'sendRegisterOtp');
+    Route::post('verify-register-otp', 'verifyRegisterOtp');
+
+    Route::post('resend-register-otp', 'resendRegisterOtp');
+    
+    Route::post('login', 'login');
+    Route::post('verify-login-otp', 'verifyLoginOtp');
+
+    Route::post('resend-login-otp', 'resendLoginOtp');
+
+    Route::get('logout', 'logout');
+});
+
+
+Route::controller(DashboardController::class)->group(function () {
+    Route::get('dashboard-detail', 'dashboardDetail');
+});
+
+Route::controller(BranchController::class)->group(function () {
+    Route::get('base-branches', 'baseBranches');
+    Route::get('branch-configuration', 'branchConfig');
+    Route::get('branch-detail', 'branchDetails');
+    Route::get('branch-service', 'branchService');
+    Route::get('branch-review', 'branchReviews');
+    Route::get('branch-employee', 'branchEmployee');
+    Route::get('branch-gallery', 'branchGallery');
+});
+
+Route::group(['middleware' => 'auth:sanctum'], function () {
+    Route::controller(MobileCartController::class)->group(function () {
+        Route::get('/mobile/cart', 'index');
+        Route::post('/mobile/cart/bookings', 'storeBooking');
+        Route::post('/mobile/cart/gift-cards', 'storeGiftCard');
+    });
+
+    Route::controller(BookingCartController::class)->group(function () {
+        Route::post('/cart/products/{id}', 'addToCart');
+        Route::delete('/cart/{id}', 'destroy');
+        Route::post('/cart-pay', 'cartPay');
+        Route::get('/wallet-loyalty-balance', 'walletLoyaltyBalance');
+        Route::get('/loyallety', 'balance');
+    });
+
+    Route::controller(PaymentController::class)->group(function () {
+        Route::post('/payment-chanal', 'payment');
+    });
+
+    Route::controller(PackageDetailsController::class)->group(function () {
+        Route::get('/details/{id}', 'show');
+    });
+});
+
+Route::controller(SettingController::class)->group(function () {
+    Route::post('app-configuration', 'appConfiguraton');
+});
+
+
 
 
 
@@ -70,12 +204,9 @@ Route::delete('/booking-carts/{id}', [CalanderBookingController::class, 'destroy
 Route::get('/booking-carts/by-time', [CalanderBookingController::class, 'getAllByTime']);
 Route::get('/booking-carts/by-day', [CalanderBookingController::class, 'getAllByDay']);
 
-
-
-
-
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::middleware('auth:sanctum')->controller(SystemUtilityController::class)->group(function () {
+    Route::get('/admin', 'adminRedirect');
+    Route::get('/user', 'currentUser');
 });
 
 Route::controller(AuthController::class)->group(function () {
@@ -94,13 +225,6 @@ Route::controller(AuthController::class)->group(function () {
     Route::get('logout', 'logout');
 });
 
-Route::get('dashboard-detail', [DashboardController::class, 'dashboardDetail']);
-Route::get('branch-configuration', [BranchController::class, 'branchConfig']);
-Route::get('branch-detail', [BranchController::class, 'branchDetails']);
-Route::get('branch-service', [BranchController::class, 'branchService']);
-Route::get('branch-review', [BranchController::class, 'branchReviews']);
-Route::get('branch-employee', [BranchController::class, 'branchEmployee']);
-Route::get('branch-gallery', [BranchController::class, 'branchGallery']);
 
 Route::get('/available/{date}/{staffId}', [HomeBookingController::class, 'getAvailableTimes']);
 
@@ -115,8 +239,6 @@ Route::get('/success-py-gift', [GiftCardController::class, 'handlePaymentResult'
 
 
 Route::group(['middleware' => 'auth:sanctum'], function () {
-    Route::post('branch/assign/{id}', [BranchController::class, 'assign_update']);
-    Route::apiResource('branch', BranchController::class);
     Route::apiResource('user', UserApiController::class);
     Route::apiResource('setting', SettingController::class);
     Route::apiResource('notification', NotificationsController::class);
@@ -133,7 +255,6 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::get('remove-address', [AddressController::class, 'RemoveAddress']);
     Route::post('edit-address', [AddressController::class, 'EditAddress']);
 
-    Route::post('verify-slot', [BranchController::class, 'verifySlot']);
 
     Route::get('/cart', [BookingCartController::class, 'index']);
     Route::post('/cart', [BookingCartController::class, 'store']);
@@ -141,7 +262,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::post('/cart-pay', [BookingCartController::class, 'cartPay']);
     Route::get('/loyallety', [BookingCartController::class, 'balance']);
     Route::post('/bookings', [HomeBookingController::class, 'store']);
-    Route::get('/details/{id}', [SaloneBookController::class, 'show']);
+    Route::get('/details/{id}', [PackageDetailsController::class, 'show']);
     Route::get('/pay-now', [HomeBookingController::class, 'createPayment']);
     Route::post('/payments/init', [PaymentController::class, 'init']);
     Route::get('/payments/{token}', [PaymentController::class, 'status']);

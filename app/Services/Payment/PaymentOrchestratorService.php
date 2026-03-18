@@ -184,15 +184,8 @@ class PaymentOrchestratorService
         return ['status' => $status];
     }
 
-    private function handleCod(
-        int $userId,
-        bool $isBuyNow,
-        float $grossAmount,
-        float $taxAmount,
-        float $discountAmount,
-        array $totalData,
-        ?string $couponCode
-    ): array {
+    private function handleCod( int $userId, bool $isBuyNow, float $grossAmount, float $taxAmount, float $discountAmount, array $totalData, ?string $couponCode ): array {
+
         $codDepositPercent = (float) Setting::get('cod_deposit_percent', 30);
         $codDepositPercent = max(0, min(100, $codDepositPercent));
         $requiredDeposit = round($grossAmount * ($codDepositPercent / 100), 2);

@@ -38,7 +38,7 @@ class HomeBookingController extends Controller
         ->get();
     
         return response()->json($branches);
-}
+    }
     
     public function allbranchs()
     {
@@ -146,7 +146,6 @@ class HomeBookingController extends Controller
         if (!$branchId) {
             return response()->json([]);
         }
-
         $baseShiftId = $user->shift?->shift_id;
         $shift = $this->resolveWeeklyRotatingShiftId($baseShiftId, $date);
 
@@ -189,8 +188,13 @@ class HomeBookingController extends Controller
         
         $availableTimes = [];
 
-        $workStart = Carbon::parse($date . ' ' . $workStartTime->format('H:i'), $timezone);
-        $workEnd = Carbon::parse($date . ' ' . $workEndTime->format('H:i'), $timezone);
+        $workStart = Carbon::parse($date . ' ' . $workingHours->start_time, $timezone)->startOfMinute();
+        $workEnd   = Carbon::parse($date . ' ' . $workingHours->end_time, $timezone)->startOfMinute();
+        
+        if ($workEnd->lte($workStart)) {
+            $workEnd->addDay();
+        }
+
         $current = $workStart->copy();
 
         $isToday = Carbon::createFromFormat('Y-m-d', $date, $timezone)->isToday();
@@ -224,6 +228,7 @@ class HomeBookingController extends Controller
 
         return response()->json($availableTimes4);
     }
+
 
     private function pickSlotStartsByDuration(array $availableTimes, int $serviceDuration, Carbon $workStart, Carbon $workEnd): array
     {
@@ -448,9 +453,9 @@ class HomeBookingController extends Controller
                 'purchase_date'    => now(),
                 'package_id'   => $data['package_id'],
             ]);
-        }
+    }
 
-    //        Payment Methods\n\n/*-----------------------Helper function to filter time---------------------------*/
+/*-----------------------Helper function to filter time---------------------------*/
     function filterAvailableTimes($availableTimes, $serviceDuration) {
         $filtered = [];
         $serviceDuration = max(1, (int) $serviceDuration);

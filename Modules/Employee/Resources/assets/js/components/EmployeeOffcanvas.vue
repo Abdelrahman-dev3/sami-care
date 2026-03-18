@@ -113,6 +113,28 @@
               </span>
               <span class="text-danger">{{ errors.shift_id }}</span>
             </div>
+            <div class="form-group col-md-12">
+              <label class="form-label" for="category_id">Select Category</label>
+              <Multiselect
+                id="category_id"
+                v-model="category_id"
+                :value="category_id"
+                placeholder="Select Category"
+                v-bind="categorySelectOption"
+                :options="categories.options"
+                @select="categorySelect"
+                @deselect="categorySelect"
+                @clear="categorySelect"
+                class="form-group"
+              >
+              </Multiselect>
+              <span v-if="errorMessages['category_id']">
+                <ul class="text-danger">
+                  <li v-for="err in errorMessages['category_id']" :key="err">{{ err }}</li>
+                </ul>
+              </span>
+              <span class="text-danger">{{ errors.category_id }}</span>
+            </div>
             <div class="form-group">
               <label class="form-label" for="service">{{ $t('employee.lbl_select_service') }}</label>
               <Multiselect id="service_id" v-model="service_id" :multiple="true" :value="service_id"
@@ -190,17 +212,17 @@
 
       <FormFooter :IS_SUBMITED="IS_SUBMITED"></FormFooter>
       
-<!--<a :href="`/app/staff-working-hours/${currentId}`"   v-if="currentId" class="btn btn-primary" style="width: 31%;right: 20px;">-->
-<!--    {{ $t('employee.btn_edit_working_hours') }}-->
-<!--</a>-->
+<a :href="`/app/staff-working-hours/${currentId}`"   v-if="currentId" class="btn btn-primary" style="width: 31%;right: 20px;">
+    {{ $t('employee.btn_edit_working_hours') }}
+</a>
 
     </div>
   </form>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { EDIT_URL, STORE_URL, UPDATE_URL, BRANCH_LIST,SHIFT_LIST, SERVICE_LIST, COMMISSION_LIST, EMAIL_UNIQUE_CHECK } from '../constant/employee'
+import { ref, onMounted, nextTick } from 'vue'
+import { EDIT_URL, STORE_URL, UPDATE_URL, BRANCH_LIST, SHIFT_LIST, CATEGORY_LIST, SERVICE_LIST, COMMISSION_LIST, EMAIL_UNIQUE_CHECK } from '../constant/employee'
 import { useField, useForm } from 'vee-validate'
 
 import { VueTelInput } from 'vue3-tel-input'
@@ -236,6 +258,12 @@ const multiSelectOption = ref({
   closeOnSelect: true,
   searchable: true,
 })
+const categorySelectOption = ref({
+  mode: 'tags',
+  closeOnSelect: false,
+  searchable: true,
+  hideSelected: true,
+})
 
 const { getRequest, storeRequest, updateRequest } = useRequest()
 
@@ -247,9 +275,9 @@ const currentId = useModuleId(() => {
       branch_id.value = props.selectedSessionBranchId
     } else if (data.options.length === 1) {
       branch_id.value = data.options[0].value
-      branchSelect()
+      loadServicesForCurrentFilters()
     }
-    branchSelect()
+    loadServicesForCurrentFilters()
   })
   useSelect({ url: SHIFT_LIST }, { value: 'id', label: 'name' }).then((data) => {
     shift.value = data
@@ -257,16 +285,17 @@ const currentId = useModuleId(() => {
       shift_id.value = props.selectedSessionShiftId
     } else if (data.options.length === 1) {
       shift_id.value = data.options[0].value
-      shiftSelect()
+      loadServicesForCurrentFilters()
     }
-    shiftSelect()
+    loadServicesForCurrentFilters()
   })
+  useSelect({ url: CATEGORY_LIST }, { value: 'id', label: 'name' }).then((data) => (categories.value = data))
   useSelect({ url: COMMISSION_LIST }, { value: 'id', label: 'name' }).then((data) => (commissions.value = data))
   if (currentId.value > 0) {
     getRequest({ url: EDIT_URL, id: currentId.value }).then((res) => {
       if (res.status && res.data) {
         setFormData(res.data)
-        branchSelect()
+        loadServicesForCurrentFilters()
       }
     })
   } else {
@@ -276,6 +305,7 @@ const currentId = useModuleId(() => {
 
 const branch = ref({ options: [], list: [] })
 const shift  = ref({ options: [], list: [] })
+const categories = ref({ options: [], list: [] })
 const commissions = ref({ options: [], list: [] })
 const services = ref({ options: [], list: [] })
 
@@ -283,11 +313,32 @@ onMounted(() => {
   setFormData(defaultData())
 })
 
-const branchSelect = () => {
-  useSelect({ url: SERVICE_LIST, data: { branch_id: branch_id.value } }, { value: 'id', label: 'name' }).then((data) => (services.value = data))
+const loadServicesForCurrentFilters = ({ resetSelected = false } = {}) => {
+  if (resetSelected) {
+    service_id.value = []
+  }
+
+  useSelect({
+    url: SERVICE_LIST,
+    data: {
+      branch_id: branch_id.value,
+      shift_id: shift_id.value,
+      category_id: category_id.value
+    }
+  }, { value: 'id', label: 'name' }).then((data) => (services.value = data))
 }
+
+const branchSelect = () => {
+  loadServicesForCurrentFilters({ resetSelected: true })
+}
+
 const shiftSelect = () => {
-  useSelect({ url: SERVICE_LIST, data: { shift_id: shift_id.value } }, { value: 'id', label: 'name' }).then((data) => (services.value = data))
+  loadServicesForCurrentFilters({ resetSelected: true })
+}
+
+const categorySelect = async () => {
+  await nextTick()
+  loadServicesForCurrentFilters({ resetSelected: true })
 }
 
 // File Upload Function
@@ -350,6 +401,7 @@ const defaultData = () => {
     profile_image: '',
     status: 1,
     branch_id: 0,
+    category_id: [],
     service_id: [],
     commission_id: '',
     show_in_calender: 1,
@@ -368,6 +420,12 @@ const defaultData = () => {
 
 
 
+const normalizeCategoryIds = (value) => {
+  if (Array.isArray(value)) return value
+  if (value === null || value === undefined || value === '') return []
+  return [value]
+}
+
 //  Reset Form
 const setFormData = (data) => {
   ImageViewer.value = data.profile_image
@@ -384,6 +442,7 @@ const setFormData = (data) => {
       profile_image: data.profile_image,
       branch_id: data.branch_id,
       shift_id: data.shift_id,
+      category_id: normalizeCategoryIds(data.category_id),
       service_id: data.service_id,
       commission_id: data.commission_id,
       status: data.status ? true : false,
@@ -489,6 +548,7 @@ const { value: gender } = useField('gender')
 const { value: mobile } = useField('mobile')
 const { value: branch_id } = useField('branch_id')
 const { value: shift_id } = useField('shift_id')
+const { value: category_id } = useField('category_id')
 const { value: status } = useField('status')
 const { value: service_id } = useField('service_id')
 const { value: commission_id } = useField('commission_id')

@@ -4,9 +4,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Modules\Booking\Models\Booking;
 use Modules\Booking\Models\BookingService;
-use Modules\Booking\Models\BookingProduct;
 use Modules\Package\Models\BookingPackages;
-use Modules\Wallet\Models\Wallet;
 use App\Models\LoyaltyPoint;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -247,7 +245,7 @@ class BookingCartController extends Controller
         $packagesCount = $bookingPackages->count();
 
 
-        return view('components.frontend.cart', compact('packagesCount','bookingPackages','services' , 'products' , 'finalPrice' , 'discountTotal' , 'serviceCount' , 'productCount', 'gifts'));
+        return view('frontend.cart.index', compact('packagesCount','bookingPackages','services' , 'products' , 'finalPrice' , 'discountTotal' , 'serviceCount' , 'productCount', 'gifts'));
     }
 
      public function store(Request $request)
