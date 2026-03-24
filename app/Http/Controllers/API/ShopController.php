@@ -3,12 +3,28 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use Modules\Product\Models\Product;
 use Modules\Product\Models\ProductCategory;
+use Modules\Product\Transformers\ProductResource;
 use App\Models\Ad;
 
 class ShopController extends Controller
 {
+    public function homeProducts()
+    {
+        $products = Product::with('media', 'categories', 'brand', 'unit', 'product_variations', 'product_review')
+            ->where('status', 1)
+            ->where('is_featured', 1)
+            ->whereNull('deleted_at')
+            ->take(6)
+            ->get();
+
+        return response()->json([
+            'status' => true,
+            'data' => ProductResource::collection($products),
+        ]);
+    }
+
     public function index()
     {
         $ads = Ad::where('page', 'shop')

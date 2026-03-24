@@ -42,12 +42,20 @@ use App\Http\Controllers\Api\WheelController;
 
 
 Route::prefix('Home')->group(function () {
+
     Route::controller(CategoriesController::class)->group(function () {
         Route::get('/categories', 'index');
     });
+
     Route::controller(PackageCatalogController::class)->group(function () {
         Route::get('/packages', 'packages');
     });
+
+    Route::controller(ShopController::class)->group(function () {
+        Route::get('/products', 'homeProducts');
+    });
+
+    
 });
 
 Route::prefix('shop')->group(function () {
