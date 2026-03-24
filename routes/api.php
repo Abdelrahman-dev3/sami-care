@@ -20,14 +20,14 @@ use App\Http\Controllers\Backend\UserController;
 use Modules\Service\Http\Controllers\Backend\API\ServiceController;
 use App\Http\Controllers\API\PaymentController;
 use App\Http\Controllers\Api\CategoriesController;
-use App\Http\Controllers\Api\PackagesController;
+use App\Http\Controllers\Api\PackageCatalogController;
 use App\Http\Controllers\Api\ShopController;
 use App\Http\Controllers\Api\LoyaltyController;
 use App\Http\Controllers\Api\CouponController;
 use App\Http\Controllers\Api\BookingsController;
 use App\Http\Controllers\Api\MobileCartController;
-use App\Http\Controllers\BookingController;
-use App\Http\Controllers\PackageBookingController;
+use App\Http\Controllers\Api\WheelController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -45,9 +45,8 @@ Route::prefix('Home')->group(function () {
     Route::controller(CategoriesController::class)->group(function () {
         Route::get('/categories', 'index');
     });
-
-    Route::controller(PackagesController::class)->group(function () {
-        Route::get('/packages', 'index');
+    Route::controller(PackageCatalogController::class)->group(function () {
+        Route::get('/packages', 'packages');
     });
 });
 
@@ -57,8 +56,20 @@ Route::prefix('shop')->group(function () {
     });
 });
 
+Route::controller(PackageCatalogController::class)->group(function () {
+    Route::get('/packages', 'packages');
+    Route::get('/packages/{id}', 'packageDetails')->whereNumber('id');
+    Route::get('/offers', 'offers');
+    Route::get('/offers/{id}', 'offerDetails')->whereNumber('id');
+});
+
 Route::controller(LoyaltyController::class)->group(function () {
     Route::get('/loyalty/point-value', 'index');
+});
+
+Route::prefix('wheel')->controller(WheelController::class)->group(function () {
+    Route::get('/prizes', 'prizes');
+    Route::post('/spin', 'spin');
 });
 
 Route::controller(CouponController::class)->group(function () {
