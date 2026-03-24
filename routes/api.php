@@ -55,7 +55,11 @@ Route::prefix('Home')->group(function () {
         Route::get('/products', 'homeProducts');
     });
 
-    
+    Route::prefix('wheel')->controller(WheelController::class)->group(function () {
+        Route::post('/spin', 'spin');
+        Route::get('/prizes', 'prizes');
+    });
+
 });
 
 Route::prefix('shop')->group(function () {
@@ -73,11 +77,6 @@ Route::controller(PackageCatalogController::class)->group(function () {
 
 Route::controller(LoyaltyController::class)->group(function () {
     Route::get('/loyalty/point-value', 'index');
-});
-
-Route::prefix('wheel')->controller(WheelController::class)->group(function () {
-    Route::get('/prizes', 'prizes');
-    Route::post('/spin', 'spin');
 });
 
 Route::controller(CouponController::class)->group(function () {
