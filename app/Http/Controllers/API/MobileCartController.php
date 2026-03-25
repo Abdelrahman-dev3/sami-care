@@ -287,6 +287,55 @@ class MobileCartController extends Controller
 
     public function storeGiftCard(Request $request)
     {
+        if ($request->filled('services') || $request->filled('location')) {
+            $validated = $request->validate([
+                'services' => ['required', 'array', 'min:1'],
+                'services.*.subServices' => ['required', 'array', 'min:1'],
+                'services.*.subServices.*.id' => ['required', 'integer', 'exists:services,id'],
+                'services.*.subServices.*.price' => ['nullable', 'numeric', 'min:0'],
+                'location' => ['required', 'array'],
+                'location.recipient_name' => ['required', 'string', 'max:255'],
+                'location.recipient_mobile' => ['required', 'string', 'max:20'],
+                'location.message' => ['nullable', 'string', 'max:1000'],
+                'delivery_method' => ['nullable', 'in:center_pickup,electronic_card,استلام من المركز,بطاقة الكترونية,traditional,email'],
+            ]);
+
+            $serviceIds = [];
+            $subtotal = 0.0;
+
+            foreach ($validated['services'] as $service) {
+                foreach ($service['subServices'] as $subService) {
+                    $serviceIds[] = (int) $subService['id'];
+                    $subtotal += (float) ($subService['price'] ?? 0);
+                }
+            }
+
+            $giftCard = GiftCard::create([
+                'user_id' => $request->user()->id,
+                'delivery_method' => isset($validated['delivery_method'])
+                    ? $this->normalizeGiftDeliveryMethod($validated['delivery_method'])
+                    : '',
+                'sender_name' => $request->user()->first_name ?? $request->user()->username ?? '',
+                'recipient_name' => $validated['location']['recipient_name'],
+                'sender_phone' => $request->user()->mobile ?? '',
+                'recipient_phone' => $validated['location']['recipient_mobile'],
+                'requested_services' => $serviceIds,
+                'message' => $validated['location']['message'] ?? null,
+                'subtotal' => $subtotal,
+                'payment_status' => 0,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'status' => true,
+                'message' => __('messages.gift_added_success'),
+                'data' => [
+                    'gift_card_id' => $giftCard->id,
+                    'subtotal' => (float) $giftCard->subtotal,
+                ],
+            ], 201);
+        }
+
         $validated = $request->validate([
             'delivery_method' => ['required', 'in:center_pickup,electronic_card,استلام من المركز,بطاقة الكترونية,traditional,email'],
             'sender_name' => ['required', 'string', 'max:255'],
@@ -301,11 +350,7 @@ class MobileCartController extends Controller
             'optional_services' => ['nullable', 'string', 'max:100'],
         ]);
 
-        $deliveryMethod = match ($validated['delivery_method']) {
-            'بطاقة الكترونية', 'email' => 'electronic_card',
-            'استلام من المركز', 'traditional' => 'center_pickup',
-            default => $validated['delivery_method'],
-        };
+        $deliveryMethod = $this->normalizeGiftDeliveryMethod($validated['delivery_method']);
 
         $serviceIds = array_map('intval', $validated['requested_services']);
         $servicesTotal = (float) Service::whereIn('id', $serviceIds)->sum('default_price');
@@ -364,8 +409,8 @@ class MobileCartController extends Controller
             'sender_phone' => $validated['sender_phone'],
             'recipient_phone' => $validated['recipient_phone'],
             'message' => $validated['optional_services'] ?? null,
-            'requested_services' => json_encode($validated['requested_services']),
-            'package_ids' => json_encode($validated['package_ids'] ?? null),
+            'requested_services' => $validated['requested_services'],
+            'package_ids' => $validated['package_ids'] ?? null,
             'coupons' => ! empty($normalizedCoupons) ? json_encode($normalizedCoupons) : null,
             'subtotal' => $subtotal,
             'payment_status' => 0,
@@ -379,6 +424,15 @@ class MobileCartController extends Controller
                 'subtotal' => (float) $giftCard->subtotal,
             ],
         ], 201);
+    }
+
+    private function normalizeGiftDeliveryMethod(string $deliveryMethod): string
+    {
+        return match ($deliveryMethod) {
+            'بطاقة الكترونية', 'email' => 'electronic_card',
+            'استلام من المركز', 'traditional' => 'center_pickup',
+            default => $deliveryMethod,
+        };
     }
 
     private function localizedValue(mixed $value): ?string
