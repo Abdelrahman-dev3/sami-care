@@ -23,9 +23,18 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
-        $validated = $request->validate([
+
+        $validator = Validator::make($request->all(), [
             'mobile' => ['required', 'string', 'max:20'],
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation Error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
 
         $smsService = new TaqnyatSmsService();
         $phone = $smsService->validatePhoneNumber($validated['mobile']);
