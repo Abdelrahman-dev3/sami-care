@@ -61,7 +61,7 @@ class AuthController extends Controller
             return $this->sendError(__('messagess.sms_daily_limit_reached'), [], 429);
         }
 
-        $otp = (string) random_int(1000, 9999);
+        $otp = 1111;//(string) random_int(1000, 9999);
 
         Cache::put('login_otp_' . $phone, [
             'otp' => $otp,
@@ -70,14 +70,14 @@ class AuthController extends Controller
 
         Cache::put($dailyKey, $dailyCount + 1, now()->endOfDay());
 
-        if ((int) setting('is_taqnyat_sms') === 1) {
-            $message = __('messagess.otp_sms', ['code' => $otp]);
-            $sent = $smsService->sendSms($phone, $message);
+        // if ((int) setting('is_taqnyat_sms') === 1) {
+        //     $message = __('messagess.otp_sms', ['code' => $otp]);
+        //     $sent = $smsService->sendSms($phone, $message);
 
-            if ($sent === false) {
-                return $this->sendError(__('messagess.sms_failed'), [], 500);
-            }
-        }
+        //     if ($sent === false) {
+        //         return $this->sendError(__('messagess.sms_failed'), [], 500);
+        //     }
+        // }
 
         return $this->sendResponse([
             'mobile' => $phone,

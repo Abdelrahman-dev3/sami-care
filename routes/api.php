@@ -185,6 +185,7 @@ Route::controller(BranchController::class)->group(function () {
 Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::controller(ProfileController::class)->group(function () {
         Route::get('/profile', 'show');
+        Route::post('/profile/update', 'update');
     });
 
     Route::controller(MobileCartController::class)->group(function () {

@@ -8,6 +8,7 @@ use App\Models\LoyaltyPoint;
 use App\Models\reject;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Modules\Booking\Models\Booking;
 use Modules\Promotion\Models\Coupon;
@@ -56,7 +57,6 @@ class ProfileController extends Controller
 
         $walletBalance = (float) (Wallet::where('user_id', $user->id)->value('amount') ?? 0);
         $loyaltyPoints = (int) (LoyaltyPoint::where('user_id', $user->id)->value('points') ?? 0);
-        $affiliate = $user->affiliate;
 
         return response()->json([
             'status' => true,
@@ -82,7 +82,6 @@ class ProfileController extends Controller
                 ],
                 'balances' => [
                     'wallet' => $walletBalance,
-                    'referral_balance' => (float) ($affiliate->wallet_available ?? 0),
                     'loyalty_points' => $loyaltyPoints,
                 ],
                 'stats' => [
@@ -90,15 +89,6 @@ class ProfileController extends Controller
                     'pending_bookings_count' => $currentBookings->count(),
                     'completed_bookings_count' => $completedBookings->count(),
                     'gift_cards_count' => $giftCards->count(),
-                    'transactions_count' => $allBookings->count(),
-                ],
-                'affiliate' => [
-                    'is_affiliate' => (bool) $affiliate,
-                    'status' => $affiliate?->status,
-                    'ref_code' => $affiliate?->ref_code,
-                    'wallet_total' => (float) ($affiliate->wallet_total ?? 0),
-                    'wallet_available' => (float) ($affiliate->wallet_available ?? 0),
-                    'referral_link' => $affiliate?->ref_code ? route('affiliate.track', ['ref_code' => $affiliate->ref_code]) : null,
                 ],
                 'payment_methods' => [
                     ['key' => 'visa', 'image_url' => asset('images/icons/visa.png')],
@@ -145,6 +135,53 @@ class ProfileController extends Controller
                 'completed_bookings' => $completedBookings->map(fn (Booking $booking) => $this->transformBooking($booking, false))->values(),
                 'gift_cards' => $giftCards->map(fn (GiftCard $giftCard) => $this->transformGiftCard($giftCard))->values(),
                 'today_paid_gift_cards' => $todayPaidGiftCards->map(fn (GiftCard $giftCard) => $this->transformGiftCard($giftCard))->values(),
+            ],
+        ]);
+    }
+
+    public function update(Request $request): JsonResponse
+    {
+        $user = Auth::user();
+
+        $data = $request->validate([
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'mobile' => 'required|string|max:20|unique:users,mobile,'.$user->id,
+            'email' => 'nullable|email|max:255|unique:users,email,'.$user->id,
+            'address' => 'nullable|string|max:255',
+            'city' => 'nullable|string|max:255',
+            'country' => 'nullable|string|max:255',
+            'date_of_birth' => 'nullable|date|before:today',
+            'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+        ]);
+
+        if ($request->hasFile('profile_image')) {
+            $image = $request->file('profile_image');
+            $imageName = 'user_'.$user->id.'_'.time().'.'.$image->getClientOriginalExtension();
+            $image->move(public_path('profile_images'), $imageName);
+            $data['avatar'] = 'profile_images/'.$imageName;
+        }
+
+        $user->update($data);
+
+        return response()->json([
+            'status' => true,
+            'message' => __('messages.profile_updated'),
+            'data' => [
+                'user' => [
+                    'id' => $user->id,
+                    'first_name' => $user->first_name,
+                    'last_name' => $user->last_name,
+                    'full_name' => trim(($user->first_name ?? '').' '.($user->last_name ?? '')),
+                    'email' => $user->email,
+                    'mobile' => $user->mobile,
+                    'avatar' => $this->resolveUrl($user->avatar ?: $user->profile_image),
+                    'profile_image' => $this->resolveUrl($user->profile_image),
+                    'date_of_birth' => $this->formatDate($user->date_of_birth),
+                    'city' => $user->city,
+                    'country' => $user->country,
+                    'address' => $user->address,
+                ],
             ],
         ]);
     }
