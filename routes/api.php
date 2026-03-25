@@ -235,18 +235,16 @@ Route::middleware('auth:sanctum')->controller(SystemUtilityController::class)->g
 });
 
 Route::controller(AuthController::class)->group(function () {
-    Route::post('register', 'register');
-    // or ||
-    Route::post('send-register-otp', 'sendRegisterOtp');
-
-    Route::post('resend-register-otp', 'resendRegisterOtp');
-
+    Route::post('register', 'sendRegisterOtp');
     Route::post('verify-register-otp', 'verifyRegisterOtp');
 
+    Route::post('resend-register-otp', 'resendRegisterOtp');
+    
+    Route::post('login', 'login');
+    Route::post('verify-login-otp', 'verifyLoginOtp');
 
-    Route::post('signup', 'signup');
-    Route::post('social-login', 'socialLogin');
-    Route::post('forgot-password', 'forgotPassword');
+    Route::post('resend-login-otp', 'resendLoginOtp');
+
     Route::get('logout', 'logout');
 });
 

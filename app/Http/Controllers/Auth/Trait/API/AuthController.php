@@ -4,242 +4,264 @@ namespace App\Http\Controllers\Auth\Trait\API;
 
 use App\Http\Controllers\Auth\Trait\AuthTrait;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Resources\LoginResource;
 use App\Http\Resources\RegisterResource;
-use App\Http\Resources\SocialLoginResource;
 use App\Models\User;
 use App\Services\TaqnyatSmsService;
+use Illuminate\Support\Facades\Validator;
 use Auth;
-use Hash;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Password;
 
 class AuthController extends Controller
 {
     use AuthTrait;
-
-    public function register(Request $request)
-    {
-        return $this->sendRegisterOtp($request);
-    }
-
     /**
      * Login api
      *
      * @return \Illuminate\Http\Response
      */
-public function login(LoginRequest $request)
-{
-    $user = User::withTrashed()->where('mobile', $request->input('mobile'))->first();
-
-    if ($user == null) {
-        return response()->json([
-            'status' => false,
-            'message' => __('messages.register_before_login')
+    public function login(Request $request)
+    {
+        $validated = $request->validate([
+            'mobile' => ['required', 'string', 'max:20'],
         ]);
-    }
 
-    if (Auth::attempt(['mobile' => $request->mobile, 'password' => $request->password])) {
-        $user = Auth::user();
+        $smsService = new TaqnyatSmsService();
+        $phone = $smsService->validatePhoneNumber($validated['mobile']);
+
+        if (! $phone) {
+            return $this->sendError(__('messagess.invalid_phone'), [], 422);
+        }
+
+        $user = User::where('mobile', $phone)->first();
+
+        if ($user == null || !$user) {
+            return $this->sendError(__('messages.register_before_login'));
+        }
 
         if ($user->is_banned == 1 || $user->status == 0) {
-            return response()->json([
-                'status' => false,
-                'message' => __('messages.login_error')
-            ]);
+            return $this->sendError(__('messages.login_error'));
         }
-        $user['api_token'] = $user->createToken(setting('app_name'))->plainTextToken;
 
-        $loginResource = new LoginResource($user);
-        $message = __('messages.user_login');
+        $dailyKey = 'login_otp_count_'.$phone.'_'.date('Y-m-d');
+        $dailyCount = (int) Cache::get($dailyKey, 0);
 
-        return $this->sendResponse($loginResource, $message);
+        if ($dailyCount >= 711) {
+            return $this->sendError(__('messagess.sms_daily_limit_reached'), [], 429);
+        }
+
+        $otp = (string) random_int(1000, 9999);
+
+        Cache::put('login_otp_'.$phone, [
+            'otp' => $otp,
+            'user_id' => $user->id,
+        ], now()->addMinutes(5));
+        Cache::put($dailyKey, $dailyCount + 1, now()->endOfDay());
+
+        if ((int) setting('is_taqnyat_sms') === 1) {
+            $message = __('messagess.otp_sms', ['code' => $otp]);
+            $sent = $smsService->sendSms($phone, $message);
+
+            if ($sent === false) {
+                return $this->sendError(__('messagess.sms_failed'), [], 500);
+            }
+        }
+
+        return $this->sendResponse([
+            'mobile' => $phone,
+            'expires_in' => 300,
+        ], __('messages.otp_sent'));
     }
 
-    return $this->sendError(__('messages.not_matched'), [
-        'error' => __('messages.unauthorised')
-    ], 200);
-}
-
-
-    public function socialLogin(Request $request)
+    public function resendLoginOtp(Request $request)
     {
-        $input = $request->all();
+        return $this->sendLoginOtp($request);
+    }
 
-        if ($input['login_type'] === 'mobile') {
-            $user_data = User::where('username', $input['username'])->where('login_type', 'mobile')->first();
-        } else {
-            $user_data = User::where('email', $input['email'])->first();
+    public function verifyLoginOtp(Request $request)
+    {
+        $validated = $request->validate([
+            'mobile' => ['required', 'string', 'max:20'],
+            'otp' => ['required', 'digits:4'],
+        ]);
+
+        $smsService = new TaqnyatSmsService();
+        $phone = $smsService->validatePhoneNumber($validated['mobile']);
+
+        if (! $phone) {
+            return $this->sendError(__('messagess.invalid_phone'), [], 422);
         }
 
-        if ($user_data != null) {
-            if (! isset($user_data->login_type) || $user_data->login_type == '') {
-                if ($request->login_type === 'google') {
-                    $message = __('validation.unique', ['attribute' => 'email']);
-                } else {
-                    $message = __('validation.unique', ['attribute' => 'username']);
-                }
+        $cached = Cache::get('login_otp_'.$phone);
 
-                return $this->sendError($message, 400);
-            }
-            $message = __('messages.login_success');
-        } else {
-            if ($request->login_type === 'google') {
-                $key = 'email';
-                $value = $request->email;
-            } else {
-                $key = 'username';
-                $value = $request->username;
-            }
-
-            $trashed_user_data = User::where($key, $value)->whereNotNull('login_type')->withTrashed()->first();
-
-            if ($trashed_user_data != null && $trashed_user_data->trashed()) {
-                if ($request->login_type === 'google') {
-                    $message = __('validation.unique', ['attribute' => 'email']);
-                } else {
-                    $message = __('validation.unique', ['attribute' => 'username']);
-                }
-
-                return $this->sendError($message, 400);
-            }
-
-            if ($request->login_type === 'mobile' && $user_data == null) {
-                $otp_response = [
-                    'status' => true,
-                    'is_user_exist' => false,
-                ];
-
-                return $this->sendError($otp_response);
-            }
-
-            if ($request->login_type === 'mobile' && $user_data != null) {
-                $otp_response = [
-                    'status' => true,
-                    'is_user_exist' => true,
-                ];
-
-                return $this->sendError($otp_response);
-            }
-
-            $password = ! empty($input['accessToken']) ? $input['accessToken'] : $input['email'];
-
-            $input['user_type'] = 'user';
-            $input['display_name'] = $input['first_name'].' '.$input['last_name'];
-            $input['password'] = Hash::make($password);
-            $input['user_type'] = isset($input['user_type']) ? $input['user_type'] : 'user';
-            
-            $user = User::create($input);
-            $user->assignRole('user');
-
-            \Artisan::call('cache:clear');
-
-            if (! empty($input['profile_image'])) {
-                $media = $user->addMediaFromUrl($input['profile_image'])->toMediaCollection('profile_image');
-                $user->avatar = $media->getUrl();
-            }
-            $user_data = User::where('id', $user->id)->first();
-            $message = trans('messages.save_form', ['form' => $input['user_type']]);
+        if (! $cached || ! isset($cached['otp'], $cached['user_id'])) {
+            return $this->sendError(__('messagess.session_expired'), [], 422);
         }
 
-        
-        $user_data['api_token'] = $user_data->createToken('auth_token')->plainTextToken;
+        $attemptKey = 'login_otp_attempts_'.$phone;
+        $attempts = (int) Cache::get($attemptKey, 0);
 
-        $socialLogin = new SocialLoginResource($user_data);
+        if ($attempts >= 5) {
+            Cache::forget('login_otp_'.$phone);
+            Cache::forget($attemptKey);
 
-        return $this->sendResponse($socialLogin, $message);
+            return $this->sendError(__('auth.throttle', ['seconds' => 300, 'minutes' => 5]), [], 429);
+        }
+
+        if ((string) $cached['otp'] !== (string) $validated['otp']) {
+            Cache::put($attemptKey, $attempts + 1, now()->addMinutes(5));
+
+            return $this->sendError(__('messagess.invalid_otp'), [], 422);
+        }
+
+        $user = User::where('id', $cached['user_id'])->where('mobile', $phone)->first();
+
+        if (! $user) {
+            Cache::forget('login_otp_'.$phone);
+            Cache::forget($attemptKey);
+
+            return $this->sendError(__('messages.user_notfound'), [], 404);
+        }
+
+        if ($user->is_banned == 1 || $user->status == 0) {
+            Cache::forget('login_otp_'.$phone);
+            Cache::forget($attemptKey);
+
+            return $this->sendError(__('messages.login_error'));
+        }
+
+        Cache::forget('login_otp_'.$phone);
+        Cache::forget($attemptKey);
+        $user['api_token'] = $user->createToken(setting('app_name'))->plainTextToken;
+
+        return $this->sendResponse(new LoginResource($user), __('messages.user_login'));
     }
 
     public function logout(Request $request)
     {
-        $user = Auth::guard('sanctum')->user();
+        $request->user()->currentAccessToken()->delete();
 
-        if ($request->is('api*')) {
-            $user->save();
-
-            return response()->json(['status' => true, 'message' => __('messages.user_logout')]);
-        }
+        return response()->json([
+            'status' => true,
+            'message' => __('messages.user_logout')
+        ]);
     }
-
-    public function forgotPassword(Request $request)
+    public function sendRegisterOtp(Request $request)
     {
-        $request->validate([
-            'email' => 'required|email',
+        $validator = Validator::make($request->all(), [
+            'username' => ['required', 'string', 'max:191', 'unique:users,username'],
+            'mobile' => ['required', 'string', 'max:20', 'unique:users,mobile'],
         ]);
 
-        // We will send the password reset link to this user. Once we have attempted
-        // to send the link, we will examine the response then see the message we
-        // need to show to the user. Finally, we'll send out a proper response.
-        $response = Password::sendResetLink(
-            $request->only('email')
-        );
-        $user = User::where('email', $request->email)->first();
-        if ($user == null) {
-            return $response == Password::RESET_LINK_SENT
-                ? response()->json(['message' => __($response), 'status' => true], 200)
-                : response()->json(['message' => __($response), 'status' => false], 200);
+        if ($validator->fails()) {
+            return $this->sendError(
+                $validator->errors()->first(),
+                $validator->errors(),
+                422
+            );
         }
 
-        return $response == Password::RESET_LINK_SENT
-            ? response()->json(['message' => __($response), 'status' => true], 200)
-            : response()->json(['message' => __($response), 'status' => false], 400);
+        $validated = $validator->validated();
+        $smsService = new TaqnyatSmsService();
+        $phone = $smsService->validatePhoneNumber($validated['mobile']);
+    
+        if (! $phone) {
+            return $this->sendError(__('messagess.invalid_phone'), [], 422);
+        }
+    
+        $dailyKey = 'register_otp_count_'.$phone.'_'.date('Y-m-d');
+        $dailyCount = (int) Cache::get($dailyKey, 0);
+    
+        if ($dailyCount >= 3) {
+            return $this->sendError(__('messagess.sms_daily_limit_reached'), [], 429);
+        }
+    
+        $otp = (string) random_int(1000, 9999);
+    
+        Cache::put('register_otp_'.$phone, [
+            'username' => $validated['username'],
+            'otp' => $otp,
+        ], now()->addMinutes(5));
+        Cache::put($dailyKey, $dailyCount + 1, now()->endOfDay());
+    
+        $message = __('messagess.otp_sms', ['code' => $otp]);
+        $sent = $smsService->sendSms($phone, $message);
+    
+        if ($sent === false) {
+            return $this->sendError(__('messagess.sms_failed'), [], 500);
+        }
+    
+        return $this->sendResponse([
+            'mobile' => $phone,
+            'expires_in' => 300,
+        ], __('messages.otp_sent'));
     }
 
-    public function changePassword(Request $request)
+    public function resendRegisterOtp(Request $request)
     {
-        $user = \Auth::user();
-        $user_id = ! empty($request->id) ? $request->id : $user->id;
-        $user = User::where('id', $user_id)->first();
-        if ($user == '') {
-            return response()->json([
-                'status' => false,
-                'message' => __('messages.user_notfound'),
-            ], 400);
-        }
-
-        $hashedPassword = $user->password;
-
-        $match = Hash::check($request->old_password, $hashedPassword);
-
-        $same_exits = Hash::check($request->new_password, $hashedPassword);
-
-        if ($match) {
-            if ($same_exits) {
-                $message = __('messages.old_new_pass_same');
-
-                return response()->json([
-                    'status' => false,
-                    'message' => __('messages.same_pass'),
-                ], 400);
-            }
-
-            $user->fill([
-                'password' => Hash::make($request->new_password),
-            ])->save();
-
-            $success['api_token'] = $user->createToken(setting('app_name'))->plainTextToken;
-            $success['name'] = $user->name;
-
-            return response()->json([
-                'status' => true,
-                'data' => $success,
-                'message' => __('messages.pass_successfull'),
-            ], 200);
-        } else {
-            $success['api_token'] = $user->createToken(setting('app_name'))->plainTextToken;
-            $success['name'] = $user->name;
-            $message = __('messages.valid_password');
-
-            return response()->json([
-                'status' => true,
-                'data' => $success,
-                'message' => __('messages.pass_successfull'),
-            ], 200);
-        }
+        return $this->sendRegisterOtp($request);
     }
 
+    public function verifyRegisterOtp(Request $request)
+    {
+        $validated = $request->validate([
+            'mobile' => ['required', 'string', 'max:20'],
+            'otp' => ['required', 'digits:4'],
+        ]);
+    
+        $smsService = new TaqnyatSmsService();
+        $phone = $smsService->validatePhoneNumber($validated['mobile']);
+    
+        if (! $phone) {
+            return $this->sendError(__('messagess.invalid_phone'), [], 422);
+        }
+    
+        $cached = Cache::get('register_otp_'.$phone);
+    
+        if (! $cached || ! isset($cached['otp'], $cached['username'])) {
+            return $this->sendError(__('messagess.session_expired'), [], 422);
+        }
+    
+        $attemptKey = 'register_otp_attempts_'.$phone;
+        $attempts = (int) Cache::get($attemptKey, 0);
+    
+        if ($attempts >= 5) {
+            Cache::forget('register_otp_'.$phone);
+            Cache::forget($attemptKey);
+    
+            return $this->sendError(__('auth.throttle', ['seconds' => 300, 'minutes' => 5]), [], 429);
+        }
+    
+        if ((string) $cached['otp'] !== (string) $validated['otp']) {
+            Cache::put($attemptKey, $attempts + 1, now()->addMinutes(5));
+    
+            return $this->sendError('Invalid OTP code.', [], 422);
+        }
+    
+        Cache::forget('register_otp_'.$phone);
+        Cache::forget($attemptKey);
+    
+        if (User::where('mobile', $phone)->exists() || User::where('username', $cached['username'])->exists()) {
+            return $this->sendError(__('validation.unique', ['attribute' => 'mobile/username']), [], 422);
+        }
+    
+        $user = User::create([
+            'first_name' => $cached['username'],
+            'last_name' => '',
+            'username' => $cached['username'],
+            'mobile' => $phone,
+            'email_verified_at' => now(),
+            'status' => 1,
+        ]);
+    
+        $user->assignRole('user');
+        $user['api_token'] = $user->createToken(setting('app_name'))->plainTextToken;
+    
+        return $this->sendResponse(new RegisterResource($user), __('messages.register_successfull'));
+    }
+
+    
     public function updateProfile(Request $request)
     {
         $user = \Auth::user();
@@ -286,6 +308,96 @@ public function login(LoginRequest $request)
         return response()->json(['status' => true, 'data' => $user, 'message' => __('messages.user_details_successfull')]);
     }
 
+    public function profileDetails(Request $request)
+    {
+        $user = $request->user()->load(['profile', 'addresses']);
+
+        $data = [
+            'id' => $user->id,
+            'username' => $user->username,
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
+            'full_name' => $user->full_name,
+            'email' => $user->email,
+            'mobile' => $user->mobile,
+            'gender' => $user->gender,
+            'date_of_birth' => $user->date_of_birth,
+            'address' => $user->address,
+            'city' => $user->city,
+            'country' => $user->country,
+            'login_type' => $user->login_type,
+            'status' => $user->status,
+            'is_banned' => $user->is_banned,
+            'is_subscribe' => $user->is_subscribe,
+            'email_verified_at' => $user->email_verified_at,
+            'last_notification_seen' => $user->last_notification_seen,
+            'profile_image' => $user->profile_image,
+            'user_role' => $user->getRoleNames(),
+            'profile' => $user->profile,
+            'addresses' => $user->addresses,
+        ];
+
+        return $this->sendResponse($data, __('messages.user_details_successfull'));
+    }
+
+    public function updateMyProfile(Request $request)
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'username' => ['sometimes', 'nullable', 'string', 'max:191', 'unique:users,username,' . $user->id],
+            'first_name' => ['sometimes', 'nullable', 'string', 'max:191'],
+            'last_name' => ['sometimes', 'nullable', 'string', 'max:191'],
+            'email' => ['sometimes', 'nullable', 'email', 'max:191', 'unique:users,email,' . $user->id],
+            'mobile' => ['sometimes', 'nullable', 'string', 'max:20', 'unique:users,mobile,' . $user->id],
+            'gender' => ['sometimes', 'nullable', 'string', 'max:50'],
+            'date_of_birth' => ['sometimes', 'nullable', 'date'],
+            'address' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'city' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'country' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'profile_image' => ['sometimes', 'nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'about_self' => ['sometimes', 'nullable', 'string', 'max:1000'],
+            'expert' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'facebook_link' => ['sometimes', 'nullable', 'url', 'max:255'],
+            'instagram_link' => ['sometimes', 'nullable', 'url', 'max:255'],
+            'twitter_link' => ['sometimes', 'nullable', 'url', 'max:255'],
+            'dribbble_link' => ['sometimes', 'nullable', 'url', 'max:255'],
+        ]);
+
+        $userData = collect($validated)->only([
+            'username',
+            'first_name',
+            'last_name',
+            'email',
+            'mobile',
+            'gender',
+            'date_of_birth',
+            'address',
+            'city',
+            'country',
+        ])->all();
+
+        if (!empty($userData)) {
+            $user->update($userData);
+        }
+
+        if ($request->hasFile('profile_image')) {
+            storeMediaFile($user, $request->file('profile_image'), 'profile_image');
+            $user->save();
+        }
+
+        $profileKeys = ['about_self', 'expert', 'facebook_link', 'instagram_link', 'twitter_link', 'dribbble_link'];
+        if ($request->hasAny($profileKeys)) {
+            $profileData = collect($validated)->only($profileKeys)->all();
+            $user->profile()->updateOrCreate([], $profileData);
+        }
+
+        return $this->sendResponse(
+            $user->fresh()->load(['profile', 'addresses']),
+            __('messages.profile_update')
+        );
+    }
+
     public function deleteAccount(Request $request)
     {
         $user_id = \Auth::user()->id;
@@ -307,142 +419,4 @@ public function login(LoginRequest $request)
             'message' => $message,
         ], 200);
     }
-    
-public function signup(Request $request)
-{
-    $user = $this->registerCustomer($request);
-    $user['api_token'] = $user->createToken(setting('app_name'))->plainTextToken;
-
-    return response()->json([
-        'status' => true,
-        'message' => __('messages.register_successfull'),
-        'data' => new RegisterResource($user),
-    ], 200);
-}
-
-public function sendRegisterOtp(Request $request)
-{
-    $validated = $request->validate([
-        'username' => ['required', 'string', 'max:191', 'unique:users,username'],
-        'mobile' => ['required', 'string', 'max:20', 'unique:users,mobile'],
-    ]);
-
-    $smsService = new TaqnyatSmsService();
-    $phone = $smsService->validatePhoneNumber($validated['mobile']);
-
-    if (! $phone) {
-        return $this->sendError(__('messagess.invalid_phone'), [], 422);
-    }
-
-    $dailyKey = 'register_otp_count_'.$phone.'_'.date('Y-m-d');
-    $dailyCount = (int) Cache::get($dailyKey, 0);
-
-    if ($dailyCount >= 3) {
-        return $this->sendError(__('messagess.sms_daily_limit_reached'), [], 429);
-    }
-
-    $otp = (string) 1111;//random_int(1000, 9999);
-
-    Cache::put('register_otp_'.$phone, [
-        'username' => $validated['username'],
-        'otp' => $otp,
-    ], now()->addMinutes(5));
-    Cache::put($dailyKey, $dailyCount + 1, now()->endOfDay());
-
-    $message = __('messagess.otp_sms', ['code' => $otp]);
-    // $sent = $smsService->sendSms($phone, $message);
-
-    // if ($sent === false) {
-    //     return $this->sendError(__('messagess.sms_failed'), [], 500);
-    // }
-
-    return $this->sendResponse([
-        'mobile' => $phone,
-        'expires_in' => 300,
-    ], __('messages.otp_sent'));
-}
-
-public function resendRegisterOtp(Request $request)
-{
-    return $this->sendRegisterOtp($request);
-}
-
-public function verifyRegisterOtp(Request $request)
-{
-    $validated = $request->validate([
-        'mobile' => ['required', 'string', 'max:20'],
-        'otp' => ['required', 'digits:4'],
-    ]);
-
-    $smsService = new TaqnyatSmsService();
-    $phone = $smsService->validatePhoneNumber($validated['mobile']);
-
-    if (! $phone) {
-        return $this->sendError(__('messagess.invalid_phone'), [], 422);
-    }
-
-    $cached = Cache::get('register_otp_'.$phone);
-
-    if (! $cached || ! isset($cached['otp'], $cached['username'])) {
-        return $this->sendError(__('messagess.session_expired'), [], 422);
-    }
-
-    $attemptKey = 'register_otp_attempts_'.$phone;
-    $attempts = (int) Cache::get($attemptKey, 0);
-
-    if ($attempts >= 5) {
-        Cache::forget('register_otp_'.$phone);
-        Cache::forget($attemptKey);
-
-        return $this->sendError(__('auth.throttle', ['seconds' => 300, 'minutes' => 5]), [], 429);
-    }
-
-    if ((string) $cached['otp'] !== (string) $validated['otp']) {
-        Cache::put($attemptKey, $attempts + 1, now()->addMinutes(5));
-
-        return $this->sendError('Invalid OTP code.', [], 422);
-    }
-
-    Cache::forget('register_otp_'.$phone);
-    Cache::forget($attemptKey);
-
-    if (User::where('mobile', $phone)->exists() || User::where('username', $cached['username'])->exists()) {
-        return $this->sendError(__('validation.unique', ['attribute' => 'mobile/username']), [], 422);
-    }
-
-    $user = User::create([
-        'first_name' => $cached['username'],
-        'last_name' => '',
-        'username' => $cached['username'],
-        'mobile' => $phone,
-        'email_verified_at' => now(),
-        'status' => 1,
-    ]);
-
-    $user->assignRole('user');
-    $user['api_token'] = $user->createToken(setting('app_name'))->plainTextToken;
-
-    return $this->sendResponse(new RegisterResource($user), __('messages.register_successfull'));
-}
-
-private function registerCustomer(Request $request): User
-{
-    $validated = $request->validate([
-        'username' => ['required', 'string', 'max:191', 'unique:users,username'],
-        'mobile' => ['required', 'string', 'max:20', 'unique:users,mobile'],
-    ]);
-
-    $user = User::create([
-        'first_name' => $validated['username'],
-        'last_name' => '',
-        'username' => $validated['username'],
-        'mobile' => $validated['mobile'],
-        'status' => 1,
-    ]);
-
-    $user->assignRole('user');
-
-    return $user;
-}
-
 }
