@@ -4,11 +4,14 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\GiftCard;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\Booking\Models\Booking;
 use Modules\Booking\Models\BookingService;
+use Modules\Package\Models\BookingPackages;
 use Modules\Package\Models\Package;
+use Modules\Package\Models\UserPackage;
 use Modules\Product\Models\Cart;
 use Modules\Service\Models\Service;
 
@@ -34,6 +37,17 @@ class MobileCartController extends Controller
             ->where('payment_status', 0)
             ->get();
 
+        $packageBookings = BookingPackages::query()
+            ->whereHas('booking', function ($query) use ($userId) {
+                $query->where('created_by', $userId)
+                    ->whereNotIn('status', ['cancelled', 'completed'])
+                    ->where('payment_type', 'cart')
+                    ->where('payment_status', 0)
+                    ->whereNull('deleted_by');
+            })
+            ->with(['package', 'booking.branch', 'employee'])
+            ->get();
+
         $serviceTotal = (float) $bookings->sum(function ($booking) {
             return $booking->service ? ((float) ($booking->service->service_price ?? 0)) : 0;
         });
@@ -44,12 +58,13 @@ class MobileCartController extends Controller
         });
 
         $giftTotal = (float) $giftCards->sum(fn ($gift) => (float) ($gift->subtotal ?? 0));
+        $packageTotal = (float) $packageBookings->sum(fn ($item) => (float) ($item->package_price ?? $item->package?->package_price ?? 0));
 
         $discountTotal = (float) $bookings->sum(function ($booking) {
             return (float) $booking->services->sum(fn ($service) => (float) ($service->discount_amount ?? 0));
         });
 
-        $cartTotal = $serviceTotal + $productTotal + $giftTotal;
+        $cartTotal = $serviceTotal + $productTotal + $giftTotal + $packageTotal;
         $finalTotal = $cartTotal - $discountTotal;
 
         return response()->json([
@@ -58,19 +73,140 @@ class MobileCartController extends Controller
                 'bookings' => $bookings,
                 'products' => $products,
                 'gift_cards' => $giftCards,
+                'packages' => $packageBookings->map(function (BookingPackages $item) {
+                    $package = $item->package;
+
+                    return [
+                        'id' => $item->id,
+                        'booking_id' => $item->booking_id,
+                        'package_id' => $item->package_id,
+                        'type' => $package->type ?? Package::TYPE_PACKAGE,
+                        'name' => $this->localizedValue($package->name),
+                        'price' => (float) ($item->package_price ?? $package->package_price ?? 0),
+                        'branch' => [
+                            'id' => $item->booking?->branch_id,
+                            'name' => $this->localizedValue($item->booking?->branch?->name),
+                        ],
+                        'employee' => [
+                            'id' => $item->employee_id,
+                            'name' => $item->employee?->full_name ?? trim(($item->employee?->first_name ?? '').' '.($item->employee?->last_name ?? '')),
+                        ],
+                        'booking_date' => $this->formatDate($item->booking?->start_date_time, 'Y-m-d'),
+                        'booking_time' => $this->formatDate($item->booking?->start_date_time, 'H:i'),
+                        'notes' => $item->booking?->note,
+                        'image' => $package?->feature_image,
+                    ];
+                })->values(),
                 'summary' => [
                     'bookings_count' => $bookings->count(),
                     'products_count' => $products->count(),
                     'gift_cards_count' => $giftCards->count(),
+                    'packages_count' => $packageBookings->count(),
                     'service_total' => $serviceTotal,
                     'product_total' => $productTotal,
                     'gift_total' => $giftTotal,
+                    'package_total' => $packageTotal,
                     'discount_total' => $discountTotal,
                     'cart_total' => $cartTotal,
                     'final_total' => $finalTotal,
                 ],
             ],
         ]);
+    }
+
+    public function storePackage(Request $request)
+    {
+        $validated = $request->validate([
+            'package_id' => ['required', 'integer', 'exists:packages,id'],
+            'branch_id' => ['nullable', 'integer', 'exists:branches,id'],
+            'date' => ['required', 'date', 'after_or_equal:today'],
+            'time' => ['required', 'date_format:H:i'],
+            'employee_id' => ['nullable', 'integer'],
+            'employye_id' => ['nullable', 'integer'],
+            'notes' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $user = $request->user();
+        $package = Package::query()->findOrFail($validated['package_id']);
+
+        if (! $package->isActiveForFrontend()) {
+            return response()->json([
+                'success' => false,
+                'message' => __('package.package_not_available'),
+            ], 422);
+        }
+
+        $employeeId = (int) ($validated['employee_id'] ?? $validated['employye_id'] ?? 0);
+        $branchId = (int) ($validated['branch_id'] ?? $package->branch_id ?? 0);
+
+        if ($branchId <= 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Branch is required.',
+            ], 422);
+        }
+
+        if ($employeeId <= 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Employee is required.',
+            ], 422);
+        }
+
+        $startDateTime = \Carbon\Carbon::createFromFormat('Y-m-d H:i', $validated['date'].' '.$validated['time']);
+
+        $data = DB::transaction(function () use ($user, $package, $branchId, $employeeId, $validated, $startDateTime) {
+            $booking = Booking::create([
+                'status' => 'pending',
+                'start_date_time' => $startDateTime,
+                'user_id' => $user->id,
+                'branch_id' => $branchId,
+                'note' => $validated['notes'] ?? null,
+                'created_by' => $user->id,
+                'payment_type' => 'cart',
+                'payment_status' => 0,
+            ]);
+
+            $bookingPackage = BookingPackages::create([
+                'booking_id' => $booking->id,
+                'package_id' => $package->id,
+                'employee_id' => $employeeId,
+                'user_id' => $user->id,
+                'package_price' => (float) ($package->package_price ?? 0),
+                'created_by' => $user->id,
+            ]);
+
+            UserPackage::create([
+                'booking_id' => $booking->id,
+                'employee_id' => $employeeId,
+                'user_id' => $user->id,
+                'package_price' => (float) ($package->package_price ?? 0),
+                'purchase_date' => now(),
+                'package_id' => $package->id,
+            ]);
+
+            return [
+                'booking' => $booking,
+                'booking_package' => $bookingPackage,
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => __('messages.booking_added_to_cart'),
+            'data' => [
+                'booking_id' => $data['booking']->id,
+                'booking_package_id' => $data['booking_package']->id,
+                'package_id' => $package->id,
+                'package_type' => $package->type ?? Package::TYPE_PACKAGE,
+                'package_name' => $this->localizedValue($package->name),
+                'package_price' => (float) ($package->package_price ?? 0),
+                'branch_id' => $branchId,
+                'employee_id' => $employeeId,
+                'date' => $validated['date'],
+                'time' => $validated['time'],
+            ],
+        ], 201);
     }
 
     public function storeBooking(Request $request)
@@ -243,5 +379,38 @@ class MobileCartController extends Controller
                 'subtotal' => (float) $giftCard->subtotal,
             ],
         ], 201);
+    }
+
+    private function localizedValue(mixed $value): ?string
+    {
+        if (is_array($value)) {
+            $locale = app()->getLocale();
+
+            return $value[$locale] ?? $value['ar'] ?? $value['en'] ?? reset($value) ?: null;
+        }
+
+        if (is_string($value) && $value !== '') {
+            $decoded = json_decode($value, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                $locale = app()->getLocale();
+
+                return $decoded[$locale] ?? $decoded['ar'] ?? $decoded['en'] ?? reset($decoded) ?: null;
+            }
+        }
+
+        return filled($value) ? (string) $value : null;
+    }
+
+    private function formatDate(mixed $value, string $format): ?string
+    {
+        if (blank($value)) {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($value)->format($format);
+        } catch (\Throwable) {
+            return null;
+        }
     }
 }
