@@ -19,7 +19,6 @@ class ProfileController extends Controller
     public function show(): JsonResponse
     {
         $user = Auth::user()->loadMissing('affiliate');
-        $address = $user->address()->first();
 
         $bookingsQuery = Booking::query()
             ->with(['branch', 'services.employee', 'services.service'])
@@ -38,13 +37,6 @@ class ProfileController extends Controller
 
         $giftCards = GiftCard::query()
             ->where('user_id', $user->id)
-            ->latest('id')
-            ->get();
-
-        $todayPaidGiftCards = GiftCard::query()
-            ->where('user_id', $user->id)
-            ->whereDate('created_at', '>=', now()->toDateString())
-            ->where('payment_status', 1)
             ->latest('id')
             ->get();
 
@@ -68,17 +60,11 @@ class ProfileController extends Controller
                     'full_name' => trim(($user->first_name ?? '').' '.($user->last_name ?? '')),
                     'email' => $user->email,
                     'mobile' => $user->mobile,
-                    'avatar' => $this->resolveUrl($user->avatar ?: $user->profile_image),
-                    'profile_image' => $this->resolveUrl($user->profile_image),
+                    'profile_image' => $this->resolveUrl($user->avatar ?: $user->profile_image),
                     'date_of_birth' => optional($user->date_of_birth)->format('Y-m-d') ?: $user->date_of_birth,
-                    'city' => $user->city ?: $address?->city,
-                    'country' => $user->country ?: $address?->country,
-                    'address' => $user->address ?: $address?->address_line_1,
-                    'location' => trim(collect([
-                        $user->country ?: $address?->country,
-                        $user->city ?: $address?->city,
-                        $user->address ?: $address?->address_line_1,
-                    ])->filter()->implode(' - ')),
+                    'city' => $user->city ?? '',
+                    'country' => $user->country ?? '',
+                    'address' => $user->address ?? '',
                 ],
                 'balances' => [
                     'wallet' => $walletBalance,
@@ -96,29 +82,6 @@ class ProfileController extends Controller
                     ['key' => 'tamara', 'image_url' => asset('images/icons/tamara.png')],
                     ['key' => 'tabby', 'image_url' => asset('images/icons/tabby.png')],
                 ],
-                'cancel_reasons' => reject::query()
-                    ->get()
-                    ->map(fn (reject $reason) => [
-                        'id' => $reason->id,
-                        'name' => $this->localizedValue($reason->name),
-                        'name_translations' => $reason->name,
-                    ])
-                    ->values(),
-                'coupons' => $coupons->map(fn (Coupon $coupon) => [
-                    'id' => $coupon->id,
-                    'coupon_code' => $coupon->coupon_code,
-                    'coupon_type' => $coupon->coupon_type,
-                    'discount_type' => $coupon->discount_type,
-                    'discount_percentage' => $coupon->discount_percentage,
-                    'discount_amount' => $coupon->discount_amount,
-                    'start_date_time' => $coupon->start_date_time,
-                    'end_date_time' => $coupon->end_date_time,
-                    'promotion' => [
-                        'id' => $coupon->promotion?->id,
-                        'name' => $this->localizedValue($coupon->promotion?->name),
-                        'description' => $this->localizedValue($coupon->promotion?->description),
-                    ],
-                ])->values(),
                 'transactions' => $allBookings
                     ->flatMap(fn (Booking $booking) => $booking->services->map(function ($service) use ($booking) {
                         return [
@@ -134,7 +97,6 @@ class ProfileController extends Controller
                 'current_bookings' => $currentBookings->map(fn (Booking $booking) => $this->transformBooking($booking, true))->values(),
                 'completed_bookings' => $completedBookings->map(fn (Booking $booking) => $this->transformBooking($booking, false))->values(),
                 'gift_cards' => $giftCards->map(fn (GiftCard $giftCard) => $this->transformGiftCard($giftCard))->values(),
-                'today_paid_gift_cards' => $todayPaidGiftCards->map(fn (GiftCard $giftCard) => $this->transformGiftCard($giftCard))->values(),
             ],
         ]);
     }
