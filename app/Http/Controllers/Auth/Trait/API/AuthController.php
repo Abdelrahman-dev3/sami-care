@@ -32,12 +32,12 @@ class AuthController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Validation Error',
-                'errors' => $validated->errors()
+                'errors' => $validator->errors()
             ], 422);
         }
 
         $smsService = new TaqnyatSmsService();
-        $phone = $smsService->validatePhoneNumber($validated['mobile']);
+        $phone = $smsService->validatePhoneNumber($validator['mobile']);
 
         if (! $phone) {
             return $this->sendError(__('messagess.invalid_phone'), [], 422);
