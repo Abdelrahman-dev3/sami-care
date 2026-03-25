@@ -23,7 +23,6 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
-
         $validator = Validator::make($request->all(), [
             'mobile' => ['required', 'string', 'max:20'],
         ]);
@@ -36,8 +35,10 @@ class AuthController extends Controller
             ], 422);
         }
 
+        $validated = $validator->validated();
+
         $smsService = new TaqnyatSmsService();
-        $phone = $smsService->validatePhoneNumber($validator['mobile']);
+        $phone = $smsService->validatePhoneNumber($validated['mobile']);
 
         if (! $phone) {
             return $this->sendError(__('messagess.invalid_phone'), [], 422);
@@ -45,7 +46,7 @@ class AuthController extends Controller
 
         $user = User::where('mobile', $phone)->first();
 
-        if ($user == null || !$user) {
+        if (! $user) {
             return $this->sendError(__('messages.register_before_login'));
         }
 
@@ -53,7 +54,7 @@ class AuthController extends Controller
             return $this->sendError(__('messages.login_error'));
         }
 
-        $dailyKey = 'login_otp_count_'.$phone.'_'.date('Y-m-d');
+        $dailyKey = 'login_otp_count_' . $phone . '_' . date('Y-m-d');
         $dailyCount = (int) Cache::get($dailyKey, 0);
 
         if ($dailyCount >= 711) {
@@ -62,10 +63,11 @@ class AuthController extends Controller
 
         $otp = (string) random_int(1000, 9999);
 
-        Cache::put('login_otp_'.$phone, [
+        Cache::put('login_otp_' . $phone, [
             'otp' => $otp,
             'user_id' => $user->id,
         ], now()->addMinutes(5));
+
         Cache::put($dailyKey, $dailyCount + 1, now()->endOfDay());
 
         if ((int) setting('is_taqnyat_sms') === 1) {
