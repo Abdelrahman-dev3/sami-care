@@ -76,6 +76,8 @@ Route::controller(TaqnyatSmsController::class)->group(function () {
 
 Route::controller(BookingsController::class)->group(function () {
     Route::get('/salonService', 'salon')->name('salon.create');
+    Route::get('/salonService-modern', 'salonModern')->name('salon.create.modern');
+    Route::get('/salonService-signature', 'salonSignature')->name('salon.create.signature');
     Route::get('/HomeService', 'home')->name('home.create');
 });
 
