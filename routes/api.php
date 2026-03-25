@@ -27,6 +27,7 @@ use App\Http\Controllers\Api\LoyaltyController;
 use App\Http\Controllers\Api\CouponController;
 use App\Http\Controllers\Api\BookingsController;
 use App\Http\Controllers\Api\MobileCartController;
+use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\WheelController;
 
 
@@ -182,6 +183,10 @@ Route::controller(BranchController::class)->group(function () {
 });
 
 Route::group(['middleware' => 'auth:sanctum'], function () {
+    Route::controller(ProfileController::class)->group(function () {
+        Route::get('/profile', 'show');
+    });
+
     Route::controller(MobileCartController::class)->group(function () {
         Route::get('/mobile/cart', 'index');
         Route::post('/mobile/cart/bookings', 'storeBooking');
