@@ -117,14 +117,6 @@
                 </li>
                 @endhasPermission
 
-                @hasPermission('view_vartext')
-                <!--<li class="nav-item {{ request()->routeIs('app.text') ? 'active' : '' }}">-->
-                <!--    <a href="{{ route('app.text') }}" class="nav-link {{ request()->routeIs('app.text') ? 'active' : '' }}">-->
-                <!--        <i class="fa-solid fa-pen-to-square"></i>-->
-                <!--        <span class="item-name">{{ __('messagess.mainwebtext') }}</span>-->
-                <!--    </a>-->
-                <!--</li>-->
-                @endhasPermission
 
                 @hasPermission('view_reject_reasons')
                 <li class="nav-item {{ request()->routeIs('app.reject') ? 'active' : '' }}">

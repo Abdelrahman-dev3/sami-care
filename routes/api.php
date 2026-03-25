@@ -19,6 +19,7 @@ use App\Http\Controllers\PackageDetailsController;
 use App\Http\Controllers\Backend\UserController;
 use Modules\Service\Http\Controllers\Backend\API\ServiceController;
 use App\Http\Controllers\API\PaymentController;
+use App\Http\Controllers\Api\AdController;
 use App\Http\Controllers\Api\CategoriesController;
 use App\Http\Controllers\Api\PackageCatalogController;
 use App\Http\Controllers\Api\ShopController;
@@ -42,7 +43,6 @@ use App\Http\Controllers\Api\WheelController;
 
 
 Route::prefix('Home')->group(function () {
-
     Route::controller(CategoriesController::class)->group(function () {
         Route::get('/categories', 'index');
     });
@@ -59,7 +59,10 @@ Route::prefix('Home')->group(function () {
         Route::post('/spin', 'spin');
         Route::get('/prizes', 'prizes');
     });
+});
 
+Route::controller(AdController::class)->group(function () {
+    Route::get('/ads', 'index');
 });
 
 Route::prefix('shop')->group(function () {
@@ -69,7 +72,6 @@ Route::prefix('shop')->group(function () {
 });
 
 Route::controller(PackageCatalogController::class)->group(function () {
-    Route::get('/packages', 'packages');
     Route::get('/packages/{id}', 'packageDetails')->whereNumber('id');
     Route::get('/offers', 'offers');
     Route::get('/offers/{id}', 'offerDetails')->whereNumber('id');
