@@ -145,7 +145,6 @@
             <span class="close-wheel" id="close-wheel">&times;</span>
             <div class="Wheel-img">
             <svg id="wheel-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="250" height="250">
-              <title>Lucky Wheel</title>
               <rect width="100%" height="100%" fill="transparent"/>
               <g id="wheel-group" transform="translate(0,0)">
                 <path id="s0" d="M250,250 L250,0 A250,250 0 0,1 375,33.494 Z" fill="#B89743"/>
@@ -245,7 +244,7 @@
                 desc: "{{ __('messages.login_required') }}"
             });
         }
-</script>
+    </script>
 
     <script>
         const lang = "{{ app()->getLocale() }}";
@@ -261,9 +260,8 @@
         const prizes = @json($prizes ?? []);
         const spinUrl = @json(route('wheel.spin'));
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-        let isSpinning = false;
-
         const closeWheelBtn = document.getElementById("close-wheel");
+        let isSpinning = false;
 
         if (closeWheelBtn) {
             closeWheelBtn.addEventListener("click", () => {

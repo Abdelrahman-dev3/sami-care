@@ -8,6 +8,7 @@ use App\Models\LoyaltyPointTransaction;
 use App\Models\Setting;
 use App\Models\User;
 use App\Models\Wheel;
+use App\Services\WheelCooldownService;
 use App\Services\TaqnyatSmsService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -19,6 +20,10 @@ use Modules\Wallet\Models\WalletHistory;
 
 class WheelController extends Controller
 {
+    public function __construct(private readonly WheelCooldownService $wheelCooldownService)
+    {
+    }
+
     public function prizes(): JsonResponse
     {
         $prizes = Wheel::query()
@@ -63,19 +68,13 @@ class WheelController extends Controller
         $result = DB::transaction(function () use ($data, $normalizedPhone, $intervalDays, $now) {
             $user = $this->findOrCreateWheelUser($data['name'], $normalizedPhone);
 
-            $lastSpin = LoyaltyPointTransaction::query()
-                ->where('source', 'wheel')
-                ->where(function ($query) use ($user, $normalizedPhone) {
-                    $query->where('user_id', $user->id)
-                        ->orWhere('meta->mobile', $normalizedPhone)
-                        ->orWhere('meta->guest_phone', $normalizedPhone);
-                })
-                ->latest('created_at')
-                ->lockForUpdate()
-                ->first();
+            $lastSpinAt = $this->wheelCooldownService->getLastSpinAt(
+                userId: $user->id,
+                phone: $normalizedPhone
+            );
 
-            if ($lastSpin && $lastSpin->created_at instanceof Carbon) {
-                $nextAt = $lastSpin->created_at->copy()->addDays($intervalDays);
+            if ($lastSpinAt) {
+                $nextAt = $lastSpinAt->copy()->addDays($intervalDays);
                 if ($nextAt->isFuture()) {
                     return [
                         'cooldown' => true,

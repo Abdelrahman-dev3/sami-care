@@ -3,8 +3,7 @@
 namespace Modules\Frontend\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\LoyaltyPointTransaction;
-use Carbon\Carbon;
+use App\Services\WheelCooldownService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -23,6 +22,10 @@ use App\Models\Setting;
 
 class FrontendController extends Controller
 {
+    public function __construct(private readonly WheelCooldownService $wheelCooldownService)
+    {
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -46,13 +49,6 @@ class FrontendController extends Controller
             ->take(6)
             ->get();
 
-        // Fetch active services for the homepage
-        $services = Service::with(['category', 'media'])
-            ->where('status', 1)
-            ->take(6)
-            ->get();
-
-
         // Fetch active products for the homepage
         $products = Product::with(['media' , 'categories'])
             ->where('status', 1)
@@ -61,13 +57,18 @@ class FrontendController extends Controller
             ->take(6)
             ->get();
 
+        // Fetch active services for the homepage
+        $services = Service::with(['category', 'media'])
+            ->where('status', 1)
+            ->take(6)
+            ->get();
+
         // Fetch Wheel homepage
-//        $prizes = Wheel::pluck('reward_value');
         $prizes = Wheel::query()
             ->where('reward_value', '>', 0)
-            ->select('reward_value', 'type') // Get both type and value
+            ->select('reward_value', 'type')
             ->get();
-//        dd($prizes);
+
         $intervalDays = max((int) Setting::get('wheel_display_interval_days', 1), 1);
         $shouldShowWheel = $this->shouldShowWheel($intervalDays);
 
@@ -75,6 +76,18 @@ class FrontendController extends Controller
         $showDuration = $setting ? (bool) $setting->val : false;
 
         return view('frontend::index', compact('showDuration','services', 'categories', 'packages' , 'products' , 'prizes', 'shouldShowWheel', 'intervalDays'));
+    }
+
+    private function shouldShowWheel(int $intervalDays): bool
+    {
+        if (Auth::check()) {
+            return $this->wheelCooldownService->shouldShowWheel(
+                intervalDays: $intervalDays,
+                userId: Auth::id()
+            );
+        }
+
+        return true;
     }
 
     /**
@@ -271,54 +284,6 @@ class FrontendController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        return view('frontend::create');
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request): RedirectResponse
-    {
-        return redirect()->back();
-    }
-
-    /**
-     * Show the specified resource.
-     */
-    public function show($id)
-    {
-        return view('frontend::show');
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit($id)
-    {
-        return view('frontend::edit');
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, $id): RedirectResponse
-    {
-        return redirect()->back();
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($id)
-    {
-        //
-    }
-
-    /**
      * Get services for API (for AJAX requests)
      */
     public function getServices(Request $request)
@@ -431,29 +396,6 @@ class FrontendController extends Controller
         }
 
         return view('frontend::become-affiliate');
-    }
-
-    private function shouldShowWheel(int $intervalDays): bool
-    {
-        $query = LoyaltyPointTransaction::query()
-            ->where('source', 'wheel');
-
-        if (Auth::check()) {
-            $query->where('user_id', Auth::id());
-        } else {
-            $token = request()->cookie('wheel_guest_token');
-            if (empty($token)) {
-                return true;
-            }
-            $query->where('meta->guest_token', $token);
-        }
-
-        $lastSpin = $query->latest('created_at')->first();
-        if (!$lastSpin || !($lastSpin->created_at instanceof Carbon)) {
-            return true;
-        }
-
-        return Carbon::now()->greaterThanOrEqualTo($lastSpin->created_at->copy()->addDays($intervalDays));
     }
 
     public function activateAffiliate()
