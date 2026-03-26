@@ -99,15 +99,6 @@
                 </li>
                 @endhasPermission
 
-                @hasPermission('view_offers')
-                <li class="nav-item {{ request()->routeIs('app.offers') ? 'active' : '' }}">
-                    <a href="{{ route('app.offers') }}" class="nav-link {{ request()->routeIs('app.offers') ? 'active' : '' }}">
-                        <i class="fa fa-tags"></i>
-                        <span class="item-name">{{ __('messagess.our_offers') }}</span>
-                    </a>
-                </li>
-                @endhasPermission
-
                 @hasPermission('view_ads')
                 <li class="nav-item {{ request()->routeIs('app.ads') ? 'active' : '' }}">
                     <a href="{{ route('app.ads') }}" class="nav-link {{ request()->routeIs('app.ads') ? 'active' : '' }}">
