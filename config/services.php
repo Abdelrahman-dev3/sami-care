@@ -55,7 +55,11 @@ return [
     ],
     'tap' => [
         'secret_key' => env('TAP_SECRET_KEY'),
-    ]
+    ],
+    'waiting_device' => [
+        'base_url' => env('WAITING_DEVICE_BASE_URL'),
+        'timeout' => env('WAITING_DEVICE_TIMEOUT', 10),
+    ],
 
 
 ];

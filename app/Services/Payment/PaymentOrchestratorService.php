@@ -19,44 +19,39 @@ class PaymentOrchestratorService
 {
     public function initiate(array $input): array
     {
-        $isBuyNow = $input['isBuyNow'];
+        $pageType = app(CheckoutTypeResolver::class)->resolve($input);
         $gateway = $input['gateway'] ?? '';
         $couponCode = $input['coupon_code'] ?? null;
         $userId = auth()->id();
 
-        if (!$userId) {
+        if (! $userId) {
             return ['status' => 'error', 'message' => __('auth.unauthenticated')];
         }
 
-        if (!in_array($gateway, ['card', 'tabby', 'tamara', 'cod'], true)) {
+        if (! in_array($gateway, ['card', 'tabby', 'tamara', 'cod'], true)) {
             return ['status' => 'error', 'message' => __('messages.invalid_payment_method')];
         }
 
-        $calculator = app(PaymentCalculatorService::class);
-        $totalData = $calculator->calculateTotal($isBuyNow, $couponCode);
-
-        if (isset($totalData['error'])) {
-            return ['status' => 'error', 'message' => $totalData['error']];
+        $checkout = app(PaymentCalculatorService::class)->calculateTotal($pageType, $couponCode);
+        if (isset($checkout['error'])) {
+            return ['status' => 'error', 'message' => $checkout['error']];
         }
 
-        $grossAmount = (float) ($totalData['total'] ?? 0);
-        $taxAmount = (float) ($totalData['tax'] ?? 0);
-        $discountAmount = (float) ($totalData['discountAmount'] ?? 0);
-        
+        $grossAmount = (float) ($checkout['total'] ?? 0);
+        $taxAmount = (float) ($checkout['tax'] ?? 0);
+        $discountAmount = (float) ($checkout['discountAmount'] ?? 0);
+
         if ($gateway === 'cod') {
-            return $this->handleCod($userId, $isBuyNow, $grossAmount, $taxAmount, $discountAmount, $totalData, $couponCode);
+            return $this->handleCod($userId, $pageType, $grossAmount, $taxAmount, $discountAmount, $checkout, $couponCode);
         }
-        // Handle sub-methods (wallet, loyalty, gift_code) before main payment
+
         $submethods = [
             'wallet' => (bool) ($input['wallet'] ?? false),
             'loyalty' => (bool) ($input['loyalty'] ?? false),
             'gift_code' => $input['gift_code'] ?? null,
         ];
 
-
-        $subService = app(PaymentSubMethodsService::class);
-        $subResult = $subService->apply($userId, new Request($submethods), $grossAmount, false);
-
+        $subResult = app(PaymentSubMethodsService::class)->apply($userId, new Request($submethods), $grossAmount, false);
         if (isset($subResult['error'])) {
             return ['status' => 'error', 'message' => $subResult['error']];
         }
@@ -69,9 +64,9 @@ class PaymentOrchestratorService
                 $grossAmount,
                 $taxAmount,
                 $discountAmount,
-                $isBuyNow,
-                $totalData['cart_ids'] ?? [],
-                $totalData['gift_ids'] ?? [],
+                $pageType,
+                $checkout['cart_ids'] ?? [],
+                $checkout['gift_ids'] ?? [],
                 $this->resolvePaymentMethod($gateway, true),
                 $couponCode,
                 $submethods
@@ -88,14 +83,15 @@ class PaymentOrchestratorService
             'token' => (string) Str::uuid(),
             'user_id' => $userId,
             'gateway' => $gateway,
+            'page_type' => $pageType,
             'currency' => 'SAR',
             'gross_amount' => $grossAmount,
             'amount' => $remainingAmount,
             'tax_amount' => $taxAmount,
             'discount_amount' => $discountAmount,
             'coupon_code' => $couponCode,
-            'cart_ids' => $totalData['cart_ids'] ?? [],
-            'gift_ids' => $totalData['gift_ids'] ?? [],
+            'cart_ids' => $checkout['cart_ids'] ?? [],
+            'gift_ids' => $checkout['gift_ids'] ?? [],
             'submethods' => $submethods,
             'status' => PaymentAttempt::STATUS_INITIATED,
             'meta' => [
@@ -112,7 +108,9 @@ class PaymentOrchestratorService
             'external_id' => $gatewayResult['external_id'] ?? null,
             'payment_url' => $gatewayResult['payment_url'] ?? null,
             'status' => PaymentAttempt::STATUS_REDIRECTED,
-            'meta' => array_merge($attempt->meta ?? [], ['gateway_response' => $gatewayResult['raw'] ?? null]),
+            'meta' => array_merge($attempt->meta ?? [], [
+                'gateway_response' => $gatewayResult['raw'] ?? null,
+            ]),
         ]);
 
         return [
@@ -127,7 +125,7 @@ class PaymentOrchestratorService
     {
         $attempt = PaymentAttempt::where('token', $token)->first();
 
-        if (!$attempt || $attempt->gateway !== $gateway) {
+        if (! $attempt || $attempt->gateway !== $gateway) {
             return ['status' => 'failed', 'message' => 'Payment attempt not found'];
         }
 
@@ -140,6 +138,7 @@ class PaymentOrchestratorService
             $attempt->update(['status' => PaymentAttempt::STATUS_CANCELLED]);
             return ['status' => 'cancelled'];
         }
+
         if (in_array($resultHint, ['fail', 'failed', 'failure'], true)) {
             $attempt->update(['status' => PaymentAttempt::STATUS_FAILED]);
             return ['status' => 'failed'];
@@ -147,7 +146,7 @@ class PaymentOrchestratorService
 
         $verification = $this->verifyGatewayPayment($attempt, $request);
 
-        if (($verification['external_id'] ?? null) && !$attempt->external_id) {
+        if (($verification['external_id'] ?? null) && ! $attempt->external_id) {
             $attempt->external_id = $verification['external_id'];
         }
 
@@ -159,7 +158,7 @@ class PaymentOrchestratorService
                 (float) $attempt->gross_amount,
                 (float) $attempt->tax_amount,
                 (float) $attempt->discount_amount,
-                $attempt->page_type ?? 'cart',
+                $attempt->page_type ?? CheckoutType::CART,
                 $attempt->cart_ids ?? [],
                 $attempt->gift_ids ?? [],
                 $this->resolvePaymentMethod($gateway, false),
@@ -170,22 +169,35 @@ class PaymentOrchestratorService
             $attempt->update([
                 'status' => PaymentAttempt::STATUS_PAID,
                 'invoice_id' => $invoiceId,
-                'meta' => array_merge($attempt->meta ?? [], ['verify_response' => $verification['raw'] ?? null]),
+                'meta' => array_merge($attempt->meta ?? [], [
+                    'verify_response' => $verification['raw'] ?? null,
+                ]),
             ]);
 
             return ['status' => 'paid', 'invoice_id' => $invoiceId];
         }
 
         $attempt->update([
-            'status' => $status === 'cancelled' ? PaymentAttempt::STATUS_CANCELLED : PaymentAttempt::STATUS_FAILED,
-            'meta' => array_merge($attempt->meta ?? [], ['verify_response' => $verification['raw'] ?? null]),
+            'status' => $status === 'cancelled'
+                ? PaymentAttempt::STATUS_CANCELLED
+                : PaymentAttempt::STATUS_FAILED,
+            'meta' => array_merge($attempt->meta ?? [], [
+                'verify_response' => $verification['raw'] ?? null,
+            ]),
         ]);
 
         return ['status' => $status];
     }
 
-    private function handleCod( int $userId, bool $isBuyNow, float $grossAmount, float $taxAmount, float $discountAmount, array $totalData, ?string $couponCode ): array {
-
+    private function handleCod(
+        int $userId,
+        string $pageType,
+        float $grossAmount,
+        float $taxAmount,
+        float $discountAmount,
+        array $checkout,
+        ?string $couponCode
+    ): array {
         $codDepositPercent = (float) Setting::get('cod_deposit_percent', 30);
         $codDepositPercent = max(0, min(100, $codDepositPercent));
         $requiredDeposit = round($grossAmount * ($codDepositPercent / 100), 2);
@@ -193,10 +205,28 @@ class PaymentOrchestratorService
         try {
             $invoiceId = null;
 
-            DB::transaction(function () use ($userId, $isBuyNow, $grossAmount, $taxAmount, $discountAmount, $totalData, $couponCode, $requiredDeposit, &$invoiceId, $codDepositPercent) {
-                $wallet = Wallet::where('user_id', $userId)->where('status', 1)->lockForUpdate()->first();
-                $walletBalance = (float) ($wallet->amount ?? 0);
+            DB::transaction(function () use (
+                $userId,
+                $pageType,
+                $grossAmount,
+                $taxAmount,
+                $discountAmount,
+                $checkout,
+                $couponCode,
+                $requiredDeposit,
+                $codDepositPercent,
+                &$invoiceId
+            ) {
+                $wallet = Wallet::where('user_id', $userId)
+                    ->where('status', 1)
+                    ->lockForUpdate()
+                    ->first();
 
+                if (! $wallet && $requiredDeposit > 0) {
+                    throw new \RuntimeException('Wallet not found.');
+                }
+
+                $walletBalance = (float) ($wallet->amount ?? 0);
                 if ($walletBalance + 0.0001 < $requiredDeposit) {
                     throw new \RuntimeException(__('messagess.wallet_balance_requirement', [
                         'percent' => rtrim(rtrim(number_format($codDepositPercent, 2, '.', ''), '0'), '.'),
@@ -226,9 +256,9 @@ class PaymentOrchestratorService
                     $grossAmount,
                     $taxAmount,
                     $discountAmount,
-                    $isBuyNow,
-                    $totalData['cart_ids'] ?? [],
-                    $totalData['gift_ids'] ?? [],
+                    $pageType,
+                    $checkout['cart_ids'] ?? [],
+                    $checkout['gift_ids'] ?? [],
                     'cash on delivery',
                     $couponCode ?? '',
                     false
@@ -242,15 +272,15 @@ class PaymentOrchestratorService
                 'token' => (string) Str::uuid(),
                 'user_id' => $userId,
                 'gateway' => 'cod',
-                'page_type' => $isBuyNow,
+                'page_type' => $pageType,
                 'currency' => 'SAR',
                 'gross_amount' => $grossAmount,
                 'amount' => 0,
                 'tax_amount' => $taxAmount,
                 'discount_amount' => $discountAmount,
                 'coupon_code' => $couponCode,
-                'cart_ids' => $totalData['cart_ids'] ?? [],
-                'gift_ids' => $totalData['gift_ids'] ?? [],
+                'cart_ids' => $checkout['cart_ids'] ?? [],
+                'gift_ids' => $checkout['gift_ids'] ?? [],
                 'submethods' => [],
                 'status' => PaymentAttempt::STATUS_PAID,
                 'invoice_id' => $invoiceId,
@@ -258,8 +288,8 @@ class PaymentOrchestratorService
             ]);
 
             return ['status' => 'paid', 'invoice_id' => $invoiceId];
-        } catch (\Throwable $e) {
-            return ['status' => 'error', 'message' => $e->getMessage()];
+        } catch (\Throwable $exception) {
+            return ['status' => 'error', 'message' => $exception->getMessage()];
         }
     }
 
@@ -268,7 +298,7 @@ class PaymentOrchestratorService
         float $grossAmount,
         float $taxAmount,
         float $discountAmount,
-        string $isBuyNow,
+        string $pageType,
         array $cartIds,
         array $giftIds,
         string $paymentMethod,
@@ -280,7 +310,7 @@ class PaymentOrchestratorService
             $grossAmount,
             $taxAmount,
             $discountAmount,
-            $isBuyNow,
+            $pageType,
             $cartIds,
             $giftIds,
             $paymentMethod,
@@ -332,9 +362,10 @@ class PaymentOrchestratorService
     private function buildCustomer(int $userId): array
     {
         $user = User::find($userId);
+        $name = trim(($user?->first_name ?? '') . ' ' . ($user?->last_name ?? ''));
 
         return [
-            'name' => $user?->first_name . ' ' . $user?->last_name,
+            'name' => $name,
             'phone' => $user?->mobile,
             'country_code' => '966',
         ];
