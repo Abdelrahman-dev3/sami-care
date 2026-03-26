@@ -456,10 +456,6 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/app/loyalty/store', 'store')->name('loyalty.store');
     });
 
-    Route::controller(offersController::class)->group(function () {
-        Route::get('/app/Offerspages', 'index')->name('app.offers');
-        Route::post('/app/Offerspages/store', 'store')->name('ouroffersections.store');
-    });
 
     Route::controller(AdsController::class)->group(function () {
         Route::get('/app/ads/', 'index')->name('app.ads');
