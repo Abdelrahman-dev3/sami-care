@@ -14,6 +14,8 @@ class CategoriesController extends Controller
             ->with(['services' => function ($query) {
                 $query->where('status', 1);
             }])
+            ->orderBy('sort_order')
+            ->orderBy('id')
             ->take(6)
             ->get();
     

@@ -32,7 +32,11 @@ class CategoryController extends Controller
         } else {
             $category = $category->whereNull('parent_id');
         }
-        $category = $category->paginate($perPage)->appends('branch_id', $branchId);
+        $category = $category
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->paginate($perPage)
+            ->appends('branch_id', $branchId);
         $categoryCollection = CategoryResource::collection($category);
 
         return response()->json([
@@ -58,7 +62,10 @@ class CategoryController extends Controller
     public function subCategoryList(Request $request)
     {
         $perPage = $request->input('per_page', 10);
-        $subcategories = Category::whereNotNull('parent_id')->paginate($perPage);
+        $subcategories = Category::whereNotNull('parent_id')
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->paginate($perPage);
         $subcategoryCollection = CategoryResource::collection($subcategories);
         $responseData = $subcategoryCollection->map(function ($item) {
             return $item->resource->toArray(request());
@@ -85,7 +92,10 @@ class CategoryController extends Controller
             } elseif ($category_id) {
                 $query->where('id', $category_id);
             }
-        })->get();
+        })
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
 
         if ($subcategories->count() > 0) {
             return response()->json(['status' => true, 'data' => $subcategories, 'message' => __('category.category_detail')]);

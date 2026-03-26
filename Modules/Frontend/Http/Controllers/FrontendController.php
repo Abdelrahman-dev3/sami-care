@@ -28,7 +28,23 @@ class FrontendController extends Controller
      */
     public function index()
     {
+        // Fetch active categories for the homepage
+        $categories = Category::where('status', 1)->whereNull('parent_id')
+            ->with(['services' => function($query) {
+                $query->where('status', 1);
+            }])
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->take(6)
+            ->get();
 
+
+        // Fetch active packages for the homepage
+        $packages = Package::with(['service', 'service.services', 'media'])
+            ->where('status', 1)
+            ->activeBasePackages()
+            ->take(6)
+            ->get();
 
         // Fetch active services for the homepage
         $services = Service::with(['category', 'media'])
@@ -42,22 +58,6 @@ class FrontendController extends Controller
             ->where('status', 1)
             ->where('is_featured', 1)
             ->where('deleted_at', null)
-            ->take(6)
-            ->get();
-
-        // Fetch active categories for the homepage
-        $categories = Category::where('status', 1)
-            ->whereNull('parent_id')
-            ->with(['services' => function($query) {
-                $query->where('status', 1);
-            }])
-            ->take(6)
-            ->get();
-
-        // Fetch active packages for the homepage
-        $packages = Package::with(['service', 'service.services', 'media'])
-            ->where('status', 1)
-            ->whereDate('end_date', '>=', now())
             ->take(6)
             ->get();
 
@@ -101,7 +101,7 @@ class FrontendController extends Controller
         'branch' // أضفنا علاقة الفرع
     ])
     ->where('status', 1)
-    ->basePackages()
+    ->activeBasePackages()
     ->get();
 
     return view('frontend::Packages', [
@@ -144,13 +144,15 @@ class FrontendController extends Controller
             ->with(['services' => function($query) {
                 $query->where('status', 1);
             }])
+            ->orderBy('sort_order')
+            ->orderBy('id')
             ->take(6)
             ->get();
 
         // Fetch active packages for the homepage
         $packages = Package::with(['service', 'service.services', 'media'])
             ->where('status', 1)
-            ->basePackages()
+            ->activeBasePackages()
             ->take(6)
             ->get();
         $setting = DB::table('settings')->where('name', 'service_duration_visibility')->first();
@@ -210,6 +212,8 @@ class FrontendController extends Controller
         $relatedCategories = Category::where('status', 1)
             ->where('id', '!=', $id)
             ->whereNull('parent_id')
+            ->orderBy('sort_order')
+            ->orderBy('id')
             ->take(4)
             ->get();
 
@@ -219,6 +223,8 @@ class FrontendController extends Controller
             ->with(['services' => function($query) {
                 $query->where('status', 1);
             }])
+            ->orderBy('sort_order')
+            ->orderBy('id')
             ->get();
         $setting = DB::table('settings')->where('name', 'service_duration_visibility')->first();
         $showDuration = $setting ? (bool) $setting->val : false;
@@ -372,7 +378,7 @@ class FrontendController extends Controller
         if ($type === 'offers') {
             $query->offerPackages();
         } elseif ($type === 'base') {
-            $query->basePackages();
+            $query->activeBasePackages();
         } else {
             $query->activeForFrontend();
         }

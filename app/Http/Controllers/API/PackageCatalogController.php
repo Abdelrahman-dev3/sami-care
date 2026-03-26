@@ -118,18 +118,7 @@ class PackageCatalogController extends Controller
             return;
         }
 
-        $query->basePackages()
-            ->where(function ($dateQuery) {
-                $today = now()->toDateString();
-
-                $dateQuery->where(function ($subQuery) use ($today) {
-                    $subQuery->whereNull('start_date')
-                        ->orWhereDate('start_date', '<=', $today);
-                })->where(function ($subQuery) use ($today) {
-                    $subQuery->whereNull('end_date')
-                        ->orWhereDate('end_date', '>=', $today);
-                });
-            });
+        $query->activeBasePackages();
     }
 
     private function transformPackage(Package $package): array

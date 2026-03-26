@@ -1,46 +1,29 @@
 
 @php
-  $isFrozen = isset($is_frozen) && $is_frozen;
+    $isFrozen = isset($is_frozen) && $is_frozen;
 @endphp
 <div class="position-relative rounded-4 overflow-hidden shadow" style="height: 350px;{{ $isFrozen ? 'opacity: 0.6;' : '' }}">
     <img src="{{ $image ?? asset('images/frontend/card 11.png') }}" alt="{{ $name ?? 'Category' }}" class="w-100 h-100" style="object-fit: cover;">
     <div class="position-absolute top-0 start-0 w-100 h-100" style="background: linear-gradient(to top, rgba(0,0,0,0.6) 40%, rgba(0,0,0,0.0) 100%);"></div>       
 
     <!-- Pricing badge -->
-    <div class="position-absolute top-0 m-3 px-3 py-1 rounded-pill text-white"
-         style="cursor: pointer;width: 77.8px;height: 32.4px;text-align: center;line-height: 2;font-weight: bold;font-size: 13.6px;"
-         @if($isFrozen)
+    <div class="position-absolute top-0 m-3 px-3 py-1 rounded-pill text-white" style="cursor: pointer;width: 77.8px;height: 32.4px;text-align: center;line-height: 2;font-weight: bold;font-size: 13.6px;"
+        @if($isFrozen)
             onclick="return showUnavailableMessage(event)"
-         @else
+        @else
             data-bs-toggle="modal"
             data-bs-target="#pricingModal"
             @if(isset($category_id)) onclick="showCategoryServices({{ $category_id }})" @endif
-         @endif>
+        @endif>
         {{ __('messagess.pricing') }}
     </div>
 
-    <!-- Services count badge -->
-    @if(isset($services_count))
-        <div class="position-absolute top-0 end-0 m-3 px-3 py-1 rounded-pill text-white"
-             style="background: rgba(0,0,0,0.7);">
-            {{ $services_count }} {{ __('messagess.services') }}
-        </div>
-    @endif
     <!-- Category info -->
     <div class="position-absolute" style="bottom: 26%;width: 100%;text-align: center;">
         <div class="" style="margin: 9px;">
             <div class="text-white h3 mb-0 fw-bold" style="font-size: 20px;margin-bottom: -31px;">{{ $name ?? 'Category Name' }}</div>
             @if(isset($description))
                 <div class="text-white-50 small">{{ $description }}</div>
-            @endif
-            @if(isset($services_count))
-                <div class="text-white-50 small">
-                    <svg width="16" height="16" fill="currentColor" class="me-1" viewBox="0 0 16 16">
-                        <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
-                        <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/>
-                    </svg>
-                    {{ $services_count }} {{ __('messagess.services_available') }}
-                </div>
             @endif
         </div>
     </div>

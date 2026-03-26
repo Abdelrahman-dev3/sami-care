@@ -86,6 +86,21 @@ class Package extends BaseModel
         });
     }
 
+    public function scopeActiveBasePackages($query)
+    {
+        $today = Carbon::today();
+
+        return $query->basePackages()
+            ->where(function ($dateQuery) use ($today) {
+                $dateQuery->whereNull('start_date')
+                    ->orWhereDate('start_date', '<=', $today);
+            })
+            ->where(function ($dateQuery) use ($today) {
+                $dateQuery->whereNull('end_date')
+                    ->orWhereDate('end_date', '>=', $today);
+            });
+    }
+
     public function scopeOfferPackages($query)
     {
         $today = Carbon::today();

@@ -34,6 +34,8 @@ class DashboardController extends Controller
         ->whereHas('services.branches', function ($query) use ($branchId) {
             $query->where('branch_id', $branchId);
         })
+        ->orderBy('sort_order')
+        ->orderBy('id')
         ->paginate($perPage)
         ->forPage(1, 6);
 
