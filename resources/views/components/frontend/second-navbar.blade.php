@@ -274,7 +274,7 @@
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
       </div>
       <div class="offcanvas-body">
-        <ul class="navbar-nav">
+        <ul class="navbar-nav" style="flex-direction: column;gap: 3px;">
           <li class="nav-item">
             <a class="nav-link  {{ request()->routeIs('frontend.home') ? 'text-active' : '' }}" href="{{ route('frontend.home') }}">
               {{ __('messagess.nav_home') }}

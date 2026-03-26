@@ -3,7 +3,7 @@
     }
     
     .navbar-nav{
-        flex-direction: column;
+        flex-direction: row;
         white-space: nowrap;
         z-index: 999999;
         gap: 26px;
