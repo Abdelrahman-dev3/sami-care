@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Frontend\Http\Controllers\FrontendController;
+use App\Http\Controllers\PaymentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,7 +21,21 @@ Route::group(['prefix' => ''], function () {
     Route::get('/services', [FrontendController::class, 'services'])->name('frontend.services');
     Route::get('/services/category/{id}', [FrontendController::class, 'categoryDetails'])->name('frontend.category.details');
     Route::get('/services/{id}', [FrontendController::class, 'serviceDetails'])->name('frontend.service.details');
+    Route::get('/product/{id}', [FrontendController::class, 'productDetails'])->name('frontend.product.details');
     Route::get('/contact', [FrontendController::class, 'contact'])->name('frontend.contact');
+    Route::get('/branches', [FrontendController::class, 'branches'])->name('frontend.branches');
+    Route::get('/Ouroffers', [FrontendController::class, 'Ouroffers'])->name('frontend.Ouroffers');
+    Route::get('/TermsAndConditions', [FrontendController::class, 'TermsAndConditions'])->name('frontend.TermsAndConditions');
+    Route::get('/Packages', [FrontendController::class, 'Packages'])->name('frontend.Packages');
+    Route::get('/Shop', [FrontendController::class, 'shop'])->name('frontend.Shop');
+    Route::middleware('auth')->group(function () {
+        Route::group(['prefix' => 'payment'], function () {
+            Route::get('/', [PaymentController::class, 'index'])->name('paymentMethods');
+        });
+
+        Route::get('/become-affiliate', [FrontendController::class, 'becomeAffiliate'])->name('frontend.become.affiliate');
+        Route::post('/become-affiliate', [FrontendController::class, 'activateAffiliate'])->name('frontend.become.affiliate.submit');
+    });
     Route::get('/sami-care-card', [FrontendController::class, 'samiCareCard'])->name('frontend.sami-care-card');
     Route::get('/sami-care-card/qr', [FrontendController::class, 'samiCareQr'])->name('frontend.sami-care-card.qr');
 });

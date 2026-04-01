@@ -13,6 +13,7 @@
         <link rel="stylesheet" href="{{ asset('css/rtl.css') }}">
     @endif
     <link rel="stylesheet" href="{{ asset('custom-css/frontend.css') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 
     @stack('after-styles')
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -34,6 +35,25 @@
             background-color: #BF9456;
             opacity: 1;
         }
+        .swiper-slide{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .swiper-slide img{
+            width: 65%;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        @media (max-width: 768px) {
+            .swiper-slide img{
+                width: 100%;
+                object-fit: contain;
+            }
+
+        }
+        
     </style>
 </head>
 <body>
@@ -47,8 +67,8 @@
     <div class="swiper mySwiper" style="display: flex; justify-content: center; align-items: center; margin-top: 37px;">
         <div class="swiper-wrapper">
             @foreach($ads as $ad)
-                <div class="swiper-slide" style="display: flex; justify-content: center; align-items: center;">
-                    <img src="{{ asset($ad->image) }}" style="width: 65%; height: 250px; object-fit: cover; border-radius: 8px;">
+                <div class="swiper-slide">
+                    <img src="{{ asset($ad->image) }}">
                 </div>
             @endforeach
         </div>

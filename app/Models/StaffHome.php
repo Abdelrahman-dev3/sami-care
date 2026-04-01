@@ -15,15 +15,10 @@ class StaffHome extends Model
     {
         return $this->belongsToMany(ServiceHome::class, 'staff_service_home', 'staff_home_id', 'service_home_id');
     }
-
-    public function bookings()
-    {
-        return $this->hasMany(BookingHome::class, 'staff_home_id');
-    }
     
     public function workingHours()
-{
-    return $this->hasMany(StaffWorkingHour::class);
-}
+    {
+        return $this->hasMany(StaffWorkingHour::class);
+    }
 
 }

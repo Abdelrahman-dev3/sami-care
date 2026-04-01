@@ -17,11 +17,6 @@ class ServiceHome extends Model
         return $this->belongsToMany(StaffHome::class, 'staff_service_home', 'service_home_id', 'staff_home_id');
     }
 
-    public function bookings()
-    {
-        return $this->hasMany(BookingHome::class, 'service_home_id');
-    }
-
 
 
 }

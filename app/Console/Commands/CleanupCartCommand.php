@@ -2,10 +2,8 @@
 
 namespace App\Console\Commands;
 
-
+use App\Services\CartExpirationService;
 use Illuminate\Console\Command;
-use Modules\Booking\Models\BookingService;
-use Carbon\Carbon;
 
 class CleanupCartCommand extends Command
 {
@@ -21,7 +19,7 @@ class CleanupCartCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Remove cart items older than 24 hours';
+    protected $description = 'Remove expired unpaid cart items based on the configured cart duration';
 
     /**
      * Execute the console command.
@@ -30,12 +28,19 @@ class CleanupCartCommand extends Command
      */
     public function handle()
     {
-        $expirationTime = Carbon::now()->subHours(24);
+        $result = app(CartExpirationService::class)->clearExpired();
 
-        $count = BookingService::where('created_at', '<', $expirationTime)->delete();
+        if (($result['duration'] ?? 0) <= 0) {
+            $this->info('Cart duration is disabled or set to 0 minutes.');
 
-        $this->info("Deleted {$count} old cart items.");
+            return self::SUCCESS;
+        }
 
-        return 0;
+        $this->info("Expired unpaid cart bookings removed: {$result['bookings']}");
+        $this->info("Expired cart products removed: {$result['products']}");
+        $this->info("Expired gift cards removed: {$result['gifts']}");
+        $this->info("Expired user packages removed: {$result['user_packages']}");
+
+        return self::SUCCESS;
     }
 }

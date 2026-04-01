@@ -3,7 +3,7 @@
     <div class="card-body">
       <div class="col-md-12 mb-3">
         <CardTitle
-          :title="$t('setting_sidebar.lbl_service_duration_value')"
+          :title="$t('setting_sidebar.lbl_cart_duration')"
           icon="fa-solid fa-stopwatch"
         ></CardTitle>
       </div>
@@ -52,7 +52,6 @@ const fetchDuration = async () => {
   try {
     const response = await axios.get('/api/get-service-duration-value')
     if (response.data.status) {
-      // Assuming API returns { data: { duration: "30" } }
       duration_val.value = response.data.data.duration
     }
   } catch (error) {
@@ -72,12 +71,12 @@ const saveDuration = async () => {
 
     if (response.data.status) {
       if (window.successSnackbar) {
-        window.successSnackbar(response.data.message || "Duration updated")
+        window.successSnackbar(response.data.message || "Cart duration updated")
       }
     }
   } catch (error) {
     if (window.errorSnackbar) {
-      window.errorSnackbar("Failed to save duration")
+      window.errorSnackbar("Failed to save cart duration")
     }
   } finally {
     isProcessing.value = false

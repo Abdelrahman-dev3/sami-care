@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="{{ asset('custom-css/frontend.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <style>
         .details-card {
             background: #fff;
@@ -56,6 +57,12 @@
             text-decoration: none;
             transform: translateY(-2px);
         }
+        .booking-btn--disabled,
+        .booking-btn--disabled:hover {
+            background: #d9b866;
+            color: #3b2f12;
+            transform: none;
+        }
         .price-badge {
             background: var(--primary-color);
             color: #fff;
@@ -99,6 +106,36 @@
             padding: 2rem;
             margin-bottom: 2rem;
         }
+        .service-state-badge {
+            vertical-align: middle;
+        }
+        .service-frozen-alert {
+            background: #fff5d6;
+            border: 1px solid #f0d17c;
+            color: #6c5310;
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
+        .related-service-card {
+            display: block;
+            text-decoration: none;
+            color: inherit;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 0.75rem;
+        }
+        .related-service-card--disabled {
+            opacity: 0.72;
+            cursor: not-allowed;
+        }
+        .related-service-image {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+        }
         @media (max-width: 768px) {
             .service-title { font-size: 1.8rem; }
             .details-card { padding: 1rem; }
@@ -106,6 +143,9 @@
     </style>
 </head>
 <body>
+    @php
+        $isFrozen = (bool) $service->is_frozen;
+    @endphp
     <!-- Lightning Progress Bar -->
     @include('components.frontend.progress-bar')
 
@@ -120,10 +160,15 @@
     <main class="container" style="margin-top: -60px; z-index: 2; position: relative;">
         <!-- Title and Booking Button -->
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="service-title">{{ $service->name }}</h1>
-            <a href="#" class="booking-btn">
+            <h1 class="service-title">
+                {{ $service->name }}
+                @if($isFrozen)
+                    <span class="badge bg-warning text-dark ms-2 service-state-badge">{{ __('service.lbl_freeze') }}</span>
+                @endif
+            </h1>
+            <a href="#" @if($isFrozen) onclick="return showUnavailableMessage(event)" @endif class="booking-btn {{ $isFrozen ? 'booking-btn--disabled' : '' }}">
                 <i class="fas fa-calendar-plus"></i>
-                Book This Service
+                {{ $isFrozen ? __('service.lbl_freeze') : 'Book This Service' }}
             </a>
         </div>
 
@@ -132,6 +177,11 @@
                 <!-- Service Image and Description -->
                 <div class="details-section">
                     <img src="{{ $service->feature_image ?? asset('images/frontend/slider1.webp') }}" alt="{{ $service->name }}" class="details-img mb-3">
+                    @if($isFrozen)
+                        <div class="service-frozen-alert">
+                            <i class="fas fa-snowflake me-2"></i>{{ __('messagess.not_available_now') }}
+                        </div>
+                    @endif
                     <div class="details-description">
                         <span class="details-label"><i class="fas fa-info-circle me-2"></i>Description</span>
                         <div class="details-value mt-2">{{ $service->description ?? 'No description available for this service.' }}</div>
@@ -178,7 +228,9 @@
                         <div class="details-card text-center">
                             <div class="details-label mb-2"><i class="fas fa-check-circle me-1"></i>Status</div>
                             <div class="details-value">
-                                @if($service->status)
+                                @if($isFrozen)
+                                    <span class="badge bg-warning text-dark">{{ __('service.lbl_freeze') }}</span>
+                                @elseif($service->status)
                                     <span class="badge bg-success">Active</span>
                                 @else
                                     <span class="badge bg-danger">Inactive</span>
@@ -209,9 +261,9 @@
                     @endif
 
                     <div class="d-grid gap-2 mt-3">
-                        <a href="#" class="booking-btn text-center">
+                        <a href="#" @if($isFrozen) onclick="return showUnavailableMessage(event)" @endif class="booking-btn text-center {{ $isFrozen ? 'booking-btn--disabled' : '' }}">
                             <i class="fas fa-calendar-plus me-2"></i>
-                            Book This Service
+                            {{ $isFrozen ? __('service.lbl_freeze') : 'Book This Service' }}
                         </a>
                         <button class="btn btn-outline-secondary">
                             <i class="fas fa-heart me-2"></i>
@@ -228,14 +280,20 @@
                     </h5>
 
                     @foreach($relatedServices as $relatedService)
-                    <a href="{{ route('frontend.service.details', $relatedService->id) }}" class="d-block text-decoration-none text-dark mb-3 p-3 bg-light rounded">
+                    <a href="{{ route('frontend.service.details', $relatedService->id) }}"
+                       @if($relatedService->is_frozen) onclick="return showUnavailableMessage(event)" @endif
+                       class="related-service-card {{ $relatedService->is_frozen ? 'related-service-card--disabled' : '' }}">
                         <div class="d-flex align-items-center">
                             <img src="{{ $relatedService->feature_image ?? asset('images/frontend/slider1.webp') }}"
                                  alt="{{ $relatedService->name }}"
-                                 class="rounded me-3"
-                                 style="width: 60px; height: 60px; object-fit: cover;">
+                                 class="rounded me-3 related-service-image">
                             <div>
-                                <h6 class="mb-1">{{ $relatedService->name }}</h6>
+                                <h6 class="mb-1">
+                                    {{ $relatedService->name }}
+                                    @if($relatedService->is_frozen)
+                                        <span class="badge bg-warning text-dark ms-2 service-state-badge">{{ __('service.lbl_freeze') }}</span>
+                                    @endif
+                                </h6>
                                 <p class="mb-0 text-muted">SR {{ number_format($relatedService->default_price ?? 0, 2) }}</p>
                             </div>
                         </div>
@@ -284,6 +342,21 @@
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
         AOS.init({ once: true, duration: 800 });
+        const notAvailableMessage = @json(__('messagess.not_available_now'));
+
+        function showUnavailableMessage(event) {
+            if (event && typeof event.preventDefault === 'function') {
+                event.preventDefault();
+            }
+
+            if (typeof createNotify === 'function') {
+                createNotify({ title: '', desc: notAvailableMessage });
+            } else {
+                alert(notAvailableMessage);
+            }
+
+            return false;
+        }
 
         // Fix modal backdrop issue
         document.addEventListener('DOMContentLoaded', function() {

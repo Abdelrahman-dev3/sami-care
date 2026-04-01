@@ -8,6 +8,7 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Modules\Earning\Models\EmployeeEarning;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+
 class StaffPayoutReportExport implements FromCollection, WithHeadings,  WithStyles
 {
     public array $columns;
@@ -60,10 +61,6 @@ class StaffPayoutReportExport implements FromCollection, WithHeadings,  WithStyl
 
                     case 'commission_amount':
                         $selectedData[$column] = Currency::format($row->commission_amount ?? 0);
-                        break;
-
-                    case 'tip_amount':
-                        $selectedData[$column] = Currency::format($row->tip_amount ?? 0);
                         break;
 
                     case 'total_pay':

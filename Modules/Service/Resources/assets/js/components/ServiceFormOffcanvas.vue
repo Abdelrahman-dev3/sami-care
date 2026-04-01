@@ -83,7 +83,7 @@
             <span class="text-danger">{{ errors['description.en'] }}</span>
         </div>
 
-        <div class="form-group">
+        <div class="form-group d-none">
           <div class="d-flex justify-content-between align-items-center">
             <label class="form-label">
               {{ $t('service.lbl_visible_home') }}

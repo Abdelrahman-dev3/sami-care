@@ -12,7 +12,7 @@ use App\Services\TaqnyatSmsService;
 use Modules\Wallet\Models\Wallet;
 use Modules\Booking\Models\Booking;
 use App\Models\LoyaltyPoint;
-use App\Models\reject;
+use App\Models\Reject;
 use Modules\Promotion\Models\Coupon;
 use Modules\Booking\Models\BookingService;
 use Illuminate\Support\Facades\Cache;
@@ -23,7 +23,7 @@ class SignController extends Controller
 {
     public function index()
     {
-        return view("auth.register" );
+        return view("auth.register");
     }
 
     public function store(Request $request)
@@ -34,15 +34,15 @@ class SignController extends Controller
         ]);
         $smsService = new TaqnyatSmsService();
         $phone = $smsService->validatePhoneNumber($validated["mobile"]);
-    
+
         if (!$phone) {
             return redirect()->back()->with('error', __('messagess.invalid_phone'));
         }
 
         Session::put('mobile', $phone);
         Session::put('username', $validated['username']);
-        
-        $smsCountKey = 'sms_count_'.$phone.'_'.date('Y-m-d');
+
+        $smsCountKey = 'sms_count_' . $phone . '_' . date('Y-m-d');
         $sentCount = Cache::get($smsCountKey, 0);
 
         if ($sentCount >= 3) {
@@ -51,24 +51,23 @@ class SignController extends Controller
 
         $otp = rand(1000, 9999);
 
-        Cache::put('otp_'.$phone, $otp, now()->addMinutes(5));
-        
+        Cache::put('otp_' . $phone, $otp, now()->addMinutes(5));
+
         $message = __('messagess.otp_sms', ['code' => $otp]);
 
         try {
             $smsService->sendSms($phone, $message);
         } catch (\Exception $e) {
-            return redirect()->back()->with('error',__('messagess.error_sending_sms'));
+            return redirect()->back()->with('error', __('messagess.error_sending_sms'));
         }
-    
+
         Cache::put($smsCountKey, $sentCount + 1, now()->endOfDay());
         return redirect()->route('verify.mobile', ['mobile' => $phone]);
-    
     }
 
     public function login()
     {
-        return view("auth.login" );
+        return view("auth.login");
     }
 
     public function verify(Request $request)
@@ -76,37 +75,37 @@ class SignController extends Controller
         $request->validate([
             'mobile' => 'required|string|max:20',
         ]);
-    
+
         $smsService = new TaqnyatSmsService();
         $phone = $smsService->validatePhoneNumber($request->mobile);
 
         if (!$phone) {
             return back()->with('error', __('messagess.invalid_phone'));
         }
-    
+
         $user = \App\Models\User::where('mobile', $phone)->first();
-    
+
         if (!$user) {
             return back()->with('error', __('messages.invalid_credentials'));
         }
-    
-        $otp = 1111;//rand(1000, 9999);
-    
-        Cache::put('login_otp_'.$phone, $otp, now()->addMinutes(5));
-    
+
+        $otp = 1111; //rand(1000, 9999);
+
+        Cache::put('login_otp_' . $phone, $otp, now()->addMinutes(5));
+
         Session::put('login_mobile', $phone);
-    
+
         $message = __('messagess.otp_sms', ['code' => $otp]);
-    
+
         // try {
         //     $smsService->sendSms($phone, $message);
         // } catch (\Exception $e) {
         //     return back()->with('error', __('messagess.error_sending_sms'));
         // }
-    
+
         return redirect()->route('login.verify.form')->with('success', 'تم إرسال كود التحقق إلى موبايلك');
     }
-    
+
     public function showVerifyForm()
     {
         if (auth()->check()) {
@@ -125,7 +124,7 @@ class SignController extends Controller
 
         return view('verify.mobile', compact('mobile'));
     }
-    
+
     public function verifyOTP(Request $request)
     {
         $request->validate([
@@ -136,23 +135,23 @@ class SignController extends Controller
         ]);
         $otpInput = $request->otp1 . $request->otp2 . $request->otp3 . $request->otp4;
         $phone = Session::get('login_mobile');
-    
+
         if (!$phone) {
             return redirect()->route('login')->with('error', __('messages.session_expired'));
         }
-    
-        $cachedOtp = Cache::get('login_otp_'.$phone);
-    
+
+        $cachedOtp = Cache::get('login_otp_' . $phone);
+
         if (!$cachedOtp || $cachedOtp != $otpInput) {
             return back()->withErrors([
                 'otp' => __('messages.invalid_otp'),
             ])->withInput();
         }
-    
-        Cache::forget('login_otp_'.$phone);
-    
+
+        Cache::forget('login_otp_' . $phone);
+
         $user = \App\Models\User::where('mobile', $phone)->first();
-    
+
         Auth::login($user);
         $request->session()->regenerate();
         if ($request->session()->has('temp_gift_booking')) {
@@ -162,7 +161,7 @@ class SignController extends Controller
             $temp = $request->session()->get('temp_booking');
             $data = $temp['data'];
             $btn_value = $temp['btn_value'];
-            $this->complateTempBookings($data,$btn_value);
+            $this->complateTempBookings($data, $btn_value);
             session()->forget('temp_booking');
             if ($btn_value == 'cart') {
                 return redirect()->to('/cart')->with('success', 'تم تحويل الحجز بنجاح');
@@ -173,7 +172,7 @@ class SignController extends Controller
 
         if (auth()->user()->hasRole('admin') || auth()->user()->hasRole('employee')) {
             return redirect()->to('/app')->with('success', __('messages.login_successfully'));
-        }else{
+        } else {
             return redirect()->to('/')->with('success', __('messages.login_successfully'));
         }
     }
@@ -194,7 +193,7 @@ class SignController extends Controller
             return redirect()->route('login')->withErrors(['otp' => 'Session expired']);
         }
 
-        $cacheOtp = Cache::get('otp_'.$mobile);
+        $cacheOtp = Cache::get('otp_' . $mobile);
 
         if (! $cacheOtp) {
             return back()->withErrors([
@@ -205,7 +204,7 @@ class SignController extends Controller
         $username = Session::get('username');
 
         if ($otpInput == $cacheOtp) {
-            Cache::forget('otp_'.$mobile);
+            Cache::forget('otp_' . $mobile);
             Session::forget(['mobile', 'username']);
 
             $user = User::where('mobile', $mobile)->first();
@@ -252,7 +251,7 @@ class SignController extends Controller
         Cache::put($cacheKey, $resendCount + 1, now()->addMinutes(5));
 
         $otp = rand(1000, 9999);
-        Cache::put('otp_'.$mobile, $otp, now()->addMinutes(5));
+        Cache::put('otp_' . $mobile, $otp, now()->addMinutes(5));
 
         $message = __('messagess.otp_sms', ['code' => $otp]);
 
@@ -266,7 +265,7 @@ class SignController extends Controller
 
         return back()->with('success', __('messagess.otp_resent'));
     }
-    
+
     public function logout(Request $request)
     {
         Auth::logout();
@@ -276,7 +275,7 @@ class SignController extends Controller
         $request->session()->regenerateToken();
 
         return redirect('/signin')->with('success', 'تم تسجيل الخروج بنجاح');
-}
+    }
 
     public function apiStore(Request $request)
     {
@@ -303,7 +302,8 @@ class SignController extends Controller
             'user' => $user
         ], 201);
     }
-    private function complateTempBookings($data,$btn_value){
+    private function complateTempBookings($data, $btn_value)
+    {
         $user = auth()->user();
         if (!empty($data['services'])) {
             foreach ($data['services'] as $service) {
@@ -324,7 +324,6 @@ class SignController extends Controller
                         $booking->branch_id       = $data['branch'] ?? 1;
                         $booking->created_by      = $user->id;
                         $booking->status          = 'pending';
-                        $booking->location       =  null;
                         $booking->payment_type       =  $btn_value;
                         $booking->save();
 
@@ -350,4 +349,3 @@ class SignController extends Controller
         }
     }
 }
-

@@ -174,7 +174,7 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
         return $this->createdBookings()
             ->whereNotIn('status', ['cancelled', 'completed'])
             ->where('payment_type', 'payment')
-            ->where('payment_status', 0)
+            ->unpaid()
             ->whereNull('deleted_by');
     }
 
@@ -183,7 +183,7 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
         return $this->createdBookings()
             ->whereNotIn('status', ['cancelled', 'completed'])
             ->where('payment_type', 'cart')
-            ->where('payment_status', 0)
+            ->unpaid()
             ->whereNull('deleted_by');
     }
 

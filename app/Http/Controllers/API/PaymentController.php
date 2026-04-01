@@ -17,7 +17,6 @@ class PaymentController extends Controller
             'coupon_code' => 'nullable|string',
             'wallet' => 'sometimes|boolean',
             'loyalty' => 'sometimes|boolean',
-            'gift_code' => 'nullable|string',
             'payment_source' => 'nullable|string',
         ]);
 
@@ -27,7 +26,6 @@ class PaymentController extends Controller
             'coupon_code' => $data['coupon_code'] ?? null,
             'wallet' => $data['wallet'] ?? false,
             'loyalty' => $data['loyalty'] ?? false,
-            'gift_code' => $data['gift_code'] ?? null,
             'payment_source' => $data['payment_source'] ?? 'src_card',
             'channel' => 'api',
             'is_mobile' => true,

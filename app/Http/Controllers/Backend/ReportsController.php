@@ -3,14 +3,16 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
+use App\Models\GiftCard;
+use App\Models\Invoice;
 use App\Models\User;
 use Carbon\Carbon;
 use Currency;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Http\Request;
-use Modules\Booking\Models\Booking;
 use Modules\Earning\Models\EmployeeEarning;
-use Modules\Product\Models\Order;
+use Illuminate\Support\Facades\Schema;
+use Modules\Booking\Models\Booking;
 use Modules\Product\Models\OrderGroup;
 use Modules\Booking\Models\BookingTransaction;
 use Modules\Promotion\Models\Coupon;
@@ -68,10 +70,6 @@ class ReportsController extends Controller
                 'text' => 'Tax Amount',
             ],
             [
-                'value' => 'total_tip_amount',
-                'text' => 'Tips Amount',
-            ],
-            [
                 'value' => 'total_amount',
                 'text' => 'Final Amount',
             ],
@@ -96,7 +94,7 @@ class ReportsController extends Controller
 
         [$startDate, $endDate] = $this->parseDateRange($filter['date_range'] ?? []);
 
-        $bookingQuery = BookingTransaction::with(['booking.services', 'booking.products', 'booking.bookingPackages'])
+        $bookingQuery = BookingTransaction::with(['booking.services', 'booking.bookingPackages'])
             ->where('payment_status', 1);
 
         if ($startDate) {
@@ -115,18 +113,30 @@ class ReportsController extends Controller
             $orderQuery->whereDate('created_at', '<=', $endDate->toDateString());
         }
 
+        $giftCardQuery = GiftCard::query()->where('payment_status', 1);
+
+        if ($startDate) {
+            $giftCardQuery->whereDate('created_at', '>=', $startDate->toDateString());
+        }
+        if ($endDate) {
+            $giftCardQuery->whereDate('created_at', '<=', $endDate->toDateString());
+        }
+
         $bookingTransactions = $bookingQuery->get();
         $orderGroups = $orderQuery->get();
+        $giftCards = $giftCardQuery->get();
 
         if ($reportType === 'custom') {
             $bookingTotal = $this->sumBookingRevenue($bookingTransactions);
             $orderTotal = $orderGroups->sum('grand_total_amount');
+            $giftCardTotal = $giftCards->sum('subtotal');
 
             $rows = [[
                 'period' => $this->formatRangeLabel($startDate, $endDate),
                 'bookings_total' => Currency::format($bookingTotal),
                 'orders_total' => Currency::format($orderTotal),
-                'grand_total' => Currency::format($bookingTotal + $orderTotal),
+                'gift_cards_total' => Currency::format($giftCardTotal),
+                'grand_total' => Currency::format($bookingTotal + $orderTotal + $giftCardTotal),
             ]];
 
             return $datatable->collection(collect($rows))->toJson();
@@ -146,22 +156,32 @@ class ReportsController extends Controller
                 : $date->format('Y-m-d');
         });
 
+        $giftCardByPeriod = $giftCards->groupBy(function ($gift) use ($reportType) {
+            $date = $gift->created_at;
+            return $reportType === 'monthly'
+                ? $date->format('Y-m')
+                : $date->format('Y-m-d');
+        });
+
         $periods = collect()
             ->merge($bookingByPeriod->keys())
             ->merge($orderByPeriod->keys())
+            ->merge($giftCardByPeriod->keys())
             ->unique()
             ->sort()
             ->values();
 
-        $rows = $periods->map(function ($period) use ($bookingByPeriod, $orderByPeriod) {
+        $rows = $periods->map(function ($period) use ($bookingByPeriod, $orderByPeriod, $giftCardByPeriod) {
             $bookingTotal = $this->sumBookingRevenue($bookingByPeriod->get($period, collect()));
             $orderTotal = $orderByPeriod->get($period, collect())->sum('grand_total_amount');
+            $giftCardTotal = $giftCardByPeriod->get($period, collect())->sum('subtotal');
 
             return [
                 'period' => $period,
                 'bookings_total' => Currency::format($bookingTotal),
                 'orders_total' => Currency::format($orderTotal),
-                'grand_total' => Currency::format($bookingTotal + $orderTotal),
+                'gift_cards_total' => Currency::format($giftCardTotal),
+                'grand_total' => Currency::format($bookingTotal + $orderTotal + $giftCardTotal),
             ];
         });
 
@@ -277,11 +297,11 @@ class ReportsController extends Controller
                 return '
                     <div class="d-flex align-items-center text-decoration-none" style="color:#c39b61;">
                         <div class="me-3">
-                            <img src="'.$Profile_image.'" class="avatar avatar-md rounded-circle" alt="'.$name.'" width="40" height="40">
+                            <img src="' . $Profile_image . '" class="avatar avatar-md rounded-circle" alt="' . $name . '" width="40" height="40">
                         </div>
                         <div class="d-flex flex-column">
-                            <span class="fw-bold">'.$name.'</span>
-                            <small class="text-muted">'.$phone.'</small>
+                            <span class="fw-bold">' . $name . '</span>
+                            <small class="text-muted">' . $phone . '</small>
                         </div>
                     </div>
                 ';
@@ -356,11 +376,11 @@ class ReportsController extends Controller
                 return '
                     <div class="d-flex align-items-center text-decoration-none" style="color:#c39b61;">
                         <div class="me-3">
-                            <img src="'.$Profile_image.'" class="avatar avatar-md rounded-circle" alt="'.$name.'" width="40" height="40">
+                            <img src="' . $Profile_image . '" class="avatar avatar-md rounded-circle" alt="' . $name . '" width="40" height="40">
                         </div>
                         <div class="d-flex flex-column">
-                            <span class="fw-bold">'.$name.'</span>
-                            <small class="text-muted">'.$phone.'</small>
+                            <span class="fw-bold">' . $name . '</span>
+                            <small class="text-muted">' . $phone . '</small>
                         </div>
                     </div>
                 ';
@@ -418,16 +438,20 @@ class ReportsController extends Controller
     }
 
 
- public function order_report_index_data(DataTables $datatable, Request $request)
+    public function order_report_index_data(DataTables $datatable, Request $request)
     {
-        $bookings = Booking::with('booking_service.employee', 'booking_service.service' , 'user');
-        
+        $bookings = Booking::with('booking_service.employee', 'booking_service.service', 'user', 'paidTransaction');
+
 
         $filter = $request->filter;
 
         if (isset($filter)) {
             if (isset($filter['payment_status']) && $filter['payment_status'] !== '') {
-                $bookings->where('payment_status', $filter['payment_status']);
+                if ((int) $filter['payment_status'] === 1) {
+                    $bookings->paid();
+                } else {
+                    $bookings->unpaid();
+                }
             }
 
             if (isset($filter['order_date'][0])) {
@@ -461,10 +485,10 @@ class ReportsController extends Controller
                 return customDate($data->created_at);
             })
             ->editColumn('items', function ($data) {
-        return $data->booking_service->pluck('service.name')->join(', ');
+                return $data->booking_service->pluck('service.name')->join(', ');
             })
             ->editColumn('payment', function ($data) {
-                return $data->payment_status == 1 ? __('order_report.paid') : __('order_report.unpaid');
+                return $data->is_paid ? __('order_report.paid') : __('order_report.unpaid');
             })
             ->editColumn('status', function ($data) {
                 return $data->booking_service->pluck('discount_amount')->join(', ');
@@ -479,8 +503,8 @@ class ReportsController extends Controller
             ->filterColumn('customer_name', function ($query, $keyword) {
                 $query->whereHas('user', function ($q) use ($keyword) {
                     $q->where('first_name', 'like', "%{$keyword}%")
-                      ->orWhere('last_name', 'like', "%{$keyword}%")
-                      ->orWhere('email', 'like', "%{$keyword}%");
+                        ->orWhere('last_name', 'like', "%{$keyword}%")
+                        ->orWhere('email', 'like', "%{$keyword}%");
                 });
             })
             ->filterColumn('phone', function ($query, $keyword) {
@@ -500,17 +524,17 @@ class ReportsController extends Controller
     public function daily_booking_report_index_data(Datatables $datatable, Request $request)
     {
         $query = Booking::dailyReport();
-        
+
         $data = $request->all();
-    
+
         $filter = $request->filter;
         if (isset($filter['booking_date'])) {
             $bookingDates = explode(' to ', $filter['booking_date']);
-    
+
             if (count($bookingDates) >= 2) {
                 $startDate = date('Y-m-d 00:00:00', strtotime($bookingDates[0]));
                 $endDate = date('Y-m-d 23:59:59', strtotime($bookingDates[1]));
-    
+
                 $query->where('bookings.start_date_time', '>=', $startDate)
                     ->where('bookings.start_date_time', '<=', $endDate);
             } elseif (count($bookingDates) === 1) {
@@ -520,7 +544,7 @@ class ReportsController extends Controller
                 $query->whereBetween('bookings.start_date_time', [$startDate, $endDate]);
             }
         }
-    
+
         return $datatable->eloquent($query)
             ->editColumn('start_date_time', function ($data) {
                 return customDate($data->start_date_time);
@@ -532,39 +556,27 @@ class ReportsController extends Controller
                 return $data->total_service ?? 0;
             })
             ->editColumn('total_service_amount', function ($data) {
-                $totalServiceAmount = Booking::totalservice($data->total_tax_amount ?? 0, $data->total_tip_amount ?? 0)
-                ->whereDate('bookings.start_date_time', '=', $data->start_date_time)
-                ->first();
+                $totalServiceAmount = Booking::totalservice($data->total_tax_amount ?? 0, 0)
+                    ->whereDate('bookings.start_date_time', '=', $data->start_date_time)
+                    ->first();
 
-            return Currency::format($totalServiceAmount->total_service_amount ?? 0);
-        })
+                return Currency::format($totalServiceAmount->total_service_amount ?? 0);
+            })
             ->editColumn('total_tax_amount', function ($data) {
                 return Currency::format($data->total_tax_amount ?? 0);
             })
-            ->editColumn('total_tip_amount', function ($data) {
-                $totalTipAmount = Booking::tipamount()
-                ->whereDate('bookings.start_date_time', '=', $data->start_date_time)
-                ->first();
-
-            return Currency::format($totalTipAmount->total_tip_amount ?? 0);
-            })
             ->editColumn('total_amount', function ($data) {
-                $totalTipAmount = Booking::tipamount()
-                ->whereDate('bookings.start_date_time', '=', $data->start_date_time)
-                ->first();
-                
-                $totalServiceAmount = Booking::totalservice($data->total_tax_amount ?? 0, $totalTipAmount->total_tip_amount ?? 0)
-                ->whereDate('bookings.start_date_time', '=', $data->start_date_time)
-                ->first();
+                $totalServiceAmount = Booking::totalservice($data->total_tax_amount ?? 0, 0)
+                    ->whereDate('bookings.start_date_time', '=', $data->start_date_time)
+                    ->first();
 
-            return Currency::format($totalServiceAmount->total_amount ?? 0);
-       
+                return Currency::format($totalServiceAmount->total_amount ?? 0);
             })
             ->addIndexColumn()
             ->rawColumns([])
             ->toJson();
     }
-    
+
 
     public function overall_booking_report(Request $request)
     {
@@ -596,10 +608,6 @@ class ReportsController extends Controller
             [
                 'value' => 'total_tax_amount',
                 'text' => 'Taxes',
-            ],
-            [
-                'value' => 'total_tip_amount',
-                'text' => 'Tips',
             ],
             [
                 'value' => 'total_amount',
@@ -834,10 +842,6 @@ class ReportsController extends Controller
                 'text' => 'Commission Earn',
             ],
             [
-                'value' => 'total_tip_earn',
-                'text' => 'Tips Earn',
-            ],
-            [
                 'value' => 'total_earning',
                 'text' => 'Total Earning',
             ],
@@ -852,96 +856,277 @@ class ReportsController extends Controller
         $module_title = __('report.title_payment_transactions_report');
         $module_name = 'payment-transactions-report';
 
-        $payment_methods = BookingTransaction::query()
-            ->select('transaction_type')
-            ->whereNotNull('transaction_type')
-            ->distinct()
-            ->orderBy('transaction_type')
-            ->pluck('transaction_type');
+        $payment_methods = collect();
+
+        if (Schema::hasColumn('invoices', 'payment_method')) {
+            $payment_methods = Invoice::query()
+                ->select('payment_method')
+                ->whereNotNull('payment_method')
+                ->distinct()
+                ->pluck('payment_method');
+        }
+
+        $payment_methods = $payment_methods
+            ->merge(
+                BookingTransaction::query()
+                    ->select('transaction_type')
+                    ->whereNotNull('transaction_type')
+                    ->distinct()
+                    ->pluck('transaction_type')
+            )
+            ->merge(
+                OrderGroup::query()
+                    ->select('payment_method')
+                    ->where('payment_status', 'paid')
+                    ->whereNotNull('payment_method')
+                    ->distinct()
+                    ->pluck('payment_method')
+            )
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values();
 
         return view('backend.reports.payment-transactions-report', compact('module_title', 'module_name', 'payment_methods'));
     }
 
     public function payment_transactions_report_index_data(Datatables $datatable, Request $request)
     {
-        $query = BookingTransaction::with(['booking.user', 'booking.services']);
-
         $filter = $request->filter;
+        [$startDate, $endDate] = $this->parseDateRange($filter['payment_date'] ?? []);
+        $selectedPaymentMethod = $filter['payment_method'] ?? '';
 
-        if (isset($filter['payment_method']) && $filter['payment_method'] !== '') {
-            $query->where('transaction_type', $filter['payment_method']);
+        $invoiceQuery = Invoice::with('user');
+        if ($startDate) {
+            $invoiceQuery->whereDate('created_at', '>=', $startDate->toDateString());
+        }
+        if ($endDate) {
+            $invoiceQuery->whereDate('created_at', '<=', $endDate->toDateString());
         }
 
-        if (isset($filter['payment_date'][0]) && $filter['payment_date'][0] !== '') {
-            $startDate = $filter['payment_date'][0];
-            $endDate = $filter['payment_date'][1] ?? null;
+        $invoiceRows = $invoiceQuery->get()->map(function (Invoice $invoice) {
+            $paymentMethod = $this->resolveInvoicePaymentMethod($invoice);
 
-            if ($endDate) {
-                $query->whereDate('created_at', '>=', date('Y-m-d', strtotime($startDate)));
-                $query->whereDate('created_at', '<=', date('Y-m-d', strtotime($endDate)));
-            } else {
-                $query->whereDate('created_at', date('Y-m-d', strtotime($startDate)));
-            }
+            return [
+                'created_at_raw' => optional($invoice->created_at)->timestamp ?? 0,
+                'created_at' => customDate($invoice->created_at),
+                'invoice_id' => $this->formatInvoiceLink($invoice),
+                'customer_name' => $this->formatCustomerCell($invoice->user),
+                'transaction_id' => $this->resolveInvoiceTransactionId($invoice),
+                'payment_method_raw' => $paymentMethod,
+                'payment_method' => $this->formatPaymentMethod($paymentMethod),
+                'payment_status' => __('messages.paid'),
+                'service_amount' => Currency::format($this->resolveInvoiceSubtotalAmount($invoice)),
+                'discount_amount' => Currency::format((float) ($invoice->discount_amount ?? 0)),
+                'total_amount' => Currency::format((float) ($invoice->final_total ?? 0)),
+            ];
+        });
+
+        $bookingQuery = BookingTransaction::with(['booking.user', 'booking.services']);
+        if ($selectedPaymentMethod !== '') {
+            $bookingQuery->where('transaction_type', $selectedPaymentMethod);
+        }
+        if ($startDate) {
+            $bookingQuery->whereDate('created_at', '>=', $startDate->toDateString());
+        }
+        if ($endDate) {
+            $bookingQuery->whereDate('created_at', '<=', $endDate->toDateString());
         }
 
-        return $datatable->eloquent($query)
-            ->addIndexColumn()
-            ->addColumn('customer_name', function ($data) {
-                $user = optional($data->booking)->user;
-                $Profile_image = optional($user)->profile_image ?? default_user_avatar();
-                $name = optional($user)->full_name ?? default_user_name();
-                $phone = optional($user)->mobile ?? '--';
-                return '
-                    <div class="d-flex align-items-center text-decoration-none" style="color:#c39b61;">
-                        <div class="me-3">
-                            <img src="'.$Profile_image.'" class="avatar avatar-md rounded-circle" alt="'.$name.'" width="40" height="40">
-                        </div>
-                        <div class="d-flex flex-column">
-                            <span class="fw-bold">'.$name.'</span>
-                            <small class="text-muted">'.$phone.'</small>
-                        </div>
-                    </div>
-                ';
-            })
-            ->addColumn('booking_id', function ($data) {
-                if (! $data->booking_id) {
-                    return '-';
+        $resolvedInvoiceByBooking = [];
+        $standaloneBookingRows = $bookingQuery->get()
+            ->filter(function (BookingTransaction $transaction) use (&$resolvedInvoiceByBooking) {
+                if ($transaction->invoice_id) {
+                    return false;
                 }
-                $url = url('app/bookings?booking_id=' . $data->booking_id);
-                return '<a href="' . $url . '">' . $data->booking_id . '</a>';
+
+                $bookingId = (int) ($transaction->booking_id ?? 0);
+                if (! array_key_exists($bookingId, $resolvedInvoiceByBooking)) {
+                    $resolvedInvoiceByBooking[$bookingId] = optional($this->resolveBookingTransactionInvoice($transaction))->id;
+                }
+
+                return $resolvedInvoiceByBooking[$bookingId] === null;
             })
-            ->editColumn('transaction_id', function ($data) {
-                return $data->external_transaction_id ?? '-';
-            })
-            ->editColumn('payment_method', function ($data) {
-                return $data->transaction_type ? ucwords(str_replace('_', ' ', $data->transaction_type)) : '-';
-            })
-            ->editColumn('payment_status', function ($data) {
-                return $data->payment_status == 1 ? __('messages.paid') : __('messages.unpaid');
-            })
-            ->addColumn('service_amount', function ($data) {
-                $services = optional($data->booking)->services;
-                $amount = $services ? $services->sum('service_price') : 0;
-                return Currency::format($amount);
-            })
-            ->addColumn('discount_amount', function ($data) {
-                return Currency::format($data->discount_amount ?? 0);
-            })
-            ->addColumn('total_amount', function ($data) {
+            ->map(function (BookingTransaction $data) {
                 $services = optional($data->booking)->services;
                 $serviceAmount = $services ? $services->sum('service_price') : 0;
-                $discount = $data->discount_amount ?? 0;
-                $total = $serviceAmount - $discount;
-                return Currency::format($total);
+                $discount = (float) ($data->discount_amount ?? 0);
+
+                return [
+                    'created_at_raw' => optional($data->created_at)->timestamp ?? 0,
+                    'created_at' => customDate($data->created_at),
+                    'invoice_id' => '-',
+                    'customer_name' => $this->formatCustomerCell(optional($data->booking)->user),
+                    'transaction_id' => $data->external_transaction_id ?? '-',
+                    'payment_method_raw' => $data->transaction_type,
+                    'payment_method' => $this->formatPaymentMethod($data->transaction_type),
+                    'payment_status' => $data->payment_status == 1 ? __('messages.paid') : __('messages.unpaid'),
+                    'service_amount' => Currency::format($serviceAmount),
+                    'discount_amount' => Currency::format($discount),
+                    'total_amount' => Currency::format($serviceAmount - $discount),
+                ];
+            });
+
+        $rows = $invoiceRows
+            ->merge($standaloneBookingRows)
+            ->filter(function (array $row) use ($selectedPaymentMethod) {
+                if ($selectedPaymentMethod === '') {
+                    return true;
+                }
+
+                return ($row['payment_method_raw'] ?? null) === $selectedPaymentMethod;
             })
-            ->editColumn('created_at', function ($data) {
-                return customDate($data->created_at);
-            })
-            ->rawColumns(['customer_name', 'booking_id'])
+            ->sortByDesc('created_at_raw')
+            ->values();
+
+        return $datatable->collection($rows)
+            ->addIndexColumn()
+            ->rawColumns(['customer_name', 'invoice_id'])
             ->toJson();
     }
 
-    
+    private function formatCustomerCell($user): string
+    {
+        $profileImage = optional($user)->profile_image ?? default_user_avatar();
+        $name = optional($user)->full_name ?? default_user_name();
+        $phone = optional($user)->mobile ?? '--';
+
+        return '
+            <div class="d-flex align-items-center text-decoration-none" style="color:#c39b61;">
+                <div class="me-3">
+                    <img src="' . $profileImage . '" class="avatar avatar-md rounded-circle" alt="' . $name . '" width="40" height="40">
+                </div>
+                <div class="d-flex flex-column">
+                    <span class="fw-bold">' . $name . '</span>
+                    <small class="text-muted">' . $phone . '</small>
+                </div>
+            </div>
+        ';
+    }
+
+    private function resolveBookingTransactionInvoice(BookingTransaction $transaction): ?Invoice
+    {
+        if ($transaction->invoice_id) {
+            $invoice = Invoice::query()->find($transaction->invoice_id);
+
+            if ($invoice) {
+                return $invoice;
+            }
+        }
+
+        if (! $transaction->booking_id) {
+            return null;
+        }
+
+        return Invoice::query()
+            ->where(function ($query) use ($transaction) {
+                $query->whereJsonContains('cart_ids', (int) $transaction->booking_id)
+                    ->orWhereJsonContains('cart_ids', (string) $transaction->booking_id);
+            })
+            ->latest('id')
+            ->first();
+    }
+
+
+    private function resolveInvoiceTransactionId(Invoice $invoice): string
+    {
+        $bookingTransaction = null;
+
+        if (Schema::hasColumn('booking_transactions', 'invoice_id')) {
+            $bookingTransaction = BookingTransaction::query()
+                ->where('invoice_id', $invoice->id)
+                ->whereNotNull('external_transaction_id')
+                ->latest('id')
+                ->first();
+        }
+
+        if ($bookingTransaction?->external_transaction_id) {
+            return $bookingTransaction->external_transaction_id;
+        }
+
+        if (! empty($invoice->cart_ids)) {
+            $fallbackTransaction = BookingTransaction::query()
+                ->whereIn('booking_id', (array) $invoice->cart_ids)
+                ->whereNotNull('external_transaction_id')
+                ->latest('id')
+                ->first();
+
+            if ($fallbackTransaction?->external_transaction_id) {
+                return $fallbackTransaction->external_transaction_id;
+            }
+        }
+
+        return '-';
+    }
+
+    private function formatPaymentMethod(?string $paymentMethod): string
+    {
+        return $paymentMethod ? ucwords(str_replace('_', ' ', $paymentMethod)) : '-';
+    }
+
+    private function resolveInvoiceSubtotalAmount(Invoice $invoice): float
+    {
+        return (float) ($invoice->final_total ?? 0)
+            + (float) ($invoice->discount_amount ?? 0)
+            + (float) ($invoice->loyalty_points_discount ?? 0)
+            + (float) ($invoice->gift_amount ?? 0);
+    }
+
+    private function resolveInvoicePaymentMethod(Invoice $invoice): ?string
+    {
+        if ($invoice->payment_method) {
+            return $invoice->payment_method;
+        }
+
+        $bookingTransaction = null;
+
+        if (Schema::hasColumn('booking_transactions', 'invoice_id')) {
+            $bookingTransaction = BookingTransaction::query()
+                ->where('invoice_id', $invoice->id)
+                ->whereNotNull('transaction_type')
+                ->latest('id')
+                ->first();
+        }
+
+        if ($bookingTransaction?->transaction_type) {
+            return $bookingTransaction->transaction_type;
+        }
+
+        if (! empty($invoice->product_ids)) {
+            $orderGroup = OrderGroup::query()
+                ->whereIn('id', (array) $invoice->product_ids)
+                ->whereNotNull('payment_method')
+                ->latest('id')
+                ->first();
+
+            if ($orderGroup?->payment_method) {
+                return $orderGroup->payment_method;
+            }
+        }
+
+        if (! empty($invoice->cart_ids)) {
+            $fallbackTransaction = BookingTransaction::query()
+                ->whereIn('booking_id', (array) $invoice->cart_ids)
+                ->whereNotNull('transaction_type')
+                ->latest('id')
+                ->first();
+
+            if ($fallbackTransaction?->transaction_type) {
+                return $fallbackTransaction->transaction_type;
+            }
+        }
+
+        return null;
+    }
+
+    private function formatInvoiceLink(Invoice $invoice): string
+    {
+        $url = route('app.invoice', ['invoice_id' => $invoice->id]) . '#invoice-card-' . $invoice->id;
+
+        return '<a href="' . $url . '">INV-' . $invoice->id . '</a>';
+    }
+
+
     public function staff_report_index_data(Datatables $datatable, Request $request)
     {
         $query = User::staffReport();
@@ -979,7 +1164,7 @@ class ReportsController extends Controller
                 return Currency::format($data->tip_earning_sum_tip_amount ?? 0);
             })
             ->editColumn('total_earning', function ($data) {
-                return Currency::format( $data->commission_earning_sum_commission_amount + $data->tip_earning_sum_tip_amount);
+                return Currency::format($data->commission_earning_sum_commission_amount + $data->tip_earning_sum_tip_amount);
             })
             ->editColumn('updated_at', function ($data) {
                 $module_name = $this->module_name;
@@ -1061,12 +1246,4 @@ class ReportsController extends Controller
 
         return $this->export($request);
     }
-
 }
-
-
-
-
-
-
-

@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('invoices', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->json('cart_ids'); // cart_ids IDs فقط بصيغة JSON
-            $table->decimal('discount_amount', 10, 2)->default(0); // خصم الكوبونات
-            $table->decimal('loyalty_points_discount', 10, 2)->default(0); // خصم الولاء
-            $table->decimal('final_total', 10, 2); // المبلغ النهائي
+            $table->json('cart_ids'); 
+            $table->decimal('discount_amount', 10, 2)->default(0);
+            $table->decimal('loyalty_points_discount', 10, 2)->default(0); 
+            $table->decimal('final_total', 10, 2);
             $table->timestamps();
         });
     }

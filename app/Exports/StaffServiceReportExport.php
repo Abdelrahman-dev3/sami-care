@@ -8,7 +8,8 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
-class StaffServiceReportExport implements FromCollection, WithHeadings,WithStyles
+
+class StaffServiceReportExport implements FromCollection, WithHeadings, WithStyles
 {
     public array $columns;
 
@@ -62,9 +63,6 @@ class StaffServiceReportExport implements FromCollection, WithHeadings,WithStyle
                         $selectedData[$column] = Currency::format($row->commission_earning_sum_commission_amount ?? 0);
                         break;
 
-                    case 'total_tip_earn':
-                        $selectedData[$column] = Currency::format($row->tip_earning_sum_tip_amount ?? 0);
-                        break;
 
                     case 'total_earning':
                         $selectedData[$column] = Currency::format($row->employee_booking_sum_service_price + $row->commission_earning_sum_commission_amount + $row->tip_earning_sum_tip_amount);

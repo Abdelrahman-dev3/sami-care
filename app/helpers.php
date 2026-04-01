@@ -71,7 +71,6 @@ function sendNotification($data)
                 $data['branch_number'] = $booking['branch_number'];
                 $data['branch_email'] = $booking['branch_email'];
                 // $data['product_amount'] = $data['product_amount'];
-                $data['tip_amount'] = $booking['tip_amount'];
                 $data['tax_amount'] = $booking['tax_amount'];
                 $data['grand_total'] = $booking['grand_total'];
                 $data['discount'] = $booking['coupon_discount'];
@@ -94,18 +93,17 @@ function sendNotification($data)
                 $data['order_time'] = $order['order_time'];
                 $data['site_url'] = env('APP_URL');
                 unset($data['order']);
-            }elseif (isset($package) && $package != null) {
+            } elseif (isset($package) && $package != null) {
                 // Package-specific logic
                 $data['notification_group'] = 'package';
                 $data['user_id'] = $data['user_id'];
                 $data['user_name'] = $data['user_name'];
                 $data['id'] = $package['id'];
-                $data['package_name'] = $package['name']; 
+                $data['package_name'] = $package['name'];
                 $data['package_expiry_date'] = $package['end_date'];
                 $data['site_url'] = env('APP_URL');
 
                 unset($data['package']);
-
             } elseif (isset($wallet) && $wallet != null) {
                 $data['notification_group'] = 'wallet';
                 $data['user_id'] = $wallet['user_id'];
@@ -346,7 +344,7 @@ if (!function_exists('default_user_avatar')) {
     }
     function default_user_name()
     {
-        return env('APP_NAME').' User';
+        return env('APP_NAME') . ' User';
     }
 }
 if (!function_exists('user_avatar')) {
@@ -1418,7 +1416,7 @@ function dbConnectionStatus(): bool
 {
     try {
         DB::connection()->getPdo();
-    return true;
+        return true;
     } catch (Exception $e) {
         return false;
     }
@@ -1432,7 +1430,8 @@ if (!function_exists('isActive')) {
      * @param  string  $className
      * @return string
      */
-    function isActive($route, $className = 'active') {
+    function isActive($route, $className = 'active')
+    {
         $currentRoute = Route::currentRouteName();
 
         if (is_array($route)) {
@@ -1574,7 +1573,3 @@ function sendPasswordResetSms($phone, $resetCode)
         return false;
     }
 }
-
-
-
-

@@ -106,11 +106,6 @@
                 title: "{{ __('report.lbl_commission_amt') }}",
             },
             {
-                data: 'tip_amount',
-                name: 'tip_amount',
-                title: "{{ __('report.lbl_tips_amt') }}",
-            },
-            {
                 data: 'payment_type',
                 name: 'payment_type',
                 title: "{{ __('report.lbl_payment_type') }}",

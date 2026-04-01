@@ -1,6 +1,8 @@
 <?php
 
 namespace App\Http\Controllers;
+
+use App\Services\CartExpirationService;
 use Illuminate\Http\Request;
 use Modules\Booking\Models\Booking;
 use Modules\Booking\Models\BookingService;
@@ -26,13 +28,14 @@ class BookingCartController extends Controller
         }
 
         $userId = auth()->id();
+        app(CartExpirationService::class)->clearExpired($userId);
 
-        // ── 1. Services ── same query as index() ──────────────────────
+        // ── 1. Services ────────────────────────
         $services = Booking::with('service.service', 'service.employee')
             ->where('created_by', $userId)
             ->whereNotIn('status', ['cancelled', 'completed'])
             ->where('payment_type', 'cart')
-            ->where('payment_status', 0)
+            ->unpaid()
             ->whereNull('deleted_by')
             ->get();
 
@@ -58,7 +61,7 @@ class BookingCartController extends Controller
             $query->where('created_by', $userId)
                 ->whereNotIn('status', ['cancelled', 'completed'])
                 ->where('payment_type', 'cart')
-                ->where('payment_status', 0)
+                ->unpaid()
                 ->whereNull('deleted_by');
         })->with(['package', 'booking'])->get();
 
@@ -171,7 +174,6 @@ class BookingCartController extends Controller
         ]);
     }
 
-// ── Private helper ────────────────────────────────────────────────
     private function emptySidebarResponse(): array
     {
         return [
@@ -191,27 +193,29 @@ class BookingCartController extends Controller
             ],
         ];
     }
+
     public function index(Request $request)
     {
         $userId = auth()->user()->id;
+        app(CartExpirationService::class)->clearExpired($userId);
 
         $services = Booking::with('service.service', 'service.employee')
-            ->where('created_by', $userId)
             ->whereNotIn('status', ['cancelled', 'completed'])
             ->where('payment_type', 'cart')
-            ->where('payment_status', 0)
+            ->unpaid()
+            ->where('created_by', $userId)
             ->whereNull('deleted_by')
             ->get();
 
         $servicePrice = $services->sum(function ($item) {
             return $item->service ? ($item->service->service_price ?? 0) : 0;
         });
-        // Fetch booking packages that belong to bookings matching your conditions
+
         $bookingPackages = BookingPackages::whereHas('booking', function ($query) use ($userId) {
             $query->where('created_by', $userId)
                 ->whereNotIn('status', ['cancelled', 'completed'])
                 ->where('payment_type', 'cart')
-                ->where('payment_status', 0)
+                ->unpaid()
                 ->whereNull('deleted_by');
         })->with('package')->get();
 
@@ -240,7 +244,6 @@ class BookingCartController extends Controller
         $finalPrice = $cartTotal - $discountTotal;
 
         $serviceCount = $services->sum(fn($item) => $item->service ? 1 : 0);
-
         $productCount = $products->count();
         $packagesCount = $bookingPackages->count();
 
@@ -248,7 +251,7 @@ class BookingCartController extends Controller
         return view('frontend.cart.index', compact('packagesCount','bookingPackages','services' , 'products' , 'finalPrice' , 'discountTotal' , 'serviceCount' , 'productCount', 'gifts'));
     }
 
-     public function store(Request $request)
+    public function store(Request $request)
     {
         $user = auth()->user();
         $data = $request->all();
@@ -285,7 +288,6 @@ class BookingCartController extends Controller
                                     '، الخدمة: ' . $subId;
                             }else{
                                 $booking->note =  'اسم العميل ' . $data['customerName'] . 'رقم العميل ' . $data['mobileNo'] . 'الحي ' . $data['neighborhood'] ;
-                                $booking->location       =  $data['locationInput'];
                             }
                             $booking->start_date_time = $startDateTime;
                             $booking->user_id         = $user->id;
@@ -319,7 +321,7 @@ class BookingCartController extends Controller
                 'success' => true,
                 'message' => __('messages.booking_added_to_cart')
             ], 201);
-        }
+    }
 
     public function destroy($id)
     {
@@ -410,7 +412,10 @@ class BookingCartController extends Controller
     {
         $user = auth()->user();
 
-        $bookings = Booking::with('services', 'products')->where('user_id', $user->id)->where('payment_status', 0)->get();
+        $bookings = Booking::with('services', 'products')
+            ->where('user_id', $user->id)
+            ->unpaid()
+            ->get();
 
         foreach ($bookings as $booking) {
             $booking->services()->delete();
@@ -430,11 +435,11 @@ class BookingCartController extends Controller
 
      public function balance(Request $request)
     {
-        $user = $request->user(); // المستخدم الحالي من التوكن
+        $user = $request->user(); 
 
         $points = DB::table('loyalty_points')
                     ->where('user_id', $user->id)
-                    ->sum('points'); // لو في أكثر من سجل، نجمع النقاط كلها
+                    ->sum('points'); 
 
         return response()->json([
             'user_id' => $user->id,

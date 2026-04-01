@@ -207,12 +207,12 @@
                     <h5>{{ \Carbon\Carbon::parse($booking->start_date_time)->format('Y-m-d') }}</h5>
                     @if($booking->status == 'pending')
                         <h5 style="color:#F7F316">{{ __('messagess.booked') }}</h5>
-                    @endif
-                    @if($booking->status == 'completed')
+                    @elseif($booking->status == 'completed')
                         <h5 style="color:#1FAF38">{{ __('messagess.completed') }}</h5>
-                    @endif
-                    @if($booking->status == 'cancelled')
+                    @elseif($booking->status == 'cancelled')
                         <h5 style="color:#FF473E">{{ __('messagess.cancelled') }}</h5>
+                    @else
+                        <h5 style="color:#999">{{ $booking->status }}</h5>
                     @endif
                 </div>
             @endforeach

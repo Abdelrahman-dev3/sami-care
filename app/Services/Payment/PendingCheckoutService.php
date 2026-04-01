@@ -2,6 +2,7 @@
 
 namespace App\Services\Payment;
 
+use App\Services\CartExpirationService;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Modules\Booking\Models\Booking;
@@ -16,6 +17,8 @@ class PendingCheckoutService
         if (! $user instanceof User) {
             return ['error' => __('auth.unauthenticated')];
         }
+
+        app(CartExpirationService::class)->clearExpired($user->id);
 
         return $this->getPendingCheckoutForUser($user, $pageType, $couponCode);
     }
@@ -37,7 +40,6 @@ class PendingCheckoutService
         $gifts = $pageType === CheckoutType::CART
             ? $user->pendingGiftCards()->get()
             : collect();
-
         $serviceSubtotal = $this->serviceSubtotal($bookings);
         $packageSubtotal = $this->packageSubtotal($bookings);
         $bookingSubtotal = $serviceSubtotal + $packageSubtotal;

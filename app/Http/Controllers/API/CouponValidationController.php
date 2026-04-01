@@ -43,6 +43,12 @@ class CouponValidationController extends Controller
 
             $coupon->decrement('use_limit');
 
+            if ($coupon->use_limit <= 0) {
+                $coupon->update([
+                    'is_expired' => 1
+                ]);
+            }
+            
             UserCouponRedeem::create([
                 'user_id' => auth()->id(),
                 'coupon_code' => $couponCode,

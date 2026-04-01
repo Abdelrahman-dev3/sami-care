@@ -13,9 +13,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Commission\Trait\CommissionTrait;
 use Modules\Service\Models\Service;
-use Modules\Tip\Trait\TipTrait;
 use Modules\Package\Models\UserPackageRedeem;
 use Modules\Package\Models\UserPackage;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
 
@@ -24,7 +24,6 @@ class Booking extends BaseModel
     use CommissionTrait;
     use HasFactory;
     use SoftDeletes;
-    use TipTrait;
 
     protected $table = 'bookings';
 
@@ -134,12 +133,24 @@ class Booking extends BaseModel
 
     public function bookingTransaction()
     {
-        return $this->hasOne(BookingTransaction::class)->where('payment_status', 1);
+        return $this->paidTransaction();
     }
 
     public function payment()
     {
-        return $this->hasOne(BookingTransaction::class);
+        return $this->hasOne(BookingTransaction::class)->latestOfMany();
+    }
+
+    public function transactions()
+    {
+        return $this->hasMany(BookingTransaction::class);
+    }
+
+    public function paidTransaction()
+    {
+        return $this->hasOne(BookingTransaction::class)
+            ->where('payment_status', 1)
+            ->latestOfMany();
     }
 
     public function bookingService()
@@ -180,6 +191,42 @@ class Booking extends BaseModel
         } else {
             return $query->whereNotNull('branch_id');
         }
+    }
+
+    public function scopePaid(Builder $query): Builder
+    {
+        return $query->whereHas('transactions', function (Builder $transactionQuery) {
+            $transactionQuery->where('payment_status', 1);
+        });
+    }
+
+    public function scopeUnpaid(Builder $query): Builder
+    {
+        return $query->whereDoesntHave('transactions', function (Builder $transactionQuery) {
+            $transactionQuery->where('payment_status', 1);
+        });
+    }
+
+    public function getIsPaidAttribute(): bool
+    {
+        if ($this->relationLoaded('paidTransaction')) {
+            return $this->paidTransaction !== null;
+        }
+
+        if ($this->relationLoaded('bookingTransaction')) {
+            return $this->bookingTransaction !== null;
+        }
+
+        if ($this->relationLoaded('transactions')) {
+            return $this->transactions->contains(fn ($transaction) => (int) $transaction->payment_status === 1);
+        }
+
+        return $this->transactions()->where('payment_status', 1)->exists();
+    }
+
+    public function getPaymentStatusAttribute($value): int
+    {
+        return $this->is_paid ? 1 : 0;
     }
 
     // Reports Query

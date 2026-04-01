@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\GiftCard;
 use App\Models\LoyaltyPoint;
-use App\Models\reject;
+use App\Models\Reject;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -21,7 +21,7 @@ class ProfileController extends Controller
         $user = Auth::user()->loadMissing('affiliate');
 
         $bookingsQuery = Booking::query()
-            ->with(['branch', 'services.employee', 'services.service'])
+            ->with(['branch', 'services.employee', 'services.service', 'paidTransaction'])
             ->where('created_by', $user->id)
             ->whereHas('services')
             ->whereNull('deleted_by');
@@ -31,7 +31,7 @@ class ProfileController extends Controller
             ->whereNotIn('status', ['completed', 'canceled', 'cancelled'])
             ->get();
         $completedBookings = (clone $bookingsQuery)
-            ->where('payment_status', 1)
+            ->paid()
             ->where('status', 'completed')
             ->get();
 
@@ -57,7 +57,7 @@ class ProfileController extends Controller
                     'id' => $user->id,
                     'first_name' => $user->first_name,
                     'last_name' => $user->last_name,
-                    'full_name' => trim(($user->first_name ?? '').' '.($user->last_name ?? '')),
+                    'full_name' => trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? '')),
                     'email' => $user->email,
                     'mobile' => $user->mobile,
                     'profile_image' => $this->resolveUrl($user->avatar ?: $user->profile_image),
@@ -83,7 +83,7 @@ class ProfileController extends Controller
                     ['key' => 'tabby', 'image_url' => asset('images/icons/tabby.png')],
                 ],
                 'transactions' => $allBookings
-                    ->flatMap(fn (Booking $booking) => $booking->services->map(function ($service) use ($booking) {
+                    ->flatMap(fn(Booking $booking) => $booking->services->map(function ($service) use ($booking) {
                         return [
                             'booking_id' => $booking->id,
                             'service_id' => $service->service_id,
@@ -94,9 +94,9 @@ class ProfileController extends Controller
                         ];
                     }))
                     ->values(),
-                'current_bookings' => $currentBookings->map(fn (Booking $booking) => $this->transformBooking($booking, true))->values(),
-                'completed_bookings' => $completedBookings->map(fn (Booking $booking) => $this->transformBooking($booking, false))->values(),
-                'gift_cards' => $giftCards->map(fn (GiftCard $giftCard) => $this->transformGiftCard($giftCard))->values(),
+                'current_bookings' => $currentBookings->map(fn(Booking $booking) => $this->transformBooking($booking, true))->values(),
+                'completed_bookings' => $completedBookings->map(fn(Booking $booking) => $this->transformBooking($booking, false))->values(),
+                'gift_cards' => $giftCards->map(fn(GiftCard $giftCard) => $this->transformGiftCard($giftCard))->values(),
             ],
         ]);
     }
@@ -108,8 +108,8 @@ class ProfileController extends Controller
         $data = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'mobile' => 'required|string|max:20|unique:users,mobile,'.$user->id,
-            'email' => 'nullable|email|max:255|unique:users,email,'.$user->id,
+            'mobile' => 'required|string|max:20|unique:users,mobile,' . $user->id,
+            'email' => 'nullable|email|max:255|unique:users,email,' . $user->id,
             'address' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:255',
             'country' => 'nullable|string|max:255',
@@ -119,9 +119,9 @@ class ProfileController extends Controller
 
         if ($request->hasFile('profile_image')) {
             $image = $request->file('profile_image');
-            $imageName = 'user_'.$user->id.'_'.time().'.'.$image->getClientOriginalExtension();
+            $imageName = 'user_' . $user->id . '_' . time() . '.' . $image->getClientOriginalExtension();
             $image->move(public_path('profile_images'), $imageName);
-            $data['avatar'] = 'profile_images/'.$imageName;
+            $data['avatar'] = 'profile_images/' . $imageName;
         }
 
         $user->update($data);
@@ -134,7 +134,7 @@ class ProfileController extends Controller
                     'id' => $user->id,
                     'first_name' => $user->first_name,
                     'last_name' => $user->last_name,
-                    'full_name' => trim(($user->first_name ?? '').' '.($user->last_name ?? '')),
+                    'full_name' => trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? '')),
                     'email' => $user->email,
                     'mobile' => $user->mobile,
                     'avatar' => $this->resolveUrl($user->avatar ?: $user->profile_image),
@@ -166,7 +166,7 @@ class ProfileController extends Controller
                     'id' => $service->id,
                     'service_id' => $service->service_id,
                     'service_name' => $service->service_name,
-                    'employee_name' => $service->employee->full_name ?? trim(($service->employee->first_name ?? '').' '.($service->employee->last_name ?? '')),
+                    'employee_name' => $service->employee->full_name ?? trim(($service->employee->first_name ?? '') . ' ' . ($service->employee->last_name ?? '')),
                     'price' => (float) ($service->service->default_price ?? $service->service_price ?? 0),
                 ];
             })->values(),
@@ -177,22 +177,14 @@ class ProfileController extends Controller
     {
         return [
             'id' => $giftCard->id,
-            'ref' => $giftCard->ref,
-            'balance' => $giftCard->balance,
-            'sender_name' => $giftCard->sender_name,
             'recipient_name' => $giftCard->recipient_name,
-            'sender_phone' => $giftCard->sender_phone,
             'recipient_phone' => $giftCard->recipient_phone,
             'message' => $giftCard->message,
             'payment_status' => (int) $giftCard->payment_status,
             'created_at' => optional($giftCard->created_at)->format('Y-m-d H:i:s'),
-            'services' => $giftCard->services_list->map(fn ($service) => [
+            'services' => $giftCard->services_list->map(fn($service) => [
                 'id' => $service->id,
                 'name' => $this->localizedValue($service->name),
-            ])->values(),
-            'packages' => $giftCard->packages->map(fn ($package) => [
-                'id' => $package->id,
-                'name' => $this->localizedValue($package->name),
             ])->values(),
         ];
     }

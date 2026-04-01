@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\GiftCard;
+use App\Services\CartExpirationService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -20,12 +21,13 @@ class MobileCartController extends Controller
     public function index(Request $request)
     {
         $userId = $request->user()->id;
+        app(CartExpirationService::class)->clearExpired($userId);
 
-        $bookings = Booking::with(['service.service', 'service.employee', 'services'])
+        $bookings = Booking::with(['service.service', 'service.employee', 'services', 'paidTransaction'])
             ->where('created_by', $userId)
             ->whereNotIn('status', ['cancelled', 'completed'])
             ->where('payment_type', 'cart')
-            ->where('payment_status', 0)
+            ->unpaid()
             ->whereNull('deleted_by')
             ->get();
 
@@ -42,7 +44,7 @@ class MobileCartController extends Controller
                 $query->where('created_by', $userId)
                     ->whereNotIn('status', ['cancelled', 'completed'])
                     ->where('payment_type', 'cart')
-                    ->where('payment_status', 0)
+                    ->unpaid()
                     ->whereNull('deleted_by');
             })
             ->with(['package', 'booking.branch', 'employee'])
@@ -164,7 +166,6 @@ class MobileCartController extends Controller
                 'note' => $validated['notes'] ?? null,
                 'created_by' => $user->id,
                 'payment_type' => 'cart',
-                'payment_status' => 0,
             ]);
 
             $bookingPackage = BookingPackages::create([
@@ -223,7 +224,6 @@ class MobileCartController extends Controller
             'customerName' => ['nullable', 'string'],
             'mobileNo' => ['nullable', 'string'],
             'neighborhood' => ['nullable', 'string'],
-            'locationInput' => ['nullable', 'string'],
         ]);
 
         $user = $request->user();
@@ -248,7 +248,6 @@ class MobileCartController extends Controller
                         $booking->note = 'Customer Name: ' . ($validated['customerName'] ?? '') .
                             ', Customer Mobile: ' . ($validated['mobileNo'] ?? '') .
                             ', Neighborhood: ' . ($validated['neighborhood'] ?? '');
-                        $booking->location = $validated['locationInput'] ?? null;
                     }
 
                     $booking->start_date_time = $startDateTime;
@@ -297,7 +296,6 @@ class MobileCartController extends Controller
                 'location.recipient_name' => ['required', 'string', 'max:255'],
                 'location.recipient_mobile' => ['required', 'string', 'max:20'],
                 'location.message' => ['nullable', 'string', 'max:1000'],
-                'delivery_method' => ['nullable', 'in:center_pickup,electronic_card,استلام من المركز,بطاقة الكترونية,traditional,email'],
             ]);
 
             $serviceIds = [];
@@ -312,12 +310,7 @@ class MobileCartController extends Controller
 
             $giftCard = GiftCard::create([
                 'user_id' => $request->user()->id,
-                'delivery_method' => isset($validated['delivery_method'])
-                    ? $this->normalizeGiftDeliveryMethod($validated['delivery_method'])
-                    : '',
-                'sender_name' => $request->user()->first_name ?? $request->user()->username ?? '',
                 'recipient_name' => $validated['location']['recipient_name'],
-                'sender_phone' => $request->user()->mobile ?? '',
                 'recipient_phone' => $validated['location']['recipient_mobile'],
                 'requested_services' => $serviceIds,
                 'message' => $validated['location']['message'] ?? null,
@@ -337,81 +330,21 @@ class MobileCartController extends Controller
         }
 
         $validated = $request->validate([
-            'delivery_method' => ['required', 'in:center_pickup,electronic_card,استلام من المركز,بطاقة الكترونية,traditional,email'],
-            'sender_name' => ['required', 'string', 'max:255'],
             'recipient_name' => ['required', 'string', 'max:255'],
-            'sender_phone' => ['required', 'string', 'max:20'],
             'recipient_phone' => ['required', 'string', 'max:20'],
             'requested_services' => ['required', 'array', 'min:1'],
             'requested_services.*' => ['integer', 'exists:services,id'],
-            'package_ids' => ['nullable', 'array'],
-            'package_ids.*' => ['integer', 'exists:packages,id'],
-            'coupons' => ['nullable', 'array'],
             'optional_services' => ['nullable', 'string', 'max:100'],
         ]);
 
-        $deliveryMethod = $this->normalizeGiftDeliveryMethod($validated['delivery_method']);
-
-        $serviceIds = array_map('intval', $validated['requested_services']);
-        $servicesTotal = (float) Service::whereIn('id', $serviceIds)->sum('default_price');
-
-        $packagesTotal = 0.0;
-        if (! empty($validated['package_ids']) && is_array($validated['package_ids'])) {
-            $packageIds = array_map('intval', $validated['package_ids']);
-            $packagesTotal = (float) Package::whereIn('id', $packageIds)->sum('package_price');
-        }
-
-        $couponsTotal = 0.0;
-        $normalizedCoupons = [];
-        if (! empty($validated['coupons']) && is_array($validated['coupons'])) {
-            foreach ($validated['coupons'] as $coupon) {
-                $couponData = is_string($coupon) ? json_decode($coupon, true) : $coupon;
-
-                if (! is_array($couponData) || ! isset($couponData['name'], $couponData['price'])) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Coupon data is invalid',
-                    ], 422);
-                }
-
-                preg_match('/\d+/', (string) $couponData['name'], $matches);
-                if (! isset($matches[0])) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Coupon name does not contain a numeric value',
-                    ], 422);
-                }
-
-                $priceFromName = (float) $matches[0];
-                $price = (float) $couponData['price'];
-                if ($priceFromName !== $price) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Coupon price mismatch',
-                    ], 422);
-                }
-
-                $couponsTotal += $price;
-                $normalizedCoupons[] = [
-                    'name' => $couponData['name'],
-                    'price' => $price,
-                ];
-            }
-        }
-
-        $subtotal = $servicesTotal + $packagesTotal + $couponsTotal;
+        $subtotal = (float) Service::whereIn('id', array_map('intval', $validated['requested_services']))->sum('default_price');
 
         $giftCard = GiftCard::create([
-            'delivery_method' => $deliveryMethod,
             'user_id' => $request->user()->id,
-            'sender_name' => $validated['sender_name'],
             'recipient_name' => $validated['recipient_name'],
-            'sender_phone' => $validated['sender_phone'],
             'recipient_phone' => $validated['recipient_phone'],
             'message' => $validated['optional_services'] ?? null,
             'requested_services' => $validated['requested_services'],
-            'package_ids' => $validated['package_ids'] ?? null,
-            'coupons' => ! empty($normalizedCoupons) ? json_encode($normalizedCoupons) : null,
             'subtotal' => $subtotal,
             'payment_status' => 0,
         ]);
@@ -424,15 +357,6 @@ class MobileCartController extends Controller
                 'subtotal' => (float) $giftCard->subtotal,
             ],
         ], 201);
-    }
-
-    private function normalizeGiftDeliveryMethod(string $deliveryMethod): string
-    {
-        return match ($deliveryMethod) {
-            'بطاقة الكترونية', 'email' => 'electronic_card',
-            'استلام من المركز', 'traditional' => 'center_pickup',
-            default => $deliveryMethod,
-        };
     }
 
     private function localizedValue(mixed $value): ?string

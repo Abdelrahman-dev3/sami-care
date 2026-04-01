@@ -58,10 +58,8 @@
     54 => 'App\\Providers\\AuthServiceProvider',
     55 => 'App\\Providers\\EventServiceProvider',
     56 => 'App\\Providers\\RouteServiceProvider',
-    57 => 'App\\Providers\\TelescopeServiceProvider',
-    58 => 'Barryvdh\\LaravelIdeHelper\\IdeHelperServiceProvider',
-    59 => 'App\\Providers\\ConfigServiceProvider',
-    60 => 'App\\Providers\\CurrencyServiceProvider',
+    57 => 'App\\Providers\\ConfigServiceProvider',
+    58 => 'App\\Providers\\CurrencyServiceProvider',
   ),
   'eager' => 
   array (
@@ -105,9 +103,8 @@
     37 => 'App\\Providers\\AuthServiceProvider',
     38 => 'App\\Providers\\EventServiceProvider',
     39 => 'App\\Providers\\RouteServiceProvider',
-    40 => 'App\\Providers\\TelescopeServiceProvider',
-    41 => 'App\\Providers\\ConfigServiceProvider',
-    42 => 'App\\Providers\\CurrencyServiceProvider',
+    40 => 'App\\Providers\\ConfigServiceProvider',
+    41 => 'App\\Providers\\CurrencyServiceProvider',
   ),
   'deferred' => 
   array (
@@ -259,8 +256,6 @@
     'form' => 'Collective\\Html\\HtmlServiceProvider',
     'Collective\\Html\\HtmlBuilder' => 'Collective\\Html\\HtmlServiceProvider',
     'Collective\\Html\\FormBuilder' => 'Collective\\Html\\HtmlServiceProvider',
-    'command.ide-helper.generate' => 'Barryvdh\\LaravelIdeHelper\\IdeHelperServiceProvider',
-    'command.ide-helper.models' => 'Barryvdh\\LaravelIdeHelper\\IdeHelperServiceProvider',
   ),
   'when' => 
   array (
@@ -313,9 +308,6 @@
     array (
     ),
     'Collective\\Html\\HtmlServiceProvider' => 
-    array (
-    ),
-    'Barryvdh\\LaravelIdeHelper\\IdeHelperServiceProvider' => 
     array (
     ),
   ),

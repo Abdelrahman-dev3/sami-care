@@ -9,8 +9,8 @@ return [
     'lbl_no_services' => 'عدد الخدمات',
     'lbl_service_amount' => 'مبلغ الخدمة',
     'lbl_tax_amt' => 'مبلغ الضريبة',
-    'lbl_tips_amt' => 'مبلغ النصائح',
     'lbl_final_amt' => 'المبلغ النهائي',
+    'lbl_invoice_id' => 'معرف الفاتورة',
 
     'title_overall_report' => 'تقارير الحجوزات الشاملة',
     'lbl_booking_date' => 'تواريخ الحجز',
@@ -19,7 +19,6 @@ return [
     'lbl_tot_service' => 'إجمالي الخدمة',
     'lbl_tot_service_amt' => 'إجمالي مبلغ الخدمة',
     'lbl_taxes' => 'الضرائب',
-    'lbl_tips' => 'النصائح',
     'lbl_tot_amt' => 'المبلغ الإجمالي',
 
     'title_staff_report' => 'تقارير دفعات الموظفين',
@@ -30,7 +29,6 @@ return [
 
     'title_staff_service_report' => 'تقارير خدمات الموظفين',
     'lbl_commissions_earn' => 'أرباح العمولات',
-    'lbl_tips_earn' => 'أرباح النصائح',
     'lbl_total_earning' => 'إجمالي الأرباح',
     'order-report' => 'تقرير الطلبات',
     'title_payment_transactions_report' => 'تقرير عمليات الدفع',
@@ -39,7 +37,6 @@ return [
     'lbl_booking_id' => 'رقم الحجز',
     'lbl_customer' => 'العميل',
     'lbl_discount_amt' => 'قيمة الخصم',
-    'lbl_tip_amt' => 'قيمة الإكرامية',
     'lbl_total_amount' => 'الإجمالي',
     'lbl_status' => 'الحالة',
     'title_coupon_report' => 'تقرير القسائم',
@@ -50,6 +47,7 @@ return [
     'lbl_period' => 'الفترة',
     'lbl_bookings_total' => 'إجمالي الحجوزات',
     'lbl_orders_total' => 'إجمالي المتجر',
+    'lbl_gift_cards_total' => 'إجمالي الجيفت كارد',
     'lbl_grand_total' => 'الإجمالي الكلي',
     'lbl_daily' => 'يومي',
     'lbl_monthly' => 'شهري',

@@ -11,103 +11,103 @@ use App\Models\GiftCard;
 @push('after-styles')
 <style>
 
-/* ===== Invoice Card ===== */
-.invoice-card {
-    background: #ffffff;
-    border-radius: 12px;
-    padding: 18px 25px;
-    margin-bottom: 15px;
-    cursor: pointer;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: 0.3s;
-    border: 1px solid #eee;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-}
-.invoice-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-}
+    /* ===== Invoice Card ===== */
+    .invoice-card {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 18px 25px;
+        margin-bottom: 15px;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: 0.3s;
+        border: 1px solid #eee;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .invoice-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    }
 
-.invoice-details {
-    display: none;
-    margin-top: 15px;
-}
+    .invoice-details {
+        display: none;
+        margin-top: 15px;
+    }
 
-/* ===== Invoice Box ===== */
-.invoice-box {
-    background: #fff;
-    border-radius: 12px;
-    padding: 30px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-    border: 1px solid #eee;
-}
+    /* ===== Invoice Box ===== */
+    .invoice-box {
+        background: #fff;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        border: 1px solid #eee;
+    }
 
-.invoice-header {
-    display: flex;
-    justify-content: space-between;
-    border-bottom: 2px solid #f1f1f1;
-    padding-bottom: 15px;
-    margin-bottom: 20px;
-}
+    .invoice-header {
+        display: flex;
+        justify-content: space-between;
+        border-bottom: 2px solid #f1f1f1;
+        padding-bottom: 15px;
+        margin-bottom: 20px;
+    }
 
-.invoice-title {
-    font-size: 22px;
-    font-weight: bold;
-    color: #333;
-}
+    .invoice-title {
+        font-size: 22px;
+        font-weight: bold;
+        color: #333;
+    }
 
-.invoice-meta {
-    font-size: 14px;
-    color: #777;
-}
+    .invoice-meta {
+        font-size: 14px;
+        color: #777;
+    }
 
-.invoice-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-}
+    .invoice-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
 
-.invoice-table th {
-    background: #f8f9fa;
-    padding: 10px;
-    text-align: left;
-    font-weight: 600;
-    border-bottom: 2px solid #eee;
-}
+    .invoice-table th {
+        background: #f8f9fa;
+        padding: 10px;
+        text-align: left;
+        font-weight: 600;
+        border-bottom: 2px solid #eee;
+    }
 
-.invoice-table td {
-    padding: 10px;
-    border-bottom: 1px solid #f1f1f1;
-}
+    .invoice-table td {
+        padding: 10px;
+        border-bottom: 1px solid #f1f1f1;
+    }
 
-.invoice-summary {
-    margin-top: 25px;
-    background: #f9fafc;
-    padding: 20px;
-    border-radius: 10px;
-}
+    .invoice-summary {
+        margin-top: 25px;
+        background: #f9fafc;
+        padding: 20px;
+        border-radius: 10px;
+    }
 
-.summary-row {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 10px;
-}
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
 
-.summary-total {
-    font-size: 18px;
-    font-weight: bold;
-    color: #000;
-    border-top: 2px solid #ddd;
-    padding-top: 10px;
-}
+    .summary-total {
+        font-size: 18px;
+        font-weight: bold;
+        color: #000;
+        border-top: 2px solid #ddd;
+        padding-top: 10px;
+    }
 
-.payment-method {
-    margin-top: 15px;
-    font-weight: 600;
-    color: #0d6efd;
-}
+    .payment-method {
+        margin-top: 15px;
+        font-weight: 600;
+        color: #0d6efd;
+    }
 
 </style>
 @endpush
@@ -151,10 +151,8 @@ use App\Models\GiftCard;
     </div>
 
     @php
-        $cartIds = json_decode($invoice->cart_ids, true);
-        $bookings = Modules\Booking\Models\Booking::whereIn('id', $cartIds)->with('services')->get();
-        $gift_ids = json_decode($invoice->gift_ids, true);
-        $bookingsGift = GiftCard::whereIn('id', $gift_ids)->get();
+        $bookings = $invoice->bookings;
+        $bookingsGift = $invoice->gifts;
         $products = $invoice->products;
     @endphp
 

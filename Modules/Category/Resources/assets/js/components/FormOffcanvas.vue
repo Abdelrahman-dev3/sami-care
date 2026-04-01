@@ -54,7 +54,7 @@
             </div>
             <div class="form-group">
                 <div class="d-flex justify-content-between align-items-center">
-                    <label class="form-label">
+                    <label class="form-label d-none">
                         {{ $t('service.lbl_visible_home') }}
                     </label>
                     <div class="form-check form-switch">

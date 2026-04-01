@@ -97,6 +97,13 @@
             searchable: false,
         },
         {
+            data: 'gift_cards_total',
+            name: 'gift_cards_total',
+            title: "{{ __('report.lbl_gift_cards_total') }}",
+            orderable: false,
+            searchable: false,
+        },
+        {
             data: 'grand_total',
             name: 'grand_total',
             title: "{{ __('report.lbl_grand_total') }}",

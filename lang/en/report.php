@@ -19,7 +19,6 @@ return [
     'lbl_no_services' => 'Total Services',
     'lbl_service_amount' => 'Service Amount',
     'lbl_tax_amt' => 'Tax Amount',
-    'lbl_tips_amt' => 'Tips Amount',
     'lbl_final_amt' => 'Final Amount',
 
     'title_overall_report' => 'Overall Bookings Reports',
@@ -29,8 +28,8 @@ return [
     'lbl_tot_service' => 'Total Service',
     'lbl_tot_service_amt' => 'Total Service Amount',
     'lbl_taxes' => 'Taxes',
-    'lbl_tips' => 'Tips',
     'lbl_tot_amt' => 'Total Amount',
+    'lbl_invoice_id' => 'Invoice ID',
 
     'title_staff_report' => 'Staffs Payouts Reports',
     'lbl_payment_date' => 'Payment Date',
@@ -40,7 +39,6 @@ return [
 
     'title_staff_service_report' => 'Staffs Services Reports',
     'lbl_commissions_earn' => 'Commissions Earn',
-    'lbl_tips_earn' => 'Tips Earn',
     'lbl_total_earning' => 'Total Earning',
     'order-report' => 'Order Report',
     'title_payment_transactions_report' => 'Payment Transactions Report',
@@ -49,7 +47,6 @@ return [
     'lbl_booking_id' => 'Booking ID',
     'lbl_customer' => 'Customer',
     'lbl_discount_amt' => 'Discount Amount',
-    'lbl_tip_amt' => 'Tip Amount',
     'lbl_total_amount' => 'Total Amount',
     'lbl_status' => 'Status',
     'title_coupon_report' => 'Coupons Report',
@@ -60,6 +57,7 @@ return [
     'lbl_period' => 'Period',
     'lbl_bookings_total' => 'Bookings Total',
     'lbl_orders_total' => 'Orders Total',
+    'lbl_gift_cards_total' => 'Gift Cards Total',
     'lbl_grand_total' => 'Grand Total',
     'lbl_daily' => 'Daily',
     'lbl_monthly' => 'Monthly',

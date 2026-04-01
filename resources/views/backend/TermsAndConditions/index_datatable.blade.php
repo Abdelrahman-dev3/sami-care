@@ -4,7 +4,7 @@ $terms = Term::all();
 @endphp
 @extends('backend.layouts.app')
 
-@section('title', 'إدارة السياسات والأحكام')
+@section('title', __('terms_conditions.page_title'))
 
 @push('after-styles')
 <style>
@@ -50,44 +50,44 @@ $terms = Term::all();
 
         {{-- عنوان السياسة --}}
         <div class="mb-3">
-            <label class="form-label">العنوان (AR)</label>
+            <label class="form-label">{{ __('terms_conditions.title_ar') }}</label>
             <input type="text" name="title_ar" class="form-control" required>
         </div>
         <div class="mb-3">
-            <label class="form-label">Title (EN)</label>
+            <label class="form-label">{{ __('terms_conditions.title_en') }}</label>
             <input type="text" name="title_en" class="form-control" required>
         </div>
 
         {{-- النقاط --}}
         <div class="mb-3">
-            <label class="form-label">النقاط / Points</label>
+            <label class="form-label">{{ __('terms_conditions.points') }}</label>
             <div id="points-wrapper">
                 <div class="point-item">
-                    <input type="text" name="points[0][ar]" placeholder="النقطة بالعربي" class="form-control" required>
-                    <input type="text" name="points[0][en]" placeholder="Point in English" class="form-control" required>
+                    <input type="text" name="points[0][ar]" placeholder="{{ __('terms_conditions.point_ar_placeholder') }}" class="form-control" required>
+                    <input type="text" name="points[0][en]" placeholder="{{ __('terms_conditions.point_en_placeholder') }}" class="form-control" required>
                     <button type="button" class="remove-btn" onclick="removePoint(this)">X</button>
                 </div>
             </div>
             @hasPermission('add_terms_and_conditions')
-            <button type="button" class="add-btn" onclick="addPoint()">+ إضافة نقطة جديدة</button>
+            <button type="button" class="add-btn" onclick="addPoint()">+ {{ __('terms_conditions.add_new_point') }}</button>
             @endhasPermission
         </div>
         @hasPermission('add_terms_and_conditions')
-        <button type="submit" class="btn btn-primary">حفظ السياسة</button>
+        <button type="submit" class="btn btn-primary">{{ __('terms_conditions.save_policy') }}</button>
         @endhasPermission
     </form>
 </div>
 
 <div class="form-section" style="overflow: auto;">
-    <h4 class="mb-3">قائمة السياسات</h4>
+    <h4 class="mb-3">{{ __('terms_conditions.terms_list') }}</h4>
     <table class="table table-bordered table-striped">
         <thead>
             <tr>
                 <th>#</th>
-                <th>العنوان (AR)</th>
-                <th>Title (EN)</th>
-                <th>النقاط</th>
-                <th>الإجراءات</th>
+                <th>{{ __('terms_conditions.title_ar') }}</th>
+                <th>{{ __('terms_conditions.title_en') }}</th>
+                <th>{{ __('terms_conditions.points') }}</th>
+                <th>{{ __('terms_conditions.actions') }}</th>
             </tr>
         </thead>
         <tbody>
@@ -113,26 +113,26 @@ $terms = Term::all();
                             data-title-ar="{{ $term->title['ar'] ?? '' }}"
                             data-title-en="{{ $term->title['en'] ?? '' }}"
                             data-points='@json($term->points)'>
-                            تعديل
+                            {{ __('terms_conditions.edit') }}
                         </button>
                         @endhasPermission
                         @hasPermission('delete_terms_and_conditions')
                         <form action="{{ route('TermsAndConditions.destroy', $term->id) }}" method="POST" style="display:inline-block">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('هل أنت متأكد من الحذف؟')">حذف</button>
+                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('{{ __('terms_conditions.confirm_delete') }}')">{{ __('terms_conditions.delete') }}</button>
                         </form>
                         @endhasPermission
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="5" class="text-center">لا توجد سياسات مضافة</td>
+                    <td colspan="5" class="text-center">{{ __('terms_conditions.no_terms') }}</td>
                 </tr>
             @endforelse
         </tbody>
     </table>
-    <!-- Modal -->
+    <!-- نافذة التعديل -->
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
@@ -140,32 +140,32 @@ $terms = Term::all();
         @csrf
         @method('PUT')
         <div class="modal-header">
-          <h5 class="modal-title" id="editModalLabel">تعديل السياسة</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+          <h5 class="modal-title" id="editModalLabel">{{ __('terms_conditions.edit_policy') }}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('terms_conditions.close') }}"></button>
         </div>
         <div class="modal-body">
           
           {{-- العنوان --}}
           <div class="mb-3">
-              <label class="form-label">العنوان (AR)</label>
+              <label class="form-label">{{ __('terms_conditions.title_ar') }}</label>
               <input type="text" id="edit_title_ar" name="title_ar" class="form-control" required>
           </div>
           <div class="mb-3">
-              <label class="form-label">Title (EN)</label>
+              <label class="form-label">{{ __('terms_conditions.title_en') }}</label>
               <input type="text" id="edit_title_en" name="title_en" class="form-control" required>
           </div>
 
           {{-- النقاط --}}
           <div class="mb-3">
-              <label class="form-label">النقاط / Points</label>
+              <label class="form-label">{{ __('terms_conditions.points') }}</label>
               <div id="edit_points_wrapper"></div>
-              <button type="button" class="add-btn" id="addEditPoint">+ إضافة نقطة جديدة</button>
+              <button type="button" class="add-btn" id="addEditPoint">+ {{ __('terms_conditions.add_new_point') }}</button>
           </div>
           
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-          <button type="submit" class="btn btn-primary">حفظ التعديلات</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('terms_conditions.cancel') }}</button>
+          <button type="submit" class="btn btn-primary">{{ __('terms_conditions.save_changes') }}</button>
         </div>
       </form>
     </div>
@@ -184,8 +184,8 @@ $terms = Term::all();
         const div = document.createElement('div');
         div.classList.add('point-item');
         div.innerHTML = `
-            <input type="text" name="points[${pointIndex}][ar]" placeholder="النقطة بالعربي" class="form-control" required>
-            <input type="text" name="points[${pointIndex}][en]" placeholder="Point in English" class="form-control" required>
+            <input type="text" name="points[${pointIndex}][ar]" placeholder="{{ __('terms_conditions.point_ar_placeholder') }}" class="form-control" required>
+            <input type="text" name="points[${pointIndex}][en]" placeholder="{{ __('terms_conditions.point_en_placeholder') }}" class="form-control" required>
             <button type="button" class="remove-btn" onclick="removePoint(this)">X</button>
         `;
         wrapper.appendChild(div);
@@ -240,8 +240,8 @@ $terms = Term::all();
     const wrapper = document.getElementById('edit_points_wrapper');
     wrapper.insertAdjacentHTML('beforeend', `
       <div class="point-item">
-          <input type="text" name="points[${editPointIndex}][ar]" placeholder="النقطة بالعربي" class="form-control" required>
-          <input type="text" name="points[${editPointIndex}][en]" placeholder="Point in English" class="form-control" required>
+          <input type="text" name="points[${editPointIndex}][ar]" placeholder="{{ __('terms_conditions.point_ar_placeholder') }}" class="form-control" required>
+          <input type="text" name="points[${editPointIndex}][en]" placeholder="{{ __('terms_conditions.point_en_placeholder') }}" class="form-control" required>
           <button type="button" class="remove-btn" onclick="this.parentElement.remove()">X</button>
       </div>
     `);

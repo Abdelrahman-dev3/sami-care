@@ -33,10 +33,10 @@ class PaymentOrchestratorService
         }
 
         $checkout = app(PaymentCalculatorService::class)->calculateTotal($pageType, $couponCode);
+
         if (isset($checkout['error'])) {
             return ['status' => 'error', 'message' => $checkout['error']];
         }
-
         $grossAmount = (float) ($checkout['total'] ?? 0);
         $taxAmount = (float) ($checkout['tax'] ?? 0);
         $discountAmount = (float) ($checkout['discountAmount'] ?? 0);
@@ -48,9 +48,7 @@ class PaymentOrchestratorService
         $submethods = [
             'wallet' => (bool) ($input['wallet'] ?? false),
             'loyalty' => (bool) ($input['loyalty'] ?? false),
-            'gift_code' => $input['gift_code'] ?? null,
         ];
-
         $subResult = app(PaymentSubMethodsService::class)->apply($userId, new Request($submethods), $grossAmount, false);
         if (isset($subResult['error'])) {
             return ['status' => 'error', 'message' => $subResult['error']];
@@ -83,7 +81,7 @@ class PaymentOrchestratorService
             'token' => (string) Str::uuid(),
             'user_id' => $userId,
             'gateway' => $gateway,
-            'page_type' => $pageType,
+            'isBuyNow' => $pageType ? str_contains($pageType, 'buy_now') : false,
             'currency' => 'SAR',
             'gross_amount' => $grossAmount,
             'amount' => $remainingAmount,
@@ -272,7 +270,7 @@ class PaymentOrchestratorService
                 'token' => (string) Str::uuid(),
                 'user_id' => $userId,
                 'gateway' => 'cod',
-                'page_type' => $pageType,
+                'isBuyNow' => $pageType ? str_contains($pageType, 'buy_now') : false,
                 'currency' => 'SAR',
                 'gross_amount' => $grossAmount,
                 'amount' => 0,

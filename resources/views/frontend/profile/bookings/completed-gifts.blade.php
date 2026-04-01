@@ -126,10 +126,6 @@
                         {{ __('messages.gift_to') }} : {{ $gift->recipient_name ?? '-' }}
                     </div>
                     
-                    <div class="gift-text">
-                        {{ __('messages.gift_from') }} : {{ $gift->sender_name ?? '-' }}
-                    </div>
-                    
                     <div class="gift-text mt-3">
                         {{ $gift->message ?? '-' }}
                     </div>

@@ -9,28 +9,24 @@
         @if (language_direction() == 'rtl')
             <link rel="stylesheet" href="{{ asset('css/rtl.css') }}">
         @endif
-
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css2?family=Lemonada:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
         <!-- Icons -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet"/>
-
         <link rel="stylesheet" href="{{ asset('pages-css/book-page-classic.css') }}">
     </head>
 
-<body dir="{{ app()->getLocale() == 'ar' ? 'rtl' : 'ltr' }}" class="{{ app()->getLocale() }}">
-    <div class="position-relative" style="height: 17vh;">
-        @include('components.frontend.second-navbar')
-        @include('components.frontend.notifications')
-    </div>
+<body dir="{{ app()->getLocale() == 'ar' ? 'rtl' : 'ltr' }}" class="{{ app()->getLocale() }} booking-page-classic">
+
+    @include('components.frontend.second-navbar')
+    @include('components.frontend.notifications')
     <!-- Main Container -->
     <div class="container">
         <div id="wifi-loader" class="sami-wifi-loader" style="display:none;">
-    <img src="{{ asset('images/samilogo.png') }}" alt="loading" class="sami-wifi-loader__logo">
-</div>
+            <img src="{{ asset('images/samilogo.png') }}" alt="loading" class="sami-wifi-loader__logo">
+        </div>
 
         <!-- Content -->
         <div class="content">
@@ -77,15 +73,17 @@
             </div>
             <!-- Step 2: Service & massage -->
             <div id="step2" class="step-content hidden">
-                <label class="top-label" style="width: 58%;margin: auto;">
+                <label class="top-label booking-step-title">
                     {{ __('messagess.select_service_to_book') }}
                 </label>
                 <br>
                 <div class="service-grid">
 
                 </div>
-                <div class="massage-cards">
+                <div id="selectedServicesSection" class="booking-selected-services">
+                    <div class="massage-cards">
 
+                    </div>
                 </div>
                 <button type="button" id="cartIcon" class="booking-cart-trigger" aria-label="{{ __('messagess.add_to_cart') }}">
                     <span class="booking-cart-trigger__badge" id="cartCountBadge">0</span>
@@ -96,12 +94,20 @@
             </div>
             <!-- Step 3: Staff Selection -->
             <div id="step3" class="step-content hidden">
-                <label class="top-label" style="width: 58%;margin: auto;">
+                <label class="top-label booking-step-title">
                     {{ __('messagess.select_service_provider') }}
                 </label>
                 <br>
+                <div class="staff-mode-toggle" id="staffModeToggle">
+                    <button type="button" class="staff-mode-toggle__button is-active" data-staff-mode="any">
+                        {{ app()->getLocale() === 'ar' ? 'أي موظف' : 'Any Staff' }}
+                    </button>
+                    <button type="button" class="staff-mode-toggle__button" data-staff-mode="specific">
+                        {{ app()->getLocale() === 'ar' ? 'اختيار الموظف' : 'Choose Staff' }}
+                    </button>
+                </div>
                 <div class="sammary-steps"></div>
-                <div id="staffGrid" class="staff-grid">
+                <div id="staffGrid" class="staff-grid staff-grid--hidden">
 
                 </div>
             </div>
@@ -167,8 +173,6 @@
         </div>
     </div>
     <div class="position-relative" style="height: 17vh;"></div>
-    <!-- Footer -->
-    @include('components.frontend.footer')
     <script>
         const translations = { next: "{{ __('messagess.next') }}", complete: "{{ __('messagess.complete') }}"};
 
@@ -219,8 +223,11 @@
         const sideCart = document.getElementById('sideCart');
         const cartBackdrop = document.getElementById('cartBackdrop');
         const cartCountBadge = document.getElementById('cartCountBadge');
+        const staffModeButtons = document.querySelectorAll('[data-staff-mode]');
         let cartAutoCloseTimer = null;
         let lastAddedSubServiceKey = null;
+        let staffSelectionMode = 'any';
+        const staffOptionsCache = new Map();
 
         const cartTranslations = {
             title: currentLang === 'ar' ? 'سلة الحجز' : 'Booking Cart',
@@ -228,7 +235,6 @@
             emptyTitle: currentLang === 'ar' ? 'السلة ما زالت فارغة' : 'Your cart is still empty',
             emptyText: currentLang === 'ar' ? 'اختر خدمة فرعية من البطاقات وسيتم إضافتها هنا تلقائيًا.' : 'Choose a sub-service card and it will appear here instantly.',
             total: currentLang === 'ar' ? 'الإجمالي' : 'Total',
-            sar: currentLang === 'ar' ? 'ريال' : 'SAR',
             duration: currentLang === 'ar' ? 'المدة' : 'Duration',
             minutes: currentLang === 'ar' ? 'دقيقة' : 'min',
             remove: currentLang === 'ar' ? 'حذف' : 'Remove'
@@ -296,6 +302,127 @@
                     parentImage: service.image
                 }))
             );
+        }
+
+        function normalizeStaffMember(staff = {}) {
+            const fullName = staff.full_name || `${staff.first_name || ''} ${staff.last_name || ''}`.trim();
+
+            return {
+                id: staff.id,
+                name: fullName || (currentLang === 'ar' ? 'موظف' : 'Staff')
+            };
+        }
+
+        function getStaffCacheKey(branchId, subServiceId) {
+            return `${branchId}-${subServiceId}`;
+        }
+
+        function getCachedStaffOptions(branchId, subServiceId) {
+            return staffOptionsCache.get(getStaffCacheKey(branchId, subServiceId)) || [];
+        }
+
+        function fetchStaffOptions(branchId, subServiceId) {
+            if (!branchId || !subServiceId) {
+                return Promise.resolve([]);
+            }
+
+            const cacheKey = getStaffCacheKey(branchId, subServiceId);
+            if (staffOptionsCache.has(cacheKey)) {
+                return Promise.resolve(staffOptionsCache.get(cacheKey));
+            }
+
+            return fetch(`/staff?branch_id=${branchId}&service_id=${subServiceId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const normalizedStaff = Array.isArray(data)
+                        ? data.map(normalizeStaffMember).filter(staff => staff.id)
+                        : [];
+
+                    staffOptionsCache.set(cacheKey, normalizedStaff);
+                    return normalizedStaff;
+                })
+                .catch(error => {
+                    console.error('Error fetching staff options:', error);
+                    return [];
+                });
+        }
+
+        function updateStaffModeToggleUI() {
+            staffModeButtons.forEach((button) => {
+                button.classList.toggle('is-active', button.dataset.staffMode === staffSelectionMode);
+            });
+        }
+
+        async function assignDefaultStaffToSubService(parentServiceId, subServiceId) {
+            const parentService = (selectedData.services || []).find(service => String(service.id) === String(parentServiceId));
+            if (!parentService) return false;
+
+            const currentSub = (parentService.subServices || []).find(sub => String(sub.id) === String(subServiceId));
+            if (!currentSub || currentSub.staffId) return Boolean(currentSub?.staffId);
+
+            const staffOptions = await fetchStaffOptions(selectedData.branch, subServiceId);
+            if (staffOptions.length === 0) {
+                return false;
+            }
+
+            currentSub.staffId = staffOptions[0].id;
+            currentSub.staffName = staffOptions[0].name;
+            return true;
+        }
+
+        async function ensureAnyStaffAssignments() {
+            if (staffSelectionMode !== 'any' || !selectedData.branch) {
+                return;
+            }
+
+            const assignmentTasks = [];
+            (selectedData.services || []).forEach((service) => {
+                (service.subServices || []).forEach((sub) => {
+                    assignmentTasks.push(assignDefaultStaffToSubService(service.id, sub.id));
+                });
+            });
+
+            await Promise.all(assignmentTasks);
+            updateSummarySteps();
+        }
+
+        async function preloadSpecificStaffOptions() {
+            if (staffSelectionMode !== 'specific' || !selectedData.branch) {
+                return;
+            }
+
+            const loadTasks = [];
+            (selectedData.services || []).forEach((service) => {
+                (service.subServices || []).forEach((sub) => {
+                    loadTasks.push(fetchStaffOptions(selectedData.branch, sub.id));
+                });
+            });
+
+            await Promise.all(loadTasks);
+            updateSummarySteps();
+        }
+
+        function setStaffSelectionMode(mode) {
+            staffSelectionMode = mode === 'specific' ? 'specific' : 'any';
+
+            if (staffSelectionMode === 'any') {
+                (selectedData.services || []).forEach((service) => {
+                    (service.subServices || []).forEach((sub) => {
+                        sub.staffId = null;
+                        sub.staffName = '';
+                    });
+                });
+            }
+
+            updateStaffModeToggleUI();
+            updateSummarySteps();
+
+            if (staffSelectionMode === 'any') {
+                void ensureAnyStaffAssignments();
+                return;
+            }
+
+            void preloadSpecificStaffOptions();
         }
 
         function calculateFinalTotal() {
@@ -434,7 +561,12 @@
                                     </div>
                                     <div class="booking-side-cart__meta">
                                         <span><i class="fa-regular fa-clock"></i> ${cartTranslations.duration}: ${item.duration || 0} ${cartTranslations.minutes}</span>
-                                        <strong>${Number(item.price || 0)} ${cartTranslations.sar}</strong>
+                                        <strong>${Number(item.price || 0)} 
+                                            <svg class="riyal-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1124.14 1256.39" width="16" height="18" style="display:inline-block;vertical-align:-0.125em">
+                                                <path fill="currentColor" d="M699.62,1113.02h0c-20.06,44.48-33.32,92.75-38.4,143.37l424.51-90.24c20.06-44.47,33.31-92.75,38.4-143.37l-424.51,90.24Z"></path>
+                                                <path fill="currentColor" d="M1085.73,895.8c20.06-44.47,33.32-92.75,38.4-143.37l-330.68,70.33v-135.2l292.27-62.11c20.06-44.47,33.32-92.75,38.4-143.37l-330.68,70.27V66.13c-50.67,28.45-95.67,66.32-132.25,110.99v403.35l-132.25,28.11V0c-50.67,28.44-95.67,66.32-132.25,110.99v525.69l-295.91,62.88c-20.06,44.47-33.33,92.75-38.42,143.37l334.33-71.05v170.26l-358.3,76.14c-20.06,44.47-33.32,92.75-38.4,143.37l375.04-79.7c30.53-6.35,56.77-24.4,73.83-49.24l68.78-101.97v-.02c7.14-10.55,11.3-23.27,11.3-36.97v-149.98l132.25-28.11v270.4l424.53-90.28Z"></path>
+                                            </svg>
+                                        </strong>
                                     </div>
                                 </div>
                             </article>
@@ -444,7 +576,11 @@
                 <div class="booking-side-cart__footer">
                     <div class="booking-side-cart__total">
                         <span>${cartTranslations.total}</span>
-                        <strong>${total} ${cartTranslations.sar}</strong>
+                        <strong>${total} <svg class="riyal-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1124.14 1256.39" width="16" height="18" style="display:inline-block;vertical-align:-0.125em">
+                                <path fill="currentColor" d="M699.62,1113.02h0c-20.06,44.48-33.32,92.75-38.4,143.37l424.51-90.24c20.06-44.47,33.31-92.75,38.4-143.37l-424.51,90.24Z"></path>
+                                <path fill="currentColor" d="M1085.73,895.8c20.06-44.47,33.32-92.75,38.4-143.37l-330.68,70.33v-135.2l292.27-62.11c20.06-44.47,33.32-92.75,38.4-143.37l-330.68,70.27V66.13c-50.67,28.45-95.67,66.32-132.25,110.99v403.35l-132.25,28.11V0c-50.67,28.44-95.67,66.32-132.25,110.99v525.69l-295.91,62.88c-20.06,44.47-33.33,92.75-38.42,143.37l334.33-71.05v170.26l-358.3,76.14c-20.06,44.47-33.32,92.75-38.4,143.37l375.04-79.7c30.53-6.35,56.77-24.4,73.83-49.24l68.78-101.97v-.02c7.14-10.55,11.3-23.27,11.3-36.97v-149.98l132.25-28.11v270.4l424.53-90.28Z"></path>
+                            </svg>
+                        </strong>
                     </div>
                 </div>
             `;
@@ -524,6 +660,17 @@
             prevBtn.disabled = currentStep === 1;
             nextBtn.textContent = currentStep === maxSteps ? translations.complete : translations.next;
             fetchbranch({{$first_States->id}})
+
+            if (currentStep === 3) {
+                updateStaffModeToggleUI();
+                updateSummarySteps();
+
+                if (staffSelectionMode === 'any') {
+                    void ensureAnyStaffAssignments();
+                } else {
+                    void preloadSpecificStaffOptions();
+                }
+            }
         }
 
         // Add this to your setupEventListeners() function
@@ -554,6 +701,16 @@
                         // completeBooking();
                     }
                 }
+            });
+
+            staffModeButtons.forEach((button) => {
+                button.addEventListener('click', () => {
+                    if (button.dataset.staffMode === staffSelectionMode) {
+                        return;
+                    }
+
+                    setStaffSelectionMode(button.dataset.staffMode);
+                });
             });
         }
 
@@ -649,6 +806,18 @@
                 });
         }
 
+        function scrollToSelectedServices() {
+            const selectedServicesSection = document.getElementById('selectedServicesSection');
+            if (!selectedServicesSection) return;
+
+            window.requestAnimationFrame(() => {
+                selectedServicesSection.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            });
+        }
+
         function fetchServiceGroups() {
             showLoader();
             fetch(`/service-groups`)
@@ -672,34 +841,39 @@
                         const card = document.createElement('div');
                         card.className = 'service-card';
                         if (isFrozen) {
-                            card.style.opacity = '0.6';
+                            card.classList.add('is-frozen');
                         }
                         card.dataset.service = service.id;
                         card.innerHTML = `
-                            <img src="${service.image}" alt="${serviceName}" style="position: absolute;width: 100%;height: 100%;border-radius: 6px;object-fit: cover;object-position: center;"">
-                            <h4 style="position: absolute;top: 78px;width: 100%;text-align: center;font-size: 21px;color: white;">${serviceName}</h4>`;
+                            <img src="${service.image}" alt="${serviceName}" class="service-card__image">
+                            <h4 class="service-card__title">${serviceName}</h4>`;
 
-                        card.addEventListener('click', () => {
-                        if (isFrozen) {
-                            showUnavailableMessage();
-                            return;
-                        }
-                        document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
-                        card.classList.add('selected');
-                        const exists = selectedData.services.some(s => s.id === service.id);
-                        if (!exists) {
-                            selectedData.services.push({
-                                id: service.id,
-                                name: serviceName,
-                                image: service.image,
-                                subServices: []
-                            });
-                        }
-                        fetchServicesByGroup(service.id);
-                    });
+                        const handleServiceGroupSelection = (shouldScroll = true) => {
+                            if (isFrozen) {
+                                showUnavailableMessage();
+                                return;
+                            }
+
+                            document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
+                            card.classList.add('selected');
+
+                            const exists = selectedData.services.some(s => s.id === service.id);
+                            if (!exists) {
+                                selectedData.services.push({
+                                    id: service.id,
+                                    name: serviceName,
+                                    image: service.image,
+                                    subServices: []
+                                });
+                            }
+
+                            fetchServicesByGroup(service.id, shouldScroll);
+                        };
+
+                        card.addEventListener('click', () => handleServiceGroupSelection(true));
                         serviceGrid.appendChild(card);
                         if(mainServiceId && parseInt(mainServiceId) == service.id){
-                            card.click();
+                            handleServiceGroupSelection(false);
                         }
                     });
                     hideLoader();
@@ -710,12 +884,13 @@
                 });
         }
 
-        function fetchServicesByGroup(serviceGroupId) {
+        function fetchServicesByGroup(serviceGroupId, shouldScroll = false) {
             showLoader();
-            fetch(`/services/${serviceGroupId}/${selectedData.branch}/bookings`)
+            return fetch(`/services/${serviceGroupId}/${selectedData.branch}/bookings`)
                 .then(response => response.json())
                 .then(data => {
                     const massageContainer = document.querySelector('.massage-cards');
+                    const selectedServicesSection = document.getElementById('selectedServicesSection');
                     massageContainer.innerHTML = '';
                     const lang = typeof currentLang !== 'undefined' ? currentLang : 'en';
 
@@ -729,7 +904,7 @@
                         searchInput.placeholder = lang === 'ar' ? 'ابحث عن الخدمة...' : 'Search service...';
 
                         searchWrapper.appendChild(searchInput);
-                        massageContainer.parentNode.insertBefore(searchWrapper, massageContainer);
+                        selectedServicesSection.insertBefore(searchWrapper, massageContainer);
 
                         searchInput.addEventListener('input', function () {
                             const query = this.value.toLowerCase();
@@ -767,7 +942,7 @@
                         const card = document.createElement('div');
                         card.className = 'massage-card';
                         if (isFrozen) {
-                            card.style.opacity = '0.6';
+                            card.classList.add('is-frozen');
                         }
                         card.dataset.massage = service.id;
                         card.dataset.main = serviceGroupId;
@@ -783,10 +958,22 @@
                                         <span class="tooltip-text">${service.description[lang]}</span>
                                     </label>
                                 </div>` : ""}
+                            <div class="massage-meta">
                         @if($showDuration)
-                            <div class="massage-duration"> <span style="font-weight: 200;"> ${lang === 'ar' ? 'مدة الجلسة :' : 'Session Duration:'} </span> ${service.duration_min} ${lang === 'ar' ? 'دقائق' : 'Minutes'}</div>
+                                <div class="massage-meta__item massage-duration">
+                                    <span class="massage-meta__label">${lang === 'ar' ? 'المده:' : 'Duration:'}</span>
+                                    <span class="massage-meta__value">${service.duration_min} ${lang === 'ar' ? 'د' : 'M'}</span>
+                                </div>
                         @endif
-                            <div class="massage-price"> <span style="font-weight: 200;"> ${lang === 'ar' ? 'السعر :' : 'price :'} </span>${parseInt(service.default_price)} ${lang === 'ar' ? 'ريال' : 'SAR'}</div>
+                                <div class="massage-meta__item massage-price">
+                                    <span class="massage-meta__label">${lang === 'ar' ? 'السعر:' : 'Price:'}</span>
+                                    <span class="massage-meta__value">${parseInt(service.default_price)} 
+                                        <svg class="riyal-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1124.14 1256.39" width="16" height="18" style="display:inline-block;vertical-align:-0.125em">
+                                            <path fill="currentColor" d="M699.62,1113.02h0c-20.06,44.48-33.32,92.75-38.4,143.37l424.51-90.24c20.06-44.47,33.31-92.75,38.4-143.37l-424.51,90.24Z"></path>
+                                            <path fill="currentColor" d="M1085.73,895.8c20.06-44.47,33.32-92.75,38.4-143.37l-330.68,70.33v-135.2l292.27-62.11c20.06-44.47,33.32-92.75,38.4-143.37l-330.68,70.27V66.13c-50.67,28.45-95.67,66.32-132.25,110.99v403.35l-132.25,28.11V0c-50.67,28.44-95.67,66.32-132.25,110.99v525.69l-295.91,62.88c-20.06,44.47-33.33,92.75-38.42,143.37l334.33-71.05v170.26l-358.3,76.14c-20.06,44.47-33.32,92.75-38.4,143.37l375.04-79.7c30.53-6.35,56.77-24.4,73.83-49.24l68.78-101.97v-.02c7.14-10.55,11.3-23.27,11.3-36.97v-149.98l132.25-28.11v270.4l424.53-90.28Z"></path>
+                                        </svg></span>
+                                </div>
+                            </div>
                         `;
                         card.addEventListener('click', (e) => {
                             if (isFrozen) {
@@ -823,7 +1010,6 @@
                                     duration: service.duration_min,
                                     price: parseInt(service.default_price)
                                 });
-                                openSideCart(true);
                             }
 
                             updateSummarySteps();
@@ -836,6 +1022,9 @@
                             }, 300);
                         }
                     });
+                    if (shouldScroll) {
+                        scrollToSelectedServices();
+                    }
                     hideLoader();
                 })
                 .catch(error => {
@@ -1112,7 +1301,110 @@
                     console.error('❌ خطأ أثناء جلب المواعيد:', err);
                     hideLoader();
                 });
-}
+        }
+
+        function renderStepThreeServiceCards(summaryContainer) {
+            const selectedServices = (selectedData.services || []).filter(service =>
+                Array.isArray(service.subServices) && service.subServices.length > 0
+            );
+
+            summaryContainer.classList.add('staff-selection-layout');
+            summaryContainer.style.display = 'block';
+            summaryContainer.style.gridTemplateColumns = 'none';
+            summaryContainer.style.gap = '0';
+
+            if (selectedServices.length === 0) {
+                const noServicesText = currentLang === 'ar'
+                    ? 'لم يتم اختيار أي خدمات بعد'
+                    : 'No services selected yet';
+                summaryContainer.innerHTML = `<p style="color: gray;">${noServicesText}</p>`;
+                return;
+            }
+
+            summaryContainer.innerHTML = selectedServices.map((service) => `
+                <article class="staff-selection-card">
+                    <div class="staff-selection-card__header">
+                        <div>
+                            <strong class="staff-selection-card__title">${service.name}</strong>
+                            <p class="staff-selection-card__subtitle">
+                                ${currentLang === 'ar' ? 'الخدمات المختارة داخل هذه الخدمة' : 'Selected sub-services in this category'}
+                            </p>
+                        </div>
+                        <img
+                            src="${service.image || 'https://via.placeholder.com/72'}"
+                            alt="${service.name}"
+                            class="staff-selection-card__image"
+                        >
+                    </div>
+                    <div class="staff-selection-card__body">
+                        ${(service.subServices || []).map((sub) => {
+                            const staffOptions = getCachedStaffOptions(selectedData.branch, sub.id);
+                            const hasOptions = staffOptions.length > 0;
+                            const selectedStaffId = sub.staffId ? String(sub.staffId) : '';
+
+                            return `
+                                <div class="staff-selection-subservice">
+                                    <div class="staff-selection-subservice__top">
+                                        <strong>${sub.name}</strong>
+                                        <span>${sub.duration || 0} ${currentLang === 'ar' ? 'دقيقة' : 'min'}</span>
+                                    </div>
+                                    <div class="summary-service-meta summary-service-meta--staff">
+                                        <span class="summary-service-meta__item">${currentLang === 'ar' ? 'المده:' : 'Duration:'} ${sub.duration || 0} ${currentLang === 'ar' ? 'دقيقة' : 'min'}</span>
+                                        <span class="summary-service-meta__item summary-service-meta__item--price">${currentLang === 'ar' ? 'السعر:' : 'Price:'} ${sub.price || 0} 
+                                        <svg class="riyal-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1124.14 1256.39" width="16" height="18" style="display:inline-block;vertical-align:-0.125em">
+                                            <path fill="currentColor" d="M699.62,1113.02h0c-20.06,44.48-33.32,92.75-38.4,143.37l424.51-90.24c20.06-44.47,33.31-92.75,38.4-143.37l-424.51,90.24Z"></path>
+                                            <path fill="currentColor" d="M1085.73,895.8c20.06-44.47,33.32-92.75,38.4-143.37l-330.68,70.33v-135.2l292.27-62.11c20.06-44.47,33.32-92.75,38.4-143.37l-330.68,70.27V66.13c-50.67,28.45-95.67,66.32-132.25,110.99v403.35l-132.25,28.11V0c-50.67,28.44-95.67,66.32-132.25,110.99v525.69l-295.91,62.88c-20.06,44.47-33.33,92.75-38.42,143.37l334.33-71.05v170.26l-358.3,76.14c-20.06,44.47-33.32,92.75-38.4,143.37l375.04-79.7c30.53-6.35,56.77-24.4,73.83-49.24l68.78-101.97v-.02c7.14-10.55,11.3-23.27,11.3-36.97v-149.98l132.25-28.11v270.4l424.53-90.28Z"></path>
+                                            </svg>
+                                        </span>
+                                    </div>
+                                    ${staffSelectionMode === 'specific' ? `
+                                        <div class="staff-selection-subservice__picker">
+                                            <label class="staff-selection-subservice__label">${currentLang === 'ar' ? 'الموظف' : 'Staff'}</label>
+                                            <select
+                                                class="staff-selection-subservice__select"
+                                                data-parent-id="${service.id}"
+                                                data-subservice-id="${sub.id}"
+                                                ${hasOptions ? '' : 'disabled'}
+                                            >
+                                                <option value="">${hasOptions ? (currentLang === 'ar' ? 'اختر الموظف' : 'Select staff') : (currentLang === 'ar' ? 'لا يوجد موظفون متاحون' : 'No staff available')}</option>
+                                                ${staffOptions.map((staff) => `
+                                                    <option value="${staff.id}" ${selectedStaffId === String(staff.id) ? 'selected' : ''}>${staff.name}</option>
+                                                `).join('')}
+                                            </select>
+                                        </div>
+                                    ` : `
+                                        <div class="staff-selection-subservice__hint">
+                                            ${currentLang === 'ar' ? 'سيتم اختيار الموظف الأنسب تلقائيًا' : 'The best available staff member will be assigned automatically'}
+                                        </div>
+                                    `}
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </article>
+            `).join('');
+
+            summaryContainer.querySelectorAll('.staff-selection-subservice__select').forEach((select) => {
+                select.addEventListener('change', (event) => {
+                    const parentService = (selectedData.services || []).find(service =>
+                        String(service.id) === String(event.target.dataset.parentId)
+                    );
+                    if (!parentService) return;
+
+                    const currentSub = (parentService.subServices || []).find(sub =>
+                        String(sub.id) === String(event.target.dataset.subserviceId)
+                    );
+                    if (!currentSub) return;
+
+                    const selectedStaffId = event.target.value;
+                    const staffOptions = getCachedStaffOptions(selectedData.branch, currentSub.id);
+                    const selectedStaff = staffOptions.find(staff => String(staff.id) === String(selectedStaffId));
+
+                    currentSub.staffId = selectedStaffId ? Number(selectedStaffId) : null;
+                    currentSub.staffName = selectedStaff ? selectedStaff.name : '';
+                });
+            });
+        }
 
         function updateSummarySteps() {
             const isSummaryStage = summaryCard.classList.contains('show');
@@ -1121,6 +1413,12 @@
             const selectedSubServices = getSelectedSubServices();
             summaryContainers.forEach(summaryContainer => {
                 summaryContainer.innerHTML = '';
+                summaryContainer.classList.remove('staff-selection-layout');
+
+                if (currentStep === 3 && !isSummaryStage) {
+                    renderStepThreeServiceCards(summaryContainer);
+                    return;
+                }
 
                 summaryContainer.style.display = "grid";
                 summaryContainer.style.gridTemplateColumns = "repeat(3, minmax(250px, 1fr))";
@@ -1188,8 +1486,17 @@
                                 </div>
 
 
-                                <div style="text-align:right; font-weight:bold; color:#CF9233; margin-top:8px;">
-                                    ${currentLang === 'ar' ? 'السعر:' : 'Price:'} ${sub.price || 0} ${currentLang === 'ar' ? 'ريال' : 'SAR'}
+                                <div class="summary-service-meta">
+                                    <span class="summary-service-meta__item">
+                                        ${currentLang === 'ar' ? 'المده:' : 'Duration:'} ${sub.duration || 0} ${currentLang === 'ar' ? 'دقيقة' : 'min'}
+                                    </span>
+                                    <span class="summary-service-meta__item summary-service-meta__item--price">
+                                        ${currentLang === 'ar' ? 'السعر:' : 'Price:'} ${sub.price || 0} 
+                                        <svg class="riyal-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1124.14 1256.39" width="16" height="18" style="display:inline-block;vertical-align:-0.125em">
+                                            <path fill="currentColor" d="M699.62,1113.02h0c-20.06,44.48-33.32,92.75-38.4,143.37l424.51-90.24c20.06-44.47,33.31-92.75,38.4-143.37l-424.51,90.24Z"></path>
+                                            <path fill="currentColor" d="M1085.73,895.8c20.06-44.47,33.32-92.75,38.4-143.37l-330.68,70.33v-135.2l292.27-62.11c20.06-44.47,33.32-92.75,38.4-143.37l-330.68,70.27V66.13c-50.67,28.45-95.67,66.32-132.25,110.99v403.35l-132.25,28.11V0c-50.67,28.44-95.67,66.32-132.25,110.99v525.69l-295.91,62.88c-20.06,44.47-33.33,92.75-38.42,143.37l334.33-71.05v170.26l-358.3,76.14c-20.06,44.47-33.32,92.75-38.4,143.37l375.04-79.7c30.53-6.35,56.77-24.4,73.83-49.24l68.78-101.97v-.02c7.14-10.55,11.3-23.27,11.3-36.97v-149.98l132.25-28.11v270.4l424.53-90.28Z"></path>
+                                        </svg>
+                                    </span>
                                 </div>
                             </div>
                             `;
@@ -1223,11 +1530,7 @@
                             }
 
                             card.addEventListener('click', () => {
-                                if (currentStep === 3) {
-                                    document.querySelectorAll('.summary-card').forEach(c => c.classList.remove('selected-card'));
-                                    card.classList.add('selected-card');
-                                    fetchStaffMembers(selectedData.branch, sub.id);
-                                } else if(currentStep === 4) {
+                                if(currentStep === 4) {
                                     document.querySelectorAll('.summary-card').forEach(c => c.classList.remove('selected-card'));
                                     card.classList.add('selected-card');
                                     activeSubId = sub.id;
@@ -1287,7 +1590,11 @@
                     );
 
                     if (!allHaveStaff) {
-                      alert("من فضلك اختر موظف لكل خدمة فرعية");
+                      alert(
+                        staffSelectionMode === 'specific'
+                            ? (currentLang === 'ar' ? 'من فضلك اختر موظفًا لكل خدمة فرعية' : 'Please choose a staff member for each sub-service')
+                            : (currentLang === 'ar' ? 'جارِ تعيين الموظف المناسب تلقائيًا أو لا يوجد موظفون متاحون لبعض الخدمات' : 'Staff is being assigned automatically, or no staff is available for some services')
+                      );
                       return false;
                     }
                     break;

@@ -184,7 +184,7 @@
               :error-message="errors['dribbble_link']" :error-messages="errorMessages['dribbble_link']"></InputField>
               
 
-            <div class="form-group">
+            <!-- <div class="form-group">
                 <div class="d-flex justify-content-between align-items-center">
                     <label class="form-label" for="show_in_home_booking">{{ $t('employee.show_in_home_booking') }}</label>
                     <div class="form-check form-switch">
@@ -194,7 +194,7 @@
                              v-model="show_in_home_booking" />
                     </div>
                 </div>
-            </div>
+            </div> -->
 
             
             <div class="form-group">

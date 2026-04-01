@@ -12,7 +12,8 @@ use Modules\Booking\Http\Requests\BookingRequest;
 use Modules\Booking\Models\Booking;
 use Modules\Booking\Models\BookingProduct;
 use Modules\Package\Models\BookingPackages;
-use Modules\Package\Models\UserPackage;
+use Illuminate\Support\Facades\DB;
+use Modules\BussinessHour\Models\BussinessHour;
 use Modules\Booking\Models\BookingService;
 use Modules\Booking\Models\BookingTransaction;
 use Modules\Booking\Trait\BookingTrait;
@@ -26,9 +27,9 @@ use Yajra\DataTables\DataTables;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\File;
 use Modules\Promotion\Models\UserCouponRedeem;
-use Modules\Package\Models\PackageService;
 use Modules\Package\Models\UserPackageRedeem;
 use Modules\Package\Models\UserPackageServices;
+
 class BookingsController extends Controller
 {
     // use Authorizable;
@@ -85,22 +86,22 @@ class BookingsController extends Controller
         $checkout_sequence = $booking_status->where('name', 'check_in')->first()->sequence ?? 0;
         $bookingColors = Constant::getAllConstant()->where('type', 'BOOKING_STATUS_COLOR');
         $statusList = [];
-    
+
         foreach ($booking_status as $value) {
             $isDisabled = false;
-    
+
             if (in_array($value->name, ['cancelled', 'completed'])) {
                 $isDisabled = true;
             } elseif ($value->sequence >= $checkout_sequence) {
                 $isDisabled = true;
             }
-    
+
             $statusList[$value->name] = [
                 'title' => $value->value,
                 'color_hex' => $bookingColors->where('sub_type', $value->name)->first()->name,
                 'is_disabled' => $isDisabled,
             ];
-    
+
             // Add next status if it's not cancelled or completed
             if (!in_array($value->name, ['cancelled', 'completed'])) {
                 $nextStatus = $booking_status->where('sequence', $value->sequence + 1)->first();
@@ -109,126 +110,126 @@ class BookingsController extends Controller
                 }
             }
         }
-    
+
         return $statusList;
-}
+    }
 
     /**
      * @return Response
      */
-public function index_list(Request $request)
-{
-    $date = $request->date;
-    $employeeId  = $request->get('employee_id');
+    public function index_list(Request $request)
+    {
+        $date = $request->date;
+        $employeeId  = $request->get('employee_id');
 
-    // ----------------------------
-    // Booking Services
-    // ----------------------------
-    $data = BookingService::with('booking', 'employee', 'service')
-        ->whereHas('booking', function ($q) use ($date) {
-            if (!empty($date)) {
-                $q->whereDate('start_date_time', $date);
-            }
-            $q->where('status', '!=', 'cancelled');
-        })
-        ->when($employeeId, function ($q) use ($employeeId) {
-            $q->where('employee_id', $employeeId);
-        })
-        ->get();
+        // ----------------------------
+        // Booking Services
+        // ----------------------------
+        $data = BookingService::with('booking', 'employee', 'service')
+            ->whereHas('booking', function ($q) use ($date) {
+                if (!empty($date)) {
+                    $q->whereDate('start_date_time', $date);
+                }
+                $q->where('status', '!=', 'cancelled');
+            })
+            ->when($employeeId, function ($q) use ($employeeId) {
+                $q->where('employee_id', $employeeId);
+            })
+            ->get();
 
-    // ----------------------------
-    // Booking Packages
-    // ----------------------------
-    $package = BookingPackages::with('booking', 'employee', 'services')
-        ->whereHas('booking', function ($q) use ($date) {
-            if (!empty($date)) {
-                $q->whereDate('start_date_time', $date);
-            }
-            $q->where('status', '!=', 'cancelled');
-        })
-        ->when($employeeId, function ($q) use ($employeeId) {
-            $q->where('employee_id', $employeeId);
-        })
-        ->get();
+        // ----------------------------
+        // Booking Packages
+        // ----------------------------
+        $package = BookingPackages::with('booking', 'employee', 'services')
+            ->whereHas('booking', function ($q) use ($date) {
+                if (!empty($date)) {
+                    $q->whereDate('start_date_time', $date);
+                }
+                $q->where('status', '!=', 'cancelled');
+            })
+            ->when($employeeId, function ($q) use ($employeeId) {
+                $q->where('employee_id', $employeeId);
+            })
+            ->get();
 
-    // ----------------------------
-    // Format Services
-    // ----------------------------
-    $service_updated = [];
-    $statusList = $this->statusList();
-    foreach ($data as $key => $value) {
-        $duration = $value->duration_min;
-        $startTime = $value->start_date_time;
-        $endTime = Carbon::parse($startTime)->addMinutes($duration);
+        // ----------------------------
+        // Format Services
+        // ----------------------------
+        $service_updated = [];
+        $statusList = $this->statusList();
+        foreach ($data as $key => $value) {
+            $duration = $value->duration_min;
+            $startTime = $value->start_date_time;
+            $endTime = Carbon::parse($startTime)->addMinutes($duration);
 
-        $serviceName = $value->service->name ?? '';
-        $customerName = $value->booking->user->full_name ?? 'Anonymous';
+            $serviceName = $value->service->name ?? '';
+            $customerName = $value->booking->user->full_name ?? 'Anonymous';
 
-        $service_updated[$key] = [
-            'id' => $value->booking_id,
-            'start' => customDate($startTime, 'Y-m-d H:i'),
-            'end' => customDate($endTime, 'Y-m-d H:i'),
-            'resourceId' => $value->employee_id,
-            'title' => $serviceName,
-            'titleHTML' => view('booking::backend.bookings.calender.event', compact('serviceName', 'customerName'))->render(),
-            'color' => $statusList[$value->booking->status]['color_hex'],
-        ];
-    }
+            $service_updated[$key] = [
+                'id' => $value->booking_id,
+                'start' => customDate($startTime, 'Y-m-d H:i'),
+                'end' => customDate($endTime, 'Y-m-d H:i'),
+                'resourceId' => $value->employee_id,
+                'title' => $serviceName,
+                'titleHTML' => view('booking::backend.bookings.calender.event', compact('serviceName', 'customerName'))->render(),
+                'color' => $statusList[$value->booking->status]['color_hex'],
+            ];
+        }
 
-    // ----------------------------
-    // Format Packages
-    // ----------------------------
-    $package_updated = [];
-    foreach ($package as $key => $value) {
-        $duration = $value->services->sum('duration_min');
-        $startTime = $value->booking->start_date_time;
-        $endTime = Carbon::parse($startTime)->addMinutes($duration);
+        // ----------------------------
+        // Format Packages
+        // ----------------------------
+        $package_updated = [];
+        foreach ($package as $key => $value) {
+            $duration = $value->services->sum('duration_min');
+            $startTime = $value->booking->start_date_time;
+            $endTime = Carbon::parse($startTime)->addMinutes($duration);
 
-        $serviceName = $value->package->name ?? '';
-        $customerName = $value->booking->user->full_name ?? 'Anonymous';
+            $serviceName = $value->package->name ?? '';
+            $customerName = $value->booking->user->full_name ?? 'Anonymous';
 
-        $package_updated[$key] = [
-            'id' => $value->booking_id,
-            'start' => customDate($startTime, 'Y-m-d H:i'),
-            'end' => customDate($endTime, 'Y-m-d H:i'),
-            'resourceId' => $value->employee_id,
-            'title' => $serviceName,
-            'titleHTML' => view('booking::backend.bookings.calender.event', compact('serviceName', 'customerName'))->render(),
-            'color' => $statusList[$value->booking->status]['color_hex'],
-        ];
-    }
+            $package_updated[$key] = [
+                'id' => $value->booking_id,
+                'start' => customDate($startTime, 'Y-m-d H:i'),
+                'end' => customDate($endTime, 'Y-m-d H:i'),
+                'resourceId' => $value->employee_id,
+                'title' => $serviceName,
+                'titleHTML' => view('booking::backend.bookings.calender.event', compact('serviceName', 'customerName'))->render(),
+                'color' => $statusList[$value->booking->status]['color_hex'],
+            ];
+        }
 
-    $updated_data = array_merge($service_updated, $package_updated);
+        $updated_data = array_merge($service_updated, $package_updated);
 
-    // ----------------------------
-    // Employees
-    // ----------------------------
-    $employeesQuery = User::bookingEmployeesList()->where('is_manager', 0);
+        // ----------------------------
+        // Employees
+        // ----------------------------
+        $employeesQuery = User::bookingEmployeesList()->where('is_manager', 0);
 
-    if ($employeeId) {
-        $employeesQuery->where('users.id', $employeeId);
-    }
+        if ($employeeId) {
+            $employeesQuery->where('users.id', $employeeId);
+        }
 
-    $employees = $employeesQuery->get();
+        $employees = $employeesQuery->get();
 
-    $resource = [];
-    foreach ($employees as $employee) {
-        $resource[] = [
-            'id' => $employee->id,
-            'title' => $employee->full_name,
-            'titleHTML' => '<div class="d-flex gap-3 justify-content-center align-items-center py-3">
+        $resource = [];
+        foreach ($employees as $employee) {
+            $resource[] = [
+                'id' => $employee->id,
+                'title' => $employee->full_name,
+                'titleHTML' => '<div class="d-flex gap-3 justify-content-center align-items-center py-3">
                 <img src="' . $employee->profile_image . '" class="avatar avatar-40 rounded-pill" alt="employee" />
                 ' . $employee->full_name . '
             </div>',
-        ];
-    }
+            ];
+        }
 
-    return response()->json([
-        'data' => $updated_data,
-        'employees' => $resource,
-        'total_count' => count($employees),
-    ]);
-}
+        return response()->json([
+            'data' => $updated_data,
+            'employees' => $resource,
+            'total_count' => count($employees),
+        ]);
+    }
 
 
     public function services_index_list(Request $request)
@@ -403,7 +404,6 @@ public function index_list(Request $request)
             ->editColumn('service_duration', function ($data) {
 
                 return '<span>' . $data->calculateServiceDuration() . ' Min</span>';
-
             })
             ->editColumn('services', function ($data) {
                 return view('booking::backend.bookings.datatable.services', compact('data'));
@@ -475,9 +475,9 @@ public function index_list(Request $request)
                 $changed = $row->services->contains(function ($service) {
                     return (int) $service->change_staff === 1;
                 });
-                return $changed ? 1 : 0; 
+                return $changed ? 1 : 0;
             })
-            ->rawColumns(['check', 'id', 'action', 'status', 'services', 'service_duration', 'service_amount', 'start_date_time', 'payment_status', 'packages' , 'change_staff'])
+            ->rawColumns(['check', 'id', 'action', 'status', 'services', 'service_duration', 'service_amount', 'start_date_time', 'payment_status', 'packages', 'change_staff'])
             // ->orderColumn('updated_at', 'desc')
             ->orderColumns(['id'], '-:column $1')
             ->make(true);
@@ -510,7 +510,7 @@ public function index_list(Request $request)
             \Log::error($e->getMessage());
         }
 
-        $data = Booking::with('services', 'user', 'products', 'packages', 'bookingPackages.services', )->findOrFail($booking->id);
+        $data = Booking::with('services', 'user', 'products', 'packages', 'bookingPackages.services',)->findOrFail($booking->id);
 
         return response()->json(['message' => $message, 'status' => true, 'data' => new BookingResource($data)], 200);
     }
@@ -704,15 +704,22 @@ public function index_list(Request $request)
         return response()->json(['status' => true, 'message' => $message]);
     }
 
+    // public function booking_slots(Request $request)
+    // {
+    //     $day = date('l', strtotime($request->date));
+
+    //     $branch_id = $request->branch_id;
+    //     $employee_id = $request->employee_id;
+    //     $serviceDuration = $request->service_duration ?? 0; // default to 0 if not provided
+    //     $slots = $this->getSlots($request->date, $day, $branch_id, $serviceDuration, $employee_id);
+
+    //     return response()->json(['status' => true, 'data' => $slots]);
+    // }
     public function booking_slots(Request $request)
     {
-        $day = date('l', strtotime($request->date));
-
-        $branch_id = $request->branch_id;
         $employee_id = $request->employee_id;
-        $serviceDuration = $request->service_duration ?? 0; // default to 0 if not provided
-        $slots = $this->getSlots($request->date, $day, $branch_id, $serviceDuration, $employee_id);
-
+        $serviceDuration = 30;
+        $slots = $this->getAvailableTimes( $request->date, $serviceDuration, $employee_id);
         return response()->json(['status' => true, 'data' => $slots]);
     }
 
@@ -831,9 +838,9 @@ public function index_list(Request $request)
             $queryData = Booking::find($responseData['booking']->id);
 
             $messageTemplate = 'Booking #[[booking_id]] has been completed. Please find the attached invoice in your email.';
-            $notify_message = str_replace('[[booking_id]]',$responseData['booking']->id, $messageTemplate);
+            $notify_message = str_replace('[[booking_id]]', $responseData['booking']->id, $messageTemplate);
             try {
-                $this->sendNotificationOnBookingUpdate('complete_booking', $notify_message,$queryData);
+                $this->sendNotificationOnBookingUpdate('complete_booking', $notify_message, $queryData);
             } catch (\Exception $e) {
                 \Log::error($e->getMessage());
             }
@@ -893,7 +900,7 @@ public function index_list(Request $request)
             try {
                 $messageTemplate = 'Booking #[[booking_id]] has been completed. Please find the attached invoice in your email.';
                 $notify_message = str_replace('[[booking_id]]',  $queryData->id, $messageTemplate);
-                $this->sendNotificationOnBookingUpdate('complete_booking',$notify_message, $queryData);
+                $this->sendNotificationOnBookingUpdate('complete_booking', $notify_message, $queryData);
             } catch (\Exception $e) {
                 \Log::error($e->getMessage());
             }
@@ -938,7 +945,7 @@ public function index_list(Request $request)
 
         return view('booking::backend.invoice', compact('data'));
     }
- 
+
     public function downloadInvoice(Request $request)
     {
         $booking = Booking::with(['services', 'user', 'products'])->where('status', 'completed')->find($request->id);
@@ -995,4 +1002,269 @@ public function index_list(Request $request)
         }
     }
 
+
+
+    public function getAvailableTimes($date, $serviceDuration, $staffId)
+    {
+        $timezone = 'Asia/Riyadh';
+        
+        $user = User::find($staffId);
+
+        if (!$user) {
+            return null;
+        }
+        $branchId = optional($user->branch)->branch_id;
+        if (!$branchId) {
+            return null;
+        }
+        
+        $baseShiftId = $user->shift?->shift_id;
+        $shift = $this->resolveWeeklyRotatingShiftId($baseShiftId, $date);
+        
+        try {
+            $dayName = strtolower(Carbon::createFromFormat('Y-m-d', $date, $timezone)->format('l'));
+        } catch (\Throwable $e) {
+            return null;
+        }
+
+        $serve_book_min = max(1, (int) $serviceDuration);
+
+        $workingHours = BussinessHour::where('branch_id', $branchId)->where('day', $dayName)->where('is_holiday', 0)->where('shift_id', $shift)->orderBy('id', 'desc')->first();
+
+        if (!$workingHours) {
+            return null;
+        }
+
+        $workStartTime = Carbon::createFromFormat('H:i:s', $workingHours->start_time);
+        $workEndTime = Carbon::createFromFormat('H:i:s', $workingHours->end_time);
+        $bookedTimes = BookingService::where('employee_id', $staffId)->whereDate('start_date_time', $date)
+            ->whereHas('booking', function ($q) {
+                $q->whereIn('status', ['pending', 'confirmed', 'check_in']);
+            })
+            ->get(['start_date_time', 'duration_min'])
+            ->flatMap(function ($booking) {
+                $times = [];
+                $start = Carbon::parse($booking->start_date_time);
+                $duration = max(1, (int) ($booking->duration_min ?? 0));
+                $steps = floor($duration / 1);
+                for ($i = 0; $i < $steps; $i++) {
+                    $times[] = $start->copy()->addMinutes($i * 1)->format('H:i');
+                }
+
+                return $times;
+            })->unique()->values()->toArray();
+
+
+        $breaks = $this->normalizeBreaks($workingHours->breaks, $date);
+
+        $availableTimes = [];
+
+        $workStart = Carbon::parse($date . ' ' . $workingHours->start_time, $timezone)->startOfMinute();
+        $workEnd   = Carbon::parse($date . ' ' . $workingHours->end_time, $timezone)->startOfMinute();
+
+        if ($workEnd->lte($workStart)) {
+            $workEnd->addDay();
+        }
+
+        $current = $workStart->copy();
+
+        $isToday = Carbon::createFromFormat('Y-m-d', $date, $timezone)->isToday();
+        $now = Carbon::now($timezone)->startOfMinute();
+
+        while ($current < $workEnd) {
+            $timeStr = $current->format('H:i');
+
+            if ($isToday && $current->lt($now)) {
+                $current->addMinute();
+                continue;
+            }
+
+            $isInBreak = false;
+            foreach ($breaks as $break) {
+                if ($current->gte($break['start']) && $current->lt($break['end'])) {
+                    $isInBreak = true;
+                    break;
+                }
+            }
+
+            if (!$isInBreak && !in_array($timeStr, $bookedTimes, true)) {
+                $availableTimes[] = $timeStr;
+            }
+
+            $current->addMinute();
+        }
+
+        $availableTimes2 = $this->filterAvailableTimes($availableTimes, $serve_book_min);
+        $availableTimes3 = $this->filterAvailableTimesNotConf($availableTimes2, $bookedTimes, $serve_book_min);
+        $availableTimes4 = $this->pickSlotStartsByDuration($availableTimes3, $serve_book_min, $workStart, $workEnd);
+
+        $slots = [];
+
+        foreach ($availableTimes4 as $time) {
+
+            $dateTime = Carbon::parse($date . ' ' . $time, $timezone);
+
+            $slots[] = [
+                'value' => $dateTime->format('Y-m-d H:i:s'),
+                'label' => $dateTime->format('h:i A'),
+                'disabled' => false
+            ];
+        }
+
+        return $slots;
+    }
+
+
+    private function pickSlotStartsByDuration(array $availableTimes, int $serviceDuration, Carbon $workStart, Carbon $workEnd): array
+    {
+        $serviceDuration = max(1, (int) $serviceDuration);
+        if (empty($availableTimes)) {
+            return [];
+        }
+
+        $lookup = array_fill_keys($availableTimes, true);
+        $slots = [];
+        $cursor = $workStart->copy();
+
+        while ($cursor->copy()->addMinutes($serviceDuration)->lte($workEnd)) {
+            $time = $cursor->format('H:i');
+            if (isset($lookup[$time])) {
+                $slots[] = $time;
+            }
+            $cursor->addMinutes($serviceDuration);
+        }
+
+        return $slots;
+    }
+
+    private function normalizeBreaks($breaks, string $date): array
+    {
+        if (is_string($breaks)) {
+            $breaks = json_decode($breaks, true);
+        }
+
+        if (!is_array($breaks)) {
+            return [];
+        }
+
+        $normalized = [];
+
+        foreach ($breaks as $break) {
+            if (is_object($break)) {
+                $break = (array) $break;
+            }
+
+            if (!is_array($break)) {
+                continue;
+            }
+
+            $startBreak = $break['start_break'] ?? $break['start'] ?? null;
+            $endBreak = $break['end_break'] ?? $break['end'] ?? null;
+
+            if (!$startBreak || !$endBreak) {
+                continue;
+            }
+
+            try {
+                $start = Carbon::parse($date . ' ' . $startBreak, 'Asia/Riyadh')->startOfMinute();
+                $end = Carbon::parse($date . ' ' . $endBreak, 'Asia/Riyadh')->startOfMinute();
+            } catch (\Throwable $e) {
+                continue;
+            }
+
+            if ($end->lte($start)) {
+                continue;
+            }
+
+            $normalized[] = [
+                'start' => $start,
+                'end' => $end,
+            ];
+        }
+
+        return $normalized;
+    }
+
+    private function resolveWeeklyRotatingShiftId($baseShiftId, string $date)
+    {
+        if (!$baseShiftId) {
+            return $baseShiftId;
+        }
+
+        $activeShiftIds = DB::table('shifts')->where('status', 1)->orderBy('id')->pluck('id')->map(fn($id) => (int) $id)->values();
+
+        // Weekly rotation requires exactly two active shifts (morning/evening).
+        if ($activeShiftIds->count() !== 2 || !$activeShiftIds->contains((int) $baseShiftId)) {
+            return $baseShiftId;
+        }
+
+        $requestedWeekStart = Carbon::createFromFormat('Y-m-d', $date, 'Asia/Riyadh')->startOfWeek(Carbon::SUNDAY);
+        $currentWeekStart = Carbon::createFromFormat('Y-m-d', '2026-02-15', 'Asia/Riyadh')->startOfWeek(Carbon::SUNDAY);
+        $weekDiff = $currentWeekStart->diffInWeeks($requestedWeekStart);
+
+        if ($weekDiff % 2 === 0) {
+            return (int) $baseShiftId;
+        }
+
+        return (int) $activeShiftIds->first(fn($shiftId) => $shiftId !== (int) $baseShiftId);
+    }
+
+    /*-----------------------Helper function to filter time---------------------------*/
+    function filterAvailableTimes($availableTimes, $serviceDuration)
+    {
+        $filtered = [];
+        $serviceDuration = max(1, (int) $serviceDuration);
+
+        if (empty($availableTimes)) {
+            return $filtered;
+        }
+
+        $availableLookup = array_fill_keys($availableTimes, true);
+
+        foreach ($availableTimes as $startTime) {
+            $start = Carbon::createFromFormat('H:i', $startTime);
+            $isContinuous = true;
+
+            for ($minute = 0; $minute < $serviceDuration; $minute++) {
+                $checkTime = $start->copy()->addMinutes($minute)->format('H:i');
+                if (!isset($availableLookup[$checkTime])) {
+                    $isContinuous = false;
+                    break;
+                }
+            }
+
+            if ($isContinuous) {
+                $filtered[] = $startTime;
+            }
+        }
+
+        return $filtered;
+    }
+    /*-----------------------Helper function to filter time---------------------------*/
+    function filterAvailableTimesNotConf($availableTimes, $bookedTimes, $serve_book_min)
+    {
+        $result = [];
+
+        foreach ($availableTimes as $time) {
+            $start = strtotime($time);
+            $end   = $start + ($serve_book_min * 60);
+
+            $conflict = false;
+
+            foreach ($bookedTimes as $booked) {
+                $bookedTimestamp = strtotime($booked);
+
+                if ($bookedTimestamp >= $start && $bookedTimestamp < $end) {
+                    $conflict = true;
+                    break;
+                }
+            }
+
+            if (!$conflict) {
+                $result[] = $time;
+            }
+        }
+
+        return $result;
+    }
 }

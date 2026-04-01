@@ -2,7 +2,6 @@
 
 namespace App\Services\Payment;
 
-use Modules\Booking\Models\Booking;
 use Modules\Booking\Models\BookingTransaction;
 
 class BookingTransactionRecorderService
@@ -18,6 +17,5 @@ class BookingTransactionRecorderService
             ]);
         }
 
-        Booking::whereIn('id', $bookingIds)->update(['payment_status' => 1]);
     }
 }

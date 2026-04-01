@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\CartExpirationService;
+use App\Services\Payment\PaymentOrchestratorService;
 use Illuminate\Http\Request;
 use Modules\Booking\Models\Booking;
+use Modules\Package\Models\BookingPackages;
 use Modules\Product\Models\Cart;
 use App\Models\GiftCard;
 use Modules\Wallet\Models\Wallet;
@@ -12,64 +15,115 @@ use App\Models\Setting;
 
 class PaymentController extends Controller
 {
-    public function index(Request $request){
-        $type_page = $request->has('is_buy_now') ? 'payment' : 'cart';
-        $userId = auth()->user()->id;
-        $cartproduct = [];
-        $productPrice = 0;
-        $productCount = 0;
-        $GifttCount = 0;
-        $GiftPrice = 0;
-        if($type_page == 'payment'){
-            $cartservice = Booking::with('service.service' , 'service.employee' , 'branch:id,name,description')->where(['created_by' => $userId , 'status' => 'pending' ,'payment_type' => 'payment' , 'payment_status' => 0])->whereNull('deleted_by')->get();
-        }else{
-            $cartservice = Booking::with('service.service' , 'service.employee' , 'branch:id,name,description')->where(['created_by' => $userId , 'status' => 'pending' , 'payment_type' => 'cart' , 'payment_status' => 0])->whereNull('deleted_by')->get();
-            $cartproduct = Cart::with('product')->where(['user_id' => $userId])->get();
-            $productPrice = $cartproduct->sum(function ($item) {
-                $price = $item->product->max_price ?? $item->product->min_price ?? 0;
-            
-                return $price * ($item->qty ?? 1);
-            });
-            $productCount = $cartproduct->count();
-            
-            $gifts = GiftCard::where('user_id', auth()->id())->where('payment_status', 0 )->get();
-            $GifttCount = $gifts->count();
-            $GiftPrice = $gifts->sum(fn($g) => $g->subtotal ?? 0);
+    public function index(Request $request)
+    {
+        $userId = auth()->id();
+        $typePage = $request->has('is_buy_now') ? 'payment' : 'cart';
+
+        app(CartExpirationService::class)->clearExpired($userId);
+
+        $cartProduct = collect();
+        $productPrice = $productCount = $giftPrice = $giftCount  = $packagePrice = $packageCount  = 0;
+
+        $cartServiceQuery = Booking::with('service.service', 'branch:id,name,description')
+            ->whereNotIn('status', ['cancelled', 'completed'])
+            ->where('payment_type', $typePage === 'payment' ? 'payment' : 'cart')
+            ->unpaid()
+            ->where('created_by', $userId)
+            ->whereNull('deleted_by');
+
+        $cartService = $cartServiceQuery->get();
+
+        if ($typePage === 'cart') {
+            $cartProduct = Cart::with('product')->where('user_id', $userId)->get();
+
+            $gifts = GiftCard::where('user_id', $userId)
+                ->where('payment_status', 0)
+                ->get();
+
+            $bookingPackages = BookingPackages::whereHas('booking', function ($query) use ($userId) {
+                $query->where('created_by', $userId)
+                    ->whereNotIn('status', ['cancelled', 'completed'])
+                    ->where('payment_type', 'cart')
+                    ->unpaid()
+                    ->whereNull('deleted_by');
+            })->with('package')->get();
+
+            $productPrice = $cartProduct->sum(fn($item) => ($item->product->max_price ?? $item->product->min_price ?? 0) * ($item->qty ?? 1));
+            $packagePrice = $bookingPackages->sum(fn($item) => $item->package ? ($item->package->package_price ?? 0) : 0);
+            $giftPrice = $gifts->sum(fn($g) => $g->subtotal ?? 0);
+
+            $productCount = $cartProduct->count();
+            $giftCount = $gifts->count();
+            $packageCount = $bookingPackages->count();
         }
 
-        $servicePrice = $cartservice->sum(function ($item) {
-            return $item->service ? ($item->service->service_price ?? 0) : 0;
-        });
-        
-        $cartTotal = $servicePrice + $productPrice  + $GiftPrice;
-        
-        $discountTotal = $cartservice->sum(fn($item) =>
-            $item->services->sum(fn($s) => $s->discount_amount ?? 0)
-        );
+        $servicePrice = $cartService->sum(fn($item) => $item->service ? ($item->service->service_price ?? 0) : 0);
+        $serviceCount = $cartService->sum(fn($item) => $item->service ? 1 : 0);
 
-    
-        $finalPrice = $cartTotal - $discountTotal;
-        
-        $serviceCount = $cartservice->sum(fn($item) => $item->service ? 1 : 0);
-        
-        $wallet =  Wallet::where('user_id',$userId)->where('status', 1)->first();
-        
+        $cartTotal = $productPrice + $packagePrice + $giftPrice + $servicePrice;
+
+        $discountTotal = $cartService->sum(fn($item) => $item->services->sum(fn($s) => $s->discount_amount ?? 0));
+
+        $wallet = Wallet::where('user_id', $userId)->where('status', 1)->first();
         $ratePerPoint = Setting::get('point_value') ?? 0.5;
-        $loyalty = LoyaltyPoint::where('user_id' ,$userId)->first();
+        $loyalty = LoyaltyPoint::where('user_id', $userId)->first();
+        $loyaltyBalance = ($loyalty->points ?? 0) * $ratePerPoint;
 
-        $currentPoints = $loyalty ? $loyalty->points : 0;
-        $loyaltyBalance = $currentPoints * $ratePerPoint;
-        
-        $branches = $cartservice->map(function($item) {
-            return [
-                'branch_id' => $item->branch_id,
-                'branch_name' => $item->branch?->name ?? 'غير محدد',
-                'branch_description' => $item->branch?->description ?? '',
-            ];
-        })->unique('branch_id')->values();   
+        $branches = $cartService->map(fn($item) => [
+            'branch_id' => $item->branch_id,
+            'branch_name' => $item->branch?->name ?? 'غير محدد',
+            'branch_description' => $item->branch?->description ?? '',
+        ])->unique('branch_id')->values();
 
-        
+        $itemsCount = $serviceCount + $productCount + $giftCount + $packageCount;
+        $totalPrice = $cartTotal - $discountTotal;
+        $productsAmount = $productPrice;
+        $wallet = $wallet->amount ?? 0;
+        $loyaltyBalance = $loyaltyBalance ?? 0;
+        $codDepositPercent = (float) \App\Models\Setting::get('cod_deposit_percent', 30);
+        $codDepositPercent = max(0, min(100, $codDepositPercent));
+        $codDepositPercentText = rtrim(rtrim(number_format($codDepositPercent, 2, '.', ''), '0'), '.');
 
-        return view('frontend::payment', compact('cartservice' , 'cartproduct' , 'finalPrice' , 'discountTotal' , 'serviceCount' , 'productCount' , 'productPrice' , 'GifttCount' , 'wallet' , 'loyaltyBalance' , 'branches'));
+        return view('frontend::payment', compact(
+            'cartService',
+            'cartProduct',
+            'packageCount',
+            'discountTotal',
+            'serviceCount',
+            'productCount',
+            'productPrice',
+            'giftCount',
+            'wallet',
+            'loyaltyBalance',
+            'branches', 
+            'itemsCount',
+            'totalPrice',
+            'productsAmount',
+            'codDepositPercent',
+            'codDepositPercentText'
+        ));
+    }
+    public function payment(Request $request)
+    {
+        $result = app(PaymentOrchestratorService::class)->initiate([
+            'isBuyNow' => $request->is_buy_now ?? false,
+            'gateway' => $request->paymentMethod,
+            'coupon_code' => $request->invoiceCopon ?? null,
+            'wallet' => (bool) $request->wallet,
+            'loyalty' => (bool) $request->loyalty,
+            'payment_source' => $request->payment_source ?? 'src_card',
+            'channel' => 'web',
+        ]);
+
+        if (($result['status'] ?? '') === 'redirect' && !empty($result['payment_url'])) {
+            return redirect()->away($result['payment_url']);
+        }
+
+        if (($result['status'] ?? '') === 'paid') {
+            return view('frontend.payment-status.captured');
+        }
+
+        return redirect()->back()->with('error', $result['message'] ?? __('messages.payment_failed'));
     }
 }

@@ -14,8 +14,8 @@ use App\Http\Controllers\Backend\LoyaltyController;
 use App\Http\Controllers\FrontendLoyaltyController;
 use App\Http\Controllers\Backend\ModuleController;
 use App\Http\Controllers\Backend\offersController;
-use App\Http\Controllers\PaymentchanalController;
 use App\Http\Controllers\PaymentCallbackController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Backend\PermissionController;
 use App\Http\Controllers\Backend\ReportsController;
@@ -76,9 +76,6 @@ Route::controller(TaqnyatSmsController::class)->group(function () {
 
 Route::controller(BookingsController::class)->group(function () {
     Route::get('/salonService', 'salon')->name('salon.create');
-    Route::get('/salonService-modern', 'salonModern')->name('salon.create.modern');
-    Route::get('/salonService-signature', 'salonSignature')->name('salon.create.signature');
-    Route::get('/HomeService', 'home')->name('home.create');
 });
 
 Route::controller(PackageDetailsController::class)->group(function () {
@@ -86,7 +83,7 @@ Route::controller(PackageDetailsController::class)->group(function () {
 });
 
 
-Route::controller(PaymentchanalController::class)->group(function () {
+Route::controller(PaymentController::class)->group(function () {
     Route::post('/payment-chanal', 'payment')->name('payment-chanal');
 });
 Route::controller(PaymentCallbackController::class)->group(function () {
@@ -156,7 +153,6 @@ Route::controller(HomeBookingController::class)->group(function () {
     Route::get('/staff/home', 'index_home');
     Route::get('/branchs/{id}', 'branchs');
     Route::get('all/branchs/', 'allbranchs');
-    Route::post('/bookings', 'store')->name('bookings.store');
     Route::post('/package-booking', 'storePackageBooking')->name('package.booking.store');
     Route::get('/complete-package-booking', 'completePackageBooking')->name('package.booking.complete');
     Route::get('/available/{date}/{staffId}', 'getAvailableTimes');
@@ -438,7 +434,6 @@ Route::middleware(['auth'])->prefix('app/affiliate')->name('affiliate.')->group(
 Route::middleware(['auth'])->group(function () {
     Route::controller(GiftController::class)->group(function () {
         Route::get('/app/gift', 'index')->name('app.gift');
-        Route::get('/validate-gift-code', 'validateGiftCode');
         Route::get('/gift/delete/{id}', 'destroy')->name('gift.delete');
     });
 
@@ -476,7 +471,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/app/TermsAndConditions', 'index')->name('app.TermsAndConditions');
         Route::post('/app/TermsAndConditions/store', 'store')->name('TermsAndConditions.store');
         Route::put('/TermsAndConditions/{id}/update', 'update')->name('TermsAndConditions.update');
-        Route::get('/TermsAndConditions/{id}', 'destroy')->name('TermsAndConditions.destroy');
+        Route::delete('/TermsAndConditions/{id}', 'destroy')->name('TermsAndConditions.destroy');
     });
 
     Route::controller(WheelController::class)->group(function () {
@@ -498,4 +493,3 @@ Route::controller(PackageDetailsController::class)->group(function () {
     Route::get('/qu/cart', 'getUserCart');
     Route::delete('/qu/cart/remove/{id}', 'remove');
 });
-

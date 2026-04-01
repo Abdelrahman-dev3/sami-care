@@ -8,7 +8,8 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Modules\Booking\Models\Booking;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
-class DailyReportsExport implements FromCollection, WithHeadings,WithStyles
+
+class DailyReportsExport implements FromCollection, WithHeadings, WithStyles
 {
     public array $columns;
 
@@ -60,10 +61,6 @@ class DailyReportsExport implements FromCollection, WithHeadings,WithStyles
 
                     case 'total_tax_amount':
                         $selectedData[$column] = Currency::format($row->total_tax_amount ?? 0);
-                        break;
-
-                    case 'total_tip_amount':
-                        $selectedData[$column] = Currency::format($row->total_tip_amount ?? 0);
                         break;
 
                     case 'total_amount':

@@ -2,8 +2,8 @@
 
 namespace App\Http\View\Composers;
 
+use App\Services\CartExpirationService;
 use Modules\Booking\Models\Booking;
-use Modules\Booking\Models\BookingService;
 use App\Models\Cart;
 use App\Models\GiftCard;
 use Illuminate\View\View;
@@ -23,6 +23,7 @@ class CartCountComposer
 
         if (auth()->check()) {
             $userId = auth()->id();
+            app(CartExpirationService::class)->clearExpired($userId);
 
             // Products in cart
             $productCount = Cart::where('user_id', $userId)->count();
@@ -32,7 +33,7 @@ class CartCountComposer
                 ->where('created_by', $userId)
                 ->whereNotIn('status', ['cancelled', 'completed'])
                 ->where('payment_type', 'cart')
-                ->where('payment_status', 0)
+                ->unpaid()
                 ->whereNull('deleted_by')
                 ->get();
             $serviceCount  = $services->filter(fn($b) => $b->service)->count();
@@ -48,7 +49,7 @@ class CartCountComposer
                 $q->where('created_by', $userId)
                     ->whereNotIn('status', ['cancelled', 'completed'])
                     ->where('payment_type', 'cart')
-                    ->where('payment_status', 0)
+                    ->unpaid()
                     ->whereNull('deleted_by');
             })->count();
 

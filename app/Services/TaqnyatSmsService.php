@@ -100,26 +100,15 @@ class TaqnyatSmsService
     /**
      * إرسال هدية
      */
-    public function sendGift($phone, $name , $to , $ref = null)
+    public function sendGift($phone, $name)
     {
-        if ($to == 'sender') {
-            $message = setting('taqnyat_sender');
-            $message = $this->replaceVariables($message, [
-                'sender_name' => $name,
-                'sender_phone' => $phone,
-            ]);
-            return $this->sendSms($phone, $message);
-        }
-        if ($to == 'recipient') {
-            $message = setting('taqnyat_recipient');
-            $message = $this->replaceVariables($message, [
-                'recipient_name' => $name,
-                'recipient_phone' => $phone,
-                'ref' => $ref,
-            ]);
-            return $this->sendSms($phone, $message);
-        }
-        return false;
+        $message = setting('taqnyat_recipient');
+        $message = $this->replaceVariables($message, [
+            'recipient_name' => $name,
+            'recipient_phone' => $phone,
+        ]);
+
+        return $this->sendSms($phone, $message);
     }
 
     /**

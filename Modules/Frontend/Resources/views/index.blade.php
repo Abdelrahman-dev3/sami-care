@@ -19,5 +19,4 @@
         width: 100%;
     }
     </style>
-    <x-frontend.discount />
 @endsection

@@ -34,7 +34,7 @@ class WaitingBookingSyncService
             'bookingService',
         ])
             ->whereIn('id', $bookingIds)
-            ->where('payment_status', 1)
+            ->paid()
             ->get();
 
         foreach ($bookings as $booking) {

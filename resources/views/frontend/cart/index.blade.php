@@ -61,26 +61,18 @@ use Illuminate\Support\Str;
                       <div class="product-img"><i class="bi bi-person"></i></div>
                       <div class="text-start">
                           <strong>
-
                               {{ \Illuminate\Support\Str::limit($bookingPackage->package->name, 23) }}
                           </strong>
                           <br>
-{{--                          <small class="text-muted">{{ __('messagess.employee') }}: {{ $service->employee->full_name ?? '-' }}</small>--}}
                       </div>
                   </td>
                   <td class="prc">
                       {{ $bookingPackage->package->package_price }} {{ __('messagess.SR')}}
                   </td>
                   <td style="direction: rtl";>
-
                   </td>
 
                   <td style="position: relative;font-weight: bold;">
-{{--                      @if($service->discount_amount && $service->discount_amount > 0)--}}
-{{--                          {{ $service->service_price - $service->discount_amount }} {{ __('messagess.SR')}}--}}
-{{--                      @else--}}
-{{--                          {{ $service->service_price }} {{ __('messagess.SR')}}--}}
-{{--                      @endif--}}
                       {{ $bookingPackage->package->package_price }} {{ __('messagess.SR')}}
                       <form action="{{ route('cart.destroy', $bookingPackage->booking->id) }}" method="post" style="position: absolute;top: 8px;left: 8px;">
                           @csrf
@@ -142,7 +134,7 @@ use Illuminate\Support\Str;
           @foreach($products as $item)
             <tr>
               <td class="d-flex align-items-center gap-2">
-                <div class="product-img"><i class="bi bi-person"></i></div>
+                <div class="product-img"><i class="bi bi-box"></i></div>
                 <div class="text-start">
                     <strong>
                         {{ \Illuminate\Support\Str::limit($item->product->name, 23) }}
@@ -178,10 +170,6 @@ use Illuminate\Support\Str;
                 <div class="text-start">
                     <strong>
                         {{ __('messagess.giftcard') }}:
-                        {{ Str::limit($item->sender_name, 23) }}
-                        <i class="bi bi-chevron-left"></i>
-                        <i class="bi bi-chevron-left" style="margin: 0 -9px;"></i>
-                        <i class="bi bi-chevron-left"></i>
                         {{ Str::limit($item->recipient_name, 23) }}
                     </strong>
                     <br>

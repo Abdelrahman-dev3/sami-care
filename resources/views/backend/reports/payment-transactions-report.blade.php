@@ -4,14 +4,11 @@
 
 @section('content')
     <div class="card">
-        <div id="giftAlert" class="alert alert-warning text-center" role="alert" style="display:none;">
-            {{ __('لاتشمل عمليات شراء الهدايا او المنتجات فرديا') }}
-        </div>
         <div class="card-body">
             <x-backend.section-header>
                 <div class="row">
-                    <div class="col-md-3">
-                        <div class="input-group gap-2 flex-nowrap">
+                    <div class="col-md-8">
+                        <div class="input-group gap-2 flex-nowrap" >
                             <input type="text" name="payment_date" id="payment_date" placeholder="Select Date" class="payment-report-date-range form-control" readonly />
                             <button id="reset" class="btn bg-primary rounded" data-bs-toggle="tooltip" title="Reset">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
@@ -95,9 +92,9 @@
             searchable: false,
         },
         {
-            data: 'booking_id',
-            name: 'booking_id',
-            title: "{{ __('report.lbl_booking_id') }}",
+            data: 'invoice_id',
+            name: 'invoice_id',
+            title: "{{ __('report.lbl_invoice_id') }}",
             orderable: false,
             searchable: false,
         },

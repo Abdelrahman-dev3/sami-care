@@ -8,7 +8,8 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Modules\Booking\Models\Booking;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
-class OverallReportsExport implements FromCollection, WithHeadings,WithStyles
+
+class OverallReportsExport implements FromCollection, WithHeadings, WithStyles
 {
     public array $columns;
 
@@ -55,7 +56,7 @@ class OverallReportsExport implements FromCollection, WithHeadings,WithStyles
                         break;
 
                     case 'inv_id':
-                        $selectedData[$column] = setting('booking_invoice_prifix').$row->id;
+                        $selectedData[$column] = setting('booking_invoice_prifix') . $row->id;
                         break;
 
                     case 'employee':
@@ -68,10 +69,6 @@ class OverallReportsExport implements FromCollection, WithHeadings,WithStyles
 
                     case 'total_tax_amount':
                         $selectedData[$column] = Currency::format($row->total_tax_amount ?? 0);
-                        break;
-
-                    case 'total_tip_amount':
-                        $selectedData[$column] = Currency::format($row->total_tip_amount ?? 0);
                         break;
 
                     case 'total_amount':

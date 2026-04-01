@@ -54,10 +54,7 @@ public function store(Request $request)
         
         $giftCard = GiftCard::create([
             'user_id' => $user->id,
-            'delivery_method' => '',
-            'sender_name' => $user->first_name ?? $user->username ?? '',
             'recipient_name' => $data['location']['recipient_name'],
-            'sender_phone' => $user->mobile ?? '',
             'recipient_phone' => $data['location']['recipient_mobile'],
             'requested_services' => $servicesIds,
             'message' => $data['location']['message'],

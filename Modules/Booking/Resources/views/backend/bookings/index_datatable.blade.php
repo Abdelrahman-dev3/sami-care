@@ -156,20 +156,17 @@
                 orderable: false,
                 searchable: false,
             },
-            {
                 data: 'id',
                 name: 'id',
                 title: "ID",
                 orderable: true,
                 visible: true,
             },
-            {
                 data: 'start_date_time',
                 name: 'start_date_time',
                 title: "{{ __('booking.lbl_date') }}",
                 orderable: true,
             },
-            {
                 data: 'user_id',
                 name: 'user_id',
                 title: "{{ __('booking.lbl_customer_name') }}"
@@ -201,7 +198,6 @@
             // {
             //     data: 'change_staff',
             //     name: 'change_staff',
-            //     className: 'dt-center',
             //     title: "{{ __('booking.lbl_change_staff') }}",
             //     orderable: false,
             //     searchable: false,
@@ -226,24 +222,6 @@
                 orderable: false,
                 searchable: false,
                 width: '10%'
-            },
-            {
-                data: 'location',
-                name: 'location',
-                title: "{{ __('booking.lbl_location') }}",
-                orderable: false,
-                searchable: false,
-                className: 'dt-center', // لجعل العمود في الوسط
-                render: function(data, type, row) {
-                    if(data) {
-                        return `<a href="https://www.google.com/maps?q=${data}" target="_blank" 
-                                    class="text-decoration-none text-primary">
-                                    <i class="fa-solid fa-map-marker-alt"></i>  {{ __('booking.view_location') }}
-                                </a>`;
-                    } else {
-                        return '-';
-                    }
-                }
             },
             {
                 data: 'updated_at',
