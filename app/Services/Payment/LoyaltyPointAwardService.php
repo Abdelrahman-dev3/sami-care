@@ -26,7 +26,7 @@ class LoyaltyPointAwardService
             'action' => 'add',
             'points' => $pointsToAdd,
             'balance_after' => $loyalty->points,
-            'source' => 'Ø§Ø¶Ø§ÙØ© Ù†Ù‚Ø§Ø· ÙˆÙ„Ø§Ø¡ Ø¨Ù†Ø§Ø¡Ø§ Ø¹Ù„ÙŠ Ø§Ù„Ù…Ø¨Ù„Øº Ø§Ù„Ø§Ø¬Ù…Ø§Ù„ÙŠ :' . $paidAmount,
+            'source' => 'إضافة نقاط ولا بنائها على المبلغ الإجمالي:' . $paidAmount,
         ]);
     }
 }

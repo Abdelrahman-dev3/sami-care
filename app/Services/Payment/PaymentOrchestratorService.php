@@ -2,29 +2,31 @@
 
 namespace App\Services\Payment;
 
-use App\Models\PaymentAttempt;
-use App\Models\Setting;
 use App\Models\User;
+use App\Models\Setting;
+use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use App\Models\PaymentAttempt;
+use Modules\Wallet\Models\Wallet;
+use Illuminate\Support\Facades\DB;
+use Modules\Wallet\Models\WalletHistory;
+use Modules\Booking\Models\BookingTransaction;
 use App\Services\Payment\Gateways\TabbyGateway;
 use App\Services\Payment\Gateways\TamaraGateway;
 use App\Services\Payment\Gateways\TapGateway;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
-use Modules\Booking\Models\BookingTransaction;
-use Modules\Wallet\Models\Wallet;
-use Modules\Wallet\Models\WalletHistory;
 
 class PaymentOrchestratorService
 {
     public function initiate(array $input): array
     {
+        $userId = auth()->id();
+
+        // Determine page type based on input (cart, buy-now)
         $pageType = app(CheckoutTypeResolver::class)->resolve($input);
         $gateway = $input['gateway'] ?? '';
         $couponCode = $input['coupon_code'] ?? null;
-        $userId = auth()->id();
 
-        if (! $userId) {
+        if (!$userId) {
             return ['status' => 'error', 'message' => __('auth.unauthenticated')];
         }
 
@@ -37,6 +39,7 @@ class PaymentOrchestratorService
         if (isset($checkout['error'])) {
             return ['status' => 'error', 'message' => $checkout['error']];
         }
+
         $grossAmount = (float) ($checkout['total'] ?? 0);
         $taxAmount = (float) ($checkout['tax'] ?? 0);
         $discountAmount = (float) ($checkout['discountAmount'] ?? 0);
@@ -57,18 +60,7 @@ class PaymentOrchestratorService
         $remainingAmount = (float) ($subResult['remaining_amount'] ?? 0);
 
         if ($remainingAmount <= 0) {
-            $invoiceId = $this->finalize(
-                $userId,
-                $grossAmount,
-                $taxAmount,
-                $discountAmount,
-                $pageType,
-                $checkout['cart_ids'] ?? [],
-                $checkout['gift_ids'] ?? [],
-                $this->resolvePaymentMethod($gateway, true),
-                $couponCode,
-                $submethods
-            );
+            $invoiceId = $this->finalize( $userId, $grossAmount, $taxAmount, $discountAmount, $pageType, $checkout['cart_ids'] ?? [], $checkout['gift_ids'] ?? [], $this->resolvePaymentMethod($gateway, true), $couponCode, $submethods );
 
             return [
                 'status' => 'paid',
@@ -187,15 +179,7 @@ class PaymentOrchestratorService
         return ['status' => $status];
     }
 
-    private function handleCod(
-        int $userId,
-        string $pageType,
-        float $grossAmount,
-        float $taxAmount,
-        float $discountAmount,
-        array $checkout,
-        ?string $couponCode
-    ): array {
+    private function handleCod(int $userId, string $pageType, float $grossAmount, float $taxAmount, float $discountAmount, array $checkout, ?string $couponCode ): array {
         $codDepositPercent = (float) Setting::get('cod_deposit_percent', 30);
         $codDepositPercent = max(0, min(100, $codDepositPercent));
         $requiredDeposit = round($grossAmount * ($codDepositPercent / 100), 2);
@@ -203,18 +187,7 @@ class PaymentOrchestratorService
         try {
             $invoiceId = null;
 
-            DB::transaction(function () use (
-                $userId,
-                $pageType,
-                $grossAmount,
-                $taxAmount,
-                $discountAmount,
-                $checkout,
-                $couponCode,
-                $requiredDeposit,
-                $codDepositPercent,
-                &$invoiceId
-            ) {
+            DB::transaction(function () use ( $userId, $pageType, $grossAmount, $taxAmount, $discountAmount, $checkout, $couponCode, $requiredDeposit, $codDepositPercent, &$invoiceId ) {
                 $wallet = Wallet::where('user_id', $userId)
                     ->where('status', 1)
                     ->lockForUpdate()
@@ -249,21 +222,9 @@ class PaymentOrchestratorService
                     ]);
                 }
 
-                $invoiceId = app(PaymentFinalizerService::class)->finalizePayment(
-                    $userId,
-                    $grossAmount,
-                    $taxAmount,
-                    $discountAmount,
-                    $pageType,
-                    $checkout['cart_ids'] ?? [],
-                    $checkout['gift_ids'] ?? [],
-                    'cash on delivery',
-                    $couponCode ?? '',
-                    false
-                );
+                $invoiceId = app(PaymentFinalizerService::class)->finalizePayment($userId,$grossAmount,$taxAmount,$discountAmount,$pageType,$checkout['cart_ids'] ?? [],$checkout['gift_ids'] ?? [],'cash on delivery',$couponCode ?? '',false);
 
-                BookingTransaction::where('external_transaction_id', 'INV-' . $invoiceId)
-                    ->update(['transaction_type' => 'cash_on_delivery_deposit_percent']);
+                BookingTransaction::where('external_transaction_id', 'INV-' . $invoiceId)->update(['transaction_type' => 'cash_on_delivery_deposit_percent']);
             });
 
             PaymentAttempt::create([
@@ -291,38 +252,10 @@ class PaymentOrchestratorService
         }
     }
 
-    private function finalize(
-        int $userId,
-        float $grossAmount,
-        float $taxAmount,
-        float $discountAmount,
-        string $pageType,
-        array $cartIds,
-        array $giftIds,
-        string $paymentMethod,
-        ?string $couponCode,
-        array $submethods
-    ): int {
-        $invoiceId = app(PaymentFinalizerService::class)->finalizePayment(
-            $userId,
-            $grossAmount,
-            $taxAmount,
-            $discountAmount,
-            $pageType,
-            $cartIds,
-            $giftIds,
-            $paymentMethod,
-            $couponCode ?? '',
-            true
-        );
-
-        app(PaymentSubMethodsService::class)->apply(
-            $userId,
-            new Request($submethods),
-            $grossAmount,
-            true
-        );
-
+    private function finalize(int $userId,float $grossAmount,float $taxAmount,float $discountAmount,string $pageType,array $cartIds,array $giftIds,string $paymentMethod,?string $couponCode,array $submethods): int {
+        
+        $invoiceId = app(PaymentFinalizerService::class)->finalizePayment($userId,$grossAmount, $taxAmount, $discountAmount, $pageType, $cartIds, $giftIds, $paymentMethod, $couponCode ?? '', true );
+        app(PaymentSubMethodsService::class)->apply($userId,new Request($submethods),$grossAmount,true);
         return $invoiceId;
     }
 

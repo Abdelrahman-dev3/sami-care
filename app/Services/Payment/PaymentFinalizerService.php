@@ -8,32 +8,10 @@ use Illuminate\Support\Facades\DB;
 
 class PaymentFinalizerService
 {
-    public function finalizePayment(
-        int $userId,
-        float $paidAmount,
-        float $tax,
-        float $discountAmount,
-        string $pageType,
-        array $cartIds,
-        array $giftIds,
-        string $paymentMethod,
-        string $couponCode,
-        bool $submethodsApplied = false
-    ): int {
+    public function finalizePayment( int $userId, float $paidAmount, float $tax, float $discountAmount, string $pageType, array $cartIds, array $giftIds, string $paymentMethod, string $couponCode, bool $submethodsApplied = false ): int {
         $invoiceId = 0;
 
-        DB::transaction(function () use (
-            $userId,
-            $paidAmount,
-            $tax,
-            $discountAmount,
-            $pageType,
-            $cartIds,
-            $giftIds,
-            $paymentMethod,
-            $couponCode,
-            &$invoiceId
-        ) {
+        DB::transaction(function () use ($userId , $paidAmount , $tax , $discountAmount , $pageType , $cartIds , $giftIds , $paymentMethod , $couponCode , &$invoiceId) {
             $orderGroupIds = [];
 
             if ($pageType === CheckoutType::CART) {
@@ -48,17 +26,7 @@ class PaymentFinalizerService
 
             app(LoyaltyPointAwardService::class)->award($userId, $paidAmount);
 
-            $invoiceId = app(InvoicePaymentRecorderService::class)->create(
-                $userId,
-                $discountAmount,
-                $tax,
-                $paidAmount,
-                $cartIds,
-                $giftIds,
-                $orderGroupIds,
-                $couponCode,
-                $paymentMethod
-            );
+            $invoiceId = app(InvoicePaymentRecorderService::class)->create($userId, $discountAmount,$tax,$paidAmount,$cartIds,$giftIds,$orderGroupIds,$couponCode,$paymentMethod);
 
             app(AffiliateCommissionService::class)->handleSuccessfulPurchase($userId, $invoiceId, $paidAmount);
 
