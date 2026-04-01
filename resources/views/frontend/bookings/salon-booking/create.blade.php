@@ -1402,6 +1402,11 @@
 
                     currentSub.staffId = selectedStaffId ? Number(selectedStaffId) : null;
                     currentSub.staffName = selectedStaff ? selectedStaff.name : '';
+
+                    activeSubId = currentSub.id;
+                    activeStaffId = currentSub.staffId;
+
+                    updateSummarySteps();
                 });
             });
         }
@@ -1530,7 +1535,7 @@
                             }
 
                             card.addEventListener('click', () => {
-                                if(currentStep === 4) {
+                                if(currentStep === 4 && activeSubId && activeStaffId) {
                                     document.querySelectorAll('.summary-card').forEach(c => c.classList.remove('selected-card'));
                                     card.classList.add('selected-card');
                                     activeSubId = sub.id;
@@ -1596,6 +1601,12 @@
                             : (currentLang === 'ar' ? 'جارِ تعيين الموظف المناسب تلقائيًا أو لا يوجد موظفون متاحون لبعض الخدمات' : 'Staff is being assigned automatically, or no staff is available for some services')
                       );
                       return false;
+                    }
+                    const firstSub = getSelectedSubServices()[0];
+
+                    if (firstSub) {
+                        activeSubId = firstSub.id;
+                        activeStaffId = firstSub.staffId;
                     }
                     break;
                 case 4:
