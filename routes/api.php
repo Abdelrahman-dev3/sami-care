@@ -29,6 +29,7 @@ use App\Http\Controllers\Api\BookingsController;
 use App\Http\Controllers\Api\MobileCartController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\WheelController;
+use App\Http\Controllers\Backend\TermsAndConditionsController;
 
 
 /*
@@ -217,7 +218,7 @@ Route::controller(SettingController::class)->group(function () {
 });
 
 
-
+Route::get('/terms', [TermsAndConditionsController::class, 'terms_api']);
 
 
 

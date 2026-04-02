@@ -21,11 +21,10 @@ class PaymentOrchestratorService
     {
         $userId = auth()->id();
 
-        // Determine page type based on input (cart, buy-now)
+        // Determine page type based on input ( buy-now , cart )
         $pageType = app(CheckoutTypeResolver::class)->resolve($input);
         $gateway = $input['gateway'] ?? '';
         $couponCode = $input['coupon_code'] ?? null;
-
         if (!$userId) {
             return ['status' => 'error', 'message' => __('auth.unauthenticated')];
         }
@@ -262,20 +261,9 @@ class PaymentOrchestratorService
     private function createGatewayPayment(PaymentAttempt $attempt, array $customer, array $urls, array $input): array
     {
         return match ($attempt->gateway) {
-            'card' => app(TapGateway::class)->create(
-                $attempt,
-                $customer,
-                $urls['success'] ?? '',
-                $input['payment_source'] ?? 'src_card'
-            ),
+            'card' => app(TapGateway::class)->create( $attempt, $customer, $urls['success'] ?? '', $input['payment_source'] ?? 'src_card' ),
             'tabby' => app(TabbyGateway::class)->create($attempt, $customer, $urls),
-            'tamara' => app(TamaraGateway::class)->create(
-                $attempt,
-                $customer,
-                $urls,
-                $input['platform'] ?? 'web',
-                (bool) ($input['is_mobile'] ?? false)
-            ),
+            'tamara' => app(TamaraGateway::class)->create($attempt, $customer, $urls, $input['platform'] ?? 'web', (bool) ($input['is_mobile'] ?? false)),
             default => throw new \RuntimeException('Unsupported gateway'),
         };
     }

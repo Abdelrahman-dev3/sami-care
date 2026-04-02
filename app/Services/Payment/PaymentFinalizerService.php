@@ -25,7 +25,7 @@ class PaymentFinalizerService
             }
 
             app(LoyaltyPointAwardService::class)->award($userId, $paidAmount);
-
+// 
             $invoiceId = app(InvoicePaymentRecorderService::class)->create($userId, $discountAmount,$tax,$paidAmount,$cartIds,$giftIds,$orderGroupIds,$couponCode,$paymentMethod);
 
             app(AffiliateCommissionService::class)->handleSuccessfulPurchase($userId, $invoiceId, $paidAmount);

@@ -14,6 +14,32 @@ class TermsAndConditionsController extends Controller
         return view('backend.TermsAndConditions.index_datatable');
     }
 
+        public function terms_api(Request $request)
+        {
+            $terms = Term::all()->map(function ($term, $index) {
+                return [
+                    'id' => $term->id,
+                    'order' => $index + 1,
+
+                    'title' => [
+                        'ar' => $term->title['ar'] ?? '',
+                        'en' => $term->title['en'] ?? '',
+                    ],
+
+                    'points' => [
+                        'ar' => $term->points['ar'] ?? [],
+                        'en' => $term->points['en'] ?? [],
+                    ],
+                ];
+            });
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Terms fetched successfully',
+                'data' => $terms
+            ]);
+        }
+
     public function store(Request $request){
         $request->validate([
             'title_ar' => 'required|max:255',
