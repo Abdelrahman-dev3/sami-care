@@ -319,8 +319,7 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
         return self::role(['manager', 'employee'])->select('users.id', 'users.first_name', 'users.last_name', 'users.email', 'users.mobile', 'users.updated_at')
             ->withCount('employeeBooking')
             ->withSum('employeeBooking', 'service_price')
-            ->withSum('commission_earning', 'commission_amount')
-            ->withSum('tip_earning', 'tip_amount');
+            ->withSum('commission_earning', 'commission_amount');
     }
 
     public function scopeWithTotalUnpaidServiceAmount($query)
