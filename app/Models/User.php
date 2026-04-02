@@ -216,11 +216,6 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
         return $this->hasMany(CommissionEarning::class, 'employee_id');
     }
 
-    public function tip_earning()
-    {
-        return $this->hasMany(TipEarning::class, 'employee_id');
-    }
-
     public function branches()
     {
         return $this->hasMany(BranchEmployee::class, 'employee_id');
