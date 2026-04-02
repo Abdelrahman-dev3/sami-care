@@ -15,11 +15,7 @@ class BookingPaymentEarningsService
             return;
         }
 
-        $bookings = Booking::with([
-            'bookingService',
-            'bookingPackages',
-            'commission',
-        ])->whereIn('id', $bookingIds)->get();
+        $bookings = Booking::with(['bookingService','bookingPackages','commission',])->whereIn('id', $bookingIds)->get();
 
         foreach ($bookings as $booking) {
             $employeeId = $this->resolveEmployeeId($booking);

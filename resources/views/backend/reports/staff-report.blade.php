@@ -119,7 +119,7 @@
             initDatatable({
                 url: '{{ route('backend.reports.staff-report.index_data') }}',
                 finalColumns,
-                orderColumn: [[ 7, "desc" ]],
+                orderColumn: [[ 6, "desc" ]],
                 advanceFilter: () => {
                     return {
 
