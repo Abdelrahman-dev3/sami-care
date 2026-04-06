@@ -28,15 +28,11 @@ class PaymentFinalizerService
             
             $invoiceId = app(InvoicePaymentRecorderService::class)->create($userId, $discountAmount,$tax,$paidAmount,$cartIds,$giftIds,$orderGroupIds,$couponCode,$paymentMethod);
             
-            
             app(AffiliateCommissionService::class)->handleSuccessfulPurchase($userId, $invoiceId, $paidAmount);
-
-            app(BookingTransactionRecorderService::class)->markBookingsPaid($cartIds,'INV-' . $invoiceId,$paymentMethod ?: 'sub_methods');
-
+            app(BookingTransactionRecorderService::class)->markBookingsPaid($cartIds,'INV-' . $invoiceId, $paymentMethod ?: 'sub_methods');
             app(BookingPaymentEarningsService::class)->syncForPaidBookings($cartIds);
             app(GiftCardPaymentActivatorService::class)->activatePurchasedGiftCards($userId, $giftIds);
         });
-
         app(WaitingBookingSyncService::class)->syncPaidBookings($cartIds);
 
         return $invoiceId;

@@ -29,10 +29,7 @@ class WaitingBookingSyncService
             return;
         }
 
-        $bookings = Booking::with([
-            'user:id,first_name,last_name,mobile',
-            'bookingService',
-        ])
+        $bookings = Booking::with(['user:id,first_name,last_name,mobile','bookingService',])
             ->whereIn('id', $bookingIds)
             ->paid()
             ->get();

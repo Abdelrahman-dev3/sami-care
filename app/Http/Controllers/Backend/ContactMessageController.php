@@ -47,6 +47,34 @@ public function store(Request $request)
     return back()->with('success', __('messages.message_sent_success'));
 }
 
+public function ContactMessageAPI(Request $request)
+{
+    $data = $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|email|max:255',
+        'phone' => [
+            'nullable',
+            'string',
+            'max:20',
+            function ($attribute, $value, $fail) {
+                if (!preg_match('/^(?:\+9665|9665|05|5)\d{8}$/', $value)) {
+                    $fail(__('messages.invalid_saudi_phone'));
+                }
+            },
+        ],
+        'message' => 'required|string',
+    ]);
+
+    $data['accepted_terms'] = $request->has('accepted_terms') ? 1 : 0;
+
+    $contact = ContactMessage::create($data);
+
+    return response()->json([
+        'status' => true,
+        'message' => __('messages.message_sent_success'),
+        'data' => $contact
+    ], 201);
+}
 
 public function reply(Request $request, $id)
 {

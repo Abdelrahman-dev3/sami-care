@@ -9,6 +9,7 @@ use App\Http\Controllers\Backend\API\NotificationsController;
 use App\Http\Controllers\Backend\API\SettingController;
 use App\Http\Controllers\Backend\API\UserApiController;
 use App\Http\Controllers\Backend\CalanderBookingController;
+use App\Http\Controllers\Backend\ContactMessageController;
 use App\Http\Controllers\GiftCardController;
 use App\Http\Controllers\HomeBookingController;
 use App\Http\Controllers\BookingCartController;
@@ -204,6 +205,10 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
         Route::get('/loyallety', 'balance');
     });
 
+    Route::controller(ContactMessageController::class)->group(function () {
+        Route::post('/contact', 'ContactMessageAPI');
+    });
+
     Route::controller(PaymentController::class)->group(function () {
         Route::post('/payment-chanal', 'payment');
     });
@@ -309,4 +314,3 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 
 });
 Route::post('app-configuration', [SettingController::class, 'appConfiguraton']);
-

@@ -39,12 +39,7 @@ class AffiliateCommissionService
         $commissionValue = $this->commissionValue();
         $applyType = $this->commissionApplyType();
 
-        if (
-            $applyType === 'first_purchase'
-            && Conversion::where('affiliate_id', $affiliate->id)
-                ->where('referred_user_id', $buyer->id)
-                ->exists()
-        ) {
+        if ( $applyType === 'first_purchase' && Conversion::where('affiliate_id', $affiliate->id)->where('referred_user_id', $buyer->id)->exists()) {
             return null;
         }
 
