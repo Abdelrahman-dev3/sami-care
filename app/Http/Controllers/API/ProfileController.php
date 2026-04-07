@@ -182,7 +182,7 @@ class ProfileController extends Controller
             'message' => $giftCard->message,
             'payment_status' => (int) $giftCard->payment_status,
             'created_at' => optional($giftCard->created_at)->format('Y-m-d H:i:s'),
-            'services' => $giftCard->services_list->map(fn($service) => [
+            'services' => collect($giftCard->services_list)->map(fn($service) => [
                 'id' => $service->id,
                 'name' => $this->localizedValue($service->name),
             ])->values(),
