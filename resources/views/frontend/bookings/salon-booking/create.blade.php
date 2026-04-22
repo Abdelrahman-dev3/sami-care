@@ -1754,7 +1754,7 @@
                             </div>
                             @endif
                         </div>
-                        <div class="two-btn">
+                        <div class="two-btn booking-summary-actions">
                             <button class="dis-btn btn-e btn-filled" onclick="completeBooking('payment')">
                                  ${lang === 'ar' ? 'ادفع الآن' : 'Pay now'}
                                  <img src="{{ asset('images/icons/vesa.png') }}" alt="payment">
