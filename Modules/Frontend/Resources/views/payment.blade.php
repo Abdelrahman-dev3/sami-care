@@ -618,6 +618,17 @@
                         <div class="flex-fill muted"> {{__('messagess.split_bill_4_payments')}} </div>
                     </div>
 
+                    <!-- METHOD: Telr -->
+                    <div class="method d-flex" style="gap: 20px;" data-method="telr" tabindex="0">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="paymentMethod" value="telr">
+                        </div>
+                        <div class="d-flex align-items-center gap-2" style="min-width: 72px;">
+                            <strong style="font-size: 18px; color: #1f3a8a; letter-spacing: 0.04em;">TELR</strong>
+                        </div>
+                        <div class="flex-fill muted">Secure hosted checkout via Telr</div>
+                    </div>
+
                     <!-- METHOD: COD -->
                     <div class="method d-flex" style="gap: 20px;flex-direction: column;" data-method="cod" tabindex="0">
                         <div class="d-flex align-items-center gap-2" style="font-size: 14px;color: #979797;">

@@ -12,7 +12,7 @@ class PaymentController extends Controller
     public function init(Request $request)
     {
         $data = $request->validate([
-            'gateway' => 'required|in:card,tabby,tamara,cod',
+            'gateway' => 'required|in:card,tabby,tamara,telr,cod',
             'page_type' => 'nullable|in:cart,payment',
             'coupon_code' => 'nullable|string',
             'wallet' => 'sometimes|boolean',

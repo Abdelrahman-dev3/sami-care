@@ -14,6 +14,7 @@ use Modules\Booking\Models\BookingTransaction;
 use App\Services\Payment\Gateways\TabbyGateway;
 use App\Services\Payment\Gateways\TamaraGateway;
 use App\Services\Payment\Gateways\TapGateway;
+use App\Services\Payment\Gateways\TelrGateway;
 
 class PaymentOrchestratorService
 {
@@ -29,7 +30,7 @@ class PaymentOrchestratorService
             return ['status' => 'error', 'message' => __('auth.unauthenticated')];
         }
 
-        if (! in_array($gateway, ['card', 'tabby', 'tamara', 'cod'], true)) {
+        if (! in_array($gateway, ['card', 'tabby', 'tamara', 'telr', 'cod'], true)) {
             return ['status' => 'error', 'message' => __('messages.invalid_payment_method')];
         }
 
@@ -264,6 +265,7 @@ class PaymentOrchestratorService
             'card' => app(TapGateway::class)->create( $attempt, $customer, $urls['success'] ?? '', $input['payment_source'] ?? 'src_card' ),
             'tabby' => app(TabbyGateway::class)->create($attempt, $customer, $urls),
             'tamara' => app(TamaraGateway::class)->create($attempt, $customer, $urls, $input['platform'] ?? 'web', (bool) ($input['is_mobile'] ?? false)),
+            'telr' => app(TelrGateway::class)->create($attempt, $customer, $urls),
             default => throw new \RuntimeException('Unsupported gateway'),
         };
     }
@@ -274,6 +276,7 @@ class PaymentOrchestratorService
             'card' => app(TapGateway::class)->verify($attempt, $request),
             'tabby' => app(TabbyGateway::class)->verify($attempt, $request),
             'tamara' => app(TamaraGateway::class)->verify($attempt, $request),
+            'telr' => app(TelrGateway::class)->verify($attempt, $request),
             default => ['status' => 'failed'],
         };
     }
@@ -285,8 +288,13 @@ class PaymentOrchestratorService
 
         return [
             'name' => $name,
+            'first_name' => $user?->first_name,
+            'last_name' => $user?->last_name,
+            'email' => $user?->email,
             'phone' => $user?->mobile,
             'country_code' => '966',
+            'country' => 'SA',
+            'reference' => $user?->id,
         ];
     }
 
@@ -312,6 +320,7 @@ class PaymentOrchestratorService
             'card' => 'tap',
             'tabby' => 'tabby',
             'tamara' => 'tamara',
+            'telr' => 'telr',
             default => $gateway,
         };
     }

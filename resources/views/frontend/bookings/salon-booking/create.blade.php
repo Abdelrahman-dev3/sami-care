@@ -162,7 +162,7 @@
                 </div>
             </div>
 
-            <div class="step-content hidden2" id="summaryCard" style="height: 800px;">
+            <div class="step-content hidden2" id="summaryCard">
 
             </div>
             <!-- Navigation -->
@@ -202,18 +202,77 @@
         let activeStaffId = null;
 
         // Initialize Calendar
-        let currentDate = new Date();
+        let currentDate = normalizeCalendarMonth(new Date());
+
+        function getTodayStart() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            return today;
+        }
+
+        function isBeforeCurrentMonth(date) {
+            const today = getTodayStart();
+            return date.getFullYear() < today.getFullYear() ||
+                (date.getFullYear() === today.getFullYear() && date.getMonth() < today.getMonth());
+        }
+
+        function normalizeCalendarMonth(date) {
+            const normalizedDate = new Date(date);
+            normalizedDate.setDate(1);
+            normalizedDate.setHours(0, 0, 0, 0);
+            return normalizedDate;
+        }
+
+        function parseStoredDate(dateString) {
+            if (!dateString) return null;
+
+            const [year, month, day] = dateString.split('-').map(Number);
+            if (!year || !month || !day) return null;
+
+            const parsedDate = new Date(year, month - 1, day);
+            parsedDate.setHours(0, 0, 0, 0);
+            return parsedDate;
+        }
+
+        function syncCalendarView(subServiceId = null) {
+            const today = getTodayStart();
+            let targetDate = today;
+            selectedDate = null;
+
+            if (subServiceId) {
+                for (const service of (selectedData.services || [])) {
+                    const matchedSub = (service.subServices || []).find(sub => String(sub.id) === String(subServiceId));
+                    if (matchedSub?.date) {
+                        const parsedSubDate = parseStoredDate(matchedSub.date);
+                        if (parsedSubDate && parsedSubDate >= today) {
+                            targetDate = parsedSubDate;
+                            selectedDate = parsedSubDate;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            currentDate = normalizeCalendarMonth(targetDate);
+        }
 
         const prevBn = document.getElementById('prevMonth');
         const nextBn = document.getElementById('nextMonth');
 
         prevBn.addEventListener('click', () => {
-            currentDate.setMonth(currentDate.getMonth() - 1);
+            const nextMonthDate = normalizeCalendarMonth(currentDate);
+            nextMonthDate.setMonth(nextMonthDate.getMonth() - 1);
+            if (isBeforeCurrentMonth(nextMonthDate)) {
+                return;
+            }
+            currentDate = nextMonthDate;
             generateCalendar(activeSubId, activeStaffId);
         });
 
         nextBn.addEventListener('click', () => {
-            currentDate.setMonth(currentDate.getMonth() + 1);
+            const nextMonthDate = normalizeCalendarMonth(currentDate);
+            nextMonthDate.setMonth(nextMonthDate.getMonth() + 1);
+            currentDate = nextMonthDate;
             generateCalendar(activeSubId, activeStaffId);
         });
 
@@ -671,6 +730,13 @@
                     void preloadSpecificStaffOptions();
                 }
             }
+
+            if (currentStep === 4) {
+                syncCalendarView(activeSubId);
+                if (activeSubId && activeStaffId) {
+                    generateCalendar(activeSubId, activeStaffId);
+                }
+            }
         }
 
         // Add this to your setupEventListeners() function
@@ -1113,6 +1179,13 @@
         }
 
         function generateCalendar(subserve = null , staffId = null) {
+            if (subserve) {
+                activeSubId = subserve;
+            }
+            if (staffId) {
+                activeStaffId = staffId;
+            }
+
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth();
 
@@ -1132,6 +1205,8 @@
                 '{{ __("messagess.december") }}'
             ];
             document.getElementById('calendarTitle').textContent = `${months[month]} ${year}`;
+
+            prevBn.disabled = isBeforeCurrentMonth(new Date(year, month - 1, 1));
 
             // Days of week names
             const weekDays = [
@@ -1169,8 +1244,7 @@
                 dayNumber.textContent = d;
                 dayElement.appendChild(dayNumber);
 
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
+                const today = getTodayStart();
                 if (date < today) {
                     dayElement.classList.add('disabled');
                 } else {
@@ -1202,6 +1276,18 @@
                 }
 
                 daysContainer.appendChild(dayElement);
+            }
+
+            const focusDate = selectedDate && selectedDate.getFullYear() === year && selectedDate.getMonth() === month
+                ? selectedDate
+                : getTodayStart();
+            const focusDay = Array.from(daysContainer.querySelectorAll('.calendar-day')).find((day) => {
+                const dayNumberElement = day.querySelector('.calendar-day-number');
+                return dayNumberElement && Number(dayNumberElement.textContent) === focusDate.getDate() && !day.classList.contains('disabled');
+            });
+
+            if (focusDay) {
+                focusDay.scrollIntoView({ inline: 'start', block: 'nearest' });
             }
         }
 
@@ -1426,7 +1512,7 @@
                 }
 
                 summaryContainer.style.display = "grid";
-                summaryContainer.style.gridTemplateColumns = "repeat(3, minmax(250px, 1fr))";
+                summaryContainer.style.gridTemplateColumns = "repeat(auto-fit, minmax(220px, 1fr))";
                 summaryContainer.style.gap = "15px";
 
                 if (selectedSubServices.length === 0) {
@@ -1631,17 +1717,22 @@
             summaryCard.classList.remove('hidden');
             summaryCard.classList.add('show');
             summaryCard.innerHTML = `
-                <div id="nad-sun" style="z-index: 999;width: 100%;min-height: 1642px;background: #0000008a;position: absolute;top: 84%;left: 50%;transform: translate(-50%, -50%);border-radius: 0 0 401px 401px / 0 0 80px 80px;">
-                    <div class="w-100-mob" style="border-radius: 15px;width: 71%;min-height: 900px;background: white;position: absolute;top: 56%;left: 50%;transform: translate(-50%, -50%);padding: 45px;">
-                        <div style="text-align: center;margin: 0 0 30px 0px;">
-                            <label style="color: black;font-size: 20px;font-weight: bold;">
-                                ${lang === 'ar' ? 'ملخص حجز الخدمات من عناية سامي ' : 'Summary of service booking from  sami'}
+                <div class="booking-summary-shell" onclick="if (event.target === this) closeBookingSummary()">
+                    <div class="booking-summary-panel">
+                        <button type="button" class="booking-summary-close" onclick="closeBookingSummary()" aria-label="${lang === 'ar' ? 'إغلاق الملخص' : 'Close summary'}">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                        <div class="booking-summary-head">
+                            <label class="booking-summary-title">
+                                ${lang === 'ar' ? 'ملخص حجز الخدمات من عناية سامي' : 'Summary of service booking from Sami'}
                             </label>
                         </div>
                         <div class="sammary-steps"></div>
                         <div class="total-sunmary">
-                            ${lang === 'ar' ? 'اجمالي المبلغ المالي :' : 'Total amount of money:'}      <span class="sub-sammary-total">${fanaltotal} {{ __('messages.currency') }}</span>
+                            ${lang === 'ar' ? 'اجمالي المبلغ المالي :' : 'Total amount of money:'}
+                            <span class="sub-sammary-total">${fanaltotal} {{ __('messages.currency') }}</span>
                         </div>
+                        <div class="booking-summary-products">
                             <div class="ti">
                                 <label style="text-align: center;font-size: 18px;font-weight: 600;color: #979797;">{{ __('messagess.products_you_may_like') }}</label>
                             </div>
@@ -1662,21 +1753,20 @@
                                 @endforeach
                             </div>
                             @endif
-                            <div class="two-btn">
-
-                                <button class=" dis-btn btn-e btn-filled" onclick="completeBooking('payment')">
-                                     ${lang === 'ar' ? 'ادفع الآن' : 'Pay now :'}
-                                     <img src="{{asset('images/icons/vesa.png')}}">
-                                </button>
-                                <button class=" dis-btn btn-e btn-outline" onclick="completeBooking('cart')">
-                                    <img class="mdi-lightcart" src="{{ asset('images/icons/mdi-light-cart.svg') }}" alt="mdi-light:cart">
-                                     ${lang === 'ar' ? 'اضافة للسلة' : 'Add to cart'}
-                                </button>
-
-                            </div>
+                        </div>
+                        <div class="two-btn">
+                            <button class="dis-btn btn-e btn-filled" onclick="completeBooking('payment')">
+                                 ${lang === 'ar' ? 'ادفع الآن' : 'Pay now'}
+                                 <img src="{{ asset('images/icons/vesa.png') }}" alt="payment">
+                            </button>
+                            <button class="dis-btn btn-e btn-outline" onclick="completeBooking('cart')">
+                                <img class="mdi-lightcart" src="{{ asset('images/icons/mdi-light-cart.svg') }}" alt="cart">
+                                 ${lang === 'ar' ? 'اضافة للسلة' : 'Add to cart'}
+                            </button>
+                        </div>
                     </div>
                 </div>
-                `;
+            `;
                 updateSummarySteps()
         }
 

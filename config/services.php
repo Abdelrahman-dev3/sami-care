@@ -56,6 +56,14 @@ return [
     'tap' => [
         'secret_key' => env('TAP_SECRET_KEY'),
     ],
+    'telr' => [
+        'base_url' => env('TELR_BASE_URL', 'https://secure.telr.com'),
+        'store_id' => env('TELR_STORE_ID'),
+        'auth_key' => env('TELR_AUTH_KEY'),
+        'test_mode' => env('TELR_TEST_MODE', 0),
+        'framed' => env('TELR_FRAMED', 0),
+        'panels' => env('TELR_PANELS'),
+    ],
     'waiting_device' => [
         'base_url' => env('WAITING_DEVICE_BASE_URL'),
         'timeout' => env('WAITING_DEVICE_TIMEOUT', 10),

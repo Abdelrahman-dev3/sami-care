@@ -82,7 +82,7 @@
             font-size: 26px;
             text-align: center;
             font-weight: bold;
-            margin: 25px;
+            margin: 60px;
         }
         .categories-list {
             padding: 10px 0 20px;
