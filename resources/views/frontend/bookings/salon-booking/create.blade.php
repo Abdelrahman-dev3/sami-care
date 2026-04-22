@@ -406,6 +406,54 @@
                 });
         }
 
+        function getSharedStaffOptionsForService(service) {
+            const subServices = (service?.subServices || []).filter(sub => sub?.id);
+            if (!selectedData.branch || subServices.length === 0) {
+                return [];
+            }
+
+            const optionGroups = subServices.map((sub) => getCachedStaffOptions(selectedData.branch, sub.id));
+            if (optionGroups.some((group) => group.length === 0)) {
+                return [];
+            }
+
+            const [firstGroup, ...remainingGroups] = optionGroups;
+
+            return firstGroup.filter((staff) =>
+                remainingGroups.every((group) =>
+                    group.some((candidate) => String(candidate.id) === String(staff.id))
+                )
+            );
+        }
+
+        function getSelectedStaffIdForService(service) {
+            const selectedIds = [...new Set(
+                (service?.subServices || [])
+                    .map((sub) => sub.staffId ? String(sub.staffId) : '')
+                    .filter(Boolean)
+            )];
+
+            return selectedIds.length === 1 ? selectedIds[0] : '';
+        }
+
+        function applyStaffSelectionToService(parentService, selectedStaffId) {
+            if (!parentService) return;
+
+            const sharedStaffOptions = getSharedStaffOptionsForService(parentService);
+            const selectedStaff = sharedStaffOptions.find((staff) => String(staff.id) === String(selectedStaffId));
+
+            (parentService.subServices || []).forEach((sub) => {
+                sub.staffId = selectedStaffId ? Number(selectedStaffId) : null;
+                sub.staffName = selectedStaff ? selectedStaff.name : '';
+            });
+
+            const firstSubService = (parentService.subServices || [])[0];
+            if (firstSubService) {
+                activeSubId = firstSubService.id;
+                activeStaffId = firstSubService.staffId;
+            }
+        }
+
         function updateStaffModeToggleUI() {
             staffModeButtons.forEach((button) => {
                 button.classList.toggle('is-active', button.dataset.staffMode === staffSelectionMode);
@@ -1407,28 +1455,54 @@
                 return;
             }
 
-            summaryContainer.innerHTML = selectedServices.map((service) => `
-                <article class="staff-selection-card">
-                    <div class="staff-selection-card__header">
-                        <div>
-                            <strong class="staff-selection-card__title">${service.name}</strong>
-                            <p class="staff-selection-card__subtitle">
-                                ${currentLang === 'ar' ? 'الخدمات المختارة داخل هذه الخدمة' : 'Selected sub-services in this category'}
-                            </p>
-                        </div>
-                        <img
-                            src="${service.image || 'https://via.placeholder.com/72'}"
-                            alt="${service.name}"
-                            class="staff-selection-card__image"
-                        >
-                    </div>
-                    <div class="staff-selection-card__body">
-                        ${(service.subServices || []).map((sub) => {
-                            const staffOptions = getCachedStaffOptions(selectedData.branch, sub.id);
-                            const hasOptions = staffOptions.length > 0;
-                            const selectedStaffId = sub.staffId ? String(sub.staffId) : '';
+            summaryContainer.innerHTML = selectedServices.map((service) => {
+                const sharedStaffOptions = getSharedStaffOptionsForService(service);
+                const selectedStaffId = getSelectedStaffIdForService(service);
+                const hasSharedStaffOptions = sharedStaffOptions.length > 0;
 
-                            return `
+                return `
+                    <article class="staff-selection-card">
+                        <div class="staff-selection-card__header">
+                            <div>
+                                <strong class="staff-selection-card__title">${service.name}</strong>
+                                <p class="staff-selection-card__subtitle">
+                                    ${currentLang === 'ar' ? 'الخدمات المختارة داخل هذا القسم' : 'Selected sub-services in this category'}
+                                </p>
+                            </div>
+                            <img
+                                src="${service.image || 'https://via.placeholder.com/72'}"
+                                alt="${service.name}"
+                                class="staff-selection-card__image"
+                            >
+                        </div>
+                        ${staffSelectionMode === 'specific' ? `
+                            <div class="staff-selection-card__picker">
+                                <label class="staff-selection-subservice__label">
+                                    ${currentLang === 'ar' ? 'اختيار موظف واحد لكل القسم' : 'Choose one staff member for this category'}
+                                </label>
+                                <select
+                                    class="staff-selection-subservice__select staff-selection-service__select"
+                                    data-parent-id="${service.id}"
+                                    ${hasSharedStaffOptions ? '' : 'disabled'}
+                                >
+                                    <option value="">
+                                        ${hasSharedStaffOptions
+                                            ? (currentLang === 'ar' ? 'اختر الموظف لهذا القسم' : 'Select staff for this category')
+                                            : (currentLang === 'ar' ? 'لا يوجد موظف مشترك لكل خدمات هذا القسم' : 'No shared staff available for all selected services')}
+                                    </option>
+                                    ${sharedStaffOptions.map((staff) => `
+                                        <option value="${staff.id}" ${selectedStaffId === String(staff.id) ? 'selected' : ''}>${staff.name}</option>
+                                    `).join('')}
+                                </select>
+                                <p class="staff-selection-card__picker-note">
+                                    ${hasSharedStaffOptions
+                                        ? (currentLang === 'ar' ? 'عند اختيار الموظف هنا سيتم تطبيقه على كل الخدمات المختارة داخل هذا القسم.' : 'Choosing a staff member here will apply to all selected services in this category.')
+                                        : (currentLang === 'ar' ? 'لا يوجد موظف واحد ينفذ كل الخدمات المختارة داخل هذا القسم حاليًا.' : 'There is no single staff member who can perform all selected services in this category right now.')}
+                                </p>
+                            </div>
+                        ` : ''}
+                        <div class="staff-selection-card__body">
+                            ${(service.subServices || []).map((sub) => `
                                 <div class="staff-selection-subservice">
                                     <div class="staff-selection-subservice__top">
                                         <strong>${sub.name}</strong>
@@ -1440,23 +1514,14 @@
                                         <svg class="riyal-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1124.14 1256.39" width="16" height="18" style="display:inline-block;vertical-align:-0.125em">
                                             <path fill="currentColor" d="M699.62,1113.02h0c-20.06,44.48-33.32,92.75-38.4,143.37l424.51-90.24c20.06-44.47,33.31-92.75,38.4-143.37l-424.51,90.24Z"></path>
                                             <path fill="currentColor" d="M1085.73,895.8c20.06-44.47,33.32-92.75,38.4-143.37l-330.68,70.33v-135.2l292.27-62.11c20.06-44.47,33.32-92.75,38.4-143.37l-330.68,70.27V66.13c-50.67,28.45-95.67,66.32-132.25,110.99v403.35l-132.25,28.11V0c-50.67,28.44-95.67,66.32-132.25,110.99v525.69l-295.91,62.88c-20.06,44.47-33.33,92.75-38.42,143.37l334.33-71.05v170.26l-358.3,76.14c-20.06,44.47-33.32,92.75-38.4,143.37l375.04-79.7c30.53-6.35,56.77-24.4,73.83-49.24l68.78-101.97v-.02c7.14-10.55,11.3-23.27,11.3-36.97v-149.98l132.25-28.11v270.4l424.53-90.28Z"></path>
-                                            </svg>
+                                        </svg>
                                         </span>
                                     </div>
                                     ${staffSelectionMode === 'specific' ? `
-                                        <div class="staff-selection-subservice__picker">
-                                            <label class="staff-selection-subservice__label">${currentLang === 'ar' ? 'الموظف' : 'Staff'}</label>
-                                            <select
-                                                class="staff-selection-subservice__select"
-                                                data-parent-id="${service.id}"
-                                                data-subservice-id="${sub.id}"
-                                                ${hasOptions ? '' : 'disabled'}
-                                            >
-                                                <option value="">${hasOptions ? (currentLang === 'ar' ? 'اختر الموظف' : 'Select staff') : (currentLang === 'ar' ? 'لا يوجد موظفون متاحون' : 'No staff available')}</option>
-                                                ${staffOptions.map((staff) => `
-                                                    <option value="${staff.id}" ${selectedStaffId === String(staff.id) ? 'selected' : ''}>${staff.name}</option>
-                                                `).join('')}
-                                            </select>
+                                        <div class="staff-selection-subservice__hint">
+                                            ${sub.staffName
+                                                ? `${currentLang === 'ar' ? 'الموظف المختار:' : 'Selected staff:'} ${sub.staffName}`
+                                                : (currentLang === 'ar' ? 'سيتم تطبيق الموظف المختار من أعلى على هذه الخدمة.' : 'The selected staff member above will apply to this service.')}
                                         </div>
                                     ` : `
                                         <div class="staff-selection-subservice__hint">
@@ -1464,34 +1529,20 @@
                                         </div>
                                     `}
                                 </div>
-                            `;
-                        }).join('')}
-                    </div>
-                </article>
-            `).join('');
+                            `).join('')}
+                        </div>
+                    </article>
+                `;
+            }).join('');
 
-            summaryContainer.querySelectorAll('.staff-selection-subservice__select').forEach((select) => {
+            summaryContainer.querySelectorAll('.staff-selection-service__select').forEach((select) => {
                 select.addEventListener('change', (event) => {
                     const parentService = (selectedData.services || []).find(service =>
                         String(service.id) === String(event.target.dataset.parentId)
                     );
                     if (!parentService) return;
 
-                    const currentSub = (parentService.subServices || []).find(sub =>
-                        String(sub.id) === String(event.target.dataset.subserviceId)
-                    );
-                    if (!currentSub) return;
-
-                    const selectedStaffId = event.target.value;
-                    const staffOptions = getCachedStaffOptions(selectedData.branch, currentSub.id);
-                    const selectedStaff = staffOptions.find(staff => String(staff.id) === String(selectedStaffId));
-
-                    currentSub.staffId = selectedStaffId ? Number(selectedStaffId) : null;
-                    currentSub.staffName = selectedStaff ? selectedStaff.name : '';
-
-                    activeSubId = currentSub.id;
-                    activeStaffId = currentSub.staffId;
-
+                    applyStaffSelectionToService(parentService, event.target.value);
                     updateSummarySteps();
                 });
             });

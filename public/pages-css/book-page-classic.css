@@ -339,6 +339,21 @@ body {
     width: 100%;
 }
 
+.staff-selection-card__picker {
+    margin-bottom: 18px;
+    padding: 16px;
+    border: 1px solid #ece3d4;
+    border-radius: 16px;
+    background: #fffaf3;
+}
+
+.staff-selection-card__picker-note {
+    margin: 10px 0 0;
+    color: #8c7a5c;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
 .staff-selection-subservice {
     border: 1px solid #ececec;
     border-radius: 16px;
