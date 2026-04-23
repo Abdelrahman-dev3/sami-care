@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
-use App\Models\Reject;
+use App\Models\reject;
 use Illuminate\Http\Request;
 
 class RejectController extends Controller
@@ -18,7 +18,7 @@ class RejectController extends Controller
 
     public function index()
     {
-        $reasons = Reject::all();
+        $reasons = reject::all();
         return view('backend.cancellation-of-reservation.index_datatable', compact('reasons'));
     }
 
@@ -28,7 +28,7 @@ class RejectController extends Controller
             'reasonAR' => 'required',
             'reasonEN' => 'required',
         ]);
-        Reject::create([
+        reject::create([
             'name' => [
                 'ar' => $request->reasonAR,
                 'en' => $request->reasonEN,
@@ -39,7 +39,7 @@ class RejectController extends Controller
 
     public function destroy($id)
     {
-        $reasons = Reject::findOrFail($id);
+        $reasons = reject::findOrFail($id);
         $reasons->delete();
         return redirect()->back()->with('success', __('messagess.reason_deleted_success'));
     }
@@ -50,7 +50,7 @@ class RejectController extends Controller
             'reasonAR' => 'required',
             'reasonEN' => 'required',
         ]);
-        $reasons = Reject::findOrFail($id);
+        $reasons = reject::findOrFail($id);
         $reasons->update([
             'name' => [
                 'ar' => $request->reasonAR,

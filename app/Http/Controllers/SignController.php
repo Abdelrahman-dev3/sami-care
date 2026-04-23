@@ -6,18 +6,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Http;
 use App\Services\TaqnyatSmsService;
-use Modules\Wallet\Models\Wallet;
 use Modules\Booking\Models\Booking;
-use App\Models\LoyaltyPoint;
-use App\Models\Reject;
-use Modules\Promotion\Models\Coupon;
 use Modules\Booking\Models\BookingService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Session;
-use App\Models\GiftCard;
 
 class SignController extends Controller
 {

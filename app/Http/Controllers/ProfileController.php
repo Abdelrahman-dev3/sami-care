@@ -7,7 +7,7 @@ use App\Models\User;
 use Modules\Wallet\Models\Wallet;
 use Modules\Booking\Models\Booking;
 use App\Models\LoyaltyPoint;
-use App\Models\Reject;
+use App\Models\reject;
 use Modules\Promotion\Models\Coupon;
 use App\Models\GiftCard;
 
@@ -88,7 +88,7 @@ class ProfileController extends Controller
 
     public function myBookings()
     {
-        $reasons = Reject::all();
+        $reasons = reject::all();
         $bookings = Booking::with('service.service', 'service.employee')->where('created_by', auth()->user()->id)->whereNull('deleted_by')->whereNotIn('status', ['completed', 'canceled'])->get();
         $today = now()->toDateString();
         $gifts = GiftCard::where('user_id', auth()->id())->whereDate('created_at', '>=', $today)->where('payment_status', 1)->get();
@@ -101,7 +101,7 @@ class ProfileController extends Controller
         $booking->delete();
         $reasons = $request->input('reasons', []);
         foreach ($reasons as $reasonId) {
-            $reason = Reject::find($reasonId);
+            $reason = reject::find($reasonId);
             if ($reason) {
                 $reason->increment('count');
             }

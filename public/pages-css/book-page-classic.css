@@ -436,6 +436,60 @@ body {
     font-size: 12px;
 }
 
+.staff-service-card__subservices {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid #f0ece4;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.staff-service-card__subservice {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid #efe3d4;
+    background: #fcfaf6;
+}
+
+.staff-service-card__subservice-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    text-align: start;
+}
+
+.staff-service-card__subservice-name {
+    color: #4f4f4f;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.staff-service-card__subservice-caption {
+    color: #a49680;
+    font-size: 11px;
+}
+
+.staff-service-card__subservice-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    color: #8f7b56;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.staff-service-card__subservice-meta strong {
+    color: #CF9233;
+    font-size: 13px;
+}
+
 .staff-service-card__status {
     margin-top: 14px;
     padding: 10px 12px;
@@ -862,6 +916,15 @@ body {
     }
 
     .staff-service-card__top {
+        align-items: flex-start;
+    }
+
+    .staff-service-card__subservice {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .staff-service-card__subservice-meta {
         align-items: flex-start;
     }
 

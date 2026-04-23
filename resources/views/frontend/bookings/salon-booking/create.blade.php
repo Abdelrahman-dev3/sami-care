@@ -241,15 +241,13 @@
             selectedDate = null;
 
             if (subServiceId) {
-                for (const service of (selectedData.services || [])) {
-                    const matchedSub = (service.subServices || []).find(sub => String(sub.id) === String(subServiceId));
-                    if (matchedSub?.date) {
-                        const parsedSubDate = parseStoredDate(matchedSub.date);
-                        if (parsedSubDate && parsedSubDate >= today) {
-                            targetDate = parsedSubDate;
-                            selectedDate = parsedSubDate;
-                        }
-                        break;
+                const activeService = getServiceGroupById(subServiceId);
+                const storedDate = getServiceGroupStoredDate(activeService);
+                if (storedDate) {
+                    const parsedServiceDate = parseStoredDate(storedDate);
+                    if (parsedServiceDate && parsedServiceDate >= today) {
+                        targetDate = parsedServiceDate;
+                        selectedDate = parsedServiceDate;
                     }
                 }
             }
@@ -267,14 +265,14 @@
                 return;
             }
             currentDate = nextMonthDate;
-            generateCalendar(activeSubId, activeStaffId);
+            generateCalendar(activeServiceGroupId, activeStaffId);
         });
 
         nextBn.addEventListener('click', () => {
             const nextMonthDate = normalizeCalendarMonth(currentDate);
             nextMonthDate.setMonth(nextMonthDate.getMonth() + 1);
             currentDate = nextMonthDate;
-            generateCalendar(activeSubId, activeStaffId);
+            generateCalendar(activeServiceGroupId, activeStaffId);
         });
 
 
@@ -362,6 +360,59 @@
                     parentImage: service.image
                 }))
             );
+        }
+
+        function getSelectedServiceGroups() {
+            return (selectedData.services || []).filter((service) =>
+                Array.isArray(service.subServices) && service.subServices.length > 0
+            );
+        }
+
+        function getServiceGroupById(serviceGroupId) {
+            return (selectedData.services || []).find((service) =>
+                String(service.id) === String(serviceGroupId)
+            ) || null;
+        }
+
+        function getServiceGroupTotalDuration(service) {
+            return (service?.subServices || []).reduce((sum, sub) => sum + Number(sub.duration || 0), 0);
+        }
+
+        function getServiceGroupStoredDate(service) {
+            return (service?.subServices || []).find((sub) => sub?.date)?.date || '';
+        }
+
+        function getServiceGroupStoredTime(service) {
+            return (service?.subServices || []).find((sub) => sub?.time)?.time || '';
+        }
+
+        function clearServiceGroupSchedule(service) {
+            (service?.subServices || []).forEach((sub) => {
+                sub.date = '';
+                sub.time = '';
+            });
+        }
+
+        function assignDateToServiceGroup(service, selectedDateFormatted) {
+            (service?.subServices || []).forEach((sub) => {
+                sub.date = selectedDateFormatted;
+                sub.time = '';
+            });
+        }
+
+        function assignTimeToServiceGroup(service, selectedTime) {
+            (service?.subServices || []).forEach((sub) => {
+                sub.time = selectedTime;
+            });
+        }
+
+        function renderEmptyTimeSlots(message) {
+            const morningGrid = document.querySelector('#morning-grid');
+            const afternoonGrid = document.querySelector('#afternoon-grid');
+            if (!morningGrid || !afternoonGrid) return;
+
+            morningGrid.innerHTML = `<p>${message}</p>`;
+            afternoonGrid.innerHTML = `<p>${message}</p>`;
         }
 
         function normalizeStaffMember(staff = {}) {
@@ -474,6 +525,9 @@
                 sub.staffName = selectedStaff ? selectedStaff.name : '';
             });
 
+            clearServiceGroupSchedule(parentService);
+            activeServiceGroupId = parentService.id;
+
             const firstSubService = (parentService.subServices || [])[0];
             if (firstSubService) {
                 activeSubId = firstSubService.id;
@@ -545,6 +599,7 @@
                         sub.staffId = null;
                         sub.staffName = '';
                     });
+                    clearServiceGroupSchedule(service);
                 });
             }
 
@@ -807,9 +862,18 @@
             }
 
             if (currentStep === 4) {
-                syncCalendarView(activeSubId);
-                if (activeSubId && activeStaffId) {
-                    generateCalendar(activeSubId, activeStaffId);
+                const activeScheduleService = ensureActiveServiceGroup(getSelectedServiceGroups());
+                activeServiceGroupId = activeScheduleService?.id || null;
+                activeStaffId = activeScheduleService ? getSelectedStaffIdForService(activeScheduleService) : null;
+                syncCalendarView(activeServiceGroupId);
+
+                if (activeServiceGroupId && activeStaffId) {
+                    generateCalendar(activeServiceGroupId, activeStaffId);
+                } else {
+                    renderEmptyTimeSlots(currentLang === 'ar'
+                        ? 'اختر موظفًا للقسم أولًا لعرض المواعيد.'
+                        : 'Choose a staff member for the category first to view times.'
+                    );
                 }
             }
         }
@@ -1234,14 +1298,14 @@
                             let count = 0;
                             selectedData.services.forEach(s => count += s.subServices.length);
 
-                            if (count === 1) {
+            if (count === 1) {
                                 currentStep = 4;
                                 updateUI();
 
                                 const firstSummaryCard = document.querySelector('.summary-card');
                                 if (firstSummaryCard) {
                                     firstSummaryCard.classList.add('selected-card');
-                                    generateCalendar(subserve, staff.id);
+                                    generateCalendar(parentService?.id || subserve, staff.id);
                                 }
                             }
                         });
@@ -1258,11 +1322,16 @@
 
         function generateCalendar(subserve = null , staffId = null) {
             if (subserve) {
+                activeServiceGroupId = subserve;
                 activeSubId = subserve;
             }
             if (staffId) {
                 activeStaffId = staffId;
             }
+
+            const activeService = getServiceGroupById(activeServiceGroupId);
+            const totalDuration = getServiceGroupTotalDuration(activeService);
+            const storedDate = getServiceGroupStoredDate(activeService);
 
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth();
@@ -1333,16 +1402,10 @@
                         const selectedDateFormatted = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
                         selectedDate = new Date(date);
 
-                        if (selectedData.services) {
-                            selectedData.services.forEach(service => {
-                                service.subServices.forEach(sub => {
-                                    if (sub.id == subserve) {
-                                        sub.date = selectedDateFormatted;
-                                        updateSummarySteps()
-                                        fetchAvailableTimes(selectedDateFormatted, staffId , subserve, sub.duration);
-                                    }
-                                });
-                            });
+                        if (activeService) {
+                            assignDateToServiceGroup(activeService, selectedDateFormatted);
+                            updateSummarySteps();
+                            fetchAvailableTimes(selectedDateFormatted, staffId , activeService.id, totalDuration);
                         }
 
                     });
@@ -1367,6 +1430,15 @@
             if (focusDay) {
                 focusDay.scrollIntoView({ inline: 'start', block: 'nearest' });
             }
+
+            if (storedDate && staffId && totalDuration > 0) {
+                fetchAvailableTimes(storedDate, staffId, activeService?.id, totalDuration);
+            } else {
+                renderEmptyTimeSlots(currentLang === 'ar'
+                    ? 'اختر يومًا لعرض المواعيد المتاحة لهذا القسم.'
+                    : 'Choose a day to view available times for this category.'
+                );
+            }
         }
 
         //   document.getElementById('scrollLeft').addEventListener('click', () => {
@@ -1378,15 +1450,11 @@
 
         function fetchAvailableTimes(date , staffId , subserve , serveTime = null) {
             showLoader();
+            const activeService = getServiceGroupById(subserve);
             const increasing = Number(serveTime) > 0
                 ? Number(serveTime)
-                : (() => {
-                    for (const service of (selectedData.services || [])) {
-                        const sub = (service.subServices || []).find(s => String(s.id) === String(subserve));
-                        if (sub && Number(sub.duration) > 0) return Number(sub.duration);
-                    }
-                    return 30;
-                })();
+                : Math.max(getServiceGroupTotalDuration(activeService), 30);
+            const storedTime = getServiceGroupStoredTime(activeService);
 
             fetch(`/available/${date}/${staffId}?Increasing=${increasing}`)
                 .then(response => response.json())
@@ -1423,17 +1491,17 @@
                         slot.textContent = time;
                         slot.dataset.time = time;
 
+                        if (storedTime && storedTime === time) {
+                            slot.classList.add('selected');
+                        }
+
                         slot.addEventListener('click', () => {
                             document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
                             slot.classList.add('selected');
-                                selectedData.services.forEach(service => {
-                                    service.subServices.forEach(sub => {
-                                        if (sub.id == subserve) {
-                                            sub.time = time;
-                                            updateSummarySteps()
-                                        }
-                                    });
-                                });
+                            if (activeService) {
+                                assignTimeToServiceGroup(activeService, time);
+                                updateSummarySteps();
+                            }
 
                         });
 
@@ -1486,6 +1554,7 @@
             }
 
             const activeService = ensureActiveServiceGroup(selectedServices);
+            activeServiceGroupId = activeService?.id || null;
             const activeServiceStaffOptions = activeService ? getSharedStaffOptionsForService(activeService) : [];
             const activeServiceSelectedStaffId = activeService ? getSelectedStaffIdForService(activeService) : '';
 
@@ -1499,6 +1568,20 @@
                             ${selectedServices.map((service) => {
                                 const totalPrice = (service.subServices || []).reduce((sum, sub) => sum + Number(sub.price || 0), 0);
                                 const totalDuration = (service.subServices || []).reduce((sum, sub) => sum + Number(sub.duration || 0), 0);
+                                const subServicesMarkup = (service.subServices || []).map((sub) => `
+                                    <div class="staff-service-card__subservice">
+                                        <div class="staff-service-card__subservice-info">
+                                            <span class="staff-service-card__subservice-name">${sub.name}</span>
+                                            <span class="staff-service-card__subservice-caption">
+                                                ${currentLang === 'ar' ? 'خدمة فرعية مختارة' : 'Selected sub-service'}
+                                            </span>
+                                        </div>
+                                        <div class="staff-service-card__subservice-meta">
+                                            <span>${Number(sub.duration || 0)} ${currentLang === 'ar' ? 'دقيقة' : 'min'}</span>
+                                            <strong>${Number(sub.price || 0)}</strong>
+                                        </div>
+                                    </div>
+                                `).join('');
                                 const selectedStaffName = (() => {
                                     const chosenId = getSelectedStaffIdForService(service);
                                     if (!chosenId) return '';
@@ -1524,6 +1607,9 @@
                                         <div class="staff-service-card__stats">
                                             <span>${currentLang === 'ar' ? 'المدة' : 'Duration'}: ${totalDuration} ${currentLang === 'ar' ? 'دقيقة' : 'min'}</span>
                                             <span>${currentLang === 'ar' ? 'السعر' : 'Price'}: ${totalPrice}</span>
+                                        </div>
+                                        <div class="staff-service-card__subservices">
+                                            ${subServicesMarkup}
                                         </div>
                                         <div class="staff-service-card__status ${selectedStaffName ? 'is-selected' : ''}">
                                             ${selectedStaffName
@@ -1602,6 +1688,121 @@
             });
         }
 
+        function renderStepFourServiceCards(summaryContainer) {
+            const selectedServices = getSelectedServiceGroups();
+
+            summaryContainer.classList.add('staff-selection-layout');
+            summaryContainer.style.display = 'block';
+            summaryContainer.style.gridTemplateColumns = 'none';
+            summaryContainer.style.gap = '0';
+
+            if (selectedServices.length === 0) {
+                const noServicesText = currentLang === 'ar'
+                    ? 'لم يتم اختيار أي خدمات بعد'
+                    : 'No services selected yet';
+                summaryContainer.innerHTML = `<p style="color: gray;">${noServicesText}</p>`;
+                renderEmptyTimeSlots(currentLang === 'ar'
+                    ? 'اختر قسمًا وخدمات أولًا لعرض المواعيد.'
+                    : 'Choose a category and services first to view times.'
+                );
+                return;
+            }
+
+            const activeService = ensureActiveServiceGroup(selectedServices);
+
+            summaryContainer.innerHTML = `
+                <div class="staff-step-shell">
+                    <section class="staff-step-services">
+                        <div class="staff-step-services__head">
+                            <strong>${currentLang === 'ar' ? 'اختر القسم لتحديد التاريخ والوقت' : 'Choose a category to set date and time'}</strong>
+                        </div>
+                        <div class="staff-step-services__grid">
+                            ${selectedServices.map((service) => {
+                                const totalPrice = (service.subServices || []).reduce((sum, sub) => sum + Number(sub.price || 0), 0);
+                                const totalDuration = getServiceGroupTotalDuration(service);
+                                const selectedStaffName = (() => {
+                                    const chosenId = getSelectedStaffIdForService(service);
+                                    if (!chosenId) return '';
+                                    const staff = getSharedStaffOptionsForService(service).find((member) => String(member.id) === String(chosenId));
+                                    return staff?.name || (service.subServices || []).find((sub) => sub.staffName)?.staffName || '';
+                                })();
+                                const storedDate = getServiceGroupStoredDate(service);
+                                const storedTime = getServiceGroupStoredTime(service);
+                                const subServicesMarkup = (service.subServices || []).map((sub) => `
+                                    <div class="staff-service-card__subservice">
+                                        <div class="staff-service-card__subservice-info">
+                                            <span class="staff-service-card__subservice-name">${sub.name}</span>
+                                            <span class="staff-service-card__subservice-caption">
+                                                ${currentLang === 'ar' ? 'خدمة فرعية مختارة' : 'Selected sub-service'}
+                                            </span>
+                                        </div>
+                                        <div class="staff-service-card__subservice-meta">
+                                            <span>${Number(sub.duration || 0)} ${currentLang === 'ar' ? 'دقيقة' : 'min'}</span>
+                                            <strong>${Number(sub.price || 0)}</strong>
+                                        </div>
+                                    </div>
+                                `).join('');
+
+                                return `
+                                    <button
+                                        type="button"
+                                        class="staff-service-card ${String(activeService?.id) === String(service.id) ? 'is-active' : ''}"
+                                        data-schedule-service-card="${service.id}"
+                                    >
+                                        <div class="staff-service-card__top">
+                                            <div>
+                                                <strong class="staff-service-card__title">${service.name}</strong>
+                                                <p class="staff-service-card__meta">
+                                                    ${(service.subServices || []).length} ${currentLang === 'ar' ? 'خدمة مختارة' : 'selected services'}
+                                                </p>
+                                            </div>
+                                            <img src="${service.image || 'https://via.placeholder.com/56'}" alt="${service.name}" class="staff-service-card__image">
+                                        </div>
+                                        <div class="staff-service-card__stats">
+                                            <span>${currentLang === 'ar' ? 'الموظف' : 'Staff'}: ${selectedStaffName || (currentLang === 'ar' ? 'غير محدد' : 'Not selected')}</span>
+                                            <span>${currentLang === 'ar' ? 'إجمالي المدة' : 'Total duration'}: ${totalDuration} ${currentLang === 'ar' ? 'دقيقة' : 'min'}</span>
+                                            <span>${currentLang === 'ar' ? 'التاريخ' : 'Date'}: ${storedDate || (currentLang === 'ar' ? 'لم يحدد بعد' : 'Not selected yet')}</span>
+                                            <span>${currentLang === 'ar' ? 'الوقت' : 'Time'}: ${storedTime || (currentLang === 'ar' ? 'لم يحدد بعد' : 'Not selected yet')}</span>
+                                            <span>${currentLang === 'ar' ? 'السعر' : 'Price'}: ${totalPrice}</span>
+                                        </div>
+                                        <div class="staff-service-card__subservices">
+                                            ${subServicesMarkup}
+                                        </div>
+                                        <div class="staff-service-card__status ${storedDate && storedTime ? 'is-selected' : ''}">
+                                            ${String(activeService?.id) === String(service.id)
+                                                ? (currentLang === 'ar' ? 'هذا هو القسم النشط الآن لاختيار الموعد.' : 'This is the active category for scheduling right now.')
+                                                : (currentLang === 'ar' ? 'اضغط لاختيار تاريخ ووقت هذا القسم' : 'Tap to choose date and time for this category')}
+                                        </div>
+                                    </button>
+                                `;
+                            }).join('')}
+                        </div>
+                    </section>
+                </div>
+            `;
+
+            summaryContainer.querySelectorAll('[data-schedule-service-card]').forEach((card) => {
+                card.addEventListener('click', () => {
+                    const parentService = getServiceGroupById(card.dataset.scheduleServiceCard);
+                    if (!parentService) return;
+
+                    activeServiceGroupId = parentService.id;
+                    activeStaffId = getSelectedStaffIdForService(parentService);
+                    syncCalendarView(parentService.id);
+                    updateSummarySteps();
+
+                    if (activeStaffId) {
+                        generateCalendar(parentService.id, activeStaffId);
+                    } else {
+                        renderEmptyTimeSlots(currentLang === 'ar'
+                            ? 'اختر موظفًا لهذا القسم أولًا.'
+                            : 'Choose a staff member for this category first.'
+                        );
+                    }
+                });
+            });
+        }
+
         function updateSummarySteps() {
             const isSummaryStage = summaryCard.classList.contains('show');
             renderSideCart();
@@ -1613,6 +1814,11 @@
 
                 if (currentStep === 3 && !isSummaryStage) {
                     renderStepThreeServiceCards(summaryContainer);
+                    return;
+                }
+
+                if (currentStep === 4 && !isSummaryStage) {
+                    renderStepFourServiceCards(summaryContainer);
                     return;
                 }
 
@@ -1726,12 +1932,16 @@
                             }
 
                             card.addEventListener('click', () => {
-                                if(currentStep === 4 && activeSubId && activeStaffId) {
+                                if(currentStep === 4) {
                                     document.querySelectorAll('.summary-card').forEach(c => c.classList.remove('selected-card'));
                                     card.classList.add('selected-card');
-                                    activeSubId = sub.id;
-                                    activeStaffId = sub.staffId;
-                                    generateCalendar(sub.id , sub.staffId);
+                                    activeServiceGroupId = service.id;
+                                    activeSubId = service.id;
+                                    activeStaffId = getSelectedStaffIdForService(service);
+                                    syncCalendarView(service.id);
+                                    if (activeStaffId) {
+                                        generateCalendar(service.id , activeStaffId);
+                                    }
                                 }
                             });
 
@@ -1788,16 +1998,17 @@
                     if (!allHaveStaff) {
                       alert(
                         staffSelectionMode === 'specific'
-                            ? (currentLang === 'ar' ? 'من فضلك اختر موظفًا لكل خدمة فرعية' : 'Please choose a staff member for each sub-service')
+                            ? (currentLang === 'ar' ? 'من فضلك اختر موظفًا لكل قسم' : 'Please choose a staff member for each category')
                             : (currentLang === 'ar' ? 'جارِ تعيين الموظف المناسب تلقائيًا أو لا يوجد موظفون متاحون لبعض الخدمات' : 'Staff is being assigned automatically, or no staff is available for some services')
                       );
                       return false;
                     }
-                    const firstSub = getSelectedSubServices()[0];
+                    const firstService = getSelectedServiceGroups()[0];
 
-                    if (firstSub) {
-                        activeSubId = firstSub.id;
-                        activeStaffId = firstSub.staffId;
+                    if (firstService) {
+                        activeServiceGroupId = firstService.id;
+                        activeSubId = firstService.id;
+                        activeStaffId = getSelectedStaffIdForService(firstService);
                     }
                     break;
                 case 4:
