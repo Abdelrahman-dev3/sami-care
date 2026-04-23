@@ -685,23 +685,31 @@
                 $isCategoryFrozen = (bool) $Cat->is_frozen;
             @endphp
             <div class="col">
-                <a href="{{ url('services/category/' . $Cat->id) }}"
-                   @if($isCategoryFrozen) onclick="return showUnavailableMessage(event)" @endif
-                   class="category-nav-link">
-                    <div class="galary category-nav-card {{ $Cat->id == $category->id ? 'category-nav-card--active' : '' }} {{ $isCategoryFrozen ? 'category-nav-card--disabled' : '' }}"
-                         style="background-image: url('{{ $Cat->feature_image ? asset($Cat->feature_image) : asset('images/av3.webp') }}');">
-                        @if($isCategoryFrozen)
-                            <div class="unavailable-indicator" aria-hidden="true">
-                                <i class="fa-solid fa-lock"></i>
-                            </div>
-                        @endif
+              @if(!$isCategoryFrozen)
+                  <a href="{{ url('services/category/' . $Cat->id) }}" class="category-nav-link">
+              @else
+                  <div onclick="showUnavailableMessage(event)" class="category-nav-link">
+              @endif
 
-                        <!-- Overlay -->
-                        <div class="overlay d-flex align-items-end justify-content-center category-nav-overlay">
-                            <h3 class="text-white text-center m-2">{{ $Cat->name }}</h3>
-                        </div>
-                    </div>
-                </a>
+                  <div class="galary category-nav-card {{ $Cat->id == $category->id ? 'category-nav-card--active' : '' }} {{ $isCategoryFrozen ? 'category-nav-card--disabled' : '' }}"
+                      style="background-image: url('{{ $Cat->feature_image ? asset($Cat->feature_image) : asset('images/av3.webp') }}');">
+
+                      @if($isCategoryFrozen)
+                          <div class="unavailable-indicator">
+                              <i class="fa-solid fa-lock"></i>
+                          </div>
+                      @endif
+
+                      <div class="overlay d-flex align-items-end justify-content-center category-nav-overlay">
+                          <h3 class="text-white text-center m-2">{{ $Cat->name }}</h3>
+                      </div>
+                  </div>
+
+              @if(!$isCategoryFrozen)
+                  </a>
+              @else
+                  </div>
+              @endif
             </div>
         @endforeach
     </div>
