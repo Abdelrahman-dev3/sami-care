@@ -165,7 +165,7 @@
                 </div>
                 
             </div>
-            <!-- Step 2: Location -->
+            <!-- Step 2: Branches -->
             <div id="step2" class="step-content">
                 <div class="location-form">
                     <div class="form-group">
@@ -326,7 +326,7 @@
 
         function showUnavailableMessage() {
             if (typeof createNotify === 'function') {
-                createNotify({ title: '', desc: notAvailableMessage });
+                createNotify({ title: 'تنبيه', desc: notAvailableMessage });
                 return;
             }
             alert(notAvailableMessage);
@@ -339,7 +339,7 @@
         function hideGiftGuideOverlay() {
             document.getElementById("giftGuideOverlay").style.display = "none";
         }
- 
+        
         function fetchbranch(cityId) {
             showLoader();
             fetch(`/branchs/${cityId}`)
@@ -367,8 +367,8 @@
                             </div>
                         
                             <div class="branch-info">
-                              <h5 class="branch-name">${branch.name[lang]}</h5>
-                              <p style="font-size: 11px;margin-top: 15px;font-weight: 600;">${branch.description}</p>
+                                <h5 class="branch-name">${branch.name[lang]}</h5>
+                                <p style="font-size: 11px;margin-top: 15px;font-weight: 600;">${branch.description}</p>
                             </div>
                           </label>
                         `;
@@ -381,7 +381,7 @@
                                 branch: null,
                                 branchName: null,
                                 services: [],
-                                location: null
+                                location: selectedData.location
                             };
                             selectedData.location = { recipient_name, recipient_mobile, message };
                             selectedData.branch = branch.id;

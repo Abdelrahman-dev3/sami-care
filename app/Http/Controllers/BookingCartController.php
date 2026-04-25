@@ -433,7 +433,7 @@ class BookingCartController extends Controller
     }
 
 
-     public function balance(Request $request)
+    public function balance(Request $request)
     {
         $user = $request->user(); 
 

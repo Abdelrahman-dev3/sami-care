@@ -213,8 +213,6 @@ class FrontendController extends Controller
      */
     public function categoryDetails($id)
     {
-
-        // return 0;
         $category = Category::with(['services' => function($query) {
                 $query->where('status', 1);
             }, 'services.category', 'services.sub_category', 'services.media', 'services.branches'])
@@ -230,7 +228,6 @@ class FrontendController extends Controller
             ->take(4)
             ->get();
 
-                // Fetch active categories for the homepage
         $allCat = Category::where('status', 1)
             ->whereNull('parent_id')
             ->with(['services' => function($query) {
