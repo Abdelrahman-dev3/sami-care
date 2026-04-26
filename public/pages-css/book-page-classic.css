@@ -819,9 +819,15 @@ body {
 .navigation {
     display: flex;
     justify-content: space-between;
-    margin-top: 40px;
-    padding-top: 20px;
-    border-top: 1px solid #eee;
+    padding: 18px;
+    position: fixed;
+    z-index: 99999999;
+    bottom: 42px;
+    width: 72%;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
 .btn {
@@ -837,6 +843,7 @@ body {
 .btn-primary {
     background: #CF9233;
     color: white;
+    border-radius: 16px !important;
 }
 
 .btn-primary:hover {
@@ -846,6 +853,7 @@ body {
 .btn-secondary {
     background: #6c757d;
     color: white;
+    border-radius: 16px !important;
 }
 
 .btn-secondary:hover {

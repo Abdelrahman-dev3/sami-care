@@ -147,106 +147,93 @@
                 })
             }
         })
-        const columns = [{
-                name: 'check',
-                data: 'check',
-                title: '<input type="checkbox" class="form-check-input" name="select_all_table" id="select-all-table" onclick="selectAllTable(this)">',
-                width: '0%',
-                exportable: false,
-                orderable: false,
-                searchable: false,
-            },
-                data: 'id',
-                name: 'id',
-                title: "ID",
-                orderable: true,
-                visible: true,
-            },
-                data: 'start_date_time',
-                name: 'start_date_time',
-                title: "{{ __('booking.lbl_date') }}",
-                orderable: true,
-            },
-                data: 'user_id',
-                name: 'user_id',
-                title: "{{ __('booking.lbl_customer_name') }}"
-            },
-            {
-                data: 'service_amount',
-                name: 'service_amount',
-                title: "{{ __('booking.lbl_amount') }}",
-                orderable: true,
-                searchable: false,
-                // render: function(data, type, row) {
-
-                //     return currencyFormat(data);
-
-                // }
-            },
-            {
-                data: 'service_duration',
-                name: 'service_duration',
-                title: "{{ __('booking.lbl_duration') }}",
-                orderable: true,
-                searchable: false,
-            },
-            {
-                data: 'employee_id',
-                name: 'employee_id',
-                title: "{{ __('booking.lbl_staff_name') }}"
-            },
-            // {
-            //     data: 'change_staff',
-            //     name: 'change_staff',
-            //     title: "{{ __('booking.lbl_change_staff') }}",
-            //     orderable: false,
-            //     searchable: false,
-            //     render: function(data, type, row) {
-            //         return data == 1
-            //             ? '<span class="badge bg-success">{{ __("messages.yes") }}</span>'
-            //             : '<span class="badge bg-danger">{{ __("messages.no") }}</span>';
-            //     }
-            // },
-            {
-                data: 'services',
-                name: 'services',
-                title: "{{ __('booking.lbl_services') }}",
-                orderable: false,
-                searchable: true,
-                width: '10%'
-            },
-            {
-                data: 'packages',
-                name: 'packages',
-                title: "{{ __('booking.lbl_packages') }}",
-                orderable: false,
-                searchable: false,
-                width: '10%'
-            },
-            {
-                data: 'updated_at',
-                name: 'updated_at',
-                title: "{{ __('booking.lbl_update_at') }}",
-                orderable: true,
-                visible:false,
-            },
-            {
-                data: 'status',
-                name: 'status',
-                orderable: true,
-                searchable: true,
-                title: "{{ __('booking.lbl_status') }}",
-                width: '10%',
-            },
-            {
-                data: 'payment_status',
-                name: 'payment_status',
-                orderable: false,
-                searchable: false,
-                title: "{{ __('booking.lbl_payment_status') }}",
-                width: '10%',
-            },
-        ]
+    const columns = [
+        {
+            name: 'check',
+            data: 'check',
+            title: '<input type="checkbox" class="form-check-input" id="select-all-table" onclick="selectAllTable(this)">',
+            width: '0%',
+            exportable: false,
+            orderable: false,
+            searchable: false,
+        },
+        {
+            data: 'id',
+            name: 'id',
+            title: "ID",
+            orderable: true,
+            visible: true,
+        },
+        {
+            data: 'start_date_time',
+            name: 'start_date_time',
+            title: "{{ __('booking.lbl_date') }}",
+            orderable: true,
+        },
+        {
+            data: 'user_id',
+            name: 'user_id',
+            title: "{{ __('booking.lbl_customer_name') }}"
+        },
+        {
+            data: 'service_amount',
+            name: 'service_amount',
+            title: "{{ __('booking.lbl_amount') }}",
+            orderable: true,
+            searchable: false,
+        },
+        {
+            data: 'service_duration',
+            name: 'service_duration',
+            title: "{{ __('booking.lbl_duration') }}",
+            orderable: true,
+            searchable: false,
+        },
+        {
+            data: 'employee_id',
+            name: 'employee_id',
+            title: "{{ __('booking.lbl_staff_name') }}"
+        },
+        {
+            data: 'services',
+            name: 'services',
+            title: "{{ __('booking.lbl_services') }}",
+            orderable: false,
+            searchable: true,
+            width: '10%'
+        },
+        {
+            data: 'packages',
+            name: 'packages',
+            title: "{{ __('booking.lbl_packages') }}",
+            orderable: false,
+            searchable: false,
+            width: '10%'
+        },
+        {
+            data: 'updated_at',
+            name: 'updated_at',
+            title: "{{ __('booking.lbl_update_at') }}",
+            orderable: true,
+            visible: false,
+        },
+        {
+            data: 'status',
+            name: 'status',
+            orderable: true,
+            searchable: true,
+            title: "{{ __('booking.lbl_status') }}",
+            width: '10%',
+        },
+        {
+            data: 'payment_status',
+            name: 'payment_status',
+            orderable: false,
+            searchable: false,
+            title: "{{ __('booking.lbl_payment_status') }}",
+            width: '10%',
+        },
+    ];
 
         const actionColumn = [{
             data: 'action',

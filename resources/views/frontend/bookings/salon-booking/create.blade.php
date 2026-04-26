@@ -167,8 +167,8 @@
             </div>
             <!-- Navigation -->
             <div class="navigation">
-                <button class="btn btn-secondary" id="prevBtn" disabled>{{ __('messagess.previous') }}</button>
                 <button class="btn btn-primary" id="nextBtn">{{ __('messagess.next') }}</button>
+                <button class="btn btn-secondary" id="prevBtn" disabled>{{ __('messagess.previous') }}</button>
             </div>
         </div>
     </div>
