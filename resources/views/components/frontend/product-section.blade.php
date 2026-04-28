@@ -1,5 +1,8 @@
 <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 <link rel="stylesheet" href="{{ asset('pages-css/products-card.css') }}">
+@php
+    $cartProductIds = auth()->check() ? \Modules\Product\Models\Cart::where('user_id', auth()->id())->pluck('product_id')->toArray() : [];
+@endphp
 @include('components.frontend.notifications')
 <section class="py-5">
     <div class="container"  style="padding: 0 5rem;">
@@ -19,6 +22,7 @@
                             'categories' => $product->categories,
                             'min_price' => $product->min_price,
                             'max_price' => $product->max_price,
+                            'isInCart' => in_array($product->id, $cartProductIds),
                         ])
                     </div>
                 @endforeach
@@ -44,6 +48,7 @@
                 createNotify({ title: data.status , desc: data.message });
                 CartSidebar.refresh();   // re-fetch cart data + update badge
                 CartSidebar.open();
+                markProductAdded(productId);
             })
             .catch(error => {
                 createNotify({ title: data.status, desc: data.message });
@@ -54,5 +59,21 @@
             title: "{{ __('product.notification') }}",
             desc: "{{ __('product.login_required_feature') }}"
         });
+    }
+
+    function markProductAdded(productId) {
+        const card = document.querySelector(`.product-card[data-product-id="${productId}"]`);
+        if (!card) return;
+
+        card.classList.add('in-cart');
+        const button = card.querySelector('.add-to-cart');
+        if (button) button.classList.add('added');
+
+        if (!card.querySelector('.product-card-badge')) {
+            const badge = document.createElement('span');
+            badge.className = 'product-card-badge';
+            badge.textContent = '+';
+            card.prepend(badge);
+        }
     }
 </script>

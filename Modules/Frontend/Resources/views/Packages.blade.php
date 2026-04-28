@@ -35,7 +35,7 @@
             opacity: 1;
         }
         .swiper-slide img{
-            width: 65%;
+            width: 100%;
             height: 250px;
             object-fit: cover;
             border-radius: 8px;
@@ -64,7 +64,7 @@
     </div>
 
     <!-- Swiper -->
-    <div class="swiper mySwiper" style="display: flex; justify-content: center; align-items: center; margin-top: 37px;">
+    <div class="swiper mySwiper" style="display: flex; justify-content: center; align-items: center;">
         <div class="swiper-wrapper">
             @foreach($ads as $ad)
                 <div class="swiper-slide">

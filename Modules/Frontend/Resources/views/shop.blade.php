@@ -39,7 +39,7 @@
             align-items: center;
         }
         .swiper-slide img{
-            width: 65%;
+            width: 100%;
             height: 250px;
             object-fit: cover;
             border-radius: 8px;
@@ -91,7 +91,8 @@
             align-items: center;
         }
         .category-item {
-            width: 110px;
+            width: auto;
+            min-width: 110px;
             transition: 0.3s;
         }
         .category-item img {
@@ -163,7 +164,8 @@
         /* موبايل */
         @media (max-width: 768px) {
             .category-item {
-                width: 85px;
+                width: auto;
+                min-width: 110px;
             }
             .product-card img {
                 height: 150px;
@@ -186,6 +188,11 @@
     </style>
     <link rel="stylesheet" href="{{ asset('custom-css/cart-sidebar.css') }}">
 </head>
+@php
+    $cartProductIds = auth()->check()
+        ? \Modules\Product\Models\Cart::where('user_id', auth()->id())->pluck('product_id')->toArray()
+        : [];
+@endphp
 <body>
 <x-frontend.cart-sidebar />
     @include('components.frontend.progress-bar')
@@ -196,7 +203,7 @@
         @include('components.frontend.second-navbar')
     </div>
     <!-- Swiper -->
-        <div class="swiper mySwiper" style="display: flex; justify-content: center; align-items: center; margin-top: 37px;">
+        <div class="swiper mySwiper" style="display: flex; justify-content: center; align-items: center;">
             <div class="swiper-wrapper">
                 @foreach($ads as $ad)
                     <div class="swiper-slide">
@@ -244,6 +251,7 @@
                             'categories' => $product->categories,
                             'min_price' => $product->min_price,
                             'max_price' => $product->max_price,
+                            'isInCart' => in_array($product->id, $cartProductIds),
                         ])
                     @endforeach
                 </div>
@@ -265,6 +273,7 @@
                         'categories' => $product->categories,
                         'min_price' => $product->min_price,
                         'max_price' => $product->max_price,
+                        'isInCart' => in_array($product->id, $cartProductIds),
                     ])
                 </div>
             @endforeach
@@ -290,7 +299,7 @@
 
     document.addEventListener('DOMContentLoaded', () => {
       new Swiper(".categories-swiper", {
-        slidesPerView: 6,
+        slidesPerView: 5,
         spaceBetween: 20,
         loop: true,
         autoplay: {
@@ -335,10 +344,27 @@
                 createNotify({ title: data.status, desc: data.message });
                 CartSidebar.refresh();   // re-fetch cart data + update badge
                 CartSidebar.open();
+                markProductAdded(productId);
             })
             .catch(error => {
                 createNotify({ title: data.status, desc: data.message });
             });
+    }
+
+    function markProductAdded(productId) {
+        const card = document.querySelector(`.product-card[data-product-id="${productId}"]`);
+        if (!card) return;
+
+        card.classList.add('in-cart');
+        const button = card.querySelector('.add-to-cart');
+        if (button) button.classList.add('added');
+
+        if (!card.querySelector('.product-card-badge')) {
+            const badge = document.createElement('span');
+            badge.className = 'product-card-badge';
+            badge.textContent = '+';
+            card.prepend(badge);
+        }
     }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>

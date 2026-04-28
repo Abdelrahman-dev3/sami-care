@@ -1,6 +1,9 @@
 <link rel="stylesheet" href="{{ asset('pages-css/products-card.css') }}">
 
-<div class="product-card">
+<div class="product-card" data-product-id="{{ $product_id }}">
+  @if(!empty($isInCart))
+    <span class="product-card-badge">+</span>
+  @endif
   <div class="product-image">
     <img src="{{ $image  }}" alt="{{ $name }}">
   </div>
@@ -25,14 +28,14 @@
     <div class="bottom">
       <span class="price">{{$max_price}} {{ __('messagess.SAR') }}</span>
       @auth
-          <button class="add-to-cart" onclick='addtocart({{$product_id}})'>
+          <button class="add-to-cart {{ !empty($isInCart) ? 'added' : '' }}" onclick='addtocart({{$product_id}})'>
             <span style="font-weight: bold;width: 100%;">
                 {{ __('messagess.add_to_cart') }}
             </span>
           </button>
       @endauth
       @guest
-          <button class="add-to-cart" onclick='shownav()'>
+          <button class="add-to-cart {{ !empty($isInCart) ? 'added' : '' }}" onclick='shownav()'>
             <span style="font-weight: bold;width: 100%;">
                 {{ __('messagess.add_to_cart') }}
             </span>

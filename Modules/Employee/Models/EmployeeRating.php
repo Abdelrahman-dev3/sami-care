@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Modules\BussinessHour\Models\Shift;
+use Modules\Booking\Models\Booking;
 
 class EmployeeRating extends Model
 {
@@ -15,7 +16,7 @@ class EmployeeRating extends Model
     protected $table = 'employee_rating';
 
     protected $fillable = [
-        'employee_id', 'review_msg', 'rating', 'user_id',
+        'employee_id', 'review_msg', 'rating', 'user_id', 'booking_id',
     ];
 
     protected static function newFactory()
@@ -46,5 +47,10 @@ class EmployeeRating extends Model
     public function branchemployee()
     {
         return $this->belongsTo(BranchEmployee::class);
+    }
+
+    public function booking()
+    {
+        return $this->belongsTo(Booking::class, 'booking_id');
     }
 }

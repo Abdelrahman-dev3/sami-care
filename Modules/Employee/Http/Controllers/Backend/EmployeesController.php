@@ -921,4 +921,110 @@ class EmployeesController extends Controller
         return response()->json(['data' => $data, 'status' => true], 200);
     }
 
+    /**
+     * Store a new employee rating from a completed booking.
+     */
+    public function store_rating(Request $request)
+    {
+        $request->validate([
+            'booking_id' => 'required|exists:bookings,id',
+            'employee_id' => 'required|exists:users,id',
+            'rating' => 'required|numeric|min:1|max:5',
+            'review_msg' => 'nullable|string|max:1000',
+        ]);
+
+        $booking = Booking::where('id', $request->booking_id)
+            ->where('created_by', auth()->id())
+            ->where('status', 'completed')
+            ->first();
+
+        if (!$booking) {
+            return response()->json([
+                'status' => false,
+                'message' => __('employee.rating_booking_not_found')
+            ], 404);
+        }
+
+        // Check if employee was part of this booking
+        $hasEmployee = $booking->services()->where('employee_id', $request->employee_id)->exists();
+        if (!$hasEmployee) {
+            $hasEmployee = $booking->packages()->where('employee_id', $request->employee_id)->exists();
+        }
+        if (!$hasEmployee) {
+            return response()->json([
+                'status' => false,
+                'message' => __('employee.rating_employee_not_found')
+            ], 404);
+        }
+
+        // Check if already rated
+        $existingRating = EmployeeRating::where('booking_id', $request->booking_id)
+            ->where('employee_id', $request->employee_id)
+            ->first();
+
+        if ($existingRating) {
+            $existingRating->update([
+                'rating' => $request->rating,
+                'review_msg' => $request->review_msg,
+            ]);
+            $message = __('employee.rating_updated');
+        } else {
+            EmployeeRating::create([
+                'booking_id' => $request->booking_id,
+                'employee_id' => $request->employee_id,
+                'user_id' => auth()->id(),
+                'rating' => $request->rating,
+                'review_msg' => $request->review_msg,
+            ]);
+            $message = __('employee.rating_created');
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => $message
+        ]);
+    }
+
+    /**
+     * Get ratings for a specific booking (for frontend display).
+     */
+    public function get_booking_ratings($booking_id)
+    {
+        $booking = Booking::with(['services.employee', 'packages.employee'])->findOrFail($booking_id);
+
+        $ratings = EmployeeRating::where('booking_id', $booking_id)->get();
+
+        $result = [];
+        
+        // Get all employees from this booking
+        $employees = [];
+        foreach ($booking->services as $service) {
+            if ($service->employee_id) {
+                $employees[$service->employee_id] = $service->employee;
+            }
+        }
+        foreach ($booking->packages as $package) {
+            if ($package->employee_id) {
+                $employees[$package->employee_id] = $package->employee;
+            }
+        }
+
+        foreach ($employees as $employeeId => $employee) {
+            $rating = $ratings->where('employee_id', $employeeId)->first();
+            $result[] = [
+                'employee_id' => $employeeId,
+                'employee_name' => $employee->full_name ?? '---',
+                'employee_image' => $employee->profile_image ?? null,
+                'rating' => $rating ? $rating->rating : null,
+                'review_msg' => $rating ? $rating->review_msg : null,
+                'already_rated' => $rating !== null,
+            ];
+        }
+
+        return response()->json([
+            'status' => true,
+            'data' => $result
+        ]);
+    }
+
 }

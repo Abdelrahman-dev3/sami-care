@@ -171,6 +171,7 @@ return [
     'no_invice_cards' => 'No invice cards available',
     'action' => 'Action',
     'du_min' => 'Duration min',
+    'complete_booking_notice' => 'To confirm your booking, please complete it within :minutes minutes, otherwise it will be automatically removed from your cart.',
     'delivery_method'    => 'Delivery Method',
     'sender_name'        => 'Sender Name',
     'recipient_name'     => 'Recipient Name',

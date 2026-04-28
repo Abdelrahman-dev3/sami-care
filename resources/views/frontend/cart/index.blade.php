@@ -1,5 +1,10 @@
 @php
 use Illuminate\Support\Str;
+use App\Models\Setting;
+@endphp
+
+@php
+    $cartDuration = Setting::get('service_duration_minutes', 0);
 @endphp
 
 <!DOCTYPE html>
@@ -45,6 +50,11 @@ use Illuminate\Support\Str;
     @if($services->count() || $products->count() || $gifts->count() || $bookingPackages->count())
     <div class="col-lg-8">
       <div class="order-summary p-3">
+        @if($cartDuration > 0 && ($services->count() || $bookingPackages->count()))
+            <div class="alert alert-warning mb-4" role="alert">
+              {{ __('messages.complete_booking_notice', ['minutes' => $cartDuration]) }}
+            </div>
+        @endif
         <table class="table align-middle">
           <thead>
             <tr style="background-color: red;">
@@ -64,6 +74,10 @@ use Illuminate\Support\Str;
                               {{ \Illuminate\Support\Str::limit($bookingPackage->package->name, 23) }}
                           </strong>
                           <br>
+                          @if($bookingPackage->booking?->start_date_time)
+                              <small class="text-muted">وقت الحجز: {{ date('d/m/Y H:i', strtotime($bookingPackage->booking->start_date_time)) }}</small>
+                              <br>
+                          @endif
                       </div>
                   </td>
                   <td class="prc">
@@ -99,6 +113,10 @@ use Illuminate\Support\Str;
                         </strong>
                         <br>
                       <small class="text-muted">{{ __('messagess.employee') }}: {{ $service->employee->full_name ?? '-' }}</small>
+                      @if($service->start_date_time)
+                        <br>
+                        <small class="text-muted">وقت الحجز: {{ date('d/m/Y H:i', strtotime($service->start_date_time)) }}</small>
+                      @endif
                     </div>
                   </td>
                   <td class="prc">

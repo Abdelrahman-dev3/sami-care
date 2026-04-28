@@ -455,7 +455,7 @@ return [
     'gift_card_recipient_required' => 'اسم المستلم مطلوب',
     'gift_card_phone_required' => 'رقم الهاتف مطلوب',
     'gift_card_delivery_method_required' => 'طريقة التوصيل مطلوبة',
-
+    'complete_booking_notice' => 'لضمان تأكيد الحجز، يُرجى إكماله خلال :minutes دقيقة، حيث سيتم إلغاؤه تلقائيًا من السلة بعد ذلك.',
     'gift_cards_list' => 'قائمة بطاقات الهدايا',
     'invoice_cards_list' => 'قائمة الفواتير ',
     'gift_card_name' => 'اسم البطاقة',

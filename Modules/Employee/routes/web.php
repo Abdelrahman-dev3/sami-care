@@ -19,6 +19,17 @@ use Modules\Employee\Http\Controllers\Backend\EmployeesController;
  *
  * --------------------------------------------------------------------
  */
+/*
+ * Frontend Routes for Employee Rating
+ */
+Route::group(['middleware' => ['auth']], function () {
+    Route::post('/employee/rating', [EmployeesController::class, 'store_rating'])->name('employee.rating.store');
+    Route::get('/employee/rating/booking/{booking_id}', [EmployeesController::class, 'get_booking_ratings'])->name('employee.rating.booking');
+});
+
+/*
+ * Backend Routes
+ */
 Route::group(['prefix' => 'app', 'as' => 'backend.', 'middleware' => ['auth']], function () {
     /*
      * These routes need view-backend permission

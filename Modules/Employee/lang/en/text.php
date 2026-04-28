@@ -12,4 +12,12 @@ return [
     'deleted_by' => 'Deleted By',
     'action' => 'Action',
 
+    // Employee Rating translations
+    'rating_booking_not_found' => 'Booking not found or not completed.',
+    'rating_employee_not_found' => 'Employee not found in this booking.',
+    'rating_updated' => 'Rating updated successfully.',
+    'rating_created' => 'Rating submitted successfully.',
+    'review_title' => 'Employee Reviews',
+    'title' => 'Employee',
+
 ];
