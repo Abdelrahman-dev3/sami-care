@@ -194,6 +194,7 @@
         const steps = document.querySelectorAll('.step');
         const stepContents = document.querySelectorAll('.step-content');
         const progressSteps = document.querySelectorAll('.progress-step');
+        const navigation = document.querySelector('.navigation');
         const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
         const currentLang = "{{ app()->getLocale() }}";
@@ -2022,7 +2023,7 @@
                         currentStep = 4;
                         showBookingSummary();
                     }
-                    nextBtn.textContent = translations.complete;
+                    navigation.display = 'none';
                     break;
             }
             return true;

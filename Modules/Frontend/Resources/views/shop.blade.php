@@ -196,7 +196,7 @@
     @include('components.frontend.progress-bar')
     @include('components.frontend.notifications')
 
-    <div class="position-relative" style="height: 17vh;">
+    <div class="position-relative" style="height:15vh;">
 
         @include('components.frontend.second-navbar')
     </div>
