@@ -91,17 +91,15 @@
             align-items: center;
         }
         .category-item {
-            width: auto;
-            min-width: 110px;
-            transition: 0.3s;
+            width: 110px;
+            aspect-ratio: 1 / 1;
         }
+
         .category-item img {
             width: 100%;
-            height: 110px;
-            cursor: pointer;
-            object-fit: cover;
+            height: 100%;
             border-radius: 50%;
-            transition: transform 0.3s ease;
+            object-fit: cover;
         }
         .category-item p {
             margin-top: 10px;
