@@ -41,7 +41,7 @@
             align-items: center;
         }
         .swiper-slide img{
-            width: 100%;
+            width: 86%;
             height: 250px;
             object-fit: cover;
             border-radius: 8px;
