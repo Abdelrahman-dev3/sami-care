@@ -16,7 +16,11 @@ class EmployeeRating extends Model
     protected $table = 'employee_rating';
 
     protected $fillable = [
-        'employee_id', 'review_msg', 'rating', 'user_id', 'booking_id',
+        'employee_id',
+        'review_msg',
+        'rating',
+        'user_id',
+        'booking_id',
     ];
 
     protected static function newFactory()

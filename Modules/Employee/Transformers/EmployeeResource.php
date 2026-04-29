@@ -34,6 +34,7 @@ class EmployeeResource extends JsonResource
             'updated_at' => $this->updated_at,
             'deleted_at' => $this->deleted_at,
             'rating_star' => count($this->rating) > 0 ? (float) number_format(max($this->rating->avg('rating'), 0), 2) : 0,
+            'total_reviews' => count($this->rating) > 0 ? $this->rating->count() : 0,
             'about_self' => $this->profile->about_self ?? null,
             'facebook_link' => $this->profile->facebook_link ?? null,
             'instagram_link' => $this->profile->instagram_link ?? null,

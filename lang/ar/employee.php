@@ -89,4 +89,15 @@ return [
     'select_employee' => 'اختر موظفًا',
     'singular_title_manager' => 'مدير',
 
+    // Employee Rating translations
+    'rating_booking_not_found' => 'الحجز غير موجود أو غير مكتمل.',
+    'rating_employee_not_found' => 'الموظف غير موجود في هذا الحجز.',
+    'rating_updated' => 'تم تحديث التقييم بنجاح.',
+    'rating_created' => 'تم إرسال التقييم بنجاح.',
+    'rate_employee' => 'تقييم الموظف',
+    'rate' => 'تقييم',
+    'overall_rating' => 'التقييم العام',
+    'total_reviews' => 'إجمالي التقييمات',
+    'rated_employees' => 'الموظفين المُقيَّمين',
+
 ];

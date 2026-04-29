@@ -137,14 +137,14 @@ class EmployeesController extends Controller
         return response()->json($data);
     }
 
-    public function store_working_houer(Request $request , $id)
+    public function store_working_houer(Request $request, $id)
     {
-     $workingHours = $request->input('working_hours', []);
-    
+        $workingHours = $request->input('working_hours', []);
+
         foreach ($workingHours as $dayName => $data) {
-    
+
             $isHoliday = isset($data['is_holiday']) && $data['is_holiday'] == '1';
-    
+
             StaffWorkingHour::updateOrCreate(
                 [
                     'staff_id' => $id,
@@ -158,7 +158,7 @@ class EmployeesController extends Controller
                 ]
             );
         }
-    
+
         return back()->with('success', 'تم حفظ ساعات العمل بنجاح');;
     }
 
@@ -243,7 +243,7 @@ class EmployeesController extends Controller
     public function index_data(Datatables $datatable, Request $request)
     {
         $module_name = $this->module_name;
-        $query = User::select('users.*')->role(['employee', 'manager'])->branch()->with('media', 'mainBranch','mainShift');
+        $query = User::select('users.*')->role(['employee', 'manager'])->branch()->with('media', 'mainBranch', 'mainShift');
 
         $filter = $request->filter;
 
@@ -355,7 +355,6 @@ class EmployeesController extends Controller
                 } else {
                     return $data->updated_at->isoFormat('llll');
                 }
-
             })
             ->rawColumns(['service'])
             ->orderColumns(['id'], '-:column $1');
@@ -389,8 +388,8 @@ class EmployeesController extends Controller
 
         $data = User::create($data);
 
-        if($data){
-            $wallet= [
+        if ($data) {
+            $wallet = [
                 'title' => $data->first_name . ' ' . $data->last_name,
                 'user_id' => $data->id,
                 'amount' => 0,
@@ -509,7 +508,7 @@ class EmployeesController extends Controller
         $data['branch_id'] = $data->branch->branch_id ?? null;
 
         $data['shift_id'] = $data->branch->shift_id ?? null;
-        
+
         $data['show_in_home_booking'] = $data->show_in_home_booking;
 
         $data['service_id'] = $data->services->pluck('service_id') ?? [];
@@ -550,7 +549,7 @@ class EmployeesController extends Controller
         } else {
             $request_data = $request->except('password');
         }
-    
+
         $request_data['show_in_home_booking'] = $request->input('show_in_home_booking', 0);
 
         $data->update($request_data);
@@ -649,10 +648,10 @@ class EmployeesController extends Controller
         if (env('IS_DEMO')) {
             return response()->json(['message' => __('messages.permission_denied'), 'status' => false], 200);
         }
-    
+
         // Find user by ID with role 'employee'
         $data = User::role('employee')->findOrFail($id);
-        
+
         $bookingIds = BookingService::where('employee_id', $id)->pluck('booking_id');
 
         $statusUpdate = Booking::whereIn('id', $bookingIds)
@@ -665,10 +664,10 @@ class EmployeesController extends Controller
         $data->forceDelete();
 
         $message = __('messages.delete_form', ['form' => __('employee.singular_title')]);
-    
+
         return response()->json(['message' => $message, 'status' => true], 200);
     }
-    
+
 
     public function update_status(Request $request, $id)
     {
@@ -995,7 +994,7 @@ class EmployeesController extends Controller
         $ratings = EmployeeRating::where('booking_id', $booking_id)->get();
 
         $result = [];
-        
+
         // Get all employees from this booking
         $employees = [];
         foreach ($booking->services as $service) {
@@ -1026,5 +1025,4 @@ class EmployeesController extends Controller
             'data' => $result
         ]);
     }
-
 }

@@ -24,6 +24,7 @@ return [
     'lbl_amount' => 'Amount',
     'lbl_duration' => 'Duration',
     'lbl_staff_name' => 'Staff Name',
+    'lbl_ratings' => 'Ratings',
     'lbl_services' => 'Services',
     'lbl_update_at' => 'Updated At',
     'lbl_status' => 'Status',

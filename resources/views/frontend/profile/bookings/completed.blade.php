@@ -150,10 +150,32 @@
             text-align: start;
         }
     }
+    .star-rating {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+    }
+    .star-input {
+        display: none;
+    }
+    .star-label {
+        font-size: 1.5rem;
+        color: #ddd;
+        cursor: pointer;
+        margin: 0 2px;
+    }
+    .star-input:checked ~ .star-label {
+        color: #ffc107;
+    }
+    .star-label:hover,
+    .star-label:hover ~ .star-label {
+        color: #ffc107;
+    }
   </style>
 </head>
 <body class="bg-white">
 @include('components.frontend.progress-bar')
+@include('components.frontend.notifications')
 <div class="position-relative" style="height: 17vh;">
     @include('components.frontend.second-navbar')
 </div>
@@ -197,7 +219,10 @@
                     {{ \Carbon\Carbon::parse($booking->start_date_time)->format('H:i') }}
                   </td>
                   <td>
-                    *****
+                      <button type="button" class="btn btn-sm btn-warning" 
+                              onclick="openRatingModal({{ $booking->id }})">
+                          <i class="fa-solid fa-star"></i> {{ __('employee.rate') }}
+                      </button>
                   </td>
                 </tr>
                 @endforeach
@@ -207,6 +232,22 @@
       </div>
     </div>
   </div>
+  
+    <!-- Employee Rating Modal -->
+    <div class="modal fade" style="z-index: 999999999999999999999;" id="ratingModal" tabindex="-1" aria-labelledby="ratingModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="ratingModalLabel">{{ __('employee.rate_employee') }}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" id="ratingModalBody">
+            <!-- Dynamic content will be loaded here -->
+          </div>
+        </div>
+      </div>
+    </div>
+    
 </div>
 <div class="position-relative" style="height: 17vh;"></div>
 <!-- Footer -->
@@ -223,6 +264,180 @@
     @if (session('error'))
         toastr.error("{{ session('error') }}");
     @endif
+    
+    // Employee Rating Functions
+    function openRatingModal(bookingId) {
+        fetch(`/employee/rating/booking/${bookingId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status) {
+                    showRatingForm(data.data, bookingId);
+                } else {
+                    createNotify({ title: '', desc: data.message });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                createNotify({ title: '', desc: 'حدث خطأ في تحميل التقييمات' });
+            });
+    }
+
+    function showRatingForm(employees, bookingId) {
+        const modalBody = document.getElementById('ratingModalBody');
+        let html = '';
+
+        if (employees.length === 0) {
+            html = '<p class="text-center">لا يوجد موظفين في هذا الحجز</p>';
+        } else {
+            employees.forEach(function(emp) {
+                html += `
+                    <div class="mb-4 p-3 border rounded">
+                        <div class="d-flex align-items-center mb-3">
+                            <img src="${emp.employee_image || '{{ asset("images/user.png") }}'}" 
+                                 class="rounded-circle me-2" width="50" height="50" alt="">
+                            <strong>${emp.employee_name}</strong>
+                        </div>
+                        ${emp.already_rated ? `
+                            <div class="text-warning mb-2">
+                                ${getStarDisplay(emp.rating)}
+                            </div>
+                            <p class="mb-0">${emp.review_msg || ''}</p>
+                            <button class="btn btn-sm btn-primary mt-2" onclick="editRating(${bookingId}, ${emp.employee_id})">
+                                تعديل التقييم
+                            </button>
+                        ` : `
+                            <div class="rating-input mb-2">
+                                <label class="d-block mb-1">التقييم:</label>
+                                <div class="star-rating">
+                                    ${getStarInputs(emp.employee_id)}
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <label class="d-block mb-1">التعليق (اختياري):</label>
+                                <textarea class="form-control" id="review_msg_${emp.employee_id}" rows="2" 
+                                          placeholder="أضف تعليقك..."></textarea>
+                            </div>
+                            <button class="btn btn-success" onclick="submitRating(${bookingId}, ${emp.employee_id})">
+                                إرسال التقييم
+                            </button>
+                        `}
+                    </div>
+                `;
+            });
+        }
+
+        modalBody.innerHTML = html;
+        var ratingModal = new bootstrap.Modal(document.getElementById('ratingModal'));
+        ratingModal.show();
+    }
+
+    function getStarInputs(employeeId) {
+        let html = '';
+        for (let i = 5; i >= 1; i--) {
+            html += `
+                <input type="radio" name="rating_${employeeId}" value="${i}" id="star${i}_${employeeId}" 
+                       class="star-input" ${i === 5 ? 'checked' : ''}>
+                <label for="star${i}_${employeeId}" class="star-label">
+                    <i class="fa-solid fa-star"></i>
+                </label>
+            `;
+        }
+        return html;
+    }
+
+    function getStarDisplay(rating) {
+        let html = '';
+        for (let i = 1; i <= 5; i++) {
+            if (i <= rating) {
+                html += '<i class="fa-solid fa-star text-warning"></i>';
+            } else {
+                html += '<i class="fa-regular fa-star text-secondary"></i>';
+            }
+        }
+        return html;
+    }
+
+    function submitRating(bookingId, employeeId) {
+        const rating = document.querySelector(`input[name="rating_${employeeId}"]:checked`).value;
+        const reviewMsg = document.getElementById(`review_msg_${employeeId}`).value;
+
+        fetch('/employee/rating', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({
+                booking_id: bookingId,
+                employee_id: employeeId,
+                rating: rating,
+                review_msg: reviewMsg
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status) {
+                createNotify({ title: '', desc: data.message });
+                openRatingModal(bookingId); // Refresh the modal
+            } else {
+                createNotify({ title: '', desc: data.message });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            createNotify({ title: '', desc: 'حدث خطأ في إرسال التقييم' });
+        });
+    }
+
+    function editRating(bookingId, employeeId) {
+        const modalBody = document.getElementById('ratingModalBody');
+        fetch(`/employee/rating/booking/${bookingId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status) {
+                    const emp = data.data.find(e => e.employee_id === employeeId);
+                    if (emp) {
+                        let html = `
+                            <div class="mb-4 p-3 border rounded">
+                                <div class="d-flex align-items-center mb-3">
+                                    <img src="${emp.employee_image || '{{ asset("images/user.png") }}'}" 
+                                         class="rounded-circle me-2" width="50" height="50" alt="">
+                                    <strong>${emp.employee_name}</strong>
+                                </div>
+                                <div class="rating-input mb-2">
+                                    <label class="d-block mb-1">التقييم:</label>
+                                    <div class="star-rating">
+                                        ${getStarInputsEdit(employeeId, emp.rating)}
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="d-block mb-1">التعليق (اختياري):</label>
+                                    <textarea class="form-control" id="review_msg_${employeeId}" rows="2">${emp.review_msg || ''}</textarea>
+                                </div>
+                                <button class="btn btn-success" onclick="submitRating(${bookingId}, ${employeeId})">
+                                    تحديث التقييم
+                                </button>
+                            </div>
+                        `;
+                        modalBody.innerHTML = html;
+                    }
+                }
+            });
+    }
+
+    function getStarInputsEdit(employeeId, currentRating) {
+        let html = '';
+        for (let i = 5; i >= 1; i--) {
+            html += `
+                <input type="radio" name="rating_${employeeId}" value="${i}" id="star${i}_${employeeId}" 
+                       class="star-input" ${i === currentRating ? 'checked' : ''}>
+                <label for="star${i}_${employeeId}" class="star-label">
+                    <i class="fa-solid fa-star"></i>
+                </label>
+            `;
+        }
+        return html;
+    }
 </script>
 </body>
 </html>

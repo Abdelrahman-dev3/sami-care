@@ -9,6 +9,51 @@
     <link rel="stylesheet" href="{{ mix('modules/constant/style.css') }}">
 @endpush
 @section('content')
+    <!-- Employee Ratings Statistics -->
+    @php
+        $employeeStats = \Modules\Employee\Models\EmployeeRating::select('employee_id')
+            ->selectRaw('AVG(rating) as avg_rating, COUNT(*) as total_reviews')
+            ->groupBy('employee_id')
+            ->get();
+        $overallAvg = $employeeStats->avg('avg_rating') ?? 0;
+        $totalReviews = $employeeStats->sum('total_reviews');
+    @endphp
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">{{ __('employee.overall_rating') }}</h5>
+                    <h2 class="mb-0">
+                        @for($i = 1; $i <= 5; $i++)
+                            @if($i <= round($overallAvg))
+                                <i class="fa-solid fa-star text-warning"></i>
+                            @else
+                                <i class="fa-regular fa-star"></i>
+                            @endif
+                        @endfor
+                        <span class="ms-2">{{ number_format($overallAvg, 1) }}</span>
+                    </h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">{{ __('employee.total_reviews') }}</h5>
+                    <h2 class="mb-0">{{ $totalReviews }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">{{ __('employee.rated_employees') }}</h5>
+                    <h2 class="mb-0">{{ $employeeStats->count() }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="card">
         <div class="card-body">
             <x-backend.section-header>

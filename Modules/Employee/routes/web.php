@@ -22,6 +22,7 @@ use Modules\Employee\Http\Controllers\Backend\EmployeesController;
 /*
  * Frontend Routes for Employee Rating
  */
+
 Route::group(['middleware' => ['auth']], function () {
     Route::post('/employee/rating', [EmployeesController::class, 'store_rating'])->name('employee.rating.store');
     Route::get('/employee/rating/booking/{booking_id}', [EmployeesController::class, 'get_booking_ratings'])->name('employee.rating.booking');
@@ -45,17 +46,17 @@ Route::group(['prefix' => 'app', 'as' => 'backend.', 'middleware' => ['auth']], 
      *
      * ---------------------------------------------------------------------
      */
-     Route::get('/staff-working-hours/{id}', function ($userId) {
-    return view('employee::backend.employees.staff-working-hours', ['userId' => $userId]);
-});
-            Route::post('/staff/working-hours/{id}', [EmployeesController::class, 'store_working_houer'])->name('staff.working-hours.store');
+    Route::get('/staff-working-hours/{id}', function ($userId) {
+        return view('employee::backend.employees.staff-working-hours', ['userId' => $userId]);
+    });
+    Route::post('/staff/working-hours/{id}', [EmployeesController::class, 'store_working_houer'])->name('staff.working-hours.store');
 
 
     Route::group(['prefix' => 'employees', 'as' => 'employees.'], function () {
         Route::get('index_list', [EmployeesController::class, 'index_list'])->name('index_list');
         Route::get('commision_list', [EmployeesController::class, 'commision_list'])->name('commision_list');
 
-Route::post('change-password', [EmployeesController::class, 'change_password'])->name('change_password');
+        Route::post('change-password', [EmployeesController::class, 'change_password'])->name('change_password');
 
 
         Route::get('employee_list', [EmployeesController::class, 'employee_list'])->name('employee_list');

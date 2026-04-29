@@ -19,5 +19,10 @@ return [
     'rating_created' => 'Rating submitted successfully.',
     'review_title' => 'Employee Reviews',
     'title' => 'Employee',
+    'rate_employee' => 'Rate Employee',
+    'rate' => 'Rate',
+    'overall_rating' => 'Overall Rating',
+    'total_reviews' => 'Total Reviews',
+    'rated_employees' => 'Rated Employees',
 
 ];

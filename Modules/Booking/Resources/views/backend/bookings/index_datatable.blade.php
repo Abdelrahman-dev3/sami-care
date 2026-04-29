@@ -8,6 +8,7 @@
             class="fa-solid fa-calendar-days me-2"></i>{{ __('messages.calender_view') }}</a>
 @endsection
 @section('content')
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 <style>
     td.dt-center, th.dt-center {
     text-align: center;
@@ -193,6 +194,14 @@
                 data: 'employee_id',
                 name: 'employee_id',
                 title: "{{ __('booking.lbl_staff_name') }}"
+            },
+            {
+                data: 'employee_ratings',
+                name: 'employee_ratings',
+                title: "{{ __('booking.lbl_ratings') }}",
+                orderable: false,
+                searchable: false,
+                width: '10%'
             },
             {
                 data: 'services',

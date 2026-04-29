@@ -194,7 +194,6 @@
         const steps = document.querySelectorAll('.step');
         const stepContents = document.querySelectorAll('.step-content');
         const progressSteps = document.querySelectorAll('.progress-step');
-        const navigation = document.querySelector('.navigation');
         const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
         const currentLang = "{{ app()->getLocale() }}";
@@ -421,7 +420,9 @@
 
             return {
                 id: staff.id,
-                name: fullName || (currentLang === 'ar' ? 'موظف' : 'Staff')
+                name: fullName || (currentLang === 'ar' ? 'موظف' : 'Staff'),
+                avg_rating: staff.avg_rating || 0,
+                total_reviews: staff.total_reviews || 0
             };
         }
 
@@ -1271,12 +1272,28 @@
                         card.dataset.subserve = subserve;
                         const fullName = staff.full_name || `${staff.first_name || ''} ${staff.last_name || ''}`;
                         const initials = fullName.trim().split(' ').map(word => word[0]).join('').substring(0, 2).toUpperCase();
+                        
+                        // Generate stars HTML
+                        let starsHtml = '';
+                        const rating = staff.avg_rating || 0;
+                        const reviewCount = staff.total_reviews || 0;
+                        for (let i = 1; i <= 5; i++) {
+                            if (i <= Math.round(rating)) {
+                                starsHtml += '<i class="fa-solid fa-star" style="color: #ffc107; font-size: 12px;"></i>';
+                            } else {
+                                starsHtml += '<i class="fa-regular fa-star" style="color: #ddd; font-size: 12px;"></i>';
+                            }
+                        }
 
                         card.innerHTML = `
                             <div class="staff-avatar" style="background: linear-gradient(45deg, ${staff.color1 || '#4a90e2'}, ${staff.color2 || '#7b68ee'}); display: flex; align-items: center; justify-content: center; color: white; font-size: 24px;">
                                 ${initials}
                             </div>
                             <div class="staff-name">${fullName}</div>
+                            <div class="staff-rating" style="margin-top: 5px;">
+                                <div style="display: flex; gap: 2px; justify-content: center;">${starsHtml}</div>
+                                <small style="color: #666; font-size: 11px;">(${reviewCount} {{ __('profile.reviews') }})</small>
+                            </div>
                         `;
 
                         card.addEventListener('click', () => {
@@ -2021,9 +2038,9 @@
                         return false;
                     }else{
                         currentStep = 4;
+                        document.querySelector('.navigation').style.display = 'none';
                         showBookingSummary();
                     }
-                    navigation.display = 'none';
                     break;
             }
             return true;

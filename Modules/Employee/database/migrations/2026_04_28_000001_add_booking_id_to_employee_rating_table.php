@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::table('employee_rating', function (Blueprint $table) {
             $table->unsignedBigInteger('booking_id')->nullable()->after('user_id');
             $table->foreign('booking_id')->references('id')->on('bookings')->onDelete('cascade');
-            
+
             $table->index(['employee_id', 'booking_id']);
         });
     }

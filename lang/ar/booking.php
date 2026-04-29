@@ -24,6 +24,7 @@ return [
     'lbl_amount' => 'المبلغ',
     'lbl_duration' => 'المدة الزمنية',
     'lbl_staff_name' => 'الموظف',
+    'lbl_ratings' => 'التقييمات',
     'lbl_services' => 'الخدمات',
     'lbl_update_at' => 'تم التحديث في',
     'lbl_status' => 'الحالة',

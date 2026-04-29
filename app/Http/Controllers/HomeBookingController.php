@@ -120,6 +120,15 @@ class HomeBookingController extends Controller
     
         $employees = $query->select('users.*')->get();
     
+        // Add rating data to each employee
+        $employees = $employees->map(function ($employee) {
+            $user = User::find($employee->id);
+            $ratings = $user->rating ?? collect([]);
+            $employee->avg_rating = $ratings->count() > 0 ? (float) number_format($ratings->avg('rating'), 2) : 0;
+            $employee->total_reviews = $ratings->count();
+            return $employee;
+        });
+    
         return response()->json($employees);
 }
 

@@ -389,6 +389,26 @@ class BookingsController extends Controller
 
                 return view('booking::backend.bookings.datatable.employee_id', compact('Profile_image', 'name', 'email'));
             })
+            ->editColumn('employee_ratings', function ($data) {
+                $ratings = \Modules\Employee\Models\EmployeeRating::where('booking_id', $data->id)->get();
+                
+                if ($ratings->isEmpty()) {
+                    return '<span class="badge bg-secondary">لا توجد تقييمات</span>';
+                }
+                
+                $html = '';
+                foreach ($ratings as $rating) {
+                    $stars = '';
+                    for ($i = 1; $i <= 5; $i++) {
+                        $stars .= $i <= $rating->rating 
+                            ? '<i class="fa-solid fa-star text-warning"></i>' 
+                            : '<i class="fa-regular fa-star text-secondary"></i>';
+                    }
+                    $html .= '<div class="mb-1"><small>' . $stars . '</small></div>';
+                }
+                
+                return $html;
+            })
             ->editColumn('service_amount', function ($data) {
                 $serviceAmount = $data->services->sum('service_price');
                 if ($data->bookingPackages->isNotEmpty()) {
@@ -477,7 +497,20 @@ class BookingsController extends Controller
                 });
                 return $changed ? 1 : 0;
             })
-            ->rawColumns(['check', 'id', 'action', 'status', 'services', 'service_duration', 'service_amount', 'start_date_time', 'payment_status', 'packages', 'change_staff'])
+            ->rawColumns([
+                'check',
+                'id',
+                'action',
+                'status',
+                'services',
+                'service_duration',
+                'service_amount',
+                'start_date_time',
+                'payment_status',
+                'packages',
+                'change_staff',
+                'employee_ratings' // 👈 أضف دي
+            ])
             // ->orderColumn('updated_at', 'desc')
             ->orderColumns(['id'], '-:column $1')
             ->make(true);

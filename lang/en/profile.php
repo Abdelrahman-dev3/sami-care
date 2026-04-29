@@ -28,6 +28,8 @@ return [
     "employee"=> "Employee",
     "branch"=> "Branch",
     'loyalty_points' => ' Points',
+    'rating' => 'Rating',
+    'reviews' => 'reviews',
     'logout' => 'Logout',
     'type' => 'Type',
     'birth_date' => 'Birth Date',
