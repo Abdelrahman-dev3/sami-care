@@ -305,8 +305,8 @@
           disableOnInteraction: false,
         },
         breakpoints: {
-          0: { slidesPerView: 3, spaceBetween: 12 },
-          576: { slidesPerView: 4, spaceBetween: 16 },
+          0: { slidesPerView: 1, spaceBetween: 12 },
+          576: { slidesPerView: 2, spaceBetween: 16 },
           768: { slidesPerView: 5, spaceBetween: 18 },
           1024: { slidesPerView: 6, spaceBetween: 20 },
         }
