@@ -25,4 +25,12 @@ return [
     'every_30_days' => 'كل 30 يوم',
     'save_interval' => 'حفظ المدة',
     'interval_saved_successfully' => 'تم حفظ مدة ظهور عجلة الحظ بنجاح',
+    'wheel_status' => 'حالة عجلة الحظ',
+    'wheel_is_enabled' => 'عجلة الحظ مفعلة حاليا',
+    'wheel_is_disabled' => 'عجلة الحظ متوقفة حاليا',
+    'wheel_status_hint' => 'يمكنك تفعيل أو إيقاف ظهور عجلة الحظ من هنا.',
+    'enable_wheel' => 'تفعيل عجلة الحظ',
+    'disable_wheel' => 'إلغاء تفعيل عجلة الحظ',
+    'wheel_enabled_successfully' => 'تم تفعيل عجلة الحظ بنجاح',
+    'wheel_disabled_successfully' => 'تم إلغاء تفعيل عجلة الحظ بنجاح',
 ];

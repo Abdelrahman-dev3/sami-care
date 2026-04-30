@@ -24,5 +24,13 @@ return [
     'every_30_days' => 'Every 30 days',
     'save_interval' => 'Save Interval',
     'interval_saved_successfully' => 'Wheel display interval saved successfully',
+    'wheel_status' => 'Wheel Status',
+    'wheel_is_enabled' => 'Wheel of Fortune is currently enabled',
+    'wheel_is_disabled' => 'Wheel of Fortune is currently disabled',
+    'wheel_status_hint' => 'You can enable or disable the wheel visibility from here.',
+    'enable_wheel' => 'Enable Wheel',
+    'disable_wheel' => 'Disable Wheel',
+    'wheel_enabled_successfully' => 'Wheel of Fortune enabled successfully',
+    'wheel_disabled_successfully' => 'Wheel of Fortune disabled successfully',
 
 ];

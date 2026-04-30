@@ -69,6 +69,31 @@
 
         <div class="card mb-4">
             <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-power"></i> {{ __('wheel.wheel_status') }}</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ route('Wheel.store') }}" method="POST" class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                    @csrf
+                    <input type="hidden" name="form_type" value="toggle">
+                    <input type="hidden" name="wheel_enabled" value="{{ $wheelEnabled ? 0 : 1 }}">
+
+                    <div>
+                        <div class="fw-semibold mb-1">
+                            {{ $wheelEnabled ? __('wheel.wheel_is_enabled') : __('wheel.wheel_is_disabled') }}
+                        </div>
+                        <small class="text-muted">{{ __('wheel.wheel_status_hint') }}</small>
+                    </div>
+
+                    <button class="btn {{ $wheelEnabled ? 'btn-outline-danger' : 'btn-gold' }}">
+                        <i class="bi {{ $wheelEnabled ? 'bi-pause-circle' : 'bi-play-circle' }}"></i>
+                        {{ $wheelEnabled ? __('wheel.disable_wheel') : __('wheel.enable_wheel') }}
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-white">
                 <h5 class="mb-0"><i class="bi bi-clock-history"></i> {{ __('wheel.wheel_display_interval') }}</h5>
             </div>
             <div class="card-body">

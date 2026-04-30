@@ -26,6 +26,7 @@ class WheelController extends Controller
 
     public function prizes(): JsonResponse
     {
+        $wheelEnabled = $this->isWheelEnabled();
         $prizes = Wheel::query()
             ->where('reward_value', '>', 0)
             ->orderBy('id')
@@ -41,6 +42,7 @@ class WheelController extends Controller
         return response()->json([
             'status' => true,
             'data' => [
+                'enabled' => $wheelEnabled,
                 'display_interval_days' => max((int) Setting::get('wheel_display_interval_days', 1), 1),
                 'prizes' => $prizes,
             ],
@@ -49,6 +51,13 @@ class WheelController extends Controller
 
     public function spin(Request $request): JsonResponse
     {
+        if (! $this->isWheelEnabled()) {
+            return response()->json([
+                'status' => false,
+                'message' => __('messagess.wheel_not_available_now'),
+            ], 403);
+        }
+
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'phone' => 'required|string|max:30',
@@ -313,5 +322,10 @@ class WheelController extends Controller
     private function formatRewardNumber(float|int $value): float|int
     {
         return floor((float) $value) == (float) $value ? (int) $value : round((float) $value, 2);
+    }
+
+    private function isWheelEnabled(): bool
+    {
+        return (bool) Setting::get('wheel_enabled', true);
     }
 }

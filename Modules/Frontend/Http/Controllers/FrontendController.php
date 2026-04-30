@@ -80,6 +80,10 @@ class FrontendController extends Controller
 
     private function shouldShowWheel(int $intervalDays): bool
     {
+        if (! (bool) Setting::get('wheel_enabled', true)) {
+            return false;
+        }
+
         if (Auth::check()) {
             return $this->wheelCooldownService->shouldShowWheel(
                 intervalDays: $intervalDays,

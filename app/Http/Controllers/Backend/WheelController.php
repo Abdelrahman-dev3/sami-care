@@ -28,12 +28,26 @@ class WheelController extends Controller
 
         $prizes = Wheel::all();
         $wheelDisplayIntervalDays = (int) Setting::get('wheel_display_interval_days', 1);
+        $wheelEnabled = (bool) Setting::get('wheel_enabled', true);
 
-        return view('backend.wheel.index_datatable', compact('prizes', 'wheelDisplayIntervalDays'));
+        return view('backend.wheel.index_datatable', compact('prizes', 'wheelDisplayIntervalDays', 'wheelEnabled'));
 
     }
 
     public function store(Request $request){
+        if ($request->input('form_type') === 'toggle') {
+            $request->validate([
+                'wheel_enabled' => 'required|boolean',
+            ]);
+
+            $wheelEnabled = (bool) $request->boolean('wheel_enabled');
+            Setting::set('wheel_enabled', $wheelEnabled ? 1 : 0, 'boolean');
+
+            return redirect()->back()->with('success', $wheelEnabled
+                ? __('wheel.wheel_enabled_successfully')
+                : __('wheel.wheel_disabled_successfully'));
+        }
+
         if ($request->input('form_type') === 'interval') {
             $request->validate([
                 'wheel_display_interval_days' => 'required|integer|min:1|max:365',
@@ -70,6 +84,13 @@ class WheelController extends Controller
                 'status' => false,
                 'message' => __('auth.unauthenticated'),
             ], 401);
+        }
+
+        if (! $this->isWheelEnabled()) {
+            return response()->json([
+                'status' => false,
+                'message' => __('messagess.wheel_not_available_now'),
+            ], 403);
         }
 
         $data = $request->validate([
@@ -246,6 +267,11 @@ class WheelController extends Controller
         return floor((float) $value) == (float) $value ? (int) $value : round((float) $value, 2);
     }
 
+    private function isWheelEnabled(): bool
+    {
+        return (bool) Setting::get('wheel_enabled', true);
+    }
+
     public function destroy_all(){
         Wheel::truncate();
         return redirect()->back()->with('success', __('wheel.success_delete_all'));
@@ -257,7 +283,6 @@ class WheelController extends Controller
         return redirect()->back()->with('success', __('wheel.The_award_has_been_deleted_successfully'));
     }
 }
-
 
 
 
