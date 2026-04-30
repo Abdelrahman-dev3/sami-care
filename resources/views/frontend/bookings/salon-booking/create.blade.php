@@ -349,6 +349,8 @@
         function closeBookingSummary() {
             summaryCard.classList.remove('show');
             summaryCard.classList.add('hidden');
+            currentStep = 4;
+            updateUI();
         }
 
         function getSelectedSubServices() {
@@ -850,6 +852,7 @@
             // Update navigation buttons
             prevBtn.disabled = currentStep === 1;
             nextBtn.textContent = currentStep === maxSteps ? translations.complete : translations.next;
+            document.querySelector('.navigation').style.display = currentStep === 1 ? 'none' : 'flex';
             fetchbranch({{$first_States->id}})
 
             if (currentStep === 3) {
@@ -864,6 +867,7 @@
             }
 
             if (currentStep === 4) {
+                updateSummarySteps();
                 const activeScheduleService = ensureActiveServiceGroup(getSelectedServiceGroups());
                 activeServiceGroupId = activeScheduleService?.id || null;
                 activeStaffId = activeScheduleService ? getSelectedStaffIdForService(activeScheduleService) : null;
@@ -1590,9 +1594,6 @@
                                     <div class="staff-service-card__subservice">
                                         <div class="staff-service-card__subservice-info">
                                             <span class="staff-service-card__subservice-name">${sub.name}</span>
-                                            <span class="staff-service-card__subservice-caption">
-                                                ${currentLang === 'ar' ? 'خدمة فرعية مختارة' : 'Selected sub-service'}
-                                            </span>
                                         </div>
                                         <div class="staff-service-card__subservice-meta">
                                             <span>${Number(sub.duration || 0)} ${currentLang === 'ar' ? 'دقيقة' : 'min'}</span>
@@ -1750,9 +1751,6 @@
                                     <div class="staff-service-card__subservice">
                                         <div class="staff-service-card__subservice-info">
                                             <span class="staff-service-card__subservice-name">${sub.name}</span>
-                                            <span class="staff-service-card__subservice-caption">
-                                                ${currentLang === 'ar' ? 'خدمة فرعية مختارة' : 'Selected sub-service'}
-                                            </span>
                                         </div>
                                         <div class="staff-service-card__subservice-meta">
                                             <span>${Number(sub.duration || 0)} ${currentLang === 'ar' ? 'دقيقة' : 'min'}</span>
@@ -1821,10 +1819,45 @@
             });
         }
 
+        function getSummaryContainersToRender() {
+            const containers = [];
+            const activeStepSummary = document.querySelector(`#step${currentStep} .sammary-steps`);
+
+            if (activeStepSummary) {
+                containers.push(activeStepSummary);
+            }
+
+            if (summaryCard.classList.contains('show')) {
+                const summaryOverlayContainer = summaryCard.querySelector('.sammary-steps');
+                if (summaryOverlayContainer) {
+                    containers.push(summaryOverlayContainer);
+                }
+            }
+
+            return [...new Set(containers)];
+        }
+
+        function resetInactiveSummaryContainers(activeContainers = []) {
+            const activeContainerSet = new Set(activeContainers);
+
+            document.querySelectorAll('.sammary-steps').forEach((summaryContainer) => {
+                if (activeContainerSet.has(summaryContainer)) {
+                    return;
+                }
+
+                summaryContainer.innerHTML = '';
+                summaryContainer.classList.remove('staff-selection-layout');
+                summaryContainer.style.display = '';
+                summaryContainer.style.gridTemplateColumns = '';
+                summaryContainer.style.gap = '';
+            });
+        }
+
         function updateSummarySteps() {
             const isSummaryStage = summaryCard.classList.contains('show');
             renderSideCart();
-            const summaryContainers = document.querySelectorAll('.sammary-steps');
+            const summaryContainers = getSummaryContainersToRender();
+            resetInactiveSummaryContainers(summaryContainers);
             const selectedSubServices = getSelectedSubServices();
             summaryContainers.forEach(summaryContainer => {
                 summaryContainer.innerHTML = '';
@@ -1835,7 +1868,7 @@
                     return;
                 }
 
-                if (currentStep === 4 && !isSummaryStage) {
+                if (currentStep === 4) {
                     renderStepFourServiceCards(summaryContainer);
                     return;
                 }

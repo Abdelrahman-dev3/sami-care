@@ -21,7 +21,7 @@ class TaqnyatSmsService
     /**
      * إرسال رسالة SMS
      */
-    public function sendSms($recipients, $message, $sender = 'JO SPA')
+    public function sendSms($recipients, $message, $sender = 'SamiCare')
     { 
         if (!setting('is_taqnyat_sms')) {
             return false;
