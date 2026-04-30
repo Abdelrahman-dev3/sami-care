@@ -1799,8 +1799,8 @@
                                             ${subServicesMarkup}
                                         </div>
                                         <div class="staff-service-card__status ${storedDate && storedTime ? 'is-selected' : ''}">
-                                            ${String(activeService?.id) === String(service.id)
-                                                ? (currentLang === 'ar' ? 'هذا هو القسم النشط الآن لاختيار الموعد.' : 'This is the active category for scheduling right now.')
+                                            ${storedDate && storedTime
+                                                ? (currentLang === 'ar' ? 'تم اختيار تاريخ ووقت هذا القسم' : 'Date and time selected for this category')
                                                 : (currentLang === 'ar' ? 'اضغط لاختيار تاريخ ووقت هذا القسم' : 'Tap to choose date and time for this category')}
                                         </div>
                                     </button>

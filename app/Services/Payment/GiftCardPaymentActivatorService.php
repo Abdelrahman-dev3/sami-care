@@ -26,7 +26,7 @@ class GiftCardPaymentActivatorService
             ]);
 
             if ($giftCard->recipient_phone) {
-                $smsService->sendGift($giftCard->recipient_phone, $giftCard->recipient_name);
+                $smsService->sendGiftCardRecipientMessage($giftCard);
             }
         }
     }

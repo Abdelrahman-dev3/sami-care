@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\GiftCard;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Models\Setting;
+use Modules\Service\Models\Service;
 
 class TaqnyatSmsService
 {
@@ -61,13 +63,10 @@ class TaqnyatSmsService
      */
     public function sendWelcomeMessage($phone, $name)
     {
-        $message = setting('taqnyat_welcome_message');
-        $message = $this->replaceVariables($message, [
+        return $this->sendMessageFromSetting($phone, 'taqnyat_welcome_message', [
             'name' => $name,
             'app_name' => setting('app_name')
         ]);
-
-        return $this->sendSms($phone, $message);
     }
 
     /**
@@ -75,14 +74,11 @@ class TaqnyatSmsService
      */
     public function sendBookingCreatedMessage($phone, $bookingData)
     {
-        $message = setting('taqnyat_booking_created');
-        $message = $this->replaceVariables($message, [
+        return $this->sendMessageFromSetting($phone, 'taqnyat_booking_created', [
             'booking_id' => $bookingData['booking_id'] ?? '',
             'booking_date' => $bookingData['booking_date'] ?? '',
             'booking_time' => $bookingData['booking_time'] ?? ''
         ]);
-
-        return $this->sendSms($phone, $message);
     }
 
     /**
@@ -90,25 +86,40 @@ class TaqnyatSmsService
      */
     public function sendBookingCancelledMessage($phone, $bookingData)
     {
-        $message = setting('taqnyat_booking_cancelled');
-        $message = $this->replaceVariables($message, [
+        return $this->sendMessageFromSetting($phone, 'taqnyat_booking_cancelled', [
             'booking_id' => $bookingData['booking_id'] ?? ''
         ]);
-
-        return $this->sendSms($phone, $message);
     }
     /**
      * إرسال هدية
      */
-    public function sendGift($phone, $name)
+    public function sendGiftCardRecipientMessage(GiftCard $giftCard)
     {
-        $message = setting('taqnyat_recipient');
-        $message = $this->replaceVariables($message, [
-            'recipient_name' => $name,
-            'recipient_phone' => $phone,
-        ]);
+        $serviceNames = $giftCard->services_list
+            ->map(fn (Service $service) => $this->resolveDisplayValue($service->name))
+            ->filter()
+            ->implode('، ');
 
-        return $this->sendSms($phone, $message);
+        return $this->sendMessageFromSetting($giftCard->recipient_phone, 'taqnyat_recipient', [
+            'recipient_name' => $giftCard->recipient_name,
+            'recipient_phone' => $giftCard->recipient_phone,
+            'gift_ref' => (string) $giftCard->id,
+            'gift_services' => $serviceNames,
+            'gift_total' => $this->formatMoney($giftCard->subtotal ?? 0),
+            'app_name' => setting('app_name'),
+        ]);
+    }
+
+    public function sendMessageFromSetting($recipients, string $settingKey, array $variables = [], ?string $fallback = null)
+    {
+        $message = setting($settingKey, $fallback);
+        $message = $this->replaceVariables((string) $message, $variables);
+
+        if (trim($message) === '') {
+            return false;
+        }
+
+        return $this->sendSms($recipients, $message);
     }
 
     /**
@@ -117,9 +128,28 @@ class TaqnyatSmsService
     protected function replaceVariables($message, $variables)
     {
         foreach ($variables as $key => $value) {
-            $message = str_replace("[[{$key}]]", $value, $message);
+            $message = str_replace("[[{$key}]]", (string) $value, $message);
         }
         return $message;
+    }
+
+    protected function resolveDisplayValue($value): string
+    {
+        if (is_array($value)) {
+            $locale = app()->getLocale();
+            $translated = $value[$locale] ?? reset($value);
+
+            return is_string($translated) ? trim($translated) : '';
+        }
+
+        return is_string($value) ? trim($value) : '';
+    }
+
+    protected function formatMoney($amount): string
+    {
+        $amount = (float) $amount;
+
+        return floor($amount) == $amount ? (string) (int) $amount : number_format($amount, 2, '.', '');
     }
 
     /**

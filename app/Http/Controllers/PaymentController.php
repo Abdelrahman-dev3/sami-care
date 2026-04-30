@@ -121,7 +121,9 @@ class PaymentController extends Controller
         }
 
         if (($result['status'] ?? '') === 'paid') {
-            return view('frontend.payment-status.captured');
+            return view('frontend.payment-status.captured', [
+                'invoiceId' => $result['invoice_id'] ?? null,
+            ]);
         }
 
         return redirect()->back()->with('error', $result['message'] ?? __('messages.payment_failed'));

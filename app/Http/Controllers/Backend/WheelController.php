@@ -156,7 +156,7 @@ class WheelController extends Controller
             $pointsBalance = (int) (optional(LoyaltyPoint::where('user_id', $user->id)->first())->points ?? 0);
             $walletBalance = (float) (optional(Wallet::where('user_id', $user->id)->first())->amount ?? 0);
             $balanceAfter = null;
-            $message = __('messagess.]');
+            $message = __('messagess.wheel_not_winner');
             $note = __('messagess.wheel_history_no_reward');
 
             if ($won) {
@@ -283,7 +283,6 @@ class WheelController extends Controller
         return redirect()->back()->with('success', __('wheel.The_award_has_been_deleted_successfully'));
     }
 }
-
 
 
 

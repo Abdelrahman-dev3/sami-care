@@ -59,7 +59,18 @@ class TaqnyatSmsController extends Controller
     {
         $request->validate([
             'is_taqnyat_sms' => 'boolean',
-            'taqnyat_sender' => 'required_if:is_taqnyat_sms,1|string|max:500',
+            'taqnyat_api_key' => 'required_if:is_taqnyat_sms,1|string|max:500',
+            'taqnyat_sender' => 'required_if:is_taqnyat_sms,1|string|max:191',
+            'taqnyat_welcome_message' => 'nullable|string|max:2000',
+            'taqnyat_booking_created' => 'nullable|string|max:2000',
+            'taqnyat_payment_service_booking' => 'nullable|string|max:2000',
+            'taqnyat_payment_package_booking' => 'nullable|string|max:2000',
+            'taqnyat_payment_product_order' => 'nullable|string|max:2000',
+            'taqnyat_payment_gift_card' => 'nullable|string|max:2000',
+            'taqnyat_recipient' => 'nullable|string|max:2000',
+            'taqnyat_booking_cancelled' => 'nullable|string|max:2000',
+            'taqnyat_booking_reminder' => 'nullable|string|max:2000',
+            'taqnyat_password_reset' => 'nullable|string|max:2000',
         ]);
 
         try {

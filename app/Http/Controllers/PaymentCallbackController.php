@@ -15,13 +15,16 @@ class PaymentCallbackController extends Controller
             return view('frontend.payment-status.failed', [
                 'message' => __('messages.payment_failed'),
                 'sub' => 'Missing payment token',
+                'redirect' => auth()->check() ? route('paymentMethods') : '/',
             ]);
         }
 
         $result = app(PaymentOrchestratorService::class)->handleCallback($gateway, $token, $request);
 
         if (($result['status'] ?? '') === 'paid') {
-            return view('frontend.payment-status.captured');
+            return view('frontend.payment-status.captured', [
+                'invoiceId' => $result['invoice_id'] ?? null,
+            ]);
         }
 
         $message = $result['status'] === 'cancelled'
@@ -30,6 +33,8 @@ class PaymentCallbackController extends Controller
 
         return view('frontend.payment-status.failed', [
             'message' => $message,
+            'sub' => $result['message'] ?? null,
+            'redirect' => auth()->check() ? route('paymentMethods') : '/',
         ]);
     }
 }

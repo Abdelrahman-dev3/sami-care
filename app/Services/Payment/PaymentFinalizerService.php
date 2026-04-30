@@ -34,6 +34,7 @@ class PaymentFinalizerService
             app(GiftCardPaymentActivatorService::class)->activatePurchasedGiftCards($userId, $giftIds);
         });
         app(WaitingBookingSyncService::class)->syncPaidBookings($cartIds);
+        app(PaymentSuccessSmsService::class)->sendForInvoice($invoiceId);
 
         return $invoiceId;
     }

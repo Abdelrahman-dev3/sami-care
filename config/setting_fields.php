@@ -613,6 +613,46 @@ return [
                 'help' => 'رسالة عند إنشاء حجز جديد (استخدم [[booking_id]], [[booking_date]], [[booking_time]] كمتغيرات)', // Help text for the input field.
             ],
             [
+                'type' => 'textarea',
+                'data' => 'taqnyat_sms',
+                'name' => 'taqnyat_payment_service_booking',
+                'label' => 'integration',
+                'rules' => 'nullable|max:2000',
+                'class' => '',
+                'value' => 'تم تأكيد دفع حجز الخدمات بنجاح. رقم الفاتورة [[invoice_code]]. الخدمات: [[service_names]]. التاريخ: [[booking_dates]]. الوقت: [[booking_times]]. الفرع: [[branch_names]]. الإجمالي: [[total_amount]] ريال.',
+                'help' => 'رسالة بعد إتمام دفع حجز الخدمات. استخدم [[invoice_code]] [[service_names]] [[booking_dates]] [[booking_times]] [[branch_names]] [[total_amount]].',
+            ],
+            [
+                'type' => 'textarea',
+                'data' => 'taqnyat_sms',
+                'name' => 'taqnyat_payment_package_booking',
+                'label' => 'integration',
+                'rules' => 'nullable|max:2000',
+                'class' => '',
+                'value' => 'تم تأكيد دفع حجز الباقة بنجاح. رقم الفاتورة [[invoice_code]]. الباقات: [[package_names]]. التاريخ: [[booking_dates]]. الوقت: [[booking_times]]. الفرع: [[branch_names]]. الإجمالي: [[total_amount]] ريال.',
+                'help' => 'رسالة بعد إتمام دفع حجز الباقات. استخدم [[invoice_code]] [[package_names]] [[booking_dates]] [[booking_times]] [[branch_names]] [[total_amount]].',
+            ],
+            [
+                'type' => 'textarea',
+                'data' => 'taqnyat_sms',
+                'name' => 'taqnyat_payment_product_order',
+                'label' => 'integration',
+                'rules' => 'nullable|max:2000',
+                'class' => '',
+                'value' => 'تم تأكيد طلب المنتجات بنجاح. أرقام الطلبات: [[order_codes]]. المنتجات: [[product_names]]. إجمالي الدفع: [[total_amount]] ريال.',
+                'help' => 'رسالة بعد إتمام دفع المنتجات. استخدم [[order_codes]] [[product_names]] [[products_count]] [[total_amount]].',
+            ],
+            [
+                'type' => 'textarea',
+                'data' => 'taqnyat_sms',
+                'name' => 'taqnyat_payment_gift_card',
+                'label' => 'integration',
+                'rules' => 'nullable|max:2000',
+                'class' => '',
+                'value' => 'تم تأكيد شراء بطاقة الهدية بنجاح. رقم الفاتورة [[invoice_code]]. المستلمون: [[recipient_names]]. الخدمات المطلوبة: [[gift_services]]. إجمالي الدفع: [[total_amount]] ريال.',
+                'help' => 'رسالة بعد إتمام دفع بطاقة الهدية. استخدم [[invoice_code]] [[recipient_names]] [[gift_services]] [[gifts_count]] [[total_amount]].',
+            ],
+            [
                 'type' => 'textarea', // input fields type
                 'data' => 'taqnyat_sms', // data type, string, int, boolean
                 'name' => 'taqnyat_sender', // unique name for field
@@ -629,8 +669,8 @@ return [
                 'label' => 'integration', // label
                 'rules' => 'required|max:500', // validation rule of laravel
                 'class' => '', // any class for input
-                'value' => 'لقد تلقيت هدية! تم إرسال هدية لك من [[recipient_name]] على الرقم [[recipient_phone]] الرقم المرجعي للحصول علي الهدية من الموقع [[ref]]', // default value
-                'help'  => 'رسالة عند إنشاء حجز جديد للمستلم (استخدم [[recipient_name]] و[[recipient_phone]] لاستبدال اسم المرسل ورقمه تلقائيًا)', // Help text
+                'value' => 'لقد وصلتك بطاقة هدية من [[app_name]]. رقم الهدية [[gift_ref]]. الخدمات: [[gift_services]]. القيمة: [[gift_total]] ريال.', // default value
+                'help'  => 'رسالة إلى مستلم الهدية بعد التفعيل. استخدم [[gift_ref]] و[[gift_services]] و[[gift_total]] و[[app_name]].', // Help text
             ],
             [
                 'type' => 'textarea', // input fields type
