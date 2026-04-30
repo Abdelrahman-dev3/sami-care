@@ -115,7 +115,7 @@
             </div>
             <!-- Step 4: Date & Time Selection -->
             <div id="step4" class="step-content hidden">
-                <label class="top-label" style="width: 58%;margin: auto;">
+                <label class="top-label" style="width:100%;margin: auto;">
                     {{ __('messagess.select_time_and_date_for_services') }}
                 </label>
                 <div class="sammary-steps" style="margin: 40px 0;"></div>
