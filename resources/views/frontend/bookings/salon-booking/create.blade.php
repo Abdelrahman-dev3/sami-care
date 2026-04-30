@@ -20,7 +20,9 @@
 
 <body dir="{{ app()->getLocale() == 'ar' ? 'rtl' : 'ltr' }}" class="{{ app()->getLocale() }} booking-page-classic">
 
-    @include('components.frontend.second-navbar')
+    <div id="bookingNavbarShell">
+        @include('components.frontend.second-navbar')
+    </div>
     @include('components.frontend.notifications')
     <!-- Main Container -->
     <div class="container">
@@ -189,6 +191,8 @@
         let fanaltotal = 0;
 
         const summaryCard = document.getElementById('summaryCard');
+        const bookingNavbarShell = document.getElementById('bookingNavbarShell');
+        const navigationControls = document.querySelector('.navigation');
 
         // DOM Elements
         const steps = document.querySelectorAll('.step');
@@ -351,6 +355,16 @@
             summaryCard.classList.add('hidden');
             currentStep = 4;
             updateUI();
+        }
+
+        function toggleBookingNavigationVisibility(isSummaryVisible = summaryCard.classList.contains('show')) {
+            if (navigationControls) {
+                navigationControls.style.display = isSummaryVisible || currentStep === 1 ? 'none' : 'flex';
+            }
+
+            if (bookingNavbarShell) {
+                bookingNavbarShell.style.display = isSummaryVisible ? 'none' : '';
+            }
         }
 
         function getSelectedSubServices() {
@@ -852,7 +866,7 @@
             // Update navigation buttons
             prevBtn.disabled = currentStep === 1;
             nextBtn.textContent = currentStep === maxSteps ? translations.complete : translations.next;
-            document.querySelector('.navigation').style.display = currentStep === 1 ? 'none' : 'flex';
+            toggleBookingNavigationVisibility();
             fetchbranch({{$first_States->id}})
 
             if (currentStep === 3) {
@@ -2071,7 +2085,6 @@
                         return false;
                     }else{
                         currentStep = 4;
-                        document.querySelector('.navigation').style.display = 'none';
                         showBookingSummary();
                     }
                     break;
@@ -2083,6 +2096,7 @@
             const lang = typeof currentLang !== 'undefined' ? currentLang : 'en';
             summaryCard.classList.remove('hidden');
             summaryCard.classList.add('show');
+            toggleBookingNavigationVisibility(true);
             summaryCard.innerHTML = `
                 <div class="booking-summary-shell" onclick="if (event.target === this) closeBookingSummary()">
                     <div class="booking-summary-panel">
