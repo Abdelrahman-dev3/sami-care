@@ -67,6 +67,13 @@ return [
             'days' => 14,
         ],
 
+        'gift_sms' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/gift-sms.log'),
+            'level' => env('GIFT_SMS_LOG_LEVEL', 'debug'),
+            'days' => 14,
+        ],
+
         'slack' => [
             'driver' => 'slack',
             'url' => env('LOG_SLACK_WEBHOOK_URL'),

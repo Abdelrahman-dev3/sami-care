@@ -6,6 +6,7 @@ return [
     'select_type' => 'اختر النوع',
     'points' => 'نقاط ولاء',
     'wallet balance' => 'رصيد محفظة',
+    'Discount Rate'=>'نسبة الحسم %',
     'add_new_reward' => 'إضافة جائزة جديدة',
     'reward_value' => 'قيمة المكافأة',
     'enter_value' => 'أدخل القيمة',

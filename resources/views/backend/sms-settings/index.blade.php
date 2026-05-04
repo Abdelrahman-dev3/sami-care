@@ -49,7 +49,7 @@
             'label' => __('taqnyat.gift_recipient_message'),
             'hint' => __('taqnyat.gift_recipient_message_hint'),
             'placeholder' => __('taqnyat.gift_recipient_message_placeholder'),
-            'value' => setting('taqnyat_recipient', 'لقد وصلتك بطاقة هدية من [[app_name]]. رقم الهدية [[gift_ref]]. الخدمات: [[gift_services]]. القيمة: [[gift_total]] ريال.'),
+            'value' => setting('taqnyat_recipient', 'لقد وصلتك بطاقة هدية من [[app_name]]. رقم الهدية [[gift_ref]]. الخدمات: [[gift_services]]. القيمة: [[gift_total]] ريال. رابط الهدية: [[gift_url]]'),
         ],
         [
             'name' => 'taqnyat_booking_cancelled',
@@ -363,7 +363,7 @@
                             </div>
                             <div class="sms-vars__group">
                                 <strong>{{ __('taqnyat.gift_variables') }}</strong>
-                                <code>[[gift_ids]] [[recipient_names]] [[recipient_phones]] [[gift_services]] [[gifts_count]] [[gift_ref]] [[gift_total]]</code>
+                                <code>[[gift_ids]] [[recipient_names]] [[recipient_phones]] [[gift_services]] [[gifts_count]] [[gift_ref]] [[gift_total]] [[gift_url]] [[gift_urls]] [[sender_name]]</code>
                             </div>
                         </div>
                     </section>

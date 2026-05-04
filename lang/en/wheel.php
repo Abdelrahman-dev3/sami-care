@@ -20,6 +20,7 @@ return [
     'WheelOfFortune' => 'Wheel Of Fortune',
     'wheel_display_interval' => 'Wheel Display Interval',
     'daily' => 'Every day',
+    'Discount Rate'=>'Discount Rate %',
     'every_10_days' => 'Every 10 days',
     'every_30_days' => 'Every 30 days',
     'save_interval' => 'Save Interval',

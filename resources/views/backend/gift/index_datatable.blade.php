@@ -20,6 +20,8 @@
                 <th>{{ __('messages.selected_services') }}</th>
                 <th>{{ __('messages.subtotal') }}</th>
                 <th>{{ __('booking.lbl_payment_status') }}</th>
+                <th>Gift Link</th>
+                <th>SMS</th>
                 <th>{{ __('messages.created_at') }}</th>
                 <th>{{ __('messages.action') }}</th>
             </tr>
@@ -34,7 +36,12 @@
                 </td>
                 <td>
                     @forelse($gift->services_list as $service)
-                        <span class="badge bg-primary">{{ $service->name }}</span> <br>
+                        @php
+                            $serviceName = is_array($service->name)
+                                ? ($service->name[app()->getLocale()] ?? $service->name['ar'] ?? $service->name['en'] ?? reset($service->name))
+                                : $service->name;
+                        @endphp
+                        <span class="badge bg-primary">{{ $serviceName }}</span> <br>
                     @empty
                         -
                     @endforelse
@@ -45,6 +52,30 @@
                         <span class="badge bg-success">{{ __('gift.paid') }}</span>
                     @else
                         <span class="badge bg-warning text-dark">{{ __('gift.unpaid') }}</span>
+                    @endif
+                </td>
+                <td>
+                    @if($gift->claim_url)
+                        <a href="{{ $gift->claim_url }}" target="_blank" class="btn btn-soft-primary btn-sm">Open</a>
+                    @else
+                        -
+                    @endif
+                </td>
+                <td>
+                    @if($gift->send_status === 'sent')
+                        <span class="badge bg-success">sent</span>
+                    @elseif($gift->send_status === 'failed')
+                        <span class="badge bg-danger">failed</span>
+                    @else
+                        <span class="badge bg-secondary">pending</span>
+                    @endif
+                    @if($gift->sent_at)
+                        <div><small>{{ $gift->sent_at->format('Y-m-d H:i') }}</small></div>
+                    @endif
+                    @if($gift->send_error)
+                        <div class="text-danger" title="{{ $gift->send_error }}">
+                            <small>{{ \Illuminate\Support\Str::limit($gift->send_error, 80) }}</small>
+                        </div>
                     @endif
                 </td>
                 <td>{{ $gift->created_at ? $gift->created_at->format('Y-m-d') : '-' }}</td>
@@ -58,7 +89,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="8" class="text-center">{{ __('messages.no_gift_cards') }}</td>
+                    <td colspan="10" class="text-center">{{ __('messages.no_gift_cards') }}</td>
                 </tr>
             @endforelse
        

@@ -199,6 +199,7 @@ class PaymentSuccessSmsService
             'recipient_phones' => $giftCards->pluck('recipient_phone')->filter()->unique()->implode($this->separator()),
             'gift_services' => $giftServices->implode($this->separator()),
             'gifts_count' => (string) $giftCards->count(),
+            'gift_urls' => $giftCards->map(fn (GiftCard $giftCard) => $giftCard->claim_url)->filter()->implode($this->separator()),
         ];
     }
 

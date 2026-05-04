@@ -140,6 +140,7 @@
                             <option value="">{{ __('wheel.select_type') }}</option>
                             <option value="points">{{ __('wheel.points') }}</option>
                             <option value="wallet_balance">{{ __('wheel.wallet balance') }}</option>
+                            <option value="discount_rate">{{ __('wheel.Discount Rate') }}</option>
                         </select>
                     </div>
 
@@ -186,14 +187,19 @@
                                 </form>
                                 <div class="reward-icon fs-3">⭐</div>
                                 <h6 class="mt-2">{{ str_replace('_', ' ', $prize->type) ?? '-' }}</h6>
-                                <p class="mb-1">{{ number_format($prize->reward_value, 0) }}</p>
+                                <p class="mb-1">{{ number_format($prize->reward_value, 0) }}  @if($prize->type=="discount_rate") % @endif </p>
                                 <small>
                                     @if ($lang === 'ar')
-                                        تهانينا لقد حصلت على {{ number_format($prize->reward_value, 0) }}
+                                        تهانينا لقد حصلت على
+
+                                        {{ number_format($prize->reward_value, 0) }}
+                                        @if($prize->type=="discount_rate") % @endif
                                        @if($prize->type=="points")
                                         نقطة
-                                        @else
+                                        @elseif($prize->type=="wallet_balance")
                                         رصيد محفظة
+                                        @elseif($prize->type=="discount_rate")
+                                           نسبة حسم
                                         @endif
                                         هدية تستخدمهم
                                         للخصم على خدمات Sami
@@ -202,8 +208,10 @@
                                         gift
                                         @if($prize->type=="points")
                                             points
-                                        @else
+                                        @elseif($prize->type=="wallet_balance")
                                             wallet balance
+                                            @elseif($prize->type=="discount_rate")
+                                            Discount Rate
                                         @endif
 
                                         to use for discounts on services

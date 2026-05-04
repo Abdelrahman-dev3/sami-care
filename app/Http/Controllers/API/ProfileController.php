@@ -181,6 +181,11 @@ class ProfileController extends Controller
             'recipient_phone' => $giftCard->recipient_phone,
             'message' => $giftCard->message,
             'payment_status' => (int) $giftCard->payment_status,
+            'gift_status' => $giftCard->gift_status,
+            'claim_url' => $giftCard->claim_url,
+            'send_status' => $giftCard->send_status,
+            'sent_at' => optional($giftCard->sent_at)->format('Y-m-d H:i:s'),
+            'claimed_at' => optional($giftCard->claimed_at)->format('Y-m-d H:i:s'),
             'created_at' => optional($giftCard->created_at)->format('Y-m-d H:i:s'),
             'services' => collect($giftCard->services_list ?? [])
                 ->map(function ($service) {

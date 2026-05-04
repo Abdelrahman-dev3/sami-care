@@ -105,6 +105,9 @@ Route::controller(BookingCartController::class)->group(function () {
 
 Route::controller(GiftCardController::class)->group(function () {
     Route::post('/gift-cards', 'store')->name('gift.create');
+    Route::get('/gift-cards/claim/{token}', 'claim')->name('gift.claim');
+    Route::post('/gift-cards/claim/{token}/accept', 'accept')->name('gift.claim.accept');
+    Route::post('/gift-cards/claim/{token}/schedule', 'schedule')->name('gift.claim.schedule');
 });
 
 Route::controller(WheelController::class)->group(function () {

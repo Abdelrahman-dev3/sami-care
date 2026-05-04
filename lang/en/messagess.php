@@ -614,7 +614,7 @@ return [
     'completed' => 'Completed',
     'WheelOfFortune' => 'Wheel Of Fortune',
     'failed_to_remove_item' => 'Failed to remove item from cart. Please try again.',
-
+    'wheel_congrats_discount' => 'Congratulations! You won a :rate% discount on your next order!',
     'not_available_now' => 'Currently unavailable',
     'cart'             => 'cart',
     'close'            => 'close',

@@ -291,31 +291,37 @@ class MobileCartController extends Controller
                 'services' => ['required', 'array', 'min:1'],
                 'services.*.subServices' => ['required', 'array', 'min:1'],
                 'services.*.subServices.*.id' => ['required', 'integer', 'exists:services,id'],
-                'services.*.subServices.*.price' => ['nullable', 'numeric', 'min:0'],
                 'location' => ['required', 'array'],
                 'location.recipient_name' => ['required', 'string', 'max:255'],
                 'location.recipient_mobile' => ['required', 'string', 'max:20'],
                 'location.message' => ['nullable', 'string', 'max:1000'],
+                'branch' => ['nullable', 'integer'],
+                'branch_id' => ['nullable', 'integer'],
             ]);
 
             $serviceIds = [];
-            $subtotal = 0.0;
 
             foreach ($validated['services'] as $service) {
                 foreach ($service['subServices'] as $subService) {
                     $serviceIds[] = (int) $subService['id'];
-                    $subtotal += (float) ($subService['price'] ?? 0);
                 }
             }
 
+            $serviceIds = array_values(array_unique($serviceIds));
+            $subtotal = (float) Service::whereIn('id', $serviceIds)
+                ->where('status', 1)
+                ->sum('default_price');
+
             $giftCard = GiftCard::create([
                 'user_id' => $request->user()->id,
+                'branch_id' => (int) ($validated['branch_id'] ?? $validated['branch'] ?? 0) ?: null,
                 'recipient_name' => $validated['location']['recipient_name'],
                 'recipient_phone' => $validated['location']['recipient_mobile'],
                 'requested_services' => $serviceIds,
                 'message' => $validated['location']['message'] ?? null,
                 'subtotal' => $subtotal,
                 'payment_status' => 0,
+                'gift_status' => GiftCard::STATUS_PENDING_PAYMENT,
             ]);
 
             return response()->json([
@@ -325,6 +331,7 @@ class MobileCartController extends Controller
                 'data' => [
                     'gift_card_id' => $giftCard->id,
                     'subtotal' => (float) $giftCard->subtotal,
+                    'claim_url' => $giftCard->claim_url,
                 ],
             ], 201);
         }
@@ -335,18 +342,21 @@ class MobileCartController extends Controller
             'requested_services' => ['required', 'array', 'min:1'],
             'requested_services.*' => ['integer', 'exists:services,id'],
             'optional_services' => ['nullable', 'string', 'max:100'],
+            'branch_id' => ['nullable', 'integer'],
         ]);
 
         $subtotal = (float) Service::whereIn('id', array_map('intval', $validated['requested_services']))->sum('default_price');
 
         $giftCard = GiftCard::create([
             'user_id' => $request->user()->id,
+            'branch_id' => (int) ($validated['branch_id'] ?? 0) ?: null,
             'recipient_name' => $validated['recipient_name'],
             'recipient_phone' => $validated['recipient_phone'],
             'message' => $validated['optional_services'] ?? null,
             'requested_services' => $validated['requested_services'],
             'subtotal' => $subtotal,
             'payment_status' => 0,
+            'gift_status' => GiftCard::STATUS_PENDING_PAYMENT,
         ]);
 
         return response()->json([
@@ -355,6 +365,7 @@ class MobileCartController extends Controller
             'data' => [
                 'gift_card_id' => $giftCard->id,
                 'subtotal' => (float) $giftCard->subtotal,
+                'claim_url' => $giftCard->claim_url,
             ],
         ], 201);
     }
