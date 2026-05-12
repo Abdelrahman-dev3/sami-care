@@ -292,6 +292,7 @@
         }
 
         .employee-card-option {
+            position: relative;
             border: 1px solid #e5d5b5;
             border-radius: 8px;
             background: #fff;
@@ -308,9 +309,32 @@
 
         .employee-card-option:hover,
         .employee-card-option.is-selected {
-            border-color: #bf9456;
-            box-shadow: 0 10px 24px rgba(191, 148, 86, .16);
+            border-color: #22a35a;
+            box-shadow: 0 10px 24px rgba(34, 163, 90, .16);
             transform: translateY(-1px);
+        }
+
+        .employee-card-option__check {
+            position: absolute;
+            top: 10px;
+            inset-inline-end: 10px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            background: #22a35a;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 900;
+            opacity: 0;
+            transform: scale(.75);
+            transition: opacity .2s ease, transform .2s ease;
+        }
+
+        .employee-card-option.is-selected .employee-card-option__check {
+            opacity: 1;
+            transform: scale(1);
         }
 
         .employee-card-option__avatar {
@@ -660,6 +684,7 @@
             optionButton.className = 'employee-card-option';
             optionButton.dataset.employeeId = employee.id;
             optionButton.innerHTML = `
+                <span class="employee-card-option__check" aria-hidden="true">✓</span>
                 <span class="employee-card-option__avatar">${escapeHtml(employeeInitials(employee))}</span>
                 <span>
                     <strong>${escapeHtml(employeeName(employee))}</strong>
