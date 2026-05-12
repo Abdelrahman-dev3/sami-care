@@ -321,12 +321,14 @@
             width: 24px;
             height: 24px;
             border-radius: 50%;
-            display: grid;
-            place-items: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             background: #22a35a;
             color: #fff;
-            font-size: 14px;
-            font-weight: 900;
+            font-size: 15px;
+            font-weight: 800;
+            line-height: 1;
             opacity: 0;
             transform: scale(.75);
             transition: opacity .2s ease, transform .2s ease;
@@ -684,7 +686,7 @@
             optionButton.className = 'employee-card-option';
             optionButton.dataset.employeeId = employee.id;
             optionButton.innerHTML = `
-                <span class="employee-card-option__check" aria-hidden="true">✓</span>
+                <span class="employee-card-option__check" aria-hidden="true">&#10003;</span>
                 <span class="employee-card-option__avatar">${escapeHtml(employeeInitials(employee))}</span>
                 <span>
                     <strong>${escapeHtml(employeeName(employee))}</strong>
