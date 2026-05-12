@@ -121,7 +121,7 @@
                 <label class="top-label" style="width:100%;margin: auto;">
                     {{ __('messagess.select_time_and_date_for_services') }}
                 </label>
-                <div class="sammary-steps" style="margin: 40px 0;"></div>
+                <div class="sammary-steps booking-schedule-services"></div>
                 <div class="Date-Time-Mob" style="display: flex;justify-content: space-between;">
                     <div class="calen">
                         <label class="sub-label"> {{ __('messagess.select_preferred_day') }} </label>
@@ -159,6 +159,7 @@
                         </div>
                     </div>
                 </div>
+                <div class="sammary-steps booking-schedule-summary"></div>
             </div>
             <!-- Step 5:  Payment Selection -->
             <div id="step5" class="step-content hidden">
@@ -667,47 +668,8 @@
             });
         }
 
-        async function assignDefaultStaffToSubService(parentServiceId, subServiceId) {
-            const parentService = (selectedData.services || []).find(service => String(service.id) === String(parentServiceId));
-            if (!parentService) return false;
-
-            const currentSub = (parentService.subServices || []).find(sub => String(sub.id) === String(subServiceId));
-            if (!currentSub || currentSub.staffId) return Boolean(currentSub?.staffId);
-
-            const staffOptions = await fetchStaffOptions(selectedData.branch, subServiceId);
-            if (staffOptions.length === 0) {
-                return false;
-            }
-
-            currentSub.staffId = staffOptions[0].id;
-            currentSub.staffName = staffOptions[0].name;
-            currentSub.staffAvailability = staffOptions[0].availability_label || '';
-            return true;
-        }
-
-        async function ensureAnyStaffAssignments() {
-            if (staffSelectionMode !== 'any' || !selectedData.branch) {
-                return;
-            }
-
-            showLoader();
-            const assignmentTasks = [];
-            (selectedData.services || []).forEach((service) => {
-                (service.subServices || []).forEach((sub) => {
-                    assignmentTasks.push(assignDefaultStaffToSubService(service.id, sub.id));
-                });
-            });
-
-            try {
-                await Promise.all(assignmentTasks);
-                updateSummarySteps();
-            } finally {
-                hideLoader();
-            }
-        }
-
-        async function preloadSpecificStaffOptions() {
-            if (staffSelectionMode !== 'specific' || !selectedData.branch) {
+        async function preloadStaffOptions() {
+            if (!selectedData.branch) {
                 return;
             }
 
@@ -742,13 +704,44 @@
 
             updateStaffModeToggleUI();
             updateSummarySteps();
+            void preloadStaffOptions();
+        }
 
-            if (staffSelectionMode === 'any') {
-                void ensureAnyStaffAssignments();
-                return;
-            }
+        function getRemoveSubServiceButtonMarkup(parentId, subServiceId, compact = false) {
+            const text = currentLang === 'ar' ? 'حذف الخدمة' : 'Delete service';
+            return `
+                <button
+                    type="button"
+                    class="booking-remove-service-btn ${compact ? 'booking-remove-service-btn--compact' : ''}"
+                    data-remove-subservice
+                    data-parent-id="${parentId}"
+                    data-subservice-id="${subServiceId}"
+                    aria-label="${text}"
+                    title="${text}"
+                >
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+            `;
+        }
 
-            void preloadSpecificStaffOptions();
+        function attachRemoveSubServiceHandlers(root) {
+            root.querySelectorAll('[data-remove-subservice]').forEach((button) => {
+                if (button.dataset.removeBound === 'true') {
+                    return;
+                }
+
+                button.dataset.removeBound = 'true';
+                button.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    removeSelectedSubService(button.dataset.parentId, button.dataset.subserviceId);
+
+                    if (getSelectedSubServices().length === 0) {
+                        currentStep = 2;
+                        updateUI();
+                    }
+                });
+            });
         }
 
         function calculateFinalTotal() {
@@ -991,12 +984,7 @@
             if (currentStep === 3) {
                 updateStaffModeToggleUI();
                 updateSummarySteps();
-
-                if (staffSelectionMode === 'any') {
-                    void ensureAnyStaffAssignments();
-                } else {
-                    void preloadSpecificStaffOptions();
-                }
+                void preloadStaffOptions();
             }
 
             if (currentStep === 4) {
@@ -1817,7 +1805,7 @@
                                     <div class="staff-service-card__subservice">
                                         <div class="staff-service-card__subservice-info">
                                             <span class="staff-service-card__subservice-name">${sub.name}</span>
-                                            ${staffSelectionMode === 'any' && sub.staffName ? `
+                                            ${sub.staffName ? `
                                                 <span class="staff-service-card__subservice-caption">
                                                     ${currentLang === 'ar' ? 'الموظف:' : 'Staff:'} ${sub.staffName}
                                                     ${sub.staffAvailability ? ` - ${currentLang === 'ar' ? 'متاح' : 'Available'} ${sub.staffAvailability}` : ''}
@@ -1828,15 +1816,12 @@
                                             <span>${Number(sub.duration || 0)} ${currentLang === 'ar' ? 'دقيقة' : 'min'}</span>
                                             <strong>${Number(sub.price || 0)}</strong>
                                         </div>
+                                        ${getRemoveSubServiceButtonMarkup(service.id, sub.id, true)}
                                     </div>
                                 `).join('');
                                 const selectedStaffName = (() => {
                                     const chosenId = getSelectedStaffIdForService(service);
-                                    if (!chosenId) {
-                                        return staffSelectionMode === 'any' && (service.subServices || []).some((sub) => sub.staffName)
-                                            ? (currentLang === 'ar' ? 'تم تعيين الموظفين تلقائيًا' : 'Staff assigned automatically')
-                                            : '';
-                                    }
+                                    if (!chosenId) return '';
                                     const staff = getSharedStaffOptionsForService(service).find((member) => String(member.id) === String(chosenId));
                                     return staff?.name || (service.subServices || []).find((sub) => sub.staffName)?.staffName || '';
                                 })();
@@ -1848,8 +1833,9 @@
                                 })();
 
                                 return `
-                                    <button
-                                        type="button"
+                                    <div
+                                        role="button"
+                                        tabindex="0"
                                         class="staff-service-card ${String(activeService?.id) === String(service.id) ? 'is-active' : ''}"
                                         data-service-group-card="${service.id}"
                                     >
@@ -1874,7 +1860,7 @@
                                                 ? `${currentLang === 'ar' ? 'الموظف:' : 'Staff:'} ${selectedStaffName}`
                                                 : (currentLang === 'ar' ? 'اضغط لاختيار الموظف لهذا القسم' : 'Tap to choose staff for this category')}
                                         </div>
-                                        ${staffSelectionMode === 'any' && selectedStaffName ? `
+                                        ${selectedStaffName ? `
                                             <div class="staff-service-card__availability">
                                                 <i class="fa-regular fa-clock"></i>
                                                 <span>
@@ -1884,20 +1870,27 @@
                                                 </span>
                                             </div>
                                         ` : ''}
-                                    </button>
+                                    </div>
                                 `;
                             }).join('')}
                         </div>
                     </section>
 
-                    ${staffSelectionMode === 'specific' && activeService ? `
+                    ${activeService ? `
                         <section class="staff-step-picker">
                             <div class="staff-step-picker__head">
-                                <strong>${currentLang === 'ar' ? 'اختر مقدم الخدمات' : 'Choose service provider'}</strong>
+                                <strong>${staffSelectionMode === 'any'
+                                    ? (currentLang === 'ar' ? 'اختر الموظف المناسب' : 'Choose an available staff member')
+                                    : (currentLang === 'ar' ? 'اختر مقدم الخدمات' : 'Choose service provider')}
+                                </strong>
                                 <p>
-                                    ${currentLang === 'ar'
-                                        ? `سيتم تطبيق الموظف المختار على كل الخدمات داخل قسم ${activeService.name}.`
-                                        : `The selected staff member will be applied to all services inside ${activeService.name}.`}
+                                    ${staffSelectionMode === 'any'
+                                        ? (currentLang === 'ar'
+                                            ? `كل الموظفين المتاحين لقسم ${activeService.name} ظاهرون هنا مع أوقات الدوام، اختر الموظف قبل المتابعة.`
+                                            : `All available staff for ${activeService.name} are shown with working hours. Choose one before continuing.`)
+                                        : (currentLang === 'ar'
+                                            ? `سيتم تطبيق الموظف المختار على كل الخدمات داخل قسم ${activeService.name}.`
+                                            : `The selected staff member will be applied to all services inside ${activeService.name}.`)}
                                 </p>
                             </div>
                             ${activeServiceStaffOptions.length > 0 ? `
@@ -1909,11 +1902,18 @@
                                             data-service-group-staff="${activeService.id}"
                                             data-staff-id="${staff.id}"
                                         >
+                                            <span class="staff-choice-card__check" aria-hidden="true">
+                                                <i class="fa-solid fa-check"></i>
+                                            </span>
                                             <div class="staff-choice-card__avatar" style="background: linear-gradient(135deg, ${index % 2 === 0 ? '#d39a3c' : '#c8842a'}, ${index % 2 === 0 ? '#f0c989' : '#e3a95b'});">
                                                 ${getStaffInitials(staff.name)}
                                             </div>
                                             <div class="staff-choice-card__name">${staff.name}</div>
                                             <div class="staff-choice-card__role">${currentLang === 'ar' ? 'مقدم الخدمة' : 'Service provider'}</div>
+                                            <div class="staff-choice-card__availability">
+                                                <i class="fa-regular fa-clock"></i>
+                                                <span>${staff.availability_label || (currentLang === 'ar' ? 'لا توجد أوقات دوام متاحة اليوم' : 'No working hours today')}</span>
+                                            </div>
                                         </button>
                                     `).join('')}
                                 </div>
@@ -1925,14 +1925,7 @@
                                 </div>
                             `}
                         </section>
-                    ` : `
-                        <section class="staff-step-picker staff-step-picker--info">
-                            <div class="staff-step-picker__head">
-                                <strong>${currentLang === 'ar' ? 'أي موظف' : 'Any staff'}</strong>
-                                <p>${currentLang === 'ar' ? 'سيظهر الموظف المعيّن تلقائيًا لكل قسم مع أوقات الدوام المتاحة له اليوم.' : 'The automatically assigned staff member appears for each category with today working hours.'}</p>
-                            </div>
-                        </section>
-                    `}
+                    ` : ''}
                 </div>
             `;
 
@@ -1954,9 +1947,13 @@
                     updateSummarySteps();
                 });
             });
+
+            attachRemoveSubServiceHandlers(summaryContainer);
         }
 
         function renderStepFourServiceCards(summaryContainer) {
+            const renderOnlyServices = summaryContainer.classList.contains('booking-schedule-services');
+            const renderOnlySessionDetails = summaryContainer.classList.contains('booking-schedule-summary');
             const selectedServices = getSelectedServiceGroups();
             const sessionItems = getFlatScheduledServices();
             const totalDuration = sessionItems.reduce((sum, item) => sum + Number(item.duration || 0), 0);
@@ -1990,9 +1987,8 @@
                 activeScheduleSubId = activeTargetSub.id;
             }
 
-            summaryContainer.innerHTML = `
-                <div class="staff-step-shell">
-                    <section class="staff-step-services">
+            const servicesSectionMarkup = `
+                    <section class="staff-step-services booking-schedule-services-section">
                         <div class="staff-step-services__head">
                             <strong>${currentLang === 'ar' ? 'اختر القسم لتحديد التاريخ والوقت' : 'Choose a category to set date and time'}</strong>
                         </div>
@@ -2017,12 +2013,14 @@
                                             <span>${Number(sub.duration || 0)} ${currentLang === 'ar' ? 'دقيقة' : 'min'}</span>
                                             <strong>${Number(sub.price || 0)}</strong>
                                         </div>
+                                        ${getRemoveSubServiceButtonMarkup(service.id, sub.id, true)}
                                     </div>
                                 `).join('');
 
                                 return `
-                                    <button
-                                        type="button"
+                                    <div
+                                        role="button"
+                                        tabindex="0"
                                         class="staff-service-card ${String(activeService?.id) === String(service.id) ? 'is-active' : ''}"
                                         data-schedule-service-card="${service.id}"
                                     >
@@ -2050,11 +2048,14 @@
                                                 ? (currentLang === 'ar' ? 'تم اختيار تاريخ ووقت هذا القسم' : 'Date and time selected for this category')
                                                 : (currentLang === 'ar' ? 'اضغط لاختيار تاريخ ووقت هذا القسم' : 'Tap to choose date and time for this category')}
                                         </div>
-                                    </button>
+                                    </div>
                                 `;
                             }).join('')}
                         </div>
                     </section>
+            `;
+
+            const sessionDetailsMarkup = `
                     <section class="session-details-card">
                         <div class="session-details-card__head">
                             <div>
@@ -2077,8 +2078,9 @@
                                 const start = item.time || '';
                                 const end = item.time ? minutesToTime(timeToMinutes(item.time) + Number(item.duration || 0)) : '';
                                 return `
-                                    <button
-                                        type="button"
+                                    <div
+                                        role="button"
+                                        tabindex="0"
                                         class="session-timeline__item ${isActive ? 'is-active' : ''} ${item.time ? 'is-scheduled' : ''}"
                                         data-edit-session-service="${item.parentId}"
                                         data-edit-session-sub="${item.id}"
@@ -2098,13 +2100,19 @@
                                         </span>
                                         <span class="session-timeline__edit">
                                             <i class="fa-regular fa-pen-to-square"></i>
-                                            ${currentLang === 'ar' ? 'تعديل' : 'Edit'}
                                         </span>
-                                    </button>
+                                        ${getRemoveSubServiceButtonMarkup(item.parentId, item.id, true)}
+                                    </div>
                                 `;
                             }).join('')}
                         </div>
                     </section>
+            `;
+
+            summaryContainer.innerHTML = `
+                <div class="staff-step-shell">
+                    ${renderOnlySessionDetails ? '' : servicesSectionMarkup}
+                    ${renderOnlyServices ? '' : sessionDetailsMarkup}
                 </div>
             `;
 
@@ -2152,15 +2160,14 @@
                     }
                 });
             });
+
+            attachRemoveSubServiceHandlers(summaryContainer);
         }
 
         function getSummaryContainersToRender() {
             const containers = [];
-            const activeStepSummary = document.querySelector(`#step${currentStep} .sammary-steps`);
-
-            if (activeStepSummary) {
-                containers.push(activeStepSummary);
-            }
+            const activeStepSummaries = document.querySelectorAll(`#step${currentStep} .sammary-steps`);
+            activeStepSummaries.forEach((summaryContainer) => containers.push(summaryContainer));
 
             if (summaryCard.classList.contains('show')) {
                 const summaryOverlayContainer = summaryCard.querySelector('.sammary-steps');
@@ -2288,34 +2295,21 @@
                                 </div>
                             </div>
                             `;
-                            let deleteBtn = null;
-                            if (!isSummaryStage) {
-                                deleteBtn = document.createElement('button');
-                                deleteBtn.textContent = currentLang === 'ar' ? '\u062D\u0630\u0641 \u0627\u0644\u062E\u062F\u0645\u0629' : 'Delete Service';
-                                deleteBtn.style.cssText = `
-                                    margin-top:10px;
-                                    background:#e74c3c;
-                                    color:white;
-                                    border:none;
-                                    padding:5px 10px;
-                                    border-radius:5px;
-                                    cursor:pointer;
-                                `;
-                                deleteBtn.addEventListener('click', (e) => {
-                                    e.stopPropagation();
-                                    removeSelectedSubService(service.id, sub.id);
-
-                                    if (getSelectedSubServices().length === 0) {
-                                        currentStep = 2;
-                                        updateUI();
-                                    }
-                                });
-                            }
+                            const deleteBtn = document.createElement('button');
+                            deleteBtn.type = 'button';
+                            deleteBtn.className = 'booking-remove-service-btn';
+                            deleteBtn.dataset.removeSubservice = '';
+                            deleteBtn.dataset.parentId = service.id;
+                            deleteBtn.dataset.subserviceId = sub.id;
+                            deleteBtn.setAttribute('aria-label', currentLang === 'ar' ? 'حذف الخدمة' : 'Delete service');
+                            deleteBtn.setAttribute('title', currentLang === 'ar' ? 'حذف الخدمة' : 'Delete service');
+                            deleteBtn.innerHTML = `
+                                <i class="fa-solid fa-trash-can"></i>
+                            `;
 
                             card.innerHTML = header + details;
-                            if (deleteBtn) {
-                                card.appendChild(deleteBtn);
-                            }
+                            card.appendChild(deleteBtn);
+                            attachRemoveSubServiceHandlers(card);
 
                             card.addEventListener('click', () => {
                                 if(currentStep === 4) {
@@ -2385,7 +2379,7 @@
                       alert(
                         staffSelectionMode === 'specific'
                             ? (currentLang === 'ar' ? 'من فضلك اختر موظفًا لكل قسم' : 'Please choose a staff member for each category')
-                            : (currentLang === 'ar' ? 'جارِ تعيين الموظف المناسب تلقائيًا أو لا يوجد موظفون متاحون لبعض الخدمات' : 'Staff is being assigned automatically, or no staff is available for some services')
+                            : (currentLang === 'ar' ? 'من فضلك اختر موظفًا متاحًا لكل قسم قبل المتابعة' : 'Please choose an available staff member for each category before continuing')
                       );
                       return false;
                     }

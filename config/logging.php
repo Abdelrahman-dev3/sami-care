@@ -68,10 +68,8 @@ return [
         ],
 
         'gift_sms' => [
-            'driver' => 'daily',
-            'path' => storage_path('logs/gift-sms.log'),
-            'level' => env('GIFT_SMS_LOG_LEVEL', 'debug'),
-            'days' => 14,
+            'driver' => 'monolog',
+            'handler' => NullHandler::class,
         ],
 
         'slack' => [

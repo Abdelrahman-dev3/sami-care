@@ -287,21 +287,27 @@
 
         .employee-options {
             display: grid;
-            gap: 10px;
-            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 12px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            align-items: stretch;
+            min-width: 0;
         }
 
         .employee-card-option {
             position: relative;
+            box-sizing: border-box;
+            min-width: 0;
+            width: 100%;
+            overflow: hidden;
             border: 1px solid #e5d5b5;
             border-radius: 8px;
             background: #fff;
             color: #1b1b1b;
-            padding: 12px;
-            text-align: inherit;
+            padding: 12px 14px;
+            text-align: start;
             display: grid;
-            grid-template-columns: 42px minmax(0, 1fr);
-            gap: 10px;
+            grid-template-columns: 46px minmax(0, 1fr);
+            gap: 12px;
             align-items: center;
             cursor: pointer;
             transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
@@ -314,7 +320,7 @@
             transform: translateY(-1px);
         }
 
-        .employee-card-option__check {
+        .service-row .employee-card-option__check {
             position: absolute;
             top: 10px;
             right: 10px;
@@ -336,35 +342,64 @@
             transition: opacity .2s ease, transform .2s ease;
         }
 
-        .employee-card-option.is-selected .employee-card-option__check {
+        .service-row .employee-card-option.is-selected .employee-card-option__check {
             opacity: 1;
             transform: scale(1);
         }
 
-        .employee-card-option__avatar {
-            width: 42px;
-            height: 42px;
+        .service-row .employee-card-option__avatar {
+            width: 46px;
+            height: 46px;
+            min-width: 46px;
             border-radius: 50%;
-            display: grid;
-            place-items: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
             background: #f2eadb;
             color: #684716;
             font-weight: 900;
+            font-size: 16px;
+            line-height: 1;
+            text-align: center;
+            white-space: nowrap;
         }
 
-        .employee-card-option strong {
+        .service-row .employee-card-option strong {
             display: block;
             font-size: 15px;
             line-height: 1.35;
+            color: #1b1b1b;
             overflow-wrap: anywhere;
+            word-break: break-word;
+            white-space: normal;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
         }
 
-        .employee-card-option span {
+        .service-row .employee-card-option__content,
+        .service-row .employee-card-option__meta {
             display: block;
             margin-top: 2px;
             color: #7a705f;
             font-size: 12px;
             white-space: normal;
+            min-width: 0;
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        .service-row .employee-card-option__content {
+            margin-top: 0;
+            min-width: 0;
+            padding-inline-end: 30px;
+        }
+
+        .service-row .employee-card-option__meta {
+            line-height: 1.4;
+            text-overflow: ellipsis;
         }
 
         .employee-empty {
@@ -441,6 +476,24 @@
             }
         }
 
+        @media (max-width: 768px) {
+            .employee-options {
+                grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            }
+
+            .employee-card-option {
+                grid-template-columns: 44px minmax(0, 1fr);
+                gap: 10px;
+                padding: 12px;
+            }
+
+            .service-row .employee-card-option__avatar {
+                width: 44px;
+                height: 44px;
+                min-width: 44px;
+            }
+        }
+
         @media (max-width: 640px) {
             .gift-claim {
                 padding: 18px 0 46px;
@@ -472,6 +525,10 @@
 
             .employee-options {
                 grid-template-columns: 1fr;
+            }
+
+            .service-row .employee-card-option__content {
+                padding-inline-end: 28px;
             }
         }
     </style>
@@ -690,9 +747,9 @@
             optionButton.innerHTML = `
                 <span class="employee-card-option__check" aria-hidden="true">&#10003;</span>
                 <span class="employee-card-option__avatar">${escapeHtml(employeeInitials(employee))}</span>
-                <span>
+                <span class="employee-card-option__content">
                     <strong>${escapeHtml(employeeName(employee))}</strong>
-                    <span>${escapeHtml(employeeMeta(employee))}</span>
+                    <span class="employee-card-option__meta">${escapeHtml(employeeMeta(employee))}</span>
                 </span>
             `;
 
