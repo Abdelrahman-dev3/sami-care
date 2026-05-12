@@ -326,9 +326,11 @@
             justify-content: center;
             background: #22a35a;
             color: #fff !important;
-            font-size: 15px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
             font-weight: 800;
-            line-height: 1;
+            line-height: 24px;
+            text-align: center;
             opacity: 0;
             transform: scale(.75);
             transition: opacity .2s ease, transform .2s ease;
