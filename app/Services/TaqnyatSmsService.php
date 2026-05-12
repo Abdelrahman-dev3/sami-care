@@ -20,14 +20,15 @@ class TaqnyatSmsService
         $this->sender = trim((string) (setting('taqnyat_sender') ?: config('services.taqnyat.sender', 'SamiCare')));
     }
 
-    public function sendSms($recipients, $message, $sender = 'SamiCare')
+    public function sendSms($recipients, $message, $sender = null)
     {
         $this->lastError = null;
-        $recipientList = is_array($recipients) ? $recipients : [$recipients];
+        $recipientList = $this->normalizeRecipients(is_array($recipients) ? $recipients : [$recipients]);
+        $senderName = trim((string) ($sender ?: $this->sender));
 
         $this->giftSmsLog()->info('Preparing Taqnyat SMS request', [
             'recipients' => $recipientList,
-            'sender' => $sender ?: $this->sender,
+            'sender' => $senderName,
             'message_length' => mb_strlen((string) $message),
             'sms_enabled' => (bool) setting('is_taqnyat_sms'),
             'has_api_key' => ! empty($this->apiKey),
@@ -51,7 +52,7 @@ class TaqnyatSmsService
             ])->post("{$this->baseUrl}/messages", [
                 'recipients' => $recipientList,
                 'body' => $message,
-                'sender' => $sender ?: $this->sender,
+                'sender' => $senderName,
             ]);
 
             if ($response->successful()) {
@@ -208,6 +209,35 @@ class TaqnyatSmsService
         $amount = (float) $amount;
 
         return floor($amount) == $amount ? (string) (int) $amount : number_format($amount, 2, '.', '');
+    }
+
+    protected function normalizeRecipients(array $recipients): array
+    {
+        return collect($recipients)
+            ->map(function ($phone) {
+                $phone = preg_replace('/[^0-9]/', '', (string) $phone);
+
+                if (preg_match('/^00(9665[0-9]{8})$/', $phone, $matches)) {
+                    return $matches[1];
+                }
+
+                if (preg_match('/^9665[0-9]{8}$/', $phone)) {
+                    return $phone;
+                }
+
+                if (preg_match('/^05([0-9]{8})$/', $phone, $matches)) {
+                    return '9665' . $matches[1];
+                }
+
+                if (preg_match('/^5[0-9]{8}$/', $phone)) {
+                    return '966' . $phone;
+                }
+
+                return $phone;
+            })
+            ->filter()
+            ->values()
+            ->all();
     }
 
     public function validatePhoneNumber($phone)
