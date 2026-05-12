@@ -24,7 +24,7 @@ class TaqnyatSmsService
     {
         $this->lastError = null;
         $recipientList = $this->normalizeRecipients(is_array($recipients) ? $recipients : [$recipients]);
-        $senderName = trim((string) ($sender ?: $this->sender));
+        $senderName = $this->resolveSenderName($sender);
 
         $this->giftSmsLog()->info('Preparing Taqnyat SMS request', [
             'recipients' => $recipientList,
@@ -238,6 +238,33 @@ class TaqnyatSmsService
             ->filter()
             ->values()
             ->all();
+    }
+
+    protected function resolveSenderName(?string $sender = null): string
+    {
+        $senderName = trim((string) ($sender ?: $this->sender));
+
+        if ($this->isInvalidSenderName($senderName)) {
+            $fallback = trim((string) config('services.taqnyat.sender', 'SamiCare'));
+
+            $this->giftSmsLog()->warning('Invalid Taqnyat sender setting ignored', [
+                'configured_sender' => $senderName,
+                'fallback_sender' => $fallback,
+            ]);
+
+            return $fallback !== '' ? $fallback : 'SamiCare';
+        }
+
+        return $senderName;
+    }
+
+    protected function isInvalidSenderName(string $senderName): bool
+    {
+        return $senderName === ''
+            || mb_strlen($senderName) > 50
+            || str_contains($senderName, '[[')
+            || str_contains($senderName, ']]')
+            || preg_match('/https?:\/\//i', $senderName);
     }
 
     public function validatePhoneNumber($phone)
