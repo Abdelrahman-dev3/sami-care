@@ -16,8 +16,8 @@ class TaqnyatSmsService
 
     public function __construct()
     {
-        $this->apiKey = setting('taqnyat_api_key');
-        $this->sender = setting('taqnyat_sender');
+        $this->apiKey = trim((string) (setting('taqnyat_api_key') ?: config('services.taqnyat.api_key')));
+        $this->sender = trim((string) (setting('taqnyat_sender') ?: config('services.taqnyat.sender', 'SamiCare')));
     }
 
     public function sendSms($recipients, $message, $sender = 'SamiCare')
@@ -127,6 +127,7 @@ class TaqnyatSmsService
             'recipient_phone' => $giftCard->recipient_phone,
             'sender_name' => $senderName,
             'gift_ref' => (string) $giftCard->id,
+            'ref' => (string) $giftCard->id,
             'gift_services' => $serviceNames,
             'gift_total' => $this->formatMoney($giftCard->subtotal ?? 0),
             'gift_url' => $giftCard->claim_url ?? '',

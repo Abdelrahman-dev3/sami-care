@@ -107,7 +107,7 @@
 @endpush
 
 @push ('after-scripts')
-<script src='{{ mix("modules/product/script.js") }}'></script>
+<script src="{{ asset('modules/product/script.js') }}?v={{ filemtime(public_path('modules/product/script.js')) }}"></script>
 <script src="{{ asset('js/form-offcanvas/index.js') }}" defer></script>
 <script src="{{ asset('js/form-modal/index.js') }}" defer></script>
 <!-- DataTables Core and Extensions -->

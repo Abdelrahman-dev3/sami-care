@@ -94,6 +94,49 @@
             animation: fadeIn 1.7s ease forwards;
         }
 
+        .package-branch-highlight {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            width: fit-content;
+            max-width: 100%;
+            margin: 0 0 18px;
+            padding: 10px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.38);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.16);
+            color: #fff;
+            font-size: 17px;
+            font-weight: 800;
+            box-shadow: 0 12px 24px rgba(0,0,0,0.12);
+            opacity: 0;
+            animation: fadeIn 1.45s ease forwards;
+        }
+
+        .package-branch-highlight i {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #fff;
+            color: #c88d2a;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .package-branch-description {
+            margin: 14px 0 18px;
+            padding: 14px 16px;
+            border-radius: 14px;
+            background: rgba(255,255,255,0.12);
+            color: rgba(255,255,255,0.92);
+            font-size: 15px;
+            line-height: 1.7;
+            opacity: 0;
+            animation: fadeIn 1.65s ease forwards;
+        }
+
         .book-btn {
             margin-top: 25px;
             padding: 12px 40px;
@@ -854,6 +897,13 @@
             <h3 class="title">{{ __('messagess.our_special_packages') }}</h3>
             <h1 class="main-title">{{ $package['name'][app()->getLocale()] ?? '' }}</h1>
 
+            @if(!empty($branchName))
+                <div class="package-branch-highlight">
+                    <i class="bi bi-geo-alt-fill"></i>
+                    <span>{{ app()->getLocale() === 'ar' ? 'الفرع:' : 'Branch:' }} {{ $branchName }}</span>
+                </div>
+            @endif
+
             <div class="stars">
                 <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
             </div>
@@ -877,7 +927,12 @@
                     </div>
                 @endforeach
             </div>
-            <p class="branch"><strong>{{ $branchName }} </strong> : {{ $branchDes }}</p>
+            @if(!empty($branchDes))
+                <div class="package-branch-description">
+                    <strong>{{ app()->getLocale() === 'ar' ? 'معلومات الفرع' : 'Branch details' }}:</strong>
+                    {{ $branchDes }}
+                </div>
+            @endif
             <p class="price"><strong style="color:white">{{ __('messagess.price') }} :</strong>  {{$totalService}} </p>
             <div style="width:100%;display: flex;justify-content: end;">
                 <button type="button" id="openModalBtn" class="more-btn">{{ __('messagess.add_to_cart') }}</button>

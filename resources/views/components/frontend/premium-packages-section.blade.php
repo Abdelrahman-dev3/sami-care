@@ -1,4 +1,69 @@
 <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+<style>
+  .package-branch-filter {
+    margin: -18px auto 34px;
+    padding: 18px;
+    border: 1px solid rgba(207, 146, 51, 0.22);
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.05);
+  }
+  .package-branch-filter__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 14px;
+    color: #444;
+  }
+  .package-branch-filter__header span {
+    color: #CF9233;
+    font-size: 13px;
+    font-weight: 800;
+  }
+  .package-branch-filter__header strong {
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .package-branch-filter__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .package-branch-filter__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 10px 16px;
+    border: 1px solid #e8e0d5;
+    border-radius: 999px;
+    background: #fafafa;
+    color: #555;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 13px;
+    transition: 0.2s ease;
+  }
+  .package-branch-filter__chip:hover,
+  .package-branch-filter__chip.is-active {
+    border-color: #CF9233;
+    background: #fff6e7;
+    color: #9b681a;
+  }
+  @media (max-width: 768px) {
+    section.py-5 > .container {
+      padding: 0 1rem !important;
+    }
+    .package-branch-filter__header {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+    .package-branch-filter__chip {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+</style>
 <section class="py-5">
 
     <div class="container" style="padding: 0 5rem;">
@@ -6,9 +71,44 @@
         <h2 class="mb-5 text-center" style="font-size: 42px;background: linear-gradient(90deg, #CF9233, #212121);-webkit-background-clip: text;-webkit-text-fill-color: transparent;font-size: 2.5rem; font-weight: bold;">
             {{ __('messagess.our_premium_packages') }}
         </h2>
+
+        @isset($branches)
+            <div class="package-branch-filter" aria-label="{{ app()->getLocale() === 'ar' ? 'فلترة الباقات حسب الفرع' : 'Filter packages by branch' }}">
+                <div class="package-branch-filter__header">
+                    <span>{{ app()->getLocale() === 'ar' ? 'الفروع' : 'Branches' }}</span>
+                    <strong>{{ app()->getLocale() === 'ar' ? 'اختر الفرع لعرض الباقات التابعة له' : 'Choose a branch to view its packages' }}</strong>
+                </div>
+                <div class="package-branch-filter__chips">
+                    <a
+                        href="{{ route('frontend.Packages') }}"
+                        class="package-branch-filter__chip {{ empty($selectedBranchId) ? 'is-active' : '' }}"
+                    >
+                        {{ app()->getLocale() === 'ar' ? 'كل الفروع' : 'All branches' }}
+                    </a>
+                    @foreach($branches as $branch)
+                        @php
+                            $filterBranchName = $branch->getTranslation('name', app()->getLocale(), false) ?: $branch->getTranslation('name', 'en', false);
+                        @endphp
+                        <a
+                            href="{{ route('frontend.Packages', ['branch_id' => $branch->id]) }}"
+                            class="package-branch-filter__chip {{ (int) ($selectedBranchId ?? 0) === (int) $branch->id ? 'is-active' : '' }}"
+                        >
+                            <i class="bi bi-geo-alt"></i>
+                            {{ $filterBranchName }}
+                        </a>
+                    @endforeach
+                </div>
+            </div>
+        @endisset
+
         @if(isset($packages) && $packages->count() > 0)
             <div class="row g-4">
                 @foreach($packages as $index => $package)
+                    @php
+                        $branchName = $package->branch
+                            ? ($package->branch->getTranslation('name', app()->getLocale(), false) ?: $package->branch->getTranslation('name', 'en', false))
+                            : null;
+                    @endphp
                     <div class="col-12 col-lg-4" data-aos="fade-up" data-aos-delay="{{ $index * 100 }}">
                         @include('components.frontend.package-card', [
                             'image' => $package->media->first()->original_url ?? asset('images/frontend/Rectangle 42489.png'),
@@ -17,6 +117,7 @@
                             'price' => 'SR ' . number_format($package->package_price ?? 0, 2),
                             'duration' => $package->duration_min ?? 0 . ' min',
                             'services_count' => $package->service ? $package->service->count() : 0,
+                            'branch_name' => $branchName,
                             'package_id' => $package->id
                         ])
                     </div>

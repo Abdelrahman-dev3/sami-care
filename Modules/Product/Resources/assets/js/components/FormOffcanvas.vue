@@ -41,6 +41,12 @@
               <span class="text-danger">{{ errors.brand_id }}</span>               </div>
 
             <div class="form-group col-md-6">
+              <label class="form-label">الفرع</label>
+              <Multiselect id="branch-list" v-model="branch_id" :value="branch_id" placeholder="Select Branch" v-bind="singleSelectOption" :options="branches.options" class="form-group"></Multiselect>
+              <span class="text-danger">{{ errors.branch_id }}</span>
+            </div>
+
+            <div class="form-group col-md-6">
               <label class="form-label" for="categories">{{ $t('product.categories') }} <span class="text-danger">*</span></label>
               <Multiselect id="categories" v-model="category_ids" :value="category_ids" placeholder="Select Category" v-bind="multiselectOption" :options="category.options" class="form-group"></Multiselect>
               <span class="text-danger">{{ errors['category_ids'] }}</span>
@@ -174,7 +180,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { EDIT_URL, STORE_URL, UPDATE_URL } from '../constant/product'
-import { CATEGORY_LIST, BRAND_LIST, UNITS_LIST, TAGS_LIST, VARIATIONS_LIST } from '../constant/product'
+import { CATEGORY_LIST, BRANCH_LIST, BRAND_LIST, UNITS_LIST, TAGS_LIST, VARIATIONS_LIST } from '../constant/product'
 import { useField, useForm, useFieldArray } from 'vee-validate'
 import InputField from '@/vue/components/form-elements/InputField.vue'
 import FlatPickr from 'vue-flatpickr-component'
@@ -280,6 +286,7 @@ const defaultData = () => {
     status: 1,
     short_description: '',
     description: ' ',
+    branch_id: null,
     category_ids: [],
     tags: [],
     brand_id: '',
@@ -308,6 +315,7 @@ const setFormData = (data) => {
       slug: data.slug,
       short_description: data.short_description || '',
       description: data.description || '',
+      branch_id: data.branch_id || null,
       category_ids: data.category_ids || [],
       tags: data.tags || [],
       brand_id: data.brand_id || null,
@@ -399,6 +407,7 @@ const { value: status } = useField('status')
 const { value: is_featured } = useField('is_featured')
 const { value: short_description } = useField('short_description')
 const { value: description } = useField('description')
+const { value: branch_id } = useField('branch_id')
 const { value: category_ids } = useField('category_ids')
 const { value: brand_id } = useField('brand_id')
 const { value: tags } = useField('tags')
@@ -421,6 +430,7 @@ const errorMessages = ref({})
 onMounted(() => {
   setFormData(defaultData())
   getBrand()
+  getBranches()
   getCategory()
   getUnits()
   getTags()
@@ -431,6 +441,18 @@ onMounted(() => {
 const brands = ref({ options: [], list: [] })
 
 const getBrand = () => useSelect({ url: BRAND_LIST }, { value: 'id', label: 'name' }).then((data) => (brands.value = data))
+
+const branches = ref({ options: [], list: [] })
+
+const getBranches = () => {
+  return useSelect({ url: BRANCH_LIST }, { value: 'id', label: 'name' })
+    .then((data) => {
+      branches.value = data
+    })
+    .catch(() => {
+      branches.value = { options: [], list: [] }
+    })
+}
 
 const selectBrand = (value) => {
   getCategory(value)

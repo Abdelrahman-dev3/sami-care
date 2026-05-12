@@ -5,6 +5,17 @@
     <span class="product-card-badge">+</span>
   @endif
   <div class="product-image">
+    @if(!empty($branch_name))
+      <span class="product-branch-badge">
+        <i class="bi bi-geo-alt-fill"></i>
+        <span>{{ $branch_name }}</span>
+      </span>
+    @else
+      <span class="product-branch-badge product-branch-badge--global">
+        <i class="bi bi-grid-fill"></i>
+        <span>كل الفروع</span>
+      </span>
+    @endif
     <img src="{{ $image  }}" alt="{{ $name }}">
   </div>
   <div class="product-content">

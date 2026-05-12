@@ -318,6 +318,7 @@ class ProductsController extends Controller
         $product->name = $request->name;
         $product->slug = Str::slug($request->name, '-').'-'.strtolower(Str::random(5));
         $product->brand_id = $request->brand_id;
+        $product->branch_id = $request->branch_id ?: null;
         $product->unit_id = $request->unit_id;
         $product->sell_target = $request->sell_target ?? 0;
 
@@ -530,6 +531,7 @@ class ProductsController extends Controller
         $product->description = $request->description;
         $product->sell_target = $request->sell_target;
         $product->brand_id = $request->brand_id;
+        $product->branch_id = $request->branch_id ?: null;
         $product->unit_id = $request->unit_id;
         $product->short_description = $request->short_description;
 

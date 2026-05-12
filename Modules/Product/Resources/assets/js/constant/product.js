@@ -11,6 +11,7 @@ export const POST_GALLERY_URL = (id) => {return {path: `${MODULE}/gallery-images
 
 // Additional Data
 export const CATEGORY_LIST = ({brand_id}) => {return {path: `products-categories/index_list?brand_id=${brand_id}`, method: 'GET'}}
+export const BRANCH_LIST = () => {return {path: `branch/index_list`, method: 'GET'}}
 export const BRAND_LIST = () => {return {path: `brands/index_list`, method: 'GET'}}
 export const UNITS_LIST = () => {return {path: `units/index_list`, method: 'GET'}}
 export const TAGS_LIST = () => {return {path: `tags/index_list`, method: 'GET'}}

@@ -505,6 +505,20 @@ body {
     color: #b67d23;
 }
 
+.staff-service-card__availability {
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: #eefaf3;
+    color: #1f8f4d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
 .staff-step-picker {
     background: #fff;
     border-radius: 18px;
@@ -595,6 +609,160 @@ body {
     color: #9a7a45;
     font-size: 14px;
     line-height: 1.8;
+}
+
+.session-details-card {
+    background: #fff;
+    border: 1px solid #ebebeb;
+    border-radius: 18px;
+    padding: 20px;
+}
+
+.session-details-card__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.session-details-card__head strong {
+    display: block;
+    color: #3d3d3d;
+    font-size: 20px;
+    margin-bottom: 6px;
+}
+
+.session-details-card__head p {
+    margin: 0;
+    color: #8f8f8f;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.session-details-card__badge {
+    flex-shrink: 0;
+    padding: 7px 12px;
+    border-radius: 999px;
+    background: #fff6e7;
+    color: #b67d23;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.session-details-card__summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.session-details-card__summary span {
+    border: 1px solid #efe5d8;
+    border-radius: 12px;
+    background: #fcfaf6;
+    padding: 10px 12px;
+    color: #8a8a8a;
+    font-size: 12px;
+}
+
+.session-details-card__summary strong {
+    display: block;
+    margin-top: 4px;
+    color: #3f3f3f;
+    font-size: 14px;
+}
+
+.session-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.session-timeline__item {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 34px minmax(86px, 112px) minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid #ece4d9;
+    border-radius: 16px;
+    background: #fff;
+    padding: 12px;
+    text-align: start;
+    cursor: pointer;
+    transition: 0.22s ease;
+}
+
+.session-timeline__item:hover,
+.session-timeline__item.is-active {
+    border-color: #CF9233;
+    box-shadow: 0 10px 24px rgba(207, 146, 51, 0.14);
+}
+
+.session-timeline__item.is-scheduled .session-timeline__marker {
+    background: #23a455;
+}
+
+.session-timeline__marker {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #CF9233;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.session-timeline__time {
+    color: #b67d23;
+    font-weight: 800;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.session-timeline__content {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.session-timeline__content strong {
+    color: #3f3f3f;
+    font-size: 14px;
+}
+
+.session-timeline__content small {
+    color: #8f8f8f;
+    font-size: 11px;
+}
+
+.session-timeline__meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    color: #8f7b56;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.session-timeline__edit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border-radius: 999px;
+    background: #f8f8f8;
+    color: #666;
+    padding: 8px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
 }
 
 .staff-selection-subservice {
@@ -867,6 +1035,26 @@ body {
 
 /* Responsive Design */
 @media (max-width: 768px) {
+    .session-details-card__head {
+        flex-direction: column;
+    }
+
+    .session-timeline__item {
+        grid-template-columns: 30px minmax(0, 1fr);
+        align-items: flex-start;
+    }
+
+    .session-timeline__time,
+    .session-timeline__content,
+    .session-timeline__meta,
+    .session-timeline__edit {
+        grid-column: 2;
+    }
+
+    .session-timeline__meta {
+        align-items: flex-start;
+    }
+
     .container {
         flex-direction: column;
         gap: 20px;
@@ -1001,7 +1189,31 @@ body {
 }
 
 .massage-card.selected {
-    box-shadow: gray 0px 0px 13px;
+    border: 2px solid #23a455;
+    box-shadow: 0 10px 24px rgba(35, 164, 85, 0.18);
+}
+
+.massage-card__check {
+    position: absolute;
+    top: 12px;
+    inset-inline-end: 12px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #23a455;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    opacity: 0;
+    transform: scale(0.7);
+    transition: 0.2s ease;
+}
+
+.massage-card.selected .massage-card__check {
+    opacity: 1;
+    transform: scale(1);
 }
 
 .massage-name {
@@ -2212,6 +2424,7 @@ border:2px solid #CF9233;
   position: fixed !important;
   width: 100vw;
   height: 100vh;
+  flex-direction: column;
   align-items: center !important;
   justify-content: center !important;
   text-align: center;
@@ -2231,6 +2444,14 @@ border:2px solid #CF9233;
   animation: sami-logo-slide 1s ease-in-out infinite;
   filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.18));
   transform-origin: center;
+}
+
+#wifi-loader .sami-wifi-loader__text {
+  display: block;
+  margin-top: 18px;
+  color: #4a4a4a;
+  font-size: 15px;
+  font-weight: 700;
 }
 
 @keyframes sami-logo-slide {

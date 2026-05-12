@@ -110,6 +110,26 @@
                     font-size: 16px;
                 }
             }
+
+            .massage-card__check {
+                position: absolute;
+                top: 12px;
+                left: 12px;
+                width: 30px;
+                height: 30px;
+                border-radius: 50%;
+                display: none;
+                align-items: center;
+                justify-content: center;
+                background: #CF9233;
+                color: #fff;
+                box-shadow: 0 3px 8px rgba(0, 0, 0, 0.18);
+                z-index: 2;
+            }
+
+            .massage-card.selected .massage-card__check {
+                display: flex;
+            }
         </style>
     </head>
 
@@ -158,7 +178,7 @@
                     <div>
                         <div class="d-flex" style="flex-direction: column;gap: 12px;width: 100%;">
                             <lable style="margin-top: 15px;">{{ __('messagess.gift_message_from_sender') }}</lable>
-                            <textarea id="message" style="height: 140px;" maxlength="500" placeholder="{{ __('messagess.friend_greeting') }}"></textarea>
+                            <textarea id="message" style="height: 140px;" maxlength="500">كل عام وانت بخير</textarea>
                         </div>
                     </div>
                     
@@ -514,6 +534,12 @@
 
                         const card = document.createElement('div');
                         card.className = 'massage-card';
+                        const selectedGroup = selectedData.services.find(s => s.id == serviceGroupId);
+                        const isSelected = selectedGroup && Array.isArray(selectedGroup.subServices)
+                            && selectedGroup.subServices.some(sub => sub.id === service.id);
+                        if (isSelected) {
+                            card.classList.add('selected');
+                        }
                         if (isFrozen) {
                             card.style.opacity = '0.6';
                         }
@@ -521,6 +547,7 @@
                         card.dataset.main = serviceGroupId;
 
                         card.innerHTML = `
+                            <div class="massage-card__check"><i class="fa-solid fa-check"></i></div>
                             ${service.mostWanted ? `<div class="most-wanted">MOST WANTED</div>` : ''}
                             <div class="massage-name">${serviceName}</div>
                             ${service.description[lang] ? `
@@ -626,17 +653,6 @@
         
                             const details = `
                                 <div style="margin-top:10px;">
-                                    <label style="font-size:13px;">الموظف:</label>
-                                    <input class="form-textarea" type="text" value="${sub.staffName || ''}"  disabled placeholder="الموظف" 
-                                           style="width:100%; padding:8px; margin-bottom:10px; border:1px solid #ccc; border-radius:6px;">
-                                    
-                                    <div style="display:flex; flex-direction:row-reverse; justify-content:flex-end; gap:6px;">
-                                        <input type="date" value="${sub.date || ''}" disabled 
-                                               style="flex:1; padding:8px; border:1px solid #ccc; border-radius:6px;color: #CF9233;">
-                                        <input type="time"  value="${sub.time || ''}" disabled 
-                                               style="flex:1; padding:8px; border:1px solid #ccc; border-radius:6px;color: #CF9233;">
-                                    </div>
-        
                                     <div style="text-align:right; font-weight:bold; color:#a36b2c; margin-top:8px;">
                                         السعر: ${sub.price || 0} ريال
                                     </div>

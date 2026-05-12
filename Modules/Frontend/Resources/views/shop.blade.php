@@ -183,6 +183,58 @@
         .more-btn{
             display: none !important;
         }
+        .shop-branch-filter {
+            width: 86%;
+            margin: 34px auto 18px;
+            padding: 18px 20px;
+            background: #fff;
+            border: 1px solid #eadfce;
+            border-radius: 12px;
+            box-shadow: 0 8px 22px rgba(0,0,0,0.06);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+        .shop-branch-filter__title {
+            margin: 0;
+            color: #2f2a24;
+            font-size: 18px;
+            font-weight: 800;
+        }
+        .shop-branch-filter__subtitle {
+            margin: 2px 0 0;
+            color: #7a6f62;
+            font-size: 14px;
+        }
+        .shop-branch-filter__chips {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .shop-branch-filter__chip {
+            min-height: 38px;
+            padding: 8px 15px;
+            border-radius: 999px;
+            border: 1px solid #ded2be;
+            color: #5f5141;
+            background: #fff;
+            font-weight: 700;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            transition: 0.2s ease;
+        }
+        .shop-branch-filter__chip:hover,
+        .shop-branch-filter__chip.is-active {
+            background: #bf9456;
+            border-color: #bf9456;
+            color: #fff;
+            box-shadow: 0 8px 18px rgba(191,148,86,0.22);
+        }
     </style>
     <link rel="stylesheet" href="{{ asset('custom-css/cart-sidebar.css') }}">
 </head>
@@ -218,6 +270,31 @@
 
     <!-- Page Content -->
     <main>
+    @if(isset($branches) && $branches->count() > 0)
+        <section class="shop-branch-filter" aria-label="Filter products by branch">
+            <div>
+                <h2 class="shop-branch-filter__title">فلترة المنتجات حسب الفرع</h2>
+                <p class="shop-branch-filter__subtitle">اختر الفرع لعرض المنتجات المتوفرة فيه فقط</p>
+            </div>
+            <div class="shop-branch-filter__chips">
+                <a href="{{ route('frontend.Shop') }}" class="shop-branch-filter__chip {{ empty($selectedBranchId) ? 'is-active' : '' }}">
+                    <i class="bi bi-grid-fill"></i>
+                    <span>كل الفروع</span>
+                </a>
+                @foreach($branches as $branch)
+                    @php
+                        $branchName = $branch->getTranslation('name', app()->getLocale(), false)
+                            ?: $branch->getTranslation('name', 'en', false)
+                            ?: $branch->name;
+                    @endphp
+                    <a href="{{ route('frontend.Shop', ['shop_branch_id' => $branch->id]) }}" class="shop-branch-filter__chip {{ (int) $selectedBranchId === (int) $branch->id ? 'is-active' : '' }}">
+                        <i class="bi bi-geo-alt-fill"></i>
+                        <span>{{ $branchName }}</span>
+                    </a>
+                @endforeach
+            </div>
+        </section>
+    @endif
     {{-- الأقسام --}}
     <section class="categories">
         <h2 class="section-title">{{ __('messagess.categories') }}</h2>
@@ -241,6 +318,13 @@
                 <h2 class="section-title">{{ $category->name }}</h2>
                 <div class="products-grid">
                     @foreach($category->products as $product)
+                        @php
+                            $productBranchName = $product->branch
+                                ? ($product->branch->getTranslation('name', app()->getLocale(), false)
+                                    ?: $product->branch->getTranslation('name', 'en', false)
+                                    ?: $product->branch->name)
+                                : null;
+                        @endphp
                         @include('components.frontend.products-card', [
                             'image' => $product->feature_image,
                             'name' => $product->name,
@@ -249,6 +333,7 @@
                             'categories' => $product->categories,
                             'min_price' => $product->min_price,
                             'max_price' => $product->max_price,
+                            'branch_name' => $productBranchName,
                             'isInCart' => in_array($product->id, $cartProductIds),
                         ])
                     @endforeach
@@ -262,7 +347,13 @@
         <div class="row" style="width: 92%;margin: auto;">
             @foreach($products as $index => $product)
                 <div class="col-12 col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="{{ $index * 100 }}">
-
+                    @php
+                        $productBranchName = $product->branch
+                            ? ($product->branch->getTranslation('name', app()->getLocale(), false)
+                                ?: $product->branch->getTranslation('name', 'en', false)
+                                ?: $product->branch->name)
+                            : null;
+                    @endphp
                     @include('components.frontend.products-card', [
                         'image' => $product->feature_image,
                         'name' => $product->name,
@@ -271,6 +362,7 @@
                         'categories' => $product->categories,
                         'min_price' => $product->min_price,
                         'max_price' => $product->max_price,
+                        'branch_name' => $productBranchName,
                         'isInCart' => in_array($product->id, $cartProductIds),
                     ])
                 </div>

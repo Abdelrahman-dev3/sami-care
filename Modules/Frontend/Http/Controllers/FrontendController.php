@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Modules\Service\Models\Service;
 use Modules\Category\Models\Category;
 use Modules\Package\Models\Package;
@@ -16,6 +17,7 @@ use Modules\Product\Models\Product;
 use Modules\Product\Models\ProductCategory;
 use App\Models\Term;
 use App\Models\Ad;
+use App\Models\Branch;
 use App\Models\Wheel;
 use App\Models\Setting;
 
@@ -107,9 +109,21 @@ class FrontendController extends Controller
         return view('frontend::branches');
     }
 
-    public function Packages()
-{
-    $ads = Ad::where('page' , 'packages')->where('status', 1)->get();
+    public function Packages(Request $request)
+    {
+        $ads = Ad::where('page' , 'packages')->where('status', 1)->get();
+        $selectedBranchId = (int) $request->query('branch_id', 0);
+
+        $basePackagesQuery = Package::where('status', 1)
+            ->activeBasePackages()
+            ->whereNotNull('branch_id');
+
+        $branchIds = (clone $basePackagesQuery)->distinct()->pluck('branch_id')->filter()->values();
+        $branches = Branch::query()
+            ->whereIn('id', $branchIds)
+            ->where('status', 1)
+            ->orderBy('id')
+            ->get();
 
     $packages = Package::with([
         'service',
@@ -119,13 +133,16 @@ class FrontendController extends Controller
     ])
     ->where('status', 1)
     ->activeBasePackages()
+    ->when($selectedBranchId > 0, fn ($query) => $query->where('branch_id', $selectedBranchId))
     ->get();
 
     return view('frontend::Packages', [
         'packages' => $packages,
-        'ads' => $ads
+        'ads' => $ads,
+        'branches' => $branches,
+        'selectedBranchId' => $selectedBranchId
     ]);
-}
+    }
 
 
     public function Ouroffers()
@@ -180,27 +197,58 @@ class FrontendController extends Controller
     /**
      * Display the shop page.
      */
-    public function shop()
+    public function shop(Request $request)
     {
         $ads = Ad::where('page' , 'shop')->where('status', 1)->get();
+        $selectedBranchId = (int) $request->query('shop_branch_id', 0);
+        $hasProductBranchColumn = Schema::hasColumn('products', 'branch_id');
+
+        $branches = collect();
+        if ($hasProductBranchColumn) {
+            $branches = Branch::query()
+                ->where('status', 1)
+                ->whereIn('id', Product::query()
+                    ->select('branch_id')
+                    ->where('status', 1)
+                    ->whereNull('deleted_at')
+                    ->whereNotNull('branch_id')
+                    ->distinct()
+                )
+                ->orderBy('id')
+                ->get();
+        }
 
         // Fetch active products for the homepage
-        $categories = ProductCategory::with(['products' => function ($q) {
-            $q->where('products.status', 1)
-              ->whereNull('products.deleted_at');
+        $categories = ProductCategory::with(['products' => function ($q) use ($selectedBranchId, $hasProductBranchColumn) {
+            $q->with(['categories', 'branch'])
+              ->where('products.status', 1)
+              ->whereNull('products.deleted_at')
+              ->when($hasProductBranchColumn && $selectedBranchId > 0, function ($query) use ($selectedBranchId) {
+                  $query->where(function ($branchQuery) use ($selectedBranchId) {
+                      $branchQuery->where('products.branch_id', $selectedBranchId)
+                          ->orWhereNull('products.branch_id');
+                  });
+              });
         }])
         ->whereNull('product_categories.deleted_by')
         ->whereNull('product_categories.deleted_at')
         ->where('product_categories.status', 1)
         ->get();
 
-        $products = Product::where('status', 1)
+        $products = Product::with(['categories', 'branch'])
+            ->where('status', 1)
             ->whereNull('deleted_at')
+            ->when($hasProductBranchColumn && $selectedBranchId > 0, function ($query) use ($selectedBranchId) {
+                $query->where(function ($branchQuery) use ($selectedBranchId) {
+                    $branchQuery->where('branch_id', $selectedBranchId)
+                        ->orWhereNull('branch_id');
+                });
+            })
             ->orderByDesc('total_sale_count')
             ->take(4)
             ->get();
 
-        return view('frontend::shop', compact( 'categories' , 'ads' , 'products'));
+        return view('frontend::shop', compact('categories', 'ads', 'products', 'branches', 'selectedBranchId'));
     }
 
     public function productDetails($id)

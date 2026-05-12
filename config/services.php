@@ -69,5 +69,10 @@ return [
         'timeout' => env('WAITING_DEVICE_TIMEOUT', 10),
     ],
 
+    'taqnyat' => [
+        'api_key' => env('TAQNYAT_API_KEY'),
+        'sender' => env('TAQNYAT_SENDER_NAME', 'SamiCare'),
+    ],
+
 
 ];

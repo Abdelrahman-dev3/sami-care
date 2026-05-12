@@ -121,11 +121,41 @@ class HomeBookingController extends Controller
         $employees = $query->select('users.*')->get();
     
         // Add rating data to each employee
-        $employees = $employees->map(function ($employee) {
+        $availabilityDate = $request->get('date') ?: Carbon::now('Asia/Riyadh')->toDateString();
+
+        $employees = $employees->map(function ($employee) use ($availabilityDate) {
             $user = User::find($employee->id);
             $ratings = $user->rating ?? collect([]);
             $employee->avg_rating = $ratings->count() > 0 ? (float) number_format($ratings->avg('rating'), 2) : 0;
             $employee->total_reviews = $ratings->count();
+
+            $employee->availability_start = null;
+            $employee->availability_end = null;
+
+            if ($user) {
+                try {
+                    $branchId = optional($user->branch)->branch_id;
+                    $baseShiftId = $user->shift?->shift_id;
+                    $shiftId = $this->resolveWeeklyRotatingShiftId($baseShiftId, $availabilityDate);
+                    $dayName = strtolower(Carbon::createFromFormat('Y-m-d', $availabilityDate, 'Asia/Riyadh')->format('l'));
+
+                    $workingHours = BussinessHour::where('branch_id', $branchId)
+                        ->where('day', $dayName)
+                        ->where('is_holiday', 0)
+                        ->where('shift_id', $shiftId)
+                        ->orderBy('id', 'desc')
+                        ->first();
+
+                    if ($workingHours) {
+                        $employee->availability_start = Carbon::parse($workingHours->start_time)->format('H:i');
+                        $employee->availability_end = Carbon::parse($workingHours->end_time)->format('H:i');
+                    }
+                } catch (\Throwable $e) {
+                    $employee->availability_start = null;
+                    $employee->availability_end = null;
+                }
+            }
+
             return $employee;
         });
     

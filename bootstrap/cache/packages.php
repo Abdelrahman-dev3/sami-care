@@ -44,6 +44,20 @@
       0 => 'Laracasts\\Flash\\FlashServiceProvider',
     ),
   ),
+  'laravel-notification-channels/onesignal' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'NotificationChannels\\OneSignal\\OneSignalServiceProvider',
+    ),
+  ),
+  'laravel-notification-channels/webpush' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'NotificationChannels\\WebPush\\WebPushServiceProvider',
+    ),
+  ),
   'laravel/breeze' => 
   array (
     'providers' => 
@@ -135,6 +149,17 @@
       0 => 'Maatwebsite\\Excel\\ExcelServiceProvider',
     ),
   ),
+  'mews/purifier' => 
+  array (
+    'aliases' => 
+    array (
+      'Purifier' => 'Mews\\Purifier\\Facades\\Purifier',
+    ),
+    'providers' => 
+    array (
+      0 => 'Mews\\Purifier\\PurifierServiceProvider',
+    ),
+  ),
   'nasirkhan/module-manager' => 
   array (
     'aliases' => 
@@ -176,6 +201,20 @@
     'providers' => 
     array (
       0 => 'Nwidart\\Modules\\LaravelModulesServiceProvider',
+    ),
+  ),
+  'orangehill/iseed' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'Orangehill\\Iseed\\IseedServiceProvider',
+    ),
+  ),
+  'spatie/laravel-activitylog' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'Spatie\\Activitylog\\ActivitylogServiceProvider',
     ),
   ),
   'spatie/laravel-backup' => 

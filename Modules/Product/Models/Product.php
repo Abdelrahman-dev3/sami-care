@@ -3,6 +3,7 @@
 namespace Modules\Product\Models;
 
 use App\Models\BaseModel;
+use App\Models\Branch;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Tag\Models\Tag;
@@ -19,6 +20,7 @@ class Product extends BaseModel
         'slug',
         'short_description',
         'description',
+        'branch_id',
         'brand_id',
         'unit_id',
         'product_tags',
@@ -51,6 +53,7 @@ class Product extends BaseModel
         'min_price' => 'double',
         'max_price' => 'double',
         'brand_id' => 'integer',
+        'branch_id' => 'integer',
         'unit_id' => 'integer',
         'stock_qty' => 'integer',
         'is_featured' => 'integer',
@@ -79,6 +82,11 @@ class Product extends BaseModel
     public function categories()
     {
         return $this->belongsToMany(ProductCategory::class, 'product_category_mappings', 'product_id', 'category_id');
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class, 'branch_id');
     }
 
     public function product_category()

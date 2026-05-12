@@ -34,6 +34,41 @@
         border: 1px solid white;
         border-radius: 50%;
     }
+    .package-branch-badge {
+        position: absolute;
+        top: 18px;
+        inset-inline-start: 50%;
+        transform: translateX(-50%);
+        max-width: 78%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 8px 13px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.92);
+        color: #7d551a;
+        font-size: 12px;
+        font-weight: 800;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        z-index: 2;
+    }
+    .package-card-meta {
+        position: absolute;
+        bottom: 82px;
+        inset-inline-start: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: rgba(255,255,255,0.92);
+        font-size: 12px;
+        font-weight: 700;
+        z-index: 2;
+    }
 </style>
 
 <div class="d-flex flex-column align-items-center position-relative" style="padding-bottom: 40px;">
@@ -52,6 +87,13 @@
          style="background: linear-gradient(to top, rgba(0,0,0,0.65) 35%, rgba(0,0,0,0) 100%);">
     </div>
 
+    @if(!empty($branch_name))
+      <div class="package-branch-badge">
+        <i class="bi bi-geo-alt"></i>
+        <span>{{ $branch_name }}</span>
+      </div>
+    @endif
+
     <div class="position-absolute start-50 translate-middle-x text-center"
          style="bottom: 110px;">
       <h3 class="text-white fw-bold mb-2 text-nowrap">
@@ -61,6 +103,13 @@
         {{ $description ?? '' }}
       </p>
     </div>
+
+    @if(!empty($services_count))
+      <div class="package-card-meta">
+        <i class="bi bi-stars"></i>
+        <span>{{ $services_count }} {{ app()->getLocale() === 'ar' ? 'خدمات' : 'services' }}</span>
+      </div>
+    @endif
   </div> 
 
   <a href="{{ route('home.details', $package_id) }}"
