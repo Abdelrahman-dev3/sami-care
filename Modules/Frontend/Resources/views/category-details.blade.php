@@ -797,6 +797,8 @@
       duration: 1200, // مدة الأنيميشن
     });
     const notAvailableMessage = @json(__('messagess.not_available_now'));
+    const isAuthenticated = @json(auth()->check());
+    const signinUrl = @json(route('signin'));
 
     function showUnavailableMessage(event) {
       if (event && typeof event.preventDefault === 'function') {
@@ -824,6 +826,11 @@
   }
 
   function selectMainService_sub(mainServiceId , subServiceId) {
+      if (!isAuthenticated) {
+          window.location.href = signinUrl;
+          return;
+      }
+
       selectedMainServiceId = mainServiceId;
       selectedSubServiceId = subServiceId;
 

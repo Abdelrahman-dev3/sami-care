@@ -205,6 +205,8 @@
         const nextBtn = document.getElementById('nextBtn');
         const currentLang = "{{ app()->getLocale() }}";
         const notAvailableMessage = @json(__('messagess.not_available_now'));
+        const isAuthenticated = @json(auth()->check());
+        const signinUrl = @json(route('signin'));
         let activeSubId = null;
         let activeStaffId = null;
         let activeServiceGroupId = null;
@@ -2472,6 +2474,10 @@
         }
 
         function completeBooking(btn) {
+            if (!isAuthenticated) {
+                window.location.href = signinUrl;
+                return;
+            }
 
             showLoader();
             document.querySelectorAll('.dis-btn').forEach(button => {
@@ -2495,11 +2501,9 @@
             .then(response => response.json())
             .then(data => {
                 if (data.need_login == true) {
-                    createNotify({ title: 'تم تحويل الحجز إلى حجز مؤقت', desc: 'برجاء تسجيل الدخول لتحويل الحجز إلى حجز دائم'
-                    });
-                    setTimeout(() => {
-                        window.location.href = '/signin';
-                    }, 3000);
+                    hideLoader();
+                    window.location.href = data.login_url || signinUrl;
+                    return;
                 }
 
                 if(btn == 'cart'){

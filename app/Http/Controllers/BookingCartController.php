@@ -266,6 +266,7 @@ class BookingCartController extends Controller
             return response()->json([
                 'success' => false,
                 'need_login' => true,
+                'login_url' => route('signin'),
                 'message' => 'يرجى تسجيل الدخول لإكمال الحجز.'
             ], 200);
         }

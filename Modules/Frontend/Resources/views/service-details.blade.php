@@ -145,6 +145,7 @@
 <body>
     @php
         $isFrozen = (bool) $service->is_frozen;
+        $bookingUrl = auth()->check() ? route('salon.create') : route('signin');
     @endphp
     <!-- Lightning Progress Bar -->
     @include('components.frontend.progress-bar')
@@ -166,7 +167,7 @@
                     <span class="badge bg-warning text-dark ms-2 service-state-badge">{{ __('service.lbl_freeze') }}</span>
                 @endif
             </h1>
-            <a href="#" @if($isFrozen) onclick="return showUnavailableMessage(event)" @endif class="booking-btn {{ $isFrozen ? 'booking-btn--disabled' : '' }}">
+            <a href="{{ $isFrozen ? '#' : $bookingUrl }}" @if($isFrozen) onclick="return showUnavailableMessage(event)" @endif class="booking-btn {{ $isFrozen ? 'booking-btn--disabled' : '' }}">
                 <i class="fas fa-calendar-plus"></i>
                 {{ $isFrozen ? __('service.lbl_freeze') : 'Book This Service' }}
             </a>
@@ -261,7 +262,7 @@
                     @endif
 
                     <div class="d-grid gap-2 mt-3">
-                        <a href="#" @if($isFrozen) onclick="return showUnavailableMessage(event)" @endif class="booking-btn text-center {{ $isFrozen ? 'booking-btn--disabled' : '' }}">
+                        <a href="{{ $isFrozen ? '#' : $bookingUrl }}" @if($isFrozen) onclick="return showUnavailableMessage(event)" @endif class="booking-btn text-center {{ $isFrozen ? 'booking-btn--disabled' : '' }}">
                             <i class="fas fa-calendar-plus me-2"></i>
                             {{ $isFrozen ? __('service.lbl_freeze') : 'Book This Service' }}
                         </a>
