@@ -48,6 +48,11 @@ class GiftCard extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class, 'branch_id');
+    }
+
     public function getServicesListAttribute()
     {
         $serviceIds = $this->requested_services ?? '[]';

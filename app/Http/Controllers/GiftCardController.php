@@ -111,6 +111,7 @@ class GiftCardController extends Controller
     public function claim(string $token)
     {
         $giftCard = GiftCard::query()
+            ->with(['user', 'branch'])
             ->where('claim_token', $token)
             ->first();
 
@@ -121,7 +122,7 @@ class GiftCardController extends Controller
         $isReady = (int) $giftCard->payment_status === 1;
 
         return view('frontend.gift-cards.claim', [
-            'giftCard' => $giftCard->fresh(),
+            'giftCard' => $giftCard->loadMissing(['user', 'branch']),
             'services' => $isReady ? $giftCard->services_list : collect(),
             'isReady' => $isReady,
         ]);
