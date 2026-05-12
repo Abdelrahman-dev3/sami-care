@@ -317,7 +317,7 @@
         .employee-card-option__check {
             position: absolute;
             top: 10px;
-            inset-inline-end: 10px;
+            right: 10px;
             width: 24px;
             height: 24px;
             border-radius: 50%;
@@ -325,7 +325,7 @@
             align-items: center;
             justify-content: center;
             background: #22a35a;
-            color: #fff;
+            color: #fff !important;
             font-size: 15px;
             font-weight: 800;
             line-height: 1;
