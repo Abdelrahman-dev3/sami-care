@@ -188,13 +188,53 @@ body {
     overflow: hidden;
 }
 
+.booking-selection-check,
+.massage-card__check,
+.staff-choice-card__check,
+.staff-card__check {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    right: auto;
+    inset-inline-start: auto;
+    inset-inline-end: auto;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #23a455;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    box-shadow: 0 8px 18px rgba(35, 164, 85, 0.24);
+    opacity: 0;
+    transform: scale(0.72);
+    transition: 0.18s ease;
+    z-index: 4;
+    pointer-events: none;
+}
+
+.branch-card.selected .booking-selection-check,
+.service-card.selected .booking-selection-check,
+.massage-card.selected .massage-card__check,
+.staff-choice-card.is-selected .staff-choice-card__check,
+.staff-card.selected .staff-card__check {
+    opacity: 1;
+    transform: scale(1);
+}
+
 .service-card.is-frozen,
 .massage-card.is-frozen {
     opacity: 0.6;
 }
 
-.service-card.selected {
+.service-card.is-active {
     border: 4px solid #CF9233;
+}
+
+.service-card.selected {
+    border: 4px solid #23a455;
 }
 
 .service-card h4 {
@@ -228,6 +268,10 @@ body {
 .service-card:hover {
     border: 4px solid #CF9233;
     transform: translateY(-5px);
+}
+
+.service-card.selected:hover {
+    border-color: #23a455;
 }
 .service-icon {
     width: 80px;
@@ -381,15 +425,47 @@ body {
 }
 
 .staff-service-card {
+    position: relative;
     width: 100%;
     border: 1px solid #e4e4e4;
     border-radius: 16px;
     background: #fff;
-    padding: 14px;
+    padding: 48px 14px 14px;
     text-align: start;
     cursor: pointer;
     transition: all 0.24s ease;
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+}
+
+.staff-service-card::before,
+.summary-card::before {
+    content: "✓";
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    right: auto;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #23a455;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 800;
+    box-shadow: 0 8px 18px rgba(35, 164, 85, 0.24);
+    opacity: 0;
+    transform: scale(0.72);
+    transition: 0.18s ease;
+    z-index: 4;
+    pointer-events: none;
+}
+
+.staff-service-card.is-active::before,
+.summary-card.selected-card::before {
+    opacity: 1;
+    transform: scale(1);
 }
 
 .staff-service-card:focus-visible,
@@ -562,7 +638,7 @@ body {
     border: 1px solid #e8e8e8;
     border-radius: 18px;
     background: #fff;
-    padding: 20px 16px;
+    padding: 54px 16px 20px;
     text-align: center;
     cursor: pointer;
     transition: all 0.22s ease;
@@ -574,30 +650,6 @@ body {
     border-color: #CF9233;
     box-shadow: 0 14px 30px rgba(207, 146, 51, 0.18);
     transform: translateY(-3px);
-}
-
-.staff-choice-card__check {
-    position: absolute;
-    top: 12px;
-    inset-inline-end: 12px;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background: #23a455;
-    color: #fff;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    box-shadow: 0 8px 18px rgba(35, 164, 85, 0.24);
-    opacity: 0;
-    transform: scale(0.72);
-    transition: 0.18s ease;
-}
-
-.staff-choice-card.is-selected .staff-choice-card__check {
-    opacity: 1;
-    transform: scale(1);
 }
 
 .staff-choice-card__avatar {
@@ -928,11 +980,12 @@ body {
     background: rgba(224, 247, 250, 0.3);
     border: 2px solid transparent;
     border-radius: 15px;
-    padding: 25px;
+    padding: 54px 25px 25px;
     text-align: center;
     cursor: pointer;
     transition: all 0.3s ease;
     min-width: 200px;
+    position: relative;
 }
 
 .staff-card:hover {
@@ -1281,7 +1334,7 @@ body {
 .massage-card {
     background: white;
     border-radius: 15px;
-    padding: 20px;
+    padding: 52px 20px 20px;
     text-align: center;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -1296,29 +1349,6 @@ body {
 .massage-card.selected {
     border: 2px solid #23a455;
     box-shadow: 0 10px 24px rgba(35, 164, 85, 0.18);
-}
-
-.massage-card__check {
-    position: absolute;
-    top: 12px;
-    inset-inline-end: 12px;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: #23a455;
-    color: #fff;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    opacity: 0;
-    transform: scale(0.7);
-    transition: 0.2s ease;
-}
-
-.massage-card.selected .massage-card__check {
-    opacity: 1;
-    transform: scale(1);
 }
 
 .massage-name {
@@ -1389,9 +1419,10 @@ body {
 }
 
 .staff-card {
+    position: relative;
     background: #f1f1f1;
     border-radius: 8px;
-    padding: 12px;
+    padding: 50px 12px 12px;
     text-align: center;
     cursor: pointer;
 }
@@ -1894,7 +1925,9 @@ h5, .h5 {
     100% { transform: translateX(0) scale(1); }
 }
  .selected-card{
+position: relative;
 border:2px solid #CF9233;
+padding-top: 52px !important;
 }
 .calendar {
     width: 400px;
@@ -2352,6 +2385,7 @@ border:2px solid #CF9233;
   margin-top: 60px;
 }
 .branch-card {
+  position: relative;
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -2360,6 +2394,10 @@ border:2px solid #CF9233;
   cursor: pointer;
   text-align: center;
   width: 250px; /* تقدر تعدلها */
+}
+
+.branch-card.selected {
+  box-shadow: 0 10px 24px rgba(35, 164, 85, 0.18);
 }
 
 .branch-card:hover {

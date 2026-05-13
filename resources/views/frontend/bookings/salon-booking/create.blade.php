@@ -443,6 +443,25 @@
             return Boolean(parentGroup?.subServices?.some((sub) => String(sub.id) === String(subServiceId)));
         }
 
+        function serviceGroupHasSelectedSubServices(parentId) {
+            const parentGroup = (selectedData.services || []).find((service) => String(service.id) === String(parentId));
+            return Boolean(parentGroup?.subServices?.length);
+        }
+
+        function refreshServiceGroupCards(activeServiceId = activeServiceGroupId) {
+            document.querySelectorAll('.service-card').forEach((card) => {
+                const cardServiceId = card.dataset.service;
+                card.classList.toggle('is-active', Boolean(activeServiceId) && String(cardServiceId) === String(activeServiceId));
+                card.classList.toggle('selected', serviceGroupHasSelectedSubServices(cardServiceId));
+            });
+        }
+
+        function syncVisibleSubServiceCards(parentId) {
+            document.querySelectorAll(`.massage-card[data-main="${parentId}"]`).forEach((card) => {
+                card.classList.toggle('selected', isSubServiceSelected(parentId, card.dataset.massage));
+            });
+        }
+
         function clearServiceGroupSchedule(service) {
             (service?.subServices || []).forEach((sub) => {
                 sub.date = '';
@@ -804,6 +823,8 @@
                 serviceCard.classList.remove('selected');
             }
 
+            refreshServiceGroupCards();
+            syncVisibleSubServiceCards(parentId);
             calculateFinalTotal();
             updateSummarySteps();
             updateUI();
@@ -1117,6 +1138,7 @@
                         card.className = "branch-card";
 
                         card.innerHTML = `
+                          <span class="booking-selection-check" aria-hidden="true"><i class="fa-solid fa-check"></i></span>
                           <label class="branch-option">
                             <input type="radio" name="branch" value="${branch.id}" hidden>
 
@@ -1199,6 +1221,7 @@
                         }
                         card.dataset.service = service.id;
                         card.innerHTML = `
+                            <span class="booking-selection-check" aria-hidden="true"><i class="fa-solid fa-check"></i></span>
                             <img src="${service.image}" alt="${serviceName}" class="service-card__image">
                             <h4 class="service-card__title">${serviceName}</h4>`;
 
@@ -1207,9 +1230,6 @@
                                 showUnavailableMessage();
                                 return;
                             }
-
-                            document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
-                            card.classList.add('selected');
 
                             const exists = selectedData.services.some(s => s.id === service.id);
                             if (!exists) {
@@ -1222,8 +1242,11 @@
                             }
 
                             activeServiceGroupId = service.id;
+                            refreshServiceGroupCards(service.id);
 
-                            fetchServicesByGroup(service.id, shouldScroll);
+                            fetchServicesByGroup(service.id, shouldScroll).then(() => {
+                                refreshServiceGroupCards(service.id);
+                            });
                         };
 
                         card.addEventListener('click', () => handleServiceGroupSelection(true));
@@ -1374,16 +1397,20 @@
                                 card.classList.add('selected');
                             }
 
+                            refreshServiceGroupCards(serviceGroupId);
+                            syncVisibleSubServiceCards(serviceGroupId);
                             updateSummarySteps();
 
                         });
                         massageContainer.appendChild(card);
-                        if(subServiceId && parseInt(subServiceId) == service.id){
+                        if(subServiceId && parseInt(subServiceId) == service.id && !isSubServiceSelected(serviceGroupId, service.id)){
                             setTimeout(() => {
                                 card.click();
                             }, 300);
                         }
                     });
+                    syncVisibleSubServiceCards(serviceGroupId);
+                    refreshServiceGroupCards(serviceGroupId);
                     if (shouldScroll) {
                         scrollToSelectedServices();
                     }
@@ -1439,6 +1466,7 @@
                         }
 
                         card.innerHTML = `
+                            <span class="staff-card__check" aria-hidden="true"><i class="fa-solid fa-check"></i></span>
                             <div class="staff-avatar" style="background: linear-gradient(45deg, ${staff.color1 || '#4a90e2'}, ${staff.color2 || '#7b68ee'}); display: flex; align-items: center; justify-content: center; color: white; font-size: 24px;">
                                 ${initials}
                             </div>
