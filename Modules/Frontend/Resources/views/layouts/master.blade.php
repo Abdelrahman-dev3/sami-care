@@ -24,8 +24,7 @@
             font-family: 'Zain', sans-serif !important;
         }
         .WheelOfFortune{
-            width: 100%;
-            height: 100vh;
+            inset: 0;
             position: fixed;
             z-index: 999999;
             background: #00000047;
@@ -33,9 +32,13 @@
             display: none;
             justify-content: center;
             align-items: center;
+            padding: 24px 16px;
+            overflow-y: auto;
         }
         .Wheel{
             text-align: center;
+            position: relative;
+            width: min(92vw, 520px);
         }
         .Wheel h1{
             color: white;
@@ -46,16 +49,26 @@
             margin: 18px 0;
         }
         .Wheel input{
+            display: block;
             height: 39px;
             border: navajowhite;
             border-radius: 5px;
-            padding: 6px;
-            width: 65%;
-            margin-bottom: 20px;
+            padding: 6px 14px;
+            width: min(100%, 420px);
+            margin: 0 auto 14px;
+            direction: rtl;
+            text-align: right;
+        }
+        .Wheel input::placeholder{
+            direction: rtl;
+            text-align: right;
         }
         .Wheel button{
+            display: block;
+            margin: 6px auto 0;
             color: white;
-            width: 186px;
+            width: min(50%, 210px);
+            min-width: 170px;
             height: 42px;
             border: none;
             border-radius: 23px;
@@ -85,13 +98,42 @@
             color: white;
             font-weight: 500;
         }
+        .wheel-account-created {
+            width: min(100%, 420px);
+            margin: 14px auto 0;
+            padding: 12px 14px;
+            border: 1px solid rgba(207, 146, 51, 0.85);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.28);
+            color: #fff;
+            font-size: 16px;
+            line-height: 1.7;
+        }
+        .wheel-profile-link {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 8px 18px;
+            border-radius: 22px;
+            background: #CF9233;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 700;
+            text-decoration: none;
+        }
+        .wheel-profile-link:hover {
+            color: #fff;
+            background: #b77c22;
+        }
         .Wheel-img .arrow-wheel {
             position: absolute;
-            top: 7%;
-            right: 37%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -60%);
+            pointer-events: none;
+            z-index: 2;
         }
         .Wheel-img{
-            width: 51%;
+            width: max-content;
             position: relative;
             border-radius: 1em;
             margin: auto;
@@ -100,16 +142,27 @@
             border: 14px solid #B48829;
             border-radius: 50%;
             margin-bottom: 20px;
+            display: block;
         }
         @media (max-width: 576px) {
+          .Wheel {
+            width: min(92vw, 420px);
+          }
+          .Wheel input {
+            width: 100%;
+            max-width: 320px;
+          }
+          .Wheel button {
+            width: min(50%, 190px);
+            min-width: 160px;
+          }
           #wheel-svg {
             width: 200px;
             height: 200px;
           }
           .Wheel-img .arrow-wheel {
-            top: 8%;
-            right: 33% !important;
-            height:160px;
+            width: 56px;
+            height: 160px;
           }
         }
         .notify-wrap{
@@ -117,8 +170,8 @@
         }
         .close-wheel{
             position: absolute;
-            top: 20% !important;
-            right: 35% !important;
+            top: 0;
+            right: 0;
             font-size: 30px;
             color: #fff;
             cursor: pointer;
@@ -201,21 +254,13 @@
                 </svg>
             </div>
             <h1 class="hid-wheel">{{ __('messagess.get_your_gift') }}</h1>
-            <h5 id="final-value"></h5>
+            <div id="final-value"></div>
             <h5 class="hid-wheel" style="color: white;">{{ __('messagess.spin_the_wheel_to_get_your_gift') }}</h5>
             <input class="hid-wheel" id="name" type="text" placeholder="{{ __('messagess.name') }}:">
-            <input class="hid-wheel" id="phone" type="number" placeholder="{{ __('messagess.phone') }}:">
-            @auth
-                <button class="hid-wheel" id="spin-btn">
-                    {{ __('messagess.spin_the_wheel') }}
-                </button>
-            @endauth
-
-            @guest
-                <button type="button" class="hid-wheel" onclick="showLoginAlert()">
-                    {{ __('messagess.spin_the_wheel') }}
-                </button>
-            @endguest
+            <input class="hid-wheel" id="phone" type="tel" inputmode="tel" placeholder="{{ __('messagess.phone') }}:">
+            <button type="button" class="hid-wheel" id="spin-btn">
+                {{ __('messagess.spin_the_wheel') }}
+            </button>
         </div>
     </div>
 
@@ -238,10 +283,10 @@
     <script src="{{ mix('js/app.js') }}"></script>
     <script src="{{ asset('custom-js/cart-sidebar.js') }}"></script>
     <script>
-        function showLoginAlert() {
+        function showLoginAlert(message = "{{ __('messages.login_required') }}") {
             createNotify({
                 title: "{{ __('messages.alert') }}",
-                desc: "{{ __('messages.login_required') }}"
+                desc: message
             });
         }
     </script>
@@ -256,6 +301,8 @@
         const wheelNotWinner = @json(__('messagess.wheel_not_winner'));
         const wheelUnavailable = @json(__('messagess.wheel_not_available_now'));
         const wheelSpinError = @json(__('messagess.wheel_spin_error'));
+        const wheelAccountCreatedMessage = @json(__('messages.account_created_successfully'));
+        const wheelProfileLinkText = @json(__('profile.profile'));
         const shouldShowWheel = @json($shouldShowWheel ?? false);
         const prizes = @json($prizes ?? []);
         const spinUrl = @json(route('wheel.spin'));
@@ -277,10 +324,31 @@
             document.querySelectorAll('.hid-wheel').forEach((ele) => {
                 ele.style.display = 'none';
             });
-            const arrow = document.querySelector('.arrow-wheel');
-            if (arrow) {
-                arrow.style.right = '39%';
+        };
+
+        const wheelEscapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;',
+        }[char]));
+
+        const renderWheelResult = (message, result = {}) => {
+            const resultMessage = `<h5 style="font-size:22px;font-weight:bold;">${wheelEscapeHtml(message)}</h5>`;
+
+            if (!result.account_created || !result.profile_url) {
+                finalValue.innerHTML = resultMessage;
+                return;
             }
+
+            finalValue.innerHTML = `${resultMessage}
+                <div class="wheel-account-created">
+                    <div>${wheelEscapeHtml(wheelAccountCreatedMessage)}</div>
+                    <a class="wheel-profile-link" href="${wheelEscapeHtml(result.profile_url)}">
+                        ${wheelEscapeHtml(wheelProfileLinkText)}
+                    </a>
+                </div>`;
         };
 
         const notifyError = (message) => {
@@ -304,6 +372,13 @@
                     return;
                 }
 
+                const normalizedDigits = phone.replace(/\D/g, '');
+                const isValidSaudiMobile = /^(05\d{8}|5\d{8}|9665\d{8}|009665\d{8})$/.test(normalizedDigits);
+                if (!isValidSaudiMobile) {
+                    notifyError(lang === 'ar' ? 'يرجى إدخال رقم جوال سعودي صحيح' : 'Please enter a valid Saudi mobile number');
+                    return;
+                }
+
                 if (isSpinning) return;
 
                 isSpinning = true;
@@ -317,7 +392,7 @@
                 setTimeout(async () => {
                     try {
                         if (prizes.length === 0) {
-                            finalValue.innerHTML = `<h5 style="font-size:22px;font-weight:bold;">${wheelUnavailable}</h5>`;
+                            renderWheelResult(wheelUnavailable);
                             hideWheelInputs();
                             return;
                         }
@@ -335,18 +410,26 @@
                         const result = await response.json();
 
                         if (!response.ok || !result.status) {
+                            if (result.login_required && result.login_url) {
+                                showLoginAlert(result.message || "{{ __('messages.login_required') }}");
+                                setTimeout(() => {
+                                    window.location.href = result.login_url;
+                                }, 1800);
+                                return;
+                            }
+
                             // This displays the 'Next eligible date' or error from backend
-                            finalValue.innerHTML = `<h5 style="font-size:22px;font-weight:bold;">${result.message || wheelSpinError}</h5>`;
+                            renderWheelResult(result.message || wheelSpinError, result);
                             hideWheelInputs();
                             return;
                         }
 
                         // result.message now comes fully formatted from the Controller (see below)
-                        finalValue.innerHTML = `<h5 style="font-size:22px;font-weight:bold;">${result.message}</h5>`;
+                        renderWheelResult(result.message, result);
 
                         hideWheelInputs();
                     } catch (error) {
-                        finalValue.innerHTML = `<h5 style="font-size:22px;font-weight:bold;">${wheelSpinError}</h5>`;
+                        renderWheelResult(wheelSpinError);
                     } finally {
                         wheelElement.style.transition = "none";
                         isSpinning = false;

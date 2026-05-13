@@ -82,7 +82,7 @@ class SignController extends Controller
             return back()->with('error', __('messages.invalid_credentials'));
         }
 
-        $otp = 1111;//rand(1000, 9999);
+        $otp = (string) random_int(1000, 9999);
 
         Cache::put('login_otp_' . $phone, $otp, now()->addMinutes(5));
 
@@ -90,13 +90,22 @@ class SignController extends Controller
 
         $message = __('messagess.otp_sms', ['code' => $otp]);
 
-        // try {
-        //     $smsService->sendSms($phone, $message);
-        // } catch (\Exception $e) {
-        //     return back()->with('error', __('messagess.error_sending_sms'));
-        // }
+        try {
+            $sent = $smsService->sendSms($phone, $message);
+            if ($sent === false) {
+                Cache::forget('login_otp_' . $phone);
+                Session::forget('login_mobile');
 
-        return redirect()->route('login.verify.form')->with('success', 'تم إرسال كود التحقق إلى موبايلك');
+                return back()->with('error', __('messagess.error_sending_sms'));
+            }
+        } catch (\Exception $e) {
+            Cache::forget('login_otp_' . $phone);
+            Session::forget('login_mobile');
+
+            return back()->with('error', __('messagess.error_sending_sms'));
+        }
+
+        return redirect()->route('login.verify.form')->with('success', __('messages.otp_sent'));
     }
 
     public function showVerifyForm()

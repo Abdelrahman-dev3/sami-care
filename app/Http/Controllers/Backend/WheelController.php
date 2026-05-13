@@ -15,6 +15,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Modules\Wallet\Models\Wallet;
 use Modules\Wallet\Models\WalletHistory;
 
@@ -245,13 +246,6 @@ class WheelController extends Controller
 
     public function spin(Request $request): JsonResponse
     {
-        if (! Auth::check()) {
-            return response()->json([
-                'status' => false,
-                'message' => __('auth.unauthenticated'),
-            ], 401);
-        }
-
         if (! $this->isWheelEnabled()) {
             return response()->json([
                 'status' => false,
@@ -265,9 +259,16 @@ class WheelController extends Controller
         ]);
 
         $authUser = Auth::user();
-        $name = trim((string) ($data['name'] ?? trim(($authUser->first_name ?? '').' '.($authUser->last_name ?? ''))));
+        $name = trim((string) ($data['name'] ?? trim(($authUser?->first_name ?? '').' '.($authUser?->last_name ?? ''))));
         $phone = (string) ($data['phone'] ?? $authUser->mobile ?? '');
         $normalizedPhone = $this->normalizePhone($phone);
+
+        if (! $authUser && $name === '') {
+            return response()->json([
+                'status' => false,
+                'message' => app()->getLocale() === 'ar' ? 'يرجى إدخال الاسم' : 'Please enter your name.',
+            ], 422);
+        }
 
         if ($normalizedPhone === null) {
             return response()->json([
@@ -276,13 +277,61 @@ class WheelController extends Controller
             ], 422);
         }
 
+        if (! $authUser && User::query()->where('mobile', $normalizedPhone)->exists()) {
+            return response()->json([
+                'status' => false,
+                'login_required' => true,
+                'login_url' => route('signin'),
+                'message' => app()->getLocale() === 'ar'
+                    ? 'رقم الجوال مسجل مسبقًا، يرجى تسجيل الدخول لتجربة العجلة وحفظ الهدية في حسابك.'
+                    : 'This mobile number is already registered. Please sign in to spin the wheel and save the gift to your account.',
+            ], 409);
+        }
+
         $intervalDays = max((int) Setting::get('wheel_display_interval_days', 1), 1);
         $now = Carbon::now();
 
-        return DB::transaction(function () use ($authUser, $name, $normalizedPhone, $intervalDays, $now) {
-            $user = User::query()->lockForUpdate()->findOrFail($authUser->id);
+        return DB::transaction(function () use ($request, $authUser, $name, $normalizedPhone, $intervalDays, $now) {
+            $accountCreated = false;
 
-            $lastSpinAt = $this->wheelCooldownService->getLastSpinAt(userId: $user->id);
+            if ($authUser) {
+                $user = User::query()->lockForUpdate()->findOrFail($authUser->id);
+            } else {
+                $existingUser = User::query()
+                    ->where('mobile', $normalizedPhone)
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($existingUser) {
+                    return response()->json([
+                        'status' => false,
+                        'login_required' => true,
+                        'login_url' => route('signin'),
+                        'message' => app()->getLocale() === 'ar'
+                            ? 'رقم الجوال مسجل مسبقًا، يرجى تسجيل الدخول لتجربة العجلة وحفظ الهدية في حسابك.'
+                            : 'This mobile number is already registered. Please sign in to spin the wheel and save the gift to your account.',
+                    ], 409);
+                }
+
+                $user = User::create([
+                    'first_name' => $name,
+                    'last_name' => '',
+                    'username' => $this->generateUniqueUsername($name, $normalizedPhone),
+                    'mobile' => $normalizedPhone,
+                    'email_verified_at' => now(),
+                    'status' => 1,
+                ]);
+
+                $user->assignRole('user');
+                Auth::login($user);
+                $request->session()->regenerate();
+                $accountCreated = true;
+            }
+
+            $lastSpinAt = $this->wheelCooldownService->getLastSpinAt(
+                userId: $user->id,
+                phone: $normalizedPhone
+            );
             if ($lastSpinAt) {
                 $nextAt = $lastSpinAt->copy()->addDays($intervalDays);
                 if ($nextAt->isFuture()) {
@@ -416,6 +465,8 @@ class WheelController extends Controller
                 'reward_points' => $rewardType === 'points' ? $rewardValue : 0,
                 'discount_rate' => $rewardType === 'discount_rate' ? $rewardValue : null,
                 'message'       => $message,
+                'account_created' => $accountCreated,
+                'profile_url'    => $accountCreated ? route('profile') : null,
                 'balances'      => [
                     'loyalty_points' => $pointsBalance,
                     'wallet_balance' => $walletBalance,
@@ -423,6 +474,24 @@ class WheelController extends Controller
             ]);
         });
     }
+
+    private function generateUniqueUsername(string $name, string $phone): string
+    {
+        $base = Str::slug($name, '_');
+        $base = $base !== '' ? $base : 'wheel_user';
+        $base .= '_' . substr(preg_replace('/\D+/', '', $phone), -4);
+
+        $username = $base;
+        $counter = 1;
+
+        while (User::query()->where('username', $username)->exists()) {
+            $username = $base . '_' . $counter;
+            $counter++;
+        }
+
+        return $username;
+    }
+
     private function normalizePhone(string $phone): ?string
     {
         $phone = trim($phone);
@@ -437,9 +506,7 @@ class WheelController extends Controller
             return $validatedPhone;
         }
 
-        $digitsOnly = preg_replace('/\D+/', '', $phone);
-
-        return $digitsOnly !== '' ? $digitsOnly : null;
+        return null;
     }
 
     private function formatRewardNumber(float|int $value): float|int

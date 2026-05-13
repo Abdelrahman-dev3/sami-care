@@ -104,10 +104,10 @@
                 </label>
                 <br>
                 <div class="staff-mode-toggle" id="staffModeToggle">
-                    <button type="button" class="staff-mode-toggle__button is-active" data-staff-mode="any">
+                    <button type="button" class="staff-mode-toggle__button" data-staff-mode="any">
                         {{ app()->getLocale() === 'ar' ? 'أي موظف' : 'Any Staff' }}
                     </button>
-                    <button type="button" class="staff-mode-toggle__button" data-staff-mode="specific">
+                    <button type="button" class="staff-mode-toggle__button is-active" data-staff-mode="specific">
                         {{ app()->getLocale() === 'ar' ? 'اختيار الموظف' : 'Choose Staff' }}
                     </button>
                 </div>
@@ -295,7 +295,7 @@
         const staffModeButtons = document.querySelectorAll('[data-staff-mode]');
         let cartAutoCloseTimer = null;
         let lastAddedSubServiceKey = null;
-        let staffSelectionMode = 'any';
+        let staffSelectionMode = 'specific';
         let loaderRequestCount = 0;
         const staffOptionsCache = new Map();
 
@@ -436,6 +436,53 @@
                     parentImage: service.image
                 }))
             );
+        }
+
+        function formatMinutesDuration(minutes) {
+            const normalizedMinutes = Math.max(0, Number(minutes) || 0);
+            const hours = Math.floor(normalizedMinutes / 60);
+            const remainingMinutes = normalizedMinutes % 60;
+
+            if (currentLang === 'ar') {
+                if (hours && remainingMinutes) return `${hours} ساعة و ${remainingMinutes} دقيقة`;
+                if (hours) return `${hours} ساعة`;
+                return `${remainingMinutes} دقيقة`;
+            }
+
+            if (hours && remainingMinutes) return `${hours}h ${remainingMinutes}m`;
+            if (hours) return `${hours}h`;
+            return `${remainingMinutes} min`;
+        }
+
+        function calculateSessionWaitDetails(sessionItems = []) {
+            const waitsByPreviousItem = {};
+            let totalWaitMinutes = 0;
+
+            for (let index = 0; index < sessionItems.length - 1; index++) {
+                const currentItem = sessionItems[index];
+                const nextItem = sessionItems[index + 1];
+                const currentStart = timeToMinutes(currentItem.time);
+                const nextStart = timeToMinutes(nextItem.time);
+
+                if (currentStart === null || nextStart === null) {
+                    continue;
+                }
+
+                if (currentItem.date && nextItem.date && currentItem.date !== nextItem.date) {
+                    continue;
+                }
+
+                const currentEnd = currentStart + Number(currentItem.duration || 0);
+                const waitMinutes = Math.max(0, nextStart - currentEnd);
+
+                if (waitMinutes > 0) {
+                    const itemKey = `${currentItem.parentId}-${currentItem.id}`;
+                    waitsByPreviousItem[itemKey] = waitMinutes;
+                    totalWaitMinutes += waitMinutes;
+                }
+            }
+
+            return { totalWaitMinutes, waitsByPreviousItem };
         }
 
         function isSubServiceSelected(parentId, subServiceId) {
@@ -708,17 +755,84 @@
             }
         }
 
-        function setStaffSelectionMode(mode) {
-            staffSelectionMode = mode === 'specific' ? 'specific' : 'any';
+        async function assignAnyAvailableStaffToSelectedServices() {
+            const selectedServices = getSelectedServiceGroups();
+            if (!selectedData.branch || selectedServices.length === 0) {
+                return false;
+            }
 
-            if (staffSelectionMode === 'any') {
-                (selectedData.services || []).forEach((service) => {
-                    (service.subServices || []).forEach((sub) => {
-                        sub.staffId = null;
-                        sub.staffName = '';
-                    });
+            showLoader();
+            try {
+                const plannedAssignments = [];
+
+                for (const service of selectedServices) {
+                    const subServices = (service.subServices || []).filter((sub) => sub?.id);
+                    if (subServices.length === 0) continue;
+
+                    await Promise.all(subServices.map((sub) => fetchStaffOptions(selectedData.branch, sub.id)));
+                    const sharedStaffOptions = getSharedStaffOptionsForService(service);
+                    const sharedStaff = sharedStaffOptions[0] || null;
+
+                    for (const sub of subServices) {
+                        const options = getCachedStaffOptions(selectedData.branch, sub.id);
+                        const selectedStaff = sharedStaff || options[0] || null;
+
+                        if (!selectedStaff) {
+                            return false;
+                        }
+
+                        plannedAssignments.push({
+                            service,
+                            sub,
+                            selectedStaff
+                        });
+                    }
+                }
+
+                plannedAssignments.forEach(({ sub, selectedStaff }) => {
+                    sub.staffId = Number(selectedStaff.id);
+                    sub.staffName = selectedStaff.name || '';
+                    sub.staffAvailability = selectedStaff.availability_label || '';
+                });
+
+                selectedServices.forEach((service) => {
                     clearServiceGroupSchedule(service);
                 });
+
+                const firstService = selectedServices[0];
+                activeServiceGroupId = firstService?.id || null;
+                activeScheduleSubId = (firstService?.subServices || [])[0]?.id || null;
+                activeSubId = activeScheduleSubId || activeServiceGroupId;
+                activeStaffId = getScheduleTarget(firstService)?.staffId || getSelectedStaffIdForService(firstService);
+
+                return true;
+            } finally {
+                hideLoader();
+            }
+        }
+
+        async function setStaffSelectionMode(mode) {
+            staffSelectionMode = mode === 'any' ? 'any' : 'specific';
+
+            if (staffSelectionMode === 'any') {
+                updateStaffModeToggleUI();
+                updateSummarySteps();
+
+                const assigned = await assignAnyAvailableStaffToSelectedServices();
+                if (assigned) {
+                    currentStep = 4;
+                    updateUI();
+                    return;
+                }
+
+                staffSelectionMode = 'specific';
+                updateStaffModeToggleUI();
+                updateSummarySteps();
+                alert(currentLang === 'ar'
+                    ? 'تعذر اختيار موظف تلقائيًا لكل الخدمات المختارة. من فضلك اختر الموظف يدويًا.'
+                    : 'Could not automatically choose staff for every selected service. Please choose staff manually.'
+                );
+                return;
             }
 
             updateStaffModeToggleUI();
@@ -1986,6 +2100,7 @@
             const sessionItems = getFlatScheduledServices();
             const totalDuration = sessionItems.reduce((sum, item) => sum + Number(item.duration || 0), 0);
             const totalPrice = sessionItems.reduce((sum, item) => sum + Number(item.price || 0), 0);
+            const waitDetails = calculateSessionWaitDetails(sessionItems);
             const firstTime = sessionItems.find((item) => item.time)?.time || '';
             const lastTimedItem = [...sessionItems].reverse().find((item) => item.time);
             const expectedEnd = lastTimedItem?.time
@@ -2097,6 +2212,7 @@
                         <div class="session-details-card__summary">
                             <span>${currentLang === 'ar' ? 'السعر الإجمالي' : 'Total'} <strong>${totalPrice}</strong></span>
                             <span>${currentLang === 'ar' ? 'المدة الإجمالية' : 'Total duration'} <strong>${totalDuration} ${currentLang === 'ar' ? 'دقيقة' : 'min'}</strong></span>
+                            <span>${currentLang === 'ar' ? 'وقت الانتظار' : 'Waiting time'} <strong>${formatMinutesDuration(waitDetails.totalWaitMinutes)}</strong></span>
                             <span>${currentLang === 'ar' ? 'وقت البداية' : 'Start'} <strong>${firstTime || (currentLang === 'ar' ? 'لم يحدد' : 'Not set')}</strong></span>
                             <span>${currentLang === 'ar' ? 'وقت الانتهاء المتوقع' : 'Expected end'} <strong>${expectedEnd || (currentLang === 'ar' ? 'لم يحدد' : 'Not set')}</strong></span>
                         </div>
@@ -2105,6 +2221,7 @@
                                 const isActive = String(item.parentId) === String(activeService?.id) && String(item.id) === String(activeScheduleSubId || activeTargetSub?.id);
                                 const start = item.time || '';
                                 const end = item.time ? minutesToTime(timeToMinutes(item.time) + Number(item.duration || 0)) : '';
+                                const waitAfter = waitDetails.waitsByPreviousItem[`${item.parentId}-${item.id}`] || 0;
                                 return `
                                     <div
                                         role="button"
@@ -2131,6 +2248,16 @@
                                         </span>
                                         ${getRemoveSubServiceButtonMarkup(item.parentId, item.id, true)}
                                     </div>
+                                    ${waitAfter > 0 ? `
+                                        <div class="session-timeline__wait">
+                                            <span class="session-timeline__wait-line"></span>
+                                            <span class="session-timeline__wait-label">
+                                                <i class="fa-regular fa-hourglass-half"></i>
+                                                ${currentLang === 'ar' ? 'وقت انتظار بين الخدمات:' : 'Waiting between services:'}
+                                                <strong>${formatMinutesDuration(waitAfter)}</strong>
+                                            </span>
+                                        </div>
+                                    ` : ''}
                                 `;
                             }).join('')}
                         </div>

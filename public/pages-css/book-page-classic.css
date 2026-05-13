@@ -860,6 +860,42 @@ body {
     white-space: nowrap;
 }
 
+.session-timeline__wait {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    padding: 0 12px;
+    color: #9a7a45;
+}
+
+.session-timeline__wait-line {
+    width: 2px;
+    min-height: 28px;
+    justify-self: center;
+    border-radius: 999px;
+    background: #ead8bb;
+}
+
+.session-timeline__wait-label {
+    width: fit-content;
+    max-width: 100%;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    border: 1px dashed #e3d2b8;
+    border-radius: 999px;
+    background: #fffaf2;
+    padding: 7px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.5;
+}
+
+.session-timeline__wait-label strong {
+    color: #b67d23;
+}
+
 .booking-schedule-services {
     margin: 26px 0 28px;
 }
@@ -1181,6 +1217,41 @@ body {
 
 /* Responsive Design */
 @media (max-width: 768px) {
+    .content {
+        padding: 20px 14px;
+    }
+
+    .navigation {
+        left: 12px;
+        right: 12px;
+        bottom: 14px;
+        width: auto;
+        padding: 12px;
+        gap: 10px;
+    }
+
+    .navigation .btn {
+        flex: 1;
+        min-width: 0;
+        padding-inline: 12px;
+    }
+
+    .Date-Time-Mob {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .calen,
+    .times,
+    .calendar,
+    .time-toggle {
+        width: 100%;
+    }
+
+    .time-toggle {
+        min-width: 0;
+    }
+
     .session-details-card__head {
         flex-direction: column;
     }
@@ -1200,6 +1271,17 @@ body {
 
     .session-timeline__meta {
         align-items: flex-start;
+    }
+
+    .session-timeline__wait {
+        grid-template-columns: 30px minmax(0, 1fr);
+        align-items: flex-start;
+    }
+
+    .session-timeline__wait-label {
+        width: 100%;
+        border-radius: 14px;
+        flex-wrap: wrap;
     }
 
     .staff-service-card__subservice {
@@ -1931,6 +2013,7 @@ padding-top: 52px !important;
 }
 .calendar {
     width: 400px;
+    max-width: 100%;
     background: white;
     padding: 13px;
     border-radius: 15px;
@@ -1993,6 +2076,7 @@ padding-top: 52px !important;
 }
 .calen , .times{
     width: 50%;
+    min-width: 0;
 }
 .sub-label{
     margin-bottom: 30px;
@@ -2006,6 +2090,8 @@ padding-top: 52px !important;
   overflow: hidden;
   margin-bottom: 10px;
   width: 50%;
+  min-width: 220px;
+  max-width: 100%;
   background: #D9D9D9;
 }
 
@@ -2433,6 +2519,16 @@ padding-top: 52px !important;
 @media (max-width: 576px) {
     .w-100-mob {
         width: 100% !important;
+    }
+    .service-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .staff-mode-toggle {
+        gap: 8px;
+    }
+    .staff-mode-toggle__button {
+        flex: 1 1 100%;
+        min-width: 0;
     }
     .branch-cards {
         grid-template-columns: repeat(1, 1fr);
