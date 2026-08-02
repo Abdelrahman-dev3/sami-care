@@ -31,7 +31,10 @@ $notifications_count = optional(auth()->user())->unreadNotifications->count();
                 id="offcanvasBottom">
                 <div class="offcanvas-body">
                     <ul class="iq-nav-menu list-unstyled">
-                        @include(('vendor.laravel-menu.custom-menu-items'), ['items' => $hmenu->roots()])
+                        @includeFirst([
+                            'vendor.laravel-menu.custom-menu-items',
+                            config('laravel-menu.views.bootstrap-items'),
+                        ], ['items' => $hmenu->roots()])
                     </ul>
                 </div>
             </div>
