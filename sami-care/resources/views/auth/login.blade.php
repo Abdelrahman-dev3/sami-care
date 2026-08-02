@@ -1,4 +1,4 @@
-@extends('frontend::layouts.auth') 
+@extends('layouts.dashboard-auth')
 
 @section('title', __('auth.login'))
 
@@ -81,38 +81,5 @@
         </p>
     </div>
 </div>
-
-<!-- Toastr JS & CSS -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-<script>
-toastr.options = {
-    "closeButton": true,
-    "progressBar": true,
-    "positionClass": "toast-top-center",
-    "timeOut": "7000",
-    "extendedTimeOut": "1000"
-};
-
-@if (session('message'))
-    toastr.success("{{ session('message') }}");
-@endif
-
-if (localStorage.getItem('flash_message')) {
-    toastr.success(localStorage.getItem('flash_message'));
-    localStorage.removeItem('flash_message');
-}
-</script>6
-@if(session('error'))
-<script>
-    toastr.error("{{ session('error') }}");
-</script>
-@endif
-@if(session('success'))
-<script>
-    toastr.success("{{ session('success') }}");
-</script>
-@endif
 
 @endsection

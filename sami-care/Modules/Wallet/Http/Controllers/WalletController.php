@@ -120,10 +120,7 @@ class WalletController extends Controller
     {
         $tap = new TapPaymentService();
         
-        $failed = function($message, $sub = '', $redirect = '/') {
-            $datas = [ 'message' => $message, 'sub' => $sub];
-            return view('frontend.payment-status.failed', $datas);
-        };
+        $failed = fn ($message, $sub = '', $redirect = '/') => redirect('/app')->with('error', $message);
         
         $amount = (float) session('walletToAdd');
         if (!$amount || $amount <= 0) {
@@ -175,7 +172,7 @@ class WalletController extends Controller
                     ]);
                 });                
                 session()->forget('walletToAdd');
-                return view('frontend.payment-status.captured');
+                return redirect('/app')->with('success', __('messages.payment_success'));
             case "FAILED":
                 session()->forget('walletToAdd');
                 return $failed(__('messages.failed_status'), __('messages.failed_message'));

@@ -30,7 +30,15 @@ class GiftCardController extends Controller
             ->take(4)
             ->get();
 
-        return view('frontend.bookings.gift-booking.create', compact('b', 'States', 'first_States', 'suggest'));
+        return response()->json([
+            'status' => true,
+            'data' => [
+                'branch' => $b,
+                'states' => $States,
+                'first_state' => $first_States,
+                'suggested_products' => $suggest,
+            ],
+        ]);
     }
 
     public function store(Request $request)

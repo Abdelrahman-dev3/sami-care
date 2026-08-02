@@ -17,6 +17,8 @@ class PaymentController extends Controller
 {
     public function index(Request $request)
     {
+        return redirect('/app');
+
         $userId = auth()->id();
         $typePage = $request->has('is_buy_now') ? 'payment' : 'cart';
 
@@ -121,9 +123,7 @@ class PaymentController extends Controller
         }
 
         if (($result['status'] ?? '') === 'paid') {
-            return view('frontend.payment-status.captured', [
-                'invoiceId' => $result['invoice_id'] ?? null,
-            ]);
+            return redirect('/app/invoice')->with('success', __('messages.payment_success'));
         }
 
         return redirect()->back()->with('error', $result['message'] ?? __('messages.payment_failed'));

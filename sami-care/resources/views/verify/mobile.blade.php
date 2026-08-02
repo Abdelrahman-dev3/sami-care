@@ -1,4 +1,4 @@
-@extends('frontend::layouts.auth')
+@extends('layouts.dashboard-auth')
 
 @section('title', __('auth.verify_code'))
 
@@ -112,7 +112,6 @@
 }
 
 </style>
-@include('components.frontend.notifications')
 <div class="main-otp-box">
     <div class="sub-otp-box">
         <h2 class="verify_code">{{ __('auth.verify_code') }}</h2>

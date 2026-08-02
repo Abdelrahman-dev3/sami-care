@@ -12,29 +12,19 @@ class PaymentCallbackController extends Controller
         $token = $request->query('attempt');
 
         if (!$token) {
-            return view('frontend.payment-status.failed', [
-                'message' => __('messages.payment_failed'),
-                'sub' => 'Missing payment token',
-                'redirect' => auth()->check() ? route('paymentMethods') : '/',
-            ]);
+            return redirect('/app')->with('error', __('messages.payment_failed'));
         }
 
         $result = app(PaymentOrchestratorService::class)->handleCallback($gateway, $token, $request);
 
         if (($result['status'] ?? '') === 'paid') {
-            return view('frontend.payment-status.captured', [
-                'invoiceId' => $result['invoice_id'] ?? null,
-            ]);
+            return redirect('/app/invoice')->with('success', __('messages.payment_success'));
         }
 
         $message = $result['status'] === 'cancelled'
             ? __('messages.payment_cancelled')
             : __('messages.payment_failed');
 
-        return view('frontend.payment-status.failed', [
-            'message' => $message,
-            'sub' => $result['message'] ?? null,
-            'redirect' => auth()->check() ? route('paymentMethods') : '/',
-        ]);
+        return redirect('/app')->with('error', $result['message'] ?? $message);
     }
 }

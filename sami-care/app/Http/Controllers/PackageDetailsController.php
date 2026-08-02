@@ -78,17 +78,17 @@ public function show($id)
     $branchDes = $package['branch_description'] ?? '';
     $branchName = json_decode($package['branch_name'], true)[$currentLocale] ?? '';
 
-    return view(
-        'frontend.bookings.package.details',
-        compact(
-            'package',
-            'services',
-            'totalServicePrice',
-            'totalService',
-            'branchDes',
-            'branchName'
-        )
-    );
+    return response()->json([
+        'status' => true,
+        'data' => [
+            'package' => $package,
+            'services' => $services,
+            'total_service_price' => $totalServicePrice,
+            'total_service' => $totalService,
+            'branch_description' => $branchDes,
+            'branch_name' => $branchName,
+        ],
+    ]);
 }
     public function getUserCart()
     {

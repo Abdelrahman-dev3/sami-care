@@ -79,12 +79,12 @@ Route::controller(SignController::class)->group(function () {
     Route::post('verify-send-otp', 'verifyOTP')->name('verify.send.otp');
 });
 
-Route::controller(CafeFrontendController::class)->group(function () {
-    Route::get('/cafe', 'index')->name('cafe.index');
-    Route::get('/cafe/table/{code}', 'table')->name('cafe.table');
-    Route::post('/cafe/table/{code}/orders', 'storeOrder')->name('cafe.orders.store');
-});
-Route::get('/sami-care-info', CenterInfoPageController::class)->name('center.info');
+$dashboardRedirect = fn () => redirect('/app');
+
+Route::get('/cafe', $dashboardRedirect)->name('cafe.index');
+Route::get('/cafe/table/{code}', $dashboardRedirect)->name('cafe.table');
+Route::post('/cafe/table/{code}/orders', $dashboardRedirect)->name('cafe.orders.store');
+Route::get('/sami-care-info', $dashboardRedirect)->name('center.info');
 
 Route::controller(TaqnyatSmsController::class)->group(function () {
     Route::get('/sms-messages', 'index')->name('app.sms');
@@ -92,13 +92,9 @@ Route::controller(TaqnyatSmsController::class)->group(function () {
     Route::post('/send-test', 'sendTestMessage')->name('send-test');
 });
 
-Route::controller(BookingsController::class)->group(function () {
-    Route::get('/salonService', 'salon')->name('salon.create');
-});
+Route::get('/salonService', $dashboardRedirect)->name('salon.create');
 
-Route::controller(PackageDetailsController::class)->group(function () {
-    Route::get('/details/{id}', 'show')->name('home.details');
-});
+Route::get('/details/{id}', $dashboardRedirect)->name('home.details');
 
 
 Route::controller(PaymentController::class)->group(function () {
@@ -112,34 +108,29 @@ Route::controller(EmployeesController::class)->group(function () {
     Route::post('/staff/working-hours/{id}', 'store_working_houer')->name('staff.working-hours.store');
 });
 
-Route::controller(FrontendLoyaltyController::class)->group(function () {
-    Route::get('/loyalety', 'loyalety')->name('home.loyalety');
-});
+Route::get('/loyalety', $dashboardRedirect)->name('home.loyalety');
 
 // Use when user not loggin
 Route::controller(BookingCartController::class)->group(function () {
     Route::post('/cart', 'store')->name('cart.store');
 });
 
-Route::controller(GiftCardController::class)->group(function () {
-    Route::post('/gift-cards', 'store')->name('gift.create');
-    Route::get('/gift-cards/claim/{token}', 'claim')->name('gift.claim');
-    Route::post('/gift-cards/claim/{token}/accept', 'accept')->name('gift.claim.accept');
-    Route::post('/gift-cards/claim/{token}/schedule', 'schedule')->name('gift.claim.schedule');
-});
+Route::post('/gift-cards', $dashboardRedirect)->name('gift.create');
+Route::get('/gift-cards/claim/{token}', $dashboardRedirect)->name('gift.claim');
+Route::post('/gift-cards/claim/{token}/accept', $dashboardRedirect)->name('gift.claim.accept');
+Route::post('/gift-cards/claim/{token}/schedule', $dashboardRedirect)->name('gift.claim.schedule');
 
 Route::controller(WheelController::class)->group(function () {
     Route::post('/wheel/spin', 'spin')->name('wheel.spin');
 });
 
-Route::middleware('auth')->group(function () {
-    Route::controller(GiftCardController::class)->group(function () {
-        Route::get('/giffte', 'index')->name('gift.page');
-    });
+Route::middleware('auth')->group(function () use ($dashboardRedirect) {
+    Route::get('/giffte', $dashboardRedirect)->name('gift.page');
+    Route::get('/cart', $dashboardRedirect)->name('cart.page');
+    Route::get('/profile', $dashboardRedirect)->name('profile');
 
     Route::controller(BookingCartController::class)->group(function () {
         Route::get('/cart/sidebar-data', 'sidebarData')->name('cart.sidebar');
-        Route::get('/cart', 'index')->name('cart.page');
         Route::delete('/cart/{id}', 'destroy')->name('cart.destroy');
         Route::delete('p/cart/{id}', 'destroy_product')->name('p.cart.destroy');
         Route::delete('g/cart/{id}', 'destroy_gift')->name('g.cart.destroy');
@@ -157,7 +148,6 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::controller(ProfileController::class)->group(function () {
-        Route::get('/profile', 'profile')->name('profile');
         Route::put('/profile/{id}/update', 'update')->name('profile.update');
     });
 
@@ -453,12 +443,10 @@ Route::group(['prefix' => 'app', 'middleware' => 'auth'], function () {
     });
 });
 
-Route::controller(ProfileController::class)->group(function () {
-    Route::get('/my-bookings', 'myBookings')->name('profile.my_bookings');
-    Route::get('/coupon', 'coupon')->name('profile.coupon');
-    Route::post('/booking/cancel/{id}', 'destroy_myBooking')->name('myBooking.destroy');
-    Route::get('/complate-bookings', 'complateBookings')->name('profile.complateBokkings');
-});
+Route::get('/my-bookings', $dashboardRedirect)->name('profile.my_bookings');
+Route::get('/coupon', $dashboardRedirect)->name('profile.coupon');
+Route::post('/booking/cancel/{id}', [ProfileController::class, 'destroy_myBooking'])->name('myBooking.destroy');
+Route::get('/complate-bookings', $dashboardRedirect)->name('profile.complateBokkings');
 
 
 Route::middleware(['auth'])->prefix('app/affiliate')->name('affiliate.')->group(function () {
@@ -467,15 +455,13 @@ Route::middleware(['auth'])->prefix('app/affiliate')->name('affiliate.')->group(
         Route::post('/settings', 'updateSettings')->name('settings.update');
     });
 });
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth'])->group(function () use ($dashboardRedirect) {
     Route::controller(GiftController::class)->group(function () {
         Route::get('/app/gift', 'index')->name('app.gift');
         Route::get('/gift/delete/{id}', 'destroy')->name('gift.delete');
     });
 
-    Route::controller(ProfileController::class)->group(function () {
-        Route::get('/complate-Gift', 'complateGift')->name('profile.complateGift');
-    });
+    Route::get('/complate-Gift', $dashboardRedirect)->name('profile.complateGift');
 
     Route::controller(InvoiceController::class)->group(function () {
         Route::get('/app/invoice', 'index')->name('app.invoice');
