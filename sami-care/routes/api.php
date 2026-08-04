@@ -27,12 +27,12 @@ use App\Http\Controllers\Api\PackageCatalogController;
 use App\Http\Controllers\Api\ShopController;
 use App\Http\Controllers\Api\LoyaltyController;
 use App\Http\Controllers\Api\CouponController;
+
 use App\Http\Controllers\Api\BookingsController;
 use App\Http\Controllers\Api\MobileCartController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\WheelController;
 use App\Http\Controllers\Backend\TermsAndConditionsController;
-
 
 /*
 |--------------------------------------------------------------------------
@@ -45,8 +45,9 @@ use App\Http\Controllers\Backend\TermsAndConditionsController;
 |
 */
 
-
 Route::prefix('Home')->group(function () {
+    Route::get('/all', [\App\Http\Controllers\Api\HomeController::class, 'index']);
+
     Route::controller(CategoriesController::class)->group(function () {
         Route::get('/categories', 'index');
     });
@@ -64,6 +65,7 @@ Route::prefix('Home')->group(function () {
         Route::get('/prizes', 'prizes');
     });
 });
+
 
 Route::controller(AdController::class)->group(function () {
     Route::get('/ads', 'index');
