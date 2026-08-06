@@ -1,8 +1,11 @@
 <script setup>
 import { ref, computed } from 'vue'
 
-// كل جايزة: نص (ممكن سطرين) + لون القطاع
-const segments = [
+const props = defineProps({
+  prizes: { type: Array, default: () => [] },
+})
+
+const defaultSegments = [
   { lines: ['هدية', 'مجانية'], color: '#171310' },
   { lines: ['خصم', '20%'], color: '#caa565' },
   { lines: ['جلسة', 'مجانية'], color: '#171310' },
@@ -11,10 +14,33 @@ const segments = [
   { lines: ['خصم', '10%'], color: '#caa565' },
 ]
 
-const segAngle = 360 / segments.length
+const activeSegments = computed(() => {
+  if (!props.prizes?.length) return defaultSegments
+
+  return props.prizes.map((prize, i) => {
+    let title = ''
+    if (typeof prize === 'string') {
+      title = prize
+    } else if (prize?.reward_value) {
+      title = prize.type === 'points' ? `${prize.reward_value} نقطة` : `خصم ${prize.reward_value}%`
+    } else if (prize?.name) {
+      title = typeof prize.name === 'object' ? (prize.name?.ar || prize.name?.en || '') : prize.name
+    } else {
+      title = `جائزة ${i + 1}`
+    }
+
+    const parts = title.split(' ')
+    const lines = parts.length > 1 ? [parts.slice(0, Math.ceil(parts.length / 2)).join(' '), parts.slice(Math.ceil(parts.length / 2)).join(' ')] : [title]
+    return {
+      lines,
+      color: i % 2 === 0 ? '#171310' : '#caa565',
+    }
+  })
+})
+
+const segAngle = computed(() => 360 / (activeSegments.value.length || 1))
 const CX = 100, CY = 100, R = 92, LABEL_R = 58
 
-// 0deg = أعلى العجلة (12)، والزاوية بتزيد مع عقارب الساعة — نفس منطق دوران العجلة تحت
 function polar(radius, angleDeg) {
   const rad = ((angleDeg - 90) * Math.PI) / 180
   return { x: CX + radius * Math.cos(rad), y: CY + radius * Math.sin(rad) }
@@ -27,10 +53,10 @@ function wedgePath(startAngle, endAngle) {
 }
 
 const wedges = computed(() =>
-  segments.map((seg, i) => {
-    const start = i * segAngle
-    const end = start + segAngle
-    const mid = start + segAngle / 2
+  activeSegments.value.map((seg, i) => {
+    const start = i * segAngle.value
+    const end = start + segAngle.value
+    const mid = start + segAngle.value / 2
     const labelPos = polar(LABEL_R, mid)
     return { ...seg, path: wedgePath(start, end), labelPos }
   })
@@ -41,19 +67,21 @@ const spinning = ref(false)
 const result = ref(null)
 
 function spin() {
-  if (spinning.value) return
+  if (spinning.value || !activeSegments.value.length) return
   spinning.value = true
   result.value = null
 
-  const idx = Math.floor(Math.random() * segments.length)
-  const targetCenter = idx * segAngle + segAngle / 2
+  const count = activeSegments.value.length
+  const angleStep = 360 / count
+  const idx = Math.floor(Math.random() * count)
+  const targetCenter = idx * angleStep + angleStep / 2
   const extraTurns = 6
   const currentMod = rotation.value % 360
   rotation.value += (360 - currentMod) + extraTurns * 360 + (360 - targetCenter)
 
   setTimeout(() => {
     spinning.value = false
-    result.value = segments[idx].lines.join(' ')
+    result.value = activeSegments.value[idx].lines.join(' ')
   }, 4200)
 }
 </script>

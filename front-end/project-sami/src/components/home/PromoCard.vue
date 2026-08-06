@@ -1,4 +1,5 @@
 <script setup>
+import { computed } from 'vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import { promos as fallbackPromos } from '@/data/home'
 
@@ -6,7 +7,7 @@ const props = defineProps({
   promos: { type: Array, default: () => [] },
 })
 
-const items = props.promos.length ? props.promos : fallbackPromos
+const items = computed(() => (props.promos?.length ? props.promos : fallbackPromos))
 </script>
 
 <template>

@@ -1,4 +1,5 @@
 <script setup>
+import { computed } from 'vue'
 import SectionTitle from '@/components/common/SectionTitle.vue'
 import AppImage from '@/components/common/AppImage.vue'
 import { products as fallbackProducts } from '@/data/home'
@@ -7,7 +8,7 @@ const props = defineProps({
   products: { type: Array, default: () => [] },
 })
 
-const items = props.products.length ? props.products : fallbackProducts
+const items = computed(() => (props.products?.length ? props.products : fallbackProducts))
 const formatPrice = value => `${value} ريال`
 </script>
 

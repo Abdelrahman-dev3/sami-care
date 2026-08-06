@@ -23,3 +23,18 @@ export async function fetchHomeData() {
   const payload = await request('/Home/all')
   return payload.data || {}
 }
+
+export async function fetchBranches() {
+  try {
+    const payload = await request('/branch-list')
+    return payload.data || payload.branches || []
+  } catch {
+    try {
+      const payload = await request('/branches')
+      return payload.data || payload.branches || []
+    } catch {
+      return []
+    }
+  }
+}
+

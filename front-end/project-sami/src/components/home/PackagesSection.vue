@@ -1,4 +1,5 @@
 <script setup>
+import { computed } from 'vue'
 import SectionTitle from '@/components/common/SectionTitle.vue'
 import AppImage from '@/components/common/AppImage.vue'
 import { packages as fallbackPackages } from '@/data/home'
@@ -7,7 +8,7 @@ const props = defineProps({
   packages: { type: Array, default: () => [] },
 })
 
-const items = props.packages.length ? props.packages : fallbackPackages
+const items = computed(() => (props.packages?.length ? props.packages : fallbackPackages))
 </script>
 
 <template>

@@ -15,7 +15,7 @@ import TestimonialsSection from '@/components/home/TestimonialsSection.vue'
 import FinalCta from '@/components/home/FinalCta.vue'
 import '@/assets/styles/home.css'
 
-import { fetchHomeData } from '@/services/homeApi'
+import { fetchHomeData, fetchBranches } from '@/services/homeApi'
 import {
   services as fallbackServices,
   packages as fallbackPackages,
@@ -83,13 +83,23 @@ onMounted(async () => {
     }
 
     // Branches
-    if (data.branches?.length) {
-      branches.value = data.branches.map(branch => ({
-        id: branch.id,
-        name: typeof branch.name === 'object' ? (branch.name?.ar || branch.name?.en || '') : (branch.name || ''),
-        address: branch.address?.state_data?.name || '',
-        image: branch.feature_image || '/images/generated/branches/branch-1-hq.png',
-      }))
+    let fetchedBranches = data.branches
+    if (!fetchedBranches?.length) {
+      fetchedBranches = await fetchBranches()
+    }
+
+    if (fetchedBranches?.length) {
+      branches.value = fetchedBranches.map((branch, idx) => {
+        const b = branch.data || branch
+        const addr = b.address?.state_data?.name || b.address?.address_line_1 || (typeof b.address === 'string' ? b.address : '') || 'فرع سامي للعناية'
+        const fallbackImg = idx % 2 === 0 ? '/images/generated/branches/branch-1-hq.png' : '/images/generated/branches/branch-2-hq.png'
+        return {
+          id: b.id,
+          name: typeof b.name === 'object' ? (b.name?.ar || b.name?.en || '') : (b.name || ''),
+          address: addr,
+          image: b.feature_image || b.media?.[0]?.original_url || fallbackImg,
+        }
+      })
     }
 
     // Reviews/Testimonials
@@ -109,7 +119,25 @@ onMounted(async () => {
       wheelPrizes.value = data.wheel_prizes
     }
   } catch (err) {
-    console.warn('Failed to load home data from API, using fallback:', err)
+    console.warn('Failed to load home data from API, trying direct branch fetch:', err)
+    try {
+      const bList = await fetchBranches()
+      if (bList?.length) {
+        branches.value = bList.map((branch, idx) => {
+          const b = branch.data || branch
+          const addr = b.address?.state_data?.name || b.address?.address_line_1 || (typeof b.address === 'string' ? b.address : '') || 'فرع سامي للعناية'
+          const fallbackImg = idx % 2 === 0 ? '/images/generated/branches/branch-1-hq.png' : '/images/generated/branches/branch-2-hq.png'
+          return {
+            id: b.id,
+            name: typeof b.name === 'object' ? (b.name?.ar || b.name?.en || '') : (b.name || ''),
+            address: addr,
+            image: b.feature_image || b.media?.[0]?.original_url || fallbackImg,
+          }
+        })
+      }
+    } catch (bErr) {
+      console.warn('Failed to fetch fallback branches:', bErr)
+    }
   } finally {
     loading.value = false
   }

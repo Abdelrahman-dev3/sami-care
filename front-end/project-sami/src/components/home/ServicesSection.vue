@@ -1,4 +1,5 @@
 <script setup>
+import { computed } from 'vue'
 import SectionTitle from '@/components/common/SectionTitle.vue'
 import AppImage from '@/components/common/AppImage.vue'
 import { services as fallbackServices } from '@/data/home'
@@ -7,7 +8,7 @@ const props = defineProps({
   services: { type: Array, default: () => [] },
 })
 
-const items = props.services.length ? props.services : fallbackServices
+const items = computed(() => (props.services?.length ? props.services : fallbackServices))
 </script>
 
 <template>
