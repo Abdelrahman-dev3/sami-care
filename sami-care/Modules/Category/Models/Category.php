@@ -21,7 +21,9 @@ class Category extends BaseModel
 
     protected $table = 'categories';
 
-    protected $fillable = ['slug', 'is_visible', 'is_frozen', 'sort_order', 'name', 'status', 'parent_id'];
+    //protected $fillable = ['slug', 'is_visible', 'is_frozen', 'sort_order', 'name', 'status', 'parent_id'];
+
+    protected $fillable = ['slug', 'is_visible', 'is_frozen', 'sort_order', 'name', 'status', 'parent_id', 'price_from', 'durMin', 'durMax', 'image'];
 
     const CUSTOM_FIELD_MODEL = 'Modules\Category\Models\Category';
 
@@ -35,6 +37,9 @@ class Category extends BaseModel
         'description' => 'array',
         'desc2' => 'array',
         'sort_order' => 'integer',
+        'price_from' => 'float',
+        'durMin' => 'integer',
+        'durMax' => 'integer',
     ];
 
     /**

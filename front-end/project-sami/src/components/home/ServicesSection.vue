@@ -2,27 +2,49 @@
 import { computed } from 'vue'
 import SectionTitle from '@/components/common/SectionTitle.vue'
 import AppImage from '@/components/common/AppImage.vue'
-import { services as fallbackServices } from '@/data/home'
+import { useRouter } from 'vue-router'
+import { useServiceLocation } from '@/composables/useServiceLocation'
 
 const props = defineProps({
-  services: { type: Array, default: () => [] },
+    categories: {
+        type: Array,
+        default: () => [],
+    },
+    loading: {
+        type: Boolean,
+        default: false,
+    },
 })
 
-const items = computed(() => (props.services?.length ? props.services : fallbackServices))
+const router = useRouter()
+const { requireLocation } = useServiceLocation()
+
+const services = computed(() => {
+    return props.categories.flatMap(category => {
+        return (category.services || []).map(service => ({
+            ...service,
+            category_name: category.name,
+        }))
+    })
+})
+
+function go(path) {
+    requireLocation(() => router.push(path))
+}
 </script>
 
 <template>
-  <section id="services" class="home-section container">
+  <section data-reveal id="services" class="home-section container">
     <SectionTitle title="خدماتنا" />
     <div class="services-grid">
-      <article v-for="service in items" :key="service.id" class="service-card">
-        <AppImage :src="service.image" :alt="service.name" />
+      <article v-for="service in categories" :key="service.id" class="service-card" data-reveal>
+        <AppImage :src="service.image" :alt="service.name.ar" />
         <div class="card-overlay">
-          <h3>{{ service.name }}</h3>
-          <RouterLink :to="`/services/${service.id}`">التفاصيل <span>←</span></RouterLink>
+          <h3>{{ service.name.ar }}</h3>
+          <a href="#" @click.prevent="go(`/services/${service.id}`)">التفاصيل <span>←</span></a>
         </div>
       </article>
     </div>
-    <RouterLink to="/services" class="show-all">عرض جميع الخدمات ←</RouterLink>
+    <a href="#" class="show-all" @click.prevent="go('/services')">عرض جميع الخدمات ←</a>
   </section>
 </template>

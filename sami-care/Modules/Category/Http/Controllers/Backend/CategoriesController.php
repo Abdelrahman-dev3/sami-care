@@ -13,6 +13,8 @@ use Modules\CustomField\Models\CustomFieldGroup;
 use Yajra\DataTables\DataTables;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
+
 
 class CategoriesController extends Controller
 {
@@ -192,24 +194,24 @@ class CategoriesController extends Controller
 
         $datatable = $datatable->eloquent($query)
             ->addColumn('check', function ($row) {
-                return '<input type="checkbox" class="form-check-input select-table-row"  id="datatable-row-'.$row->id.'"  name="datatable_ids[]" value="'.$row->id.'" onclick="dataTableRowCheck('.$row->id.')">';
+                return '<input type="checkbox" class="form-check-input select-table-row"  id="datatable-row-' . $row->id . '"  name="datatable_ids[]" value="' . $row->id . '" onclick="dataTableRowCheck(' . $row->id . ')">';
             })
             // ->editColumn('name', function ($row) use ($module_name) {
             //     return "<a href='".route('backend.'.$module_name.'.index_nested', ['category_id' => $row->id])."'>$row->name</a>";
             // })
             ->editColumn('name', function ($row) use ($module_name) {
                 // $link = route('backend.' . $module_name . '.index_nested', ['category_id' => $row->id]);
-                $link ='#';
+                $link = '#';
                 $data = $row;
                 $image = optional($data)->feature_image ?? default_user_avatar();
                 $name = optional($data)->name ?? default_user_name();
-                return view('product::backend.category.category_id', compact('image', 'link','name'));
+                return view('product::backend.category.category_id', compact('image', 'link', 'name'));
             })
             ->addColumn('action', function ($data) use ($module_name) {
                 return view('category::backend.categories.action_column', compact('module_name', 'data'));
             })
             ->addColumn('image', function ($data) {
-                return "<img src='".$data->feature_image."' class='avatar avatar-50 rounded-pill'>";
+                return "<img src='" . $data->feature_image . "' class='avatar avatar-50 rounded-pill'>";
             })
             ->editColumn('status', function ($row) {
                 $checked = '';
@@ -219,7 +221,7 @@ class CategoriesController extends Controller
 
                 return '
                     <div class="form-check form-switch ">
-                        <input type="checkbox" data-url="'.route('backend.categories.update_status', $row->id).'" data-token="'.csrf_token().'" class="switch-status-change form-check-input"  id="datatable-row-'.$row->id.'"  name="status" value="'.$row->id.'" '.$checked.'>
+                        <input type="checkbox" data-url="' . route('backend.categories.update_status', $row->id) . '" data-token="' . csrf_token() . '" class="switch-status-change form-check-input"  id="datatable-row-' . $row->id . '"  name="status" value="' . $row->id . '" ' . $checked . '>
                     </div>
                 ';
             })
@@ -231,7 +233,7 @@ class CategoriesController extends Controller
 
                 return '
                     <div class="form-check form-switch ">
-                        <input type="checkbox" data-url="'.route('backend.categories.update_freeze', $row->id).'" data-token="'.csrf_token().'" class="switch-status-change form-check-input"  id="datatable-freeze-row-'.$row->id.'"  name="freeze" value="'.$row->id.'" '.$checked.'>
+                        <input type="checkbox" data-url="' . route('backend.categories.update_freeze', $row->id) . '" data-token="' . csrf_token() . '" class="switch-status-change form-check-input"  id="datatable-freeze-row-' . $row->id . '"  name="freeze" value="' . $row->id . '" ' . $checked . '>
                     </div>
                 ';
             })
@@ -314,9 +316,9 @@ class CategoriesController extends Controller
             ->leftJoin('categories as mainCategory', 'mainCategory.id', '=', 'categories.parent_id')
             ->whereNotNull('categories.parent_id')
             ->whereNull('categories.deleted_at');
-        
+
         $filter = $request->filter;
-    
+
         if (isset($filter)) {
             if (isset($filter['column_status'])) {
                 $query->where('categories.status', $filter['column_status']);
@@ -325,10 +327,10 @@ class CategoriesController extends Controller
                 $query->where('categories.parent_id', $filter['column_category']);
             }
         }
-    
+
         $datatable = $datatable->eloquent($query)
             ->addColumn('check', function ($row) {
-                return '<input type="checkbox" class="form-check-input select-table-row" id="datatable-row-'.$row->id.'" name="datatable_ids[]" value="'.$row->id.'" onclick="dataTableRowCheck('.$row->id.')">';
+                return '<input type="checkbox" class="form-check-input select-table-row" id="datatable-row-' . $row->id . '" name="datatable_ids[]" value="' . $row->id . '" onclick="dataTableRowCheck(' . $row->id . ')">';
             })
             ->addColumn('action', function ($data) use ($module_name) {
                 return view('category::backend.categories.sub_action_column', compact('module_name', 'data'));
@@ -350,10 +352,10 @@ class CategoriesController extends Controller
                 if ($row->status) {
                     $checked = 'checked="checked"';
                 }
-    
+
                 return '
                     <div class="form-check form-switch ">
-                        <input type="checkbox" data-url="'.route('backend.categories.update_status', $row->id).'" data-token="'.csrf_token().'" class="switch-status-change form-check-input" id="datatable-row-'.$row->id.'" name="status" value="'.$row->id.'" '.$checked.'>
+                        <input type="checkbox" data-url="' . route('backend.categories.update_status', $row->id) . '" data-token="' . csrf_token() . '" class="switch-status-change form-check-input" id="datatable-row-' . $row->id . '" name="status" value="' . $row->id . '" ' . $checked . '>
                     </div>
                 ';
             })
@@ -365,13 +367,13 @@ class CategoriesController extends Controller
 
                 return '
                     <div class="form-check form-switch ">
-                        <input type="checkbox" data-url="'.route('backend.categories.update_freeze', $row->id).'" data-token="'.csrf_token().'" class="switch-status-change form-check-input" id="datatable-freeze-row-'.$row->id.'" name="freeze" value="'.$row->id.'" '.$checked.'>
+                        <input type="checkbox" data-url="' . route('backend.categories.update_freeze', $row->id) . '" data-token="' . csrf_token() . '" class="switch-status-change form-check-input" id="datatable-freeze-row-' . $row->id . '" name="freeze" value="' . $row->id . '" ' . $checked . '>
                     </div>
                 ';
             })
             ->editColumn('updated_at', function ($data) {
                 $diff = Carbon::now()->diffInHours($data->updated_at);
-    
+
                 if ($diff < 25) {
                     return $data->updated_at->diffForHumans();
                 } else {
@@ -380,7 +382,7 @@ class CategoriesController extends Controller
             })
             ->editColumn('created_at', function ($data) {
                 $diff = Carbon::now()->diffInHours($data->created_at);
-    
+
                 if ($diff < 25) {
                     return $data->created_at->diffForHumans();
                 } else {
@@ -388,13 +390,13 @@ class CategoriesController extends Controller
                 }
             })
             ->orderColumns(['id'], '-:column $1');
-    
+
         // Custom Fields For export
         $customFieldColumns = CustomField::customFieldData($datatable, Category::CUSTOM_FIELD_MODEL, null);
         return $datatable->rawColumns(array_merge(['action', 'status', 'freeze', 'image', 'check'], $customFieldColumns))
             ->toJson();
     }
-    
+
 
     /**
      * Store a newly created resource in storage.
@@ -402,7 +404,7 @@ class CategoriesController extends Controller
      * @param  Request  $request
      * @return Response
      */
-    public function store(CategoryRequest $request)
+    /*public function store(CategoryRequest $request)
     {
         if (is_string($request->name) && $this->isJson($request->name)) {
             $request['name'] = json_decode($request->name, true);
@@ -422,7 +424,34 @@ class CategoriesController extends Controller
         $message = __('messages.create_form', ['form' => __('category.singular_title')]);
 
         return response()->json(['message' => $message, 'status' => true], 200);
+    }*/
+
+    public function store(CategoryRequest $request)
+    {
+        if (is_string($request->name) && $this->isJson($request->name)) {
+            $request['name'] = json_decode($request->name, true);
+        } else {
+            $request['name'] = ['ar' => $request->name, 'en' => $request->name];
+        }
+        $data = $request->except(['feature_image', 'image']);
+
+        if ($request->hasFile('image')) {
+            $data['image'] = $this->storeImage($request);
+        }
+
+        $query = Category::create($data);
+
+        if ($request->custom_fields_data) {
+            $query->updateCustomFieldData(json_decode($request->custom_fields_data));
+        }
+
+        storeMediaFile($query, $request->file('feature_image'));
+
+        $message = __('messages.create_form', ['form' => __('category.singular_title')]);
+
+        return response()->json(['message' => $message, 'status' => true], 200);
     }
+
 
     /**
      * Display the specified resource.
@@ -471,11 +500,11 @@ class CategoriesController extends Controller
      * @param  int  $id
      * @return Response
      */
-    public function update(CategoryRequest $request, $id)
+    /*public function update(CategoryRequest $request, $id)
     {
         if (is_string($request->name) && $this->isJson($request->name)) {
             $request['name'] = json_decode($request->name, true);
-        }else {
+        } else {
             $request['name'] = ['ar' => $request->name, 'en' => $request->name];
         }
         $query = Category::findOrFail($id);
@@ -498,7 +527,41 @@ class CategoriesController extends Controller
         $message = __('messages.update_form', ['form' => __('category.singular_title')]);
 
         return response()->json(['message' => $message, 'status' => true], 200);
+    }*/
+
+    public function update(CategoryRequest $request, $id)
+    {
+        if (is_string($request->name) && $this->isJson($request->name)) {
+            $request['name'] = json_decode($request->name, true);
+        } else {
+            $request['name'] = ['ar' => $request->name, 'en' => $request->name];
+        }
+        $query = Category::findOrFail($id);
+
+        $data = $request->except(['feature_image', 'image']);
+
+        if ($request->hasFile('image')) {
+            $data['image'] = $this->storeImage($request, $query);
+        }
+
+        $query->update($data);
+
+        if ($request->custom_fields_data) {
+            $query->updateCustomFieldData(json_decode($request->custom_fields_data));
+        }
+
+        if ($request->hasFile('feature_image')) {
+            storeMediaFile($query, $request->file('feature_image'), 'feature_image');
+        }
+        if ($request->feature_image == null) {
+            $query->clearMediaCollection('feature_image');
+        }
+
+        $message = __('messages.update_form', ['form' => __('category.singular_title')]);
+
+        return response()->json(['message' => $message, 'status' => true], 200);
     }
+
 
     /**
      * Remove the specified resource from storage.
@@ -531,5 +594,22 @@ class CategoriesController extends Controller
     {
         json_decode($string);
         return json_last_error() === JSON_ERROR_NONE;
+    }
+
+    private function storeImage(Request $request, ?Category $category = null): string
+    {
+        if (! File::exists(public_path('uploads/categories'))) {
+            File::makeDirectory(public_path('uploads/categories'), 0777, true);
+        }
+
+        if ($category && $category->image && File::exists(public_path($category->image))) {
+            File::delete(public_path($category->image));
+        }
+
+        $image = $request->file('image');
+        $imageName = time() . '_' . uniqid() . '.' . $image->extension();
+        $image->move(public_path('uploads/categories'), $imageName);
+
+        return 'uploads/categories/' . $imageName;
     }
 }

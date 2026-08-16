@@ -30,10 +30,10 @@ export const serviceDetails = {
       { icon: icon.clock, label: 'جلسة متكاملة واسترخاء تام' },
     ],
     variants: [
-      { name: 'الحمام المغربي الملكي', dur: 90, price: 450, desc: 'تجربة فاخرة تتضمن جميع خطوات الحمام المغربي مع تدليك بالزيوت الطبيعية.', img: '/images/services/bath/royal.jpg' },
-      { name: 'الحمام المغربي الكامل', dur: 75, price: 350, desc: 'جلسة متكاملة للتنظيف وتعفيش البشرة ومنح الجسم انتعاشًا واسترخاءً.', img: '/images/services/bath/full.jpg' },
-      { name: 'الحمام المغربي الأساسي', dur: 60, price: 250, desc: 'جلسة أساسية لتنظيف البشرة وتقشير الجسم وترطيبه.', img: '/images/services/bath/basic.jpg' },
-      { name: 'الحمام المغربي السريع', dur: 45, price: 180, desc: 'جلسة سريعة ومنعشة للتنظيف وإزالة الخلايا الميتة.', img: '/images/services/bath/quick.jpg' },
+      { svcId: 'd1-0', cat: 'bath', name: 'الحمام المغربي الملكي', dur: 90, price: 450, desc: 'تجربة فاخرة تتضمن جميع خطوات الحمام المغربي مع تدليك بالزيوت الطبيعية.', img: '/images/services/bath/royal.jpg' },
+      { svcId: 'd1-1', cat: 'bath', name: 'الحمام المغربي الكامل', dur: 75, price: 350, desc: 'جلسة متكاملة للتنظيف وتعفيش البشرة ومنح الجسم انتعاشًا واسترخاءً.', img: '/images/services/bath/full.jpg' },
+      { svcId: 'd1-2', cat: 'bath', name: 'الحمام المغربي الأساسي', dur: 60, price: 250, desc: 'جلسة أساسية لتنظيف البشرة وتقشير الجسم وترطيبه.', img: '/images/services/bath/basic.jpg' },
+      { svcId: 'd1-3', cat: 'bath', name: 'الحمام المغربي السريع', dur: 45, price: 180, desc: 'جلسة سريعة ومنعشة للتنظيف وإزالة الخلايا الميتة.', img: '/images/services/bath/quick.jpg' },
     ],
     benefits: [
       { icon: icon.drop, title: 'تنظيف عميق للبشرة', text: 'يزيل الشوائب والزيوت الزائدة ويفتح المسام.' },
@@ -74,10 +74,10 @@ export const serviceDetails = {
       { icon: icon.clock, label: 'جلسة متكاملة واسترخاء تام' },
     ],
     variants: [
-      { name: 'البديكير الفاخر', dur: 75, price: 250, desc: 'عناية متكاملة مع نقع القدمين، تقشير، وتدليك عميق للاسترخاء التام.', img: '/images/services/pedicure/luxury.jpg' },
-      { name: 'البديكير الأساسي', dur: 45, price: 150, desc: 'جلسة عناية أساسية تشمل نقع القدمين وتنظيف الأظافر وترطيب البشرة.', img: '/images/services/pedicure/basic.jpg' },
-      { name: 'البديكير الطبي', dur: 60, price: 200, desc: 'عناية متخصصة للمشاكل الشائعة مثل التشققات والجلد الجاف والأظافر السميكة.', img: '/images/services/pedicure/medical.jpg' },
-      { name: 'البديكير السريع', dur: 30, price: 100, desc: 'جلسة سريعة للانتعاش الفوري تشمل تنظيف الأظافر وترطيب خفيف.', img: '/images/services/pedicure/quick.jpg' },
+      { svcId: 'd2-0', cat: 'pedi', name: 'البديكير الفاخر', dur: 75, price: 250, desc: 'عناية متكاملة مع نقع القدمين، تقشير، وتدليك عميق للاسترخاء التام.', img: '/images/services/pedicure/luxury.jpg' },
+      { svcId: 'd2-1', cat: 'pedi', name: 'البديكير الأساسي', dur: 45, price: 150, desc: 'جلسة عناية أساسية تشمل نقع القدمين وتنظيف الأظافر وترطيب البشرة.', img: '/images/services/pedicure/basic.jpg' },
+      { svcId: 'd2-2', cat: 'pedi', name: 'البديكير الطبي', dur: 60, price: 200, desc: 'عناية متخصصة للمشاكل الشائعة مثل التشققات والجلد الجاف والأظافر السميكة.', img: '/images/services/pedicure/medical.jpg' },
+      { svcId: 'd2-3', cat: 'pedi', name: 'البديكير السريع', dur: 30, price: 100, desc: 'جلسة سريعة للانتعاش الفوري تشمل تنظيف الأظافر وترطيب خفيف.', img: '/images/services/pedicure/quick.jpg' },
     ],
     benefits: [
       { icon: icon.drop, title: 'ترطيب وتنعيم البشرة', text: 'يعيد النعومة ويمنع الجفاف والتشقق.' },
@@ -116,11 +116,11 @@ export const serviceDetails = {
       { icon: icon.user, label: 'مختصون محترفون' },
     ],
     variants: [
-      { name: 'حلاقة ملكية', dur: 60, price: 150, desc: 'تجربة حلاقة فاخرة متكاملة مع عناية باللحية والوجه.', img: '/images/services/haircut/royal.jpg' },
-      { name: 'حلاقة مع تحديد اللحية', dur: 45, price: 60, desc: 'حلاقة شعر احترافية مع تحديد وتهذيب اللحية.', img: '/images/services/haircut/beard.jpg' },
-      { name: 'حلاقة أطفال', dur: 30, price: 90, desc: 'حلاقة مريحة وآمنة مخصصة للأطفال.', img: '/images/services/haircut/kids.jpg' },
-      { name: 'حلاقة فيد (Fade)', dur: 45, price: 90, desc: 'قصة فيد عصرية بدرجات متدرجة احترافية.', img: '/images/services/haircut/fade.jpg' },
-      { name: 'حلاقة كلاسيكية', dur: 30, price: 70, desc: 'قصة كلاسيكية أنيقة تناسب جميع المناسبات.', img: '/images/services/haircut/classic.jpg' },
+      { svcId: 'd3-0', cat: 'hair', name: 'حلاقة ملكية', dur: 60, price: 150, desc: 'تجربة حلاقة فاخرة متكاملة مع عناية باللحية والوجه.', img: '/images/services/haircut/royal.jpg' },
+      { svcId: 'd3-1', cat: 'hair', name: 'حلاقة مع تحديد اللحية', dur: 45, price: 60, desc: 'حلاقة شعر احترافية مع تحديد وتهذيب اللحية.', img: '/images/services/haircut/beard.jpg' },
+      { svcId: 'd3-2', cat: 'hair', name: 'حلاقة أطفال', dur: 30, price: 90, desc: 'حلاقة مريحة وآمنة مخصصة للأطفال.', img: '/images/services/haircut/kids.jpg' },
+      { svcId: 'd3-3', cat: 'hair', name: 'حلاقة فيد (Fade)', dur: 45, price: 90, desc: 'قصة فيد عصرية بدرجات متدرجة احترافية.', img: '/images/services/haircut/fade.jpg' },
+      { svcId: 'd3-4', cat: 'hair', name: 'حلاقة كلاسيكية', dur: 30, price: 70, desc: 'قصة كلاسيكية أنيقة تناسب جميع المناسبات.', img: '/images/services/haircut/classic.jpg' },
     ],
     benefits: [
       { icon: icon.sparkle, title: 'مظهر أنيق ومنظم', text: 'تمنحك إطلالة مرتبة تعكس ذوقك واهتمامك بنفسك.' },
@@ -160,10 +160,10 @@ export const serviceDetails = {
       { icon: icon.clock, label: 'جلسة متكاملة واسترخاء تام' },
     ],
     variants: [
-      { name: 'تنظيف بشرة عميق', dur: 75, price: 280, desc: 'جلسة متكاملة تشمل التقشير والتفريغ والترطيب العميق.' },
-      { name: 'تنظيف بشرة أساسي', dur: 45, price: 180, desc: 'جلسة عناية أساسية لتنظيف المسام وترطيب البشرة.' },
-      { name: 'عناية مضادة للشيخوخة', dur: 60, price: 320, desc: 'جلسة متخصصة لشد ونضارة البشرة بمنتجات فاخرة.' },
-      { name: 'تنظيف سريع', dur: 30, price: 130, desc: 'جلسة سريعة لانتعاش فوري ونظافة البشرة.' },
+      { svcId: 'd4-0', cat: 'skin', name: 'تنظيف بشرة عميق', dur: 75, price: 280, desc: 'جلسة متكاملة تشمل التقشير والتفريغ والترطيب العميق.' },
+      { svcId: 'd4-1', cat: 'skin', name: 'تنظيف بشرة أساسي', dur: 45, price: 180, desc: 'جلسة عناية أساسية لتنظيف المسام وترطيب البشرة.' },
+      { svcId: 'd4-2', cat: 'skin', name: 'عناية مضادة للشيخوخة', dur: 60, price: 320, desc: 'جلسة متخصصة لشد ونضارة البشرة بمنتجات فاخرة.' },
+      { svcId: 'd4-3', cat: 'skin', name: 'تنظيف سريع', dur: 30, price: 130, desc: 'جلسة سريعة لانتعاش فوري ونظافة البشرة.' },
     ],
     benefits: [
       { icon: icon.sparkle, title: 'نضارة وإشراقة فورية', text: 'يمنح بشرتك مظهرًا صحيًا ومتوهجًا من أول جلسة.' },
@@ -203,11 +203,11 @@ export const serviceDetails = {
       { icon: icon.user, label: 'مختصون محترفون' },
     ],
     variants: [
-      { name: 'مساج استرخائي', dur: 60, price: 220, desc: 'جلسة هادئة لتخفيف التوتر والاسترخاء العميق.', img: '/images/services/massage/relax.jpg' },
-      { name: 'مساج رياضي', dur: 60, price: 220, desc: 'مخصص للرياضيين لتخفيف إجهاد العضلات وتحسين المرونة.', img: '/images/services/massage/sport.jpg' },
-      { name: 'مساج ديب تيشو', dur: 90, price: 280, desc: 'ضغط عميق يستهدف طبقات العضلات الداخلية.', img: '/images/services/massage/deep.jpg' },
-      { name: 'مساج الأحجار الساخنة', dur: 90, price: 280, desc: 'استخدام أحجار دافئة لإرخاء العضلات بعمق.', img: '/images/services/massage/stones.jpg' },
-      { name: 'مساج سويدي', dur: 60, price: 220, desc: 'تقنية كلاسيكية لتحسين الدورة الدموية والاسترخاء.', img: '/images/services/massage/swedish.jpg' },
+      { svcId: 'd5-0', cat: 'mass', name: 'مساج استرخائي', dur: 60, price: 220, desc: 'جلسة هادئة لتخفيف التوتر والاسترخاء العميق.', img: '/images/services/massage/relax.jpg' },
+      { svcId: 'd5-1', cat: 'mass', name: 'مساج رياضي', dur: 60, price: 220, desc: 'مخصص للرياضيين لتخفيف إجهاد العضلات وتحسين المرونة.', img: '/images/services/massage/sport.jpg' },
+      { svcId: 'd5-2', cat: 'mass', name: 'مساج ديب تيشو', dur: 90, price: 280, desc: 'ضغط عميق يستهدف طبقات العضلات الداخلية.', img: '/images/services/massage/deep.jpg' },
+      { svcId: 'd5-3', cat: 'mass', name: 'مساج الأحجار الساخنة', dur: 90, price: 280, desc: 'استخدام أحجار دافئة لإرخاء العضلات بعمق.', img: '/images/services/massage/stones.jpg' },
+      { svcId: 'd5-4', cat: 'mass', name: 'مساج سويدي', dur: 60, price: 220, desc: 'تقنية كلاسيكية لتحسين الدورة الدموية والاسترخاء.', img: '/images/services/massage/swedish.jpg' },
     ],
     benefits: [
       { icon: icon.drop, title: 'تخفيف التوتر والقلق', text: 'يزيل الشوائب والزيوت الزائدة ويفتح المسام.' },

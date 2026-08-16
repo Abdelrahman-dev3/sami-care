@@ -46,27 +46,32 @@ class HomeController extends Controller
 
         // 4. Packages
         $packages = Package::query()
-            ->with(['branch', 'service.services'])
             ->where('status', 1)
             ->activeBasePackages()
             ->latest('id')
             ->take(6)
-            ->get();
+            ->get()
+            ->map(fn(Package $package) => $this->transformPackage($package));
+
 
         // 5. Branches
         $branches = Branch::with('address.state_data')
             ->where('status', 1)
             ->whereNull('deleted_by')
             ->take(6)
-            ->get();
+            ->get()
+            ->map(fn(Branch $branch) => $this->transformBranch($branch));
+
 
         // 6. Customer Reviews
-        $reviews = BookingReview::with(['user', 'booking'])
+        $reviews = BookingReview::with(['user', 'booking.branch'])
             ->where('status', 1)
             ->where('is_approved', 1)
             ->latest()
             ->take(6)
-            ->get();
+            ->get()
+            ->map(fn(BookingReview $review) => $this->transformReview($review));
+
 
         // 7. Wheel of Fortune Prizes
         $wheel_prizes = Wheel::query()
@@ -94,5 +99,57 @@ class HomeController extends Controller
             ],
             'message' => 'Home page data retrieved successfully',
         ]);
+    }
+
+    private function transformPackage(Package $package): array
+    {
+        app()->setLocale('ar');
+        $name = $package->name;
+
+        return [
+            'id' => $package->id,
+            'name' => is_array($name)
+                ? ($name[app()->getLocale()] ?? $name['ar'] ?? reset($name))
+                : $name,
+            'description' => $package->description,
+            'feature_image' => $package->image ?: $package->feature_image,
+            'package_price' => (float) $package->package_price,
+        ];
+    }
+
+    private function transformBranch(Branch $branch): array
+    {
+        $name = $branch->name;
+        $address = $branch->address;
+
+        $addressParts = array_filter([
+            $address?->address_line_1,
+            $address?->state_data?->name,
+        ]);
+
+        return [
+            'id' => $branch->id,
+            'name' => is_array($name)
+                ? ($name[app()->getLocale()] ?? $name['ar'] ?? reset($name))
+                : $name,
+            'address' => $addressParts ? implode('، ', $addressParts) : null,
+            'image' => $branch->feature_image,
+        ];
+    }
+
+    private function transformReview(BookingReview $review): array
+    {
+        $branchName = $review->booking?->branch?->name;
+
+        return [
+            'id' => $review->id,
+            'rating' => (int) $review->rating,
+            'name' => $review->user?->full_name ?: 'عميل سامي',
+            'place' => is_array($branchName)
+                ? ($branchName[app()->getLocale()] ?? $branchName['ar'] ?? reset($branchName))
+                : $branchName,
+            'text' => $review->review_text,
+            'when' => $review->created_at?->diffForHumans(),
+        ];
     }
 }

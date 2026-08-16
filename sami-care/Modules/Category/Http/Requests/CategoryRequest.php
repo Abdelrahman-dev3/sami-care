@@ -20,6 +20,10 @@ class CategoryRequest extends FormRequest
                 return [
                     'slug' => 'string',
                     'name' => 'required|string',
+                    'price_from' => 'required|numeric|min:0',
+                    'durMin' => 'required|integer|min:0',
+                    'durMax' => 'required|integer|min:0',
+                    'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
                 ];
                 break;
             case 'put':
@@ -27,6 +31,9 @@ class CategoryRequest extends FormRequest
                 return [
                     'slug' => 'string',
                     'name' => 'required|string',
+                    'durMin' => 'required|integer|min:0',
+                    'durMax' => 'required|integer|min:0',
+                    'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048'
                 ];
                 break;
         }

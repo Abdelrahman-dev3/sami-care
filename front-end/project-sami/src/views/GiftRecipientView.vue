@@ -1,5 +1,14 @@
 <script setup>
+/*
+  استلام الهدية — صفحة تحويل فقط.
+  الصفحة الأصلية كانت redirect ثابت؛ حُوّلت إلى تحويل عند التركيب.
+*/
 import { onMounted } from 'vue'
-onMounted(()=>window.location.replace('/exact/gift-recipient.html'+window.location.search+window.location.hash))
+onMounted(() => {
+  location.replace('/gift-recipient/' + location.search + location.hash)
+})
 </script>
-<template><div></div></template>
+
+<template>
+  <p style="padding:40px;text-align:center">يتم تحويلك إلى صفحة مستلم الهدية...</p>
+</template>

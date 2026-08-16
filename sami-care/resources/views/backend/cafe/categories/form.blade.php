@@ -8,6 +8,22 @@
         <label class="form-label">{{ __('cafe.sort_order') }}</label>
         <input type="number" min="0" name="sort_order" class="form-control" value="{{ old('sort_order', $category->sort_order ?? 0) }}">
     </div>
+    <div class="col-md-3">
+        <label class="form-label">{{ __('minimum duration') }}</label>
+        <input type="number" min="0" name="durMin" class="form-control" value="{{ old('durMin', $category->durMin ?? 0) }}">
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">{{ __('maximum duration') }}</label>
+        <input type="number" min="0" name="durMax" class="form-control" value="{{ old('durMax', $category->durMax ?? 0) }}">
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">{{ __('price from') }}</label>
+        <input type="number" min="0" name="price_from" class="form-control" value="{{ old('price_from', $category->price_from ?? 0) }}">
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">{{ __('image') }}</label>
+        <input type="file" name="image" class="form-control">
+    </div>
     <div class="col-md-3 d-flex align-items-end">
         <div class="form-check form-switch mb-2">
             <input type="hidden" name="status" value="0">

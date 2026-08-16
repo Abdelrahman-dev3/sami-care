@@ -55,6 +55,8 @@ use Modules\Affiliate\Http\Controllers\AffiliateAdminController;
 use Modules\Employee\Http\Controllers\Backend\EmployeesController;
 
 use App\Providers\RouteServiceProvider;
+use Modules\Product\Models\Product;
+use Modules\Product\Models\ProductCategory;
 
 /*
 |--------------------------------------------------------------------------
@@ -66,6 +68,69 @@ use App\Providers\RouteServiceProvider;
 | contains the "web" middleware group. Now create something great!
 |
 */
+
+Route::get('test', function () {
+    $branchId = 32;
+
+    $categories = [
+        'hair' => 'العناية بالشعر',
+        'body' => 'العناية بالجسم',
+        'beard' => 'العناية باللحية',
+        'skin' => 'العناية بالبشرة',
+        'perf' => 'العطور',
+        'sets' => 'باقات ومجموعات',
+    ];
+
+    $categoryIds = [];
+
+    foreach ($categories as $slug => $name) {
+        $categoryIds[$slug] = ProductCategory::firstOrCreate(
+            ['slug' => $slug],
+            ['name' => $name, 'status' => 1]
+        )->id;
+    }
+
+    $products = [
+        [
+            'name' => 'طقم العناية الفاخر',
+            'slug' => 'luxury-care-set',
+            'short_description' => 'طقم متكامل للعناية اليومية بالبشرة والشعر',
+            'image' => '/products/care-set-card-hq.png',
+            'min_price' => 145,
+            'max_price' => 145,
+            'category' => 'sets',
+        ],
+        [
+            'name' => 'طقم الترطيب المكثف',
+            'slug' => 'moisturizing-set',
+            'short_description' => 'مجموعة ترطيب مكثف للبشرة الجافة',
+            'image' => '/products/moisturizing-set-hq.png',
+            'min_price' => 120,
+            'max_price' => 120,
+            'category' => 'skin',
+        ],
+    ];
+
+    foreach ($products as $data) {
+        $product = Product::updateOrCreate(
+            ['slug' => $data['slug']],
+            [
+                'name' => $data['name'],
+                'short_description' => $data['short_description'],
+                'image' => $data['image'],
+                'min_price' => $data['min_price'],
+                'max_price' => $data['max_price'],
+                'branch_id' => $branchId,
+                'stock_qty' => 50,
+                'status' => 1,
+                'is_featured' => 1,
+                'has_variation' => 0,
+            ]
+        );
+
+        $product->categories()->syncWithoutDetaching([$categoryIds[$data['category']]]);
+    }
+});
 
 Route::controller(SignController::class)->group(function () {
     Route::get('/signup', 'index')->name('signup');
@@ -79,7 +144,7 @@ Route::controller(SignController::class)->group(function () {
     Route::post('verify-send-otp', 'verifyOTP')->name('verify.send.otp');
 });
 
-$dashboardRedirect = fn () => redirect('/app');
+$dashboardRedirect = fn() => redirect('/app');
 
 Route::get('/cafe', $dashboardRedirect)->name('cafe.index');
 Route::get('/cafe/table/{code}', $dashboardRedirect)->name('cafe.table');
@@ -346,7 +411,6 @@ Route::group(['prefix' => 'app', 'middleware' => 'auth'], function () {
             Route::get('staff-report-review', 'staff_report_review')->name('reports.staff-report-review');
             Route::get('order_booking_report_review', 'order_booking_report_review')->name('reports.order_booking_report_review');
         });
-
     });
 
     /*
@@ -527,7 +591,6 @@ Route::middleware(['auth'])->group(function () use ($dashboardRedirect) {
         Route::post('/booking-review', 'store')->name('booking-review.store');
         Route::get('/booking-review/{bookingId}', 'getByBooking')->name('booking-review.get');
     });
-
 });
 
 //  Get quick cart
