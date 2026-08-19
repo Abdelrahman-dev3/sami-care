@@ -34,7 +34,7 @@ class BranchResource extends JsonResource
         return [
             'id' => $this->id,
             'slug' => $this->slug,
-            'name' => $this->name,
+            'name' => $this->getTranslations('name'),
             'address_line_1' => optional($this->address)->address_line_1,
             'latitude' => optional($this->address)->latitude,
             'longitude' => optional($this->address)->longitude,

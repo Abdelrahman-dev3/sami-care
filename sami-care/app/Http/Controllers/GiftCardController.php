@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Modules\Booking\Models\Booking;
 use Modules\Booking\Models\BookingService;
 use Modules\Booking\Models\BookingTransaction;
+use Modules\Package\Models\Package;
 use Modules\Product\Models\Product;
 use Modules\Service\Models\Service as ServiceModel;
 use Modules\World\Models\State;
@@ -55,9 +56,11 @@ class GiftCardController extends Controller
         }
 
         $validated = $request->validate([
-            'services' => ['required', 'array', 'min:1'],
-            'services.*.subServices' => ['required', 'array', 'min:1'],
+            'services' => ['nullable', 'array'],
+            'services.*.subServices' => ['required_with:services', 'array', 'min:1'],
             'services.*.subServices.*.id' => ['required', 'integer', 'exists:services,id'],
+            'packages' => ['nullable', 'array'],
+            'packages.*.id' => ['required', 'integer', 'exists:packages,id'],
             'branch' => ['nullable', 'integer'],
             'location' => ['required', 'array'],
             'location.recipient_name' => ['required', 'string', 'max:255'],
@@ -65,14 +68,21 @@ class GiftCardController extends Controller
             'location.message' => ['nullable', 'string', 'max:1000'],
         ]);
 
-        $serviceIds = collect($validated['services'])
+        $serviceIds = collect($validated['services'] ?? [])
             ->flatMap(fn ($service) => collect($service['subServices'])->pluck('id'))
             ->map(fn ($id) => (int) $id)
             ->unique()
             ->values()
             ->all();
 
-        if ($serviceIds === []) {
+        $packageIds = collect($validated['packages'] ?? [])
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($serviceIds === [] && $packageIds === []) {
             return response()->json([
                 'success' => false,
                 'status' => false,
@@ -93,14 +103,31 @@ class GiftCardController extends Controller
             ], 422);
         }
 
+        $packages = Package::query()
+            ->whereIn('id', $packageIds)
+            ->where('status', 1)
+            ->get();
+
+        if ($packages->count() !== count($packageIds)) {
+            return response()->json([
+                'success' => false,
+                'status' => false,
+                'message' => __('messages.gift_card_validation_error'),
+            ], 422);
+        }
+
+        $subtotal = (float) $services->sum(fn (ServiceModel $service) => (float) ($service->default_price ?? 0));
+        $subtotal += (float) $packages->sum(fn (Package $package) => (float) ($package->package_price ?? 0));
+
         $giftCard = GiftCard::create([
             'user_id' => $user->id,
             'branch_id' => $this->resolveBranchId((int) ($validated['branch'] ?? 0)),
             'recipient_name' => $validated['location']['recipient_name'],
             'recipient_phone' => $this->normalizeSaudiPhone($validated['location']['recipient_mobile']),
             'requested_services' => $serviceIds,
+            'requested_packages' => $packageIds,
             'message' => $validated['location']['message'] ?? null,
-            'subtotal' => (float) $services->sum(fn (ServiceModel $service) => (float) ($service->default_price ?? 0)),
+            'subtotal' => $subtotal,
             'payment_status' => 0,
             'gift_status' => GiftCard::STATUS_PENDING_PAYMENT,
         ]);

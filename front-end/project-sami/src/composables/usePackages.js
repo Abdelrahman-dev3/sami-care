@@ -1,11 +1,14 @@
 import { reactive, computed, ref } from 'vue'
 import { BRANCHES, AR_DAYS, AR_MONTHS } from '@/data/packages'
 import { fetchPackages } from '@/services/packagesApi'
+import { useLanguage } from '@/composables/useLanguage'
+import { localizeField } from '@/utils/i18nField'
 
-/* ===== منسّقات الوقت والتاريخ — منقولة حرفيًا ===== */
-export function fmtTime(min) {
-  let h = Math.floor(min / 60)
-  const m = min % 60
+/* ===== منسّقات الوقت والتاريخ ===== */
+/* "HH:mm" -> "05:30 م" — الوقت الحقيقي راجع من الـ API كنص جاهز، مش رقم دقائق */
+export function fmtTime(hhmm) {
+  if (!hhmm) return ''
+  let [h, m] = hhmm.split(':').map(Number)
   const pm = h >= 12
   h = h % 12 || 12
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')} ${pm ? 'م' : 'ص'}`
@@ -26,11 +29,16 @@ export const rs = n => n.toLocaleString('ar-EG-u-nu-latn')
   • book     : رحلة حجز باقة  (4 خطوات + نجاح)
 */
 
-const TODAY = new Date(2026, 6, 7)
+const TODAY = new Date()
+TODAY.setHours(0, 0, 0, 0)
 const STORAGE_KEY = 'samiSiteBranch'
 
-/* ===== المنتجات (الباقات) — تُجلب من الـ API بدل المصفوفة الثابتة ===== */
-const packages = ref([])
+/*
+  البيانات الخام كما رجعت من الـ API — بترجمات كل حقل ({ar,en}) محفوظة زي
+  ما هي، عشان نقدر نعيد حساب النص المعروض فورًا لما اللغة تتغيّر بدون
+  إعادة تحميل. الحل النهائي (المترجم للغة الحالية) بيتحسب جوه usePackages().
+*/
+const rawPackages = ref([])
 let packagesLoaded = false
 
 /* ألوان وأيقونات جاهزة نعيد تدويرها على الباقات الحقيقية — تفصيل شكلي بحت */
@@ -43,39 +51,45 @@ const STYLE_ROTATION = [
   { color: 'var(--p-vip)', hex: '#B0642A', ico: '<path d="M2 8l4 4 6-8 6 8 4-4v10a2 2 0 01-2 2H4a2 2 0 01-2-2z"/>' },
 ]
 
+function asTranslations(text, translations) {
+  if (translations && typeof translations === 'object') return translations
+  return { ar: text, en: text }
+}
+
 async function loadPackages() {
   if (packagesLoaded) return
   packagesLoaded = true
 
   try {
     const data = await fetchPackages()
-    packages.value = data.map((p, i) => {
+    rawPackages.value = data.map((p, i) => {
       const style = STYLE_ROTATION[i % STYLE_ROTATION.length]
       const services = p.services || []
 
       return {
         id: p.id,
-        name: p.name,
+        nameT: asTranslations(p.name, p.name_translations),
         cat: 'all',
         dur: services.reduce((sum, s) => sum + (s.duration_min || 0), 0),
         price: p.package_price,
+        branchId: p.branch?.id ?? null,
+        branchNameT: asTranslations(p.branch?.name, p.branch?.name_translations),
         color: style.color,
         hex: style.hex,
         hot: !!p.is_featured,
-        desc: p.description || '',
-        inc: services.map(s => s.service_name).filter(Boolean),
+        descT: asTranslations(p.description, p.description_translations),
+        incT: services.map(s => asTranslations(s.service_name, s.service_name_translations)),
         ico: style.ico,
         img: p.feature_image,
       }
     })
   } catch (err) {
-    packages.value = []
+    rawPackages.value = []
   }
 }
 
 loadPackages()
 
-export const pkgOf = id => packages.value.find(p => p.id === id)
 export const brOf = id => BRANCHES.find(b => b.id === id)
 
 function readBranch() {
@@ -108,10 +122,33 @@ const state = reactive({
   siteBranch: readBranch(),
 
   /* رحلة حجز الباقة */
-  bk: { step: 0, pkg: null, branch: null, dayIdx: null, period: 'all', time: null, notes: '', pay: null, done: false, ref: null },
+  bk: { step: 0, pkg: null, branch: null, employee: null, dayIdx: null, period: 'all', time: null, notes: '', pay: null, done: false, ref: null },
 })
 
 export function usePackages() {
+  const { state: lang } = useLanguage()
+  const pick = t => localizeField(t, lang.lang) || ''
+
+  /* الباقات مترجَمة للغة الحالية — بتتحدّث فورًا لما المستخدم يبدّل اللغة */
+  const packages = computed(() => rawPackages.value.map(p => ({
+    id: p.id,
+    name: pick(p.nameT),
+    cat: p.cat,
+    dur: p.dur,
+    price: p.price,
+    branchId: p.branchId,
+    branchName: pick(p.branchNameT),
+    color: p.color,
+    hex: p.hex,
+    hot: p.hot,
+    desc: pick(p.descT),
+    inc: p.incT.map(pick).filter(Boolean),
+    ico: p.ico,
+    img: p.img,
+  })))
+
+  const pkgOf = id => packages.value.find(p => p.id === id)
+
   /* ===== الكتالوج — نفس منطق الفلترة الأصلي ===== */
   const filteredPkgs = computed(() =>
     packages.value.filter(p => state.filter === 'all' || p.cat === state.filter)
@@ -136,7 +173,7 @@ export function usePackages() {
   const bkCanNext = computed(() => {
     const B = state.bk
     switch (B.step) {
-      case 0: return B.dayIdx != null && B.time != null
+      case 0: return B.dayIdx != null && B.time != null && !!B.employee
       case 1: return true
     }
     return false
@@ -146,23 +183,14 @@ export function usePackages() {
     ['التالي: تأكيد الحجز', 'متابعة إلى الدفع'][state.bk.step]
   )
 
-  /* أيام الحجز — 12 يومًا من TODAY */
+  /* أيام الحجز — 12 يومًا من اليوم الحقيقي */
   const bkDays = () =>
     Array.from({ length: 12 }, (_, i) => {
-      const d = new Date(TODAY)
+      const d = new Date()
+      d.setHours(0, 0, 0, 0)
       d.setDate(d.getDate() + i)
       return d
     })
-
-  /* مواعيد اليوم — كل 45 دقيقة من 10ص حتى 9م */
-  const bkSlots = day => {
-    const out = []
-    for (let t = 10 * 60; t <= 21 * 60; t += 45) {
-      const busy = ((day.getDate() * 5 + t / 45) % 7 === 0)
-      out.push({ t, busy })
-    }
-    return out
-  }
 
   /* ===== بدء الرحلات ===== */
   function startGift(type, pkg) {
@@ -176,8 +204,10 @@ export function usePackages() {
   }
 
   function startBook(pkgId) {
+    /* الباقة مربوطة بفرع محدد من الباك إند — نستخدمه هو، مش مكان التنفيذ العام للموقع */
+    const branchId = pkgOf(pkgId)?.branchId ?? null
     state.page = 'book'
-    state.bk = { step: 0, pkg: pkgId, branch: state.siteBranch || null, dayIdx: null, period: 'all', time: null, notes: '', pay: null, done: false, ref: null }
+    state.bk = { step: 0, pkg: pkgId, branch: branchId, employee: null, dayIdx: null, period: 'all', time: null, notes: '', pay: null, done: false, ref: null }
     scrollTo({ top: 0, behavior: 'smooth' })
   }
 
@@ -199,7 +229,7 @@ export function usePackages() {
     filteredPkgs,
     gCanNext, gNextLabel,
     bkCanNext, bkNextLabel,
-    bkDays, bkSlots,
+    bkDays,
     startGift, startBook, backToPackages, setBranch,
   }
 }

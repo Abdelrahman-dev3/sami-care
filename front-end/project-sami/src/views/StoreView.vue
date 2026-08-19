@@ -11,30 +11,27 @@
   الحالة كلها في composables/useStore.js، والأنماط تُحقن عبر usePageStyles
   (راجع docs/ARCHITECTURE.md لسبب عدم استخدام <style scoped>).
 */
-import { ref, computed, onMounted,watch } from 'vue'
+import { ref, computed, nextTick, watch } from 'vue'
 import { usePageStyles } from '@/composables/usePageStyles'
 import { useInternalLinks } from '@/composables/useInternalLinks'
 import { useServiceLocation } from '@/composables/useServiceLocation'
+import { useAuth } from '@/composables/useAuth'
 import { useStore } from '@/composables/useStore'
 import { rs, shapeParts } from '@/utils/storeHelpers'
 import pageCss from '@/assets/styles/pages/store.css?raw'
-import { fetchBranches } from '@/services/homeApi'
 import StoreCatalog from '@/components/store/StoreCatalog.vue'
 import StoreCheckout from '@/components/store/StoreCheckout.vue'
 import StoreSuccess from '@/components/store/StoreSuccess.vue'
 import CartDrawer from '@/components/store/CartDrawer.vue'
 
 const root = ref(null)
-const branches = ref([])
-
-onMounted(async () => {
-  branches.value = await fetchBranches().catch(() => [])
-})
 const cartCountEl = ref(null)
 const cartBtnEl = ref(null)
 
-const { current, openPicker } = useServiceLocation()
-const { state, cartQty, pOf } = useStore()
+const { current, openPicker, locations: branches, loadServiceLocations } = useServiceLocation()
+loadServiceLocations()
+const { requireAuth } = useAuth()
+const { state, cartQty, pOf, placeOrder } = useStore()
 
 usePageStyles(pageCss, 'store')
 useInternalLinks(root)
@@ -82,11 +79,12 @@ function onAdd(id, ev) {
   }
 }
 
-function openDrawer() { drawerOpen.value = true }
+function openDrawer() { sheetOpen.value = false; drawerOpen.value = true }
 function closeDrawer() { drawerOpen.value = false }
 
 function goCheckout() {
   closeDrawer()
+  sheetOpen.value = false
   state.page = 'checkout'
   state.ck.pay = null
   state.ck.terms = false
@@ -95,14 +93,19 @@ function goCheckout() {
 
 function backToStore() { state.page = 'store'; scrollTo({ top: 0 }) }
 
-/* إتمام الطلب — نفس التأخير الأصلي (2100ms) قبل شاشة النجاح */
-function onPlaced(commit) {
-  payLoading.value = true
-  setTimeout(() => {
-    payLoading.value = false
-    commit()
-    scrollTo({ top: 0, behavior: 'smooth' })
-  }, 2100)
+/* إتمام الطلب فعليًا في الباك إند — بوابة تسجيل الدخول زي باقي عمليات الحجز */
+function onPlaced() {
+  requireAuth(async () => {
+    payLoading.value = true
+    try {
+      await placeOrder()
+      scrollTo({ top: 0, behavior: 'smooth' })
+    } catch (e) {
+      toastTop(e.message || 'تعذّر إتمام الطلب، حاول مرة أخرى')
+    } finally {
+      payLoading.value = false
+    }
+  })
 }
 
 function scrollToGrid() {
@@ -113,6 +116,16 @@ function scrollToGrid() {
 /* حماية: لا يمكن الوصول للدفع بسلة فارغة — نفس شرط render() الأصلي */
 watch(() => [state.page, cartQty.value], () => {
   if (state.page === 'checkout' && !cartQty.value) state.page = 'store'
+})
+
+/*
+  لوحة "تم إضافة المنتج" ليها حالة محلية (sheetOpen) منفصلة عن state.page،
+  فلو المستخدم غيّر الصفحة من مسار تاني (زي سلة App.vue العامة في الهيدر)
+  من غير ما يقفلها بنفسه، تفضل عالقة فوق صفحة الدفع. نقفلها تلقائيًا
+  أول ما الصفحة تتغيّر عن المتجر.
+*/
+watch(() => state.page, page => {
+  if (page !== 'store') sheetOpen.value = false
 })
 
 const sheetThumb = () => sheetProduct.value ? shapeParts(sheetProduct.value.shape, 46) : null
@@ -148,8 +161,8 @@ const sheetThumb = () => sheetProduct.value ? shapeParts(sheetProduct.value.shap
      <div>
       <h3>عناوين الفروع</h3>
       <template v-for="branch in branches" :key="branch.id">
-        <b>{{ branch.name?.ar || branch.name }}</b>
-        <p>{{ branch.address_line_1 }}<template v-if="branch.contact_number"><br />{{ branch.contact_number }}</template></p>
+        <b>{{ branch.name }}</b>
+        <p>{{ branch.address }}<template v-if="branch.contact_number"><br />{{ branch.contact_number }}</template></p>
       </template>
     </div>
   </div>

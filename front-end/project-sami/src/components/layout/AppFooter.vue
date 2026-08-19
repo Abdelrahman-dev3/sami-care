@@ -1,12 +1,18 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { fetchBranches } from '@/services/homeApi'
+import { useLanguage } from '@/composables/useLanguage'
 
 const branches = ref([])
+const { state: lang } = useLanguage()
 
 onMounted(async () => {
   branches.value = await fetchBranches().catch(() => [])
 })
+
+function branchName(branch) {
+  return branch.name?.[lang.lang] || branch.name?.ar || branch.name?.en || branch.name
+}
 </script>
 
 <template>
@@ -43,7 +49,7 @@ onMounted(async () => {
             <div class="footer-branches">
         <h3>عناوين الفروع</h3>
         <template v-for="branch in branches" :key="branch.id">
-          <b>{{ branch.name?.ar || branch.name }}</b>
+          <b>{{ branchName(branch) }}</b>
           <p>{{ branch.address_line_1 }}<template v-if="branch.contact_number"><br />{{ branch.contact_number }}</template></p>
         </template>
       </div>

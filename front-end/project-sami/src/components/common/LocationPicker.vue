@@ -1,7 +1,10 @@
 <script setup>
+import { onMounted } from 'vue'
 import { useServiceLocation } from '@/composables/useServiceLocation'
 
-const { locations, current, pickerOpen, closePicker, confirmLocation } = useServiceLocation()
+const { locations, current, pickerOpen, closePicker, confirmLocation, loadServiceLocations } = useServiceLocation()
+
+onMounted(loadServiceLocations)
 </script>
 
 <template>

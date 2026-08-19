@@ -9,8 +9,6 @@ import { useGifts } from '@/composables/useGifts'
 import SIcon from '@/components/common/SIcon.vue'
 import PayMethod from './PayMethod.vue'
 
-const COUPON_VAL = 25
-
 const { state, canNext } = useGifts()
 const emit = defineEmits(['nav', 'pay'])
 
@@ -24,14 +22,6 @@ const I = {
   check: '<path d="M20 6L9 17l-5-5"/>',
   prev:  '<path d="M5 12h14M13 6l6 6-6 6"/>',
   lock:  '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>',
-}
-
-/* تطبيق كود الخصم — نفس منطق الأصل */
-function applyCoupon() {
-  const code = state.couponIn.trim()
-  if (!code) return
-  state.couponCode = code
-  state.coupon = COUPON_VAL
 }
 </script>
 
@@ -53,12 +43,6 @@ function applyCoupon() {
         <PayMethod v-for="m in PAY_BAL" :key="m.id" :m="m" />
       </div>
     </div>
-    <div class="coupon" style="border:none;padding:16px 0 0;margin-top:6px;border-top:1px dashed var(--line);border-radius:0">
-      <span class="ci">%</span>
-      <input id="cpnInput" placeholder="أدخل كود الخصم" v-model="state.couponIn" />
-      <button id="cpnBtn" @click="applyCoupon">تطبيق</button>
-    </div>
-    <div class="coupon-msg" :class="{ ok: state.couponCode }" id="cpnMsg">{{ state.couponCode ? '✓ تم تطبيق كود الخصم بنجاح — خصم ' + COUPON_VAL + ' ر.س' : '' }}</div>
     <span class="terms-chk" :class="{ on: state.terms }" id="termsChk" @click="state.terms = !state.terms"><i><SIcon :inner="I.check" :size="11" /></i>
       أوافق على <a href="https://sami-care.sa/TermsAndConditions">الشروط والأحكام وسياسة الخصوصية</a></span>
     <div class="inline-actions">

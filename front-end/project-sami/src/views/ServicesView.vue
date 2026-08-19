@@ -1,12 +1,18 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { categoryIconPath } from '@/utils/giftIcons'
+import { resolveApiImage } from '@/utils/assetPath'
 import { RouterLink, useRouter } from 'vue-router'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import LocationNotice from '@/components/common/LocationNotice.vue'
 import { useServiceLocation } from '@/composables/useServiceLocation'
+import { useLanguage } from '@/composables/useLanguage'
 import { serviceDetails } from '@/data/serviceDetails'
 import { getCategories } from '@/data/home'
+import { localizeField } from '@/utils/i18nField'
+
+const { state: lang } = useLanguage()
+const pick = t => localizeField(t, lang.lang)
 
 /*
 |--------------------------------------------------------------------------
@@ -83,14 +89,6 @@ onMounted(() => {
 |--------------------------------------------------------------------------
 */
 
-const apiOrigin = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/api\/?$/, '')
-
-const resolveImage = path => {
-  if (!path) return null
-  if (/^https?:\/\//.test(path)) return path
-  return `${apiOrigin}/${String(path).replace(/^\/+/, '')}`
-}
-
 const cards = computed(() =>
   categories.value.map(category => {
     const detail = serviceDetails?.[category.id]
@@ -98,16 +96,16 @@ const cards = computed(() =>
     return {
       id: category.id,
 
-      name: category.name?.ar || category.name || detail?.name,
+      name: pick(category.name) || detail?.name,
 
       image:
-        resolveImage(category.image) ||
+        resolveApiImage(category.image) ||
         category.feature_image ||
         detail?.heroImage ||
         null,
 
       tagline:
-        category.description?.ar ||
+        pick(category.description) ||
         detail?.tagline ||
         '',
 
@@ -307,22 +305,20 @@ const perks = [
                 <span>
                   🕐
                   {{ c.durMin }}
-
-                  <template>
-                    –{{ c.durMax }}
+                  <template v-if="c.durMax">
+                    – {{ c.durMax }}
                   </template>
-
                   دقيقة
                 </span>
 
 
                 <span
-              
+
                   class="sv-card__price"
                 >
                   يبدأ من
                   <b>
-                    {{ c.from_price }} ريال
+                    {{ c.from }} ريال
                   </b>
                 </span>
 

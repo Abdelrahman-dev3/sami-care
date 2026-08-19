@@ -6,11 +6,13 @@
     ServicesStep → EmployeeStep → TimeStep → ConfirmStep → PayStep → BookingSuccess
   الملخص الجانبي يظهر عند اختيار خدمة واحدة على الأقل.
 */
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import { usePageStyles } from '@/composables/usePageStyles'
 import { useInternalLinks } from '@/composables/useInternalLinks'
 import { useServiceLocation } from '@/composables/useServiceLocation'
+import { useAuth } from '@/composables/useAuth'
 import { useBooking, rs } from '@/composables/useBooking'
+import { createBooking, initPayment } from '@/services/bookingApi'
 import pageCss from '@/assets/styles/pages/booking.css?raw'
 
 import BookingStepper from '@/components/booking/BookingStepper.vue'
@@ -23,8 +25,11 @@ import BookingSuccess from '@/components/booking/BookingSuccess.vue'
 import BookingSummary from '@/components/booking/BookingSummary.vue'
 
 const root = ref(null)
-const { current, openPicker } = useServiceLocation()
-const { state, selCats, priceParts, canProceed, nextLabel } = useBooking()
+const { current, locations, loadServiceLocations } = useServiceLocation()
+const { requireAuth } = useAuth()
+
+loadServiceLocations()
+const { state, selSvcs, priceParts, canProceed, nextLabel, reset } = useBooking()
 
 usePageStyles(pageCss, 'booking')
 useInternalLinks(root)
@@ -40,18 +45,11 @@ function toast(msg) {
   toast._h = setTimeout(() => { toastOn.value = false }, 2600)
 }
 
-const cartCount = computed(() => state.services.length + state.upsell.length)
 const hasSvc = computed(() => state.services.length > 0)
 
 /* الملخص الجانبي يبدأ من اختيار الموظف ويستمر حتى الدفع، بما فيها اختيار الوقت */
 const showBookingSummary = computed(() => !state.done && hasSvc.value && state.step >= 1)
 const stageCols = computed(() => (showBookingSummary.value ? 'minmax(0,1fr) minmax(285px,315px)' : '1fr'))
-
-/* تنظيف اختيارات الموظفين للأقسام التي لم تعد مختارة */
-watch(() => state.services.slice(), () => {
-  const ids = selCats.value.map(c => c.id)
-  Object.keys(state.emp).forEach(k => { if (!ids.includes(k)) delete state.emp[k] })
-})
 
 function goBack() {
   if (state.step > 0) {
@@ -62,23 +60,49 @@ function goBack() {
 
 function goNext() {
   if (!canProceed.value) return
-  if (state.step === 4) { doPay(); return }
+  if (state.step === 4) { requireAuth(doPay); return }
   state.step++
   scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-/* إتمام الدفع — نفس تأخير الأصل */
-function doPay() {
-  payLoading.value = true
-  setTimeout(() => {
-    payLoading.value = false
-    state.done = true
-    state.bookRef = '#SAMI-2026-' + String(Math.floor(10000 + Math.random() * 89999))
-    scrollTo({ top: 0, behavior: 'smooth' })
-  }, 2100)
+function toDateKey(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-function goHome() { location.href = '/' }
+/* إنشاء الحجز فعليًا في الباك إند ثم الدفع */
+async function doPay() {
+  payLoading.value = true
+  try {
+    const branchId = current.value?.home ? 0 : Number(current.value?.id)
+    const services = selSvcs.value.map(s => ({
+      subServices: [{
+        id: s.id,
+        date: toDateKey(state.date),
+        time: state.time[s.id],
+        duration: s.dur,
+        staffId: state.emp[s.id]?.id,
+      }],
+    }))
+
+    await createBooking({
+      branch: branchId,
+      services,
+      customerName: state.cust.name,
+      mobileNo: state.cust.phone,
+    })
+
+    const payment = await initPayment(state.pay)
+    state.bookRef = payment.invoice_id || null
+    state.done = true
+    scrollTo({ top: 0, behavior: 'smooth' })
+  } catch (e) {
+    toast(e.message || 'تعذّر إتمام الحجز، حاول مرة أخرى')
+  } finally {
+    payLoading.value = false
+  }
+}
+
+function goHome() { reset(); location.href = '/' }
 </script>
 
 <template>
@@ -135,9 +159,11 @@ function goHome() { location.href = '/' }
       </div>
       <div>
         <h4>عناوين الفروع</h4>
-        <div class="f-branch"><b>قريش</b><small>جدة البوادي شارع قريش</small><a href="tel:+966550046462">+966 55 004 6462</a></div>
-        <div class="f-branch"><b>البغدادية</b><small>جدة البغدادية الغربية شارع حائل</small><a href="tel:+966569610958">+966 56 961 0958</a></div>
-        <div class="f-branch"><b>خدمات منزلية</b><small>حلاقة شعر ولحية وماسكات طبيعية</small></div>
+        <div v-for="branch in locations" :key="branch.id" class="f-branch">
+          <b>{{ branch.name }}</b>
+          <small>{{ branch.address }}</small>
+          <a v-if="branch.contact_number" :href="`tel:${branch.contact_number}`">{{ branch.contact_number }}</a>
+        </div>
       </div>
     </div>
     <div class="f-bottom">

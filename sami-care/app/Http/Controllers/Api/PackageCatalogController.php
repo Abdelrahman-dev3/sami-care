@@ -130,7 +130,7 @@ class PackageCatalogController extends Controller
             'id' => $package->id,
             'type' => $type,
             'name' => $this->localizedValue($package->name),
-            'name_translations' => is_array($package->name) ? $package->name : null,
+            'name_translations' => $package->getTranslations('name'),
             'description' => $this->localizedValue($package->description),
             'description_translations' => is_array($package->description) ? $package->description : null,
             'package_price' => (float) $package->package_price,
@@ -143,7 +143,7 @@ class PackageCatalogController extends Controller
             'branch' => [
                 'id' => $package->branch_id,
                 'name' => $branchName,
-                'name_translations' => is_array($package->branch?->name) ? $package->branch?->name : null,
+                'name_translations' => $package->branch?->getTranslations('name'),
                 'feature_image' => $package->branch?->feature_image,
             ],
             'services' => $package->service
@@ -164,7 +164,7 @@ class PackageCatalogController extends Controller
             'id' => $service->id,
             'service_id' => $service->service_id,
             'service_name' => $this->localizedValue($serviceModel?->name) ?: $service->service_name,
-            'service_name_translations' => is_array($serviceModel?->name) ? $serviceModel?->name : null,
+            'service_name_translations' => $serviceModel?->getTranslations('name'),
             'qty' => (int) $service->qty,
             'service_price' => $servicePrice,
             'discounted_price' => $discountedPrice,

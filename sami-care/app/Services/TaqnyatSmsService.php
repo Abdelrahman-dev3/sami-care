@@ -36,12 +36,12 @@ class TaqnyatSmsService
 
         if (! setting('is_taqnyat_sms')) {
             $this->fail('taqnyat_disabled', 'Taqnyat SMS is disabled in settings.');
-            return false;
+            return $this->localBypass($recipientList, $message);
         }
 
         if (empty($this->apiKey)) {
             $this->fail('missing_api_key', 'Taqnyat API key is missing.');
-            return false;
+            return $this->localBypass($recipientList, $message);
         }
 
         try {
@@ -166,6 +166,25 @@ class TaqnyatSmsService
     public function getLastError(): ?string
     {
         return $this->lastError;
+    }
+
+    /**
+     * بيئة local بس: لو مفيش SMS provider مضبوط، منعتبر الإرسال نجح
+     * (من غير ما نبعت SMS حقيقي) عشان تصفّحات OTP تفضل قابلة للاختبار
+     * محليًا. الإنتاج وأي بيئة تانية بيفضلوا يفشلوا زي ما هما.
+     */
+    protected function localBypass(array $recipientList, $message)
+    {
+        if (! app()->environment('local')) {
+            return false;
+        }
+
+        $this->giftSmsLog()->info('Taqnyat SMS bypassed in local environment (no real SMS sent)', [
+            'recipients' => $recipientList,
+            'message' => $message,
+        ]);
+
+        return ['status' => 'bypassed_local'];
     }
 
     protected function fail(string $code, string $message): void

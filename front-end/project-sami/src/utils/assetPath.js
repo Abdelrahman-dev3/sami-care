@@ -9,3 +9,11 @@ export function assetPath(path) {
 
   return `${normalizedBaseUrl}${path.replace(/^\/+/, '')}`
 }
+
+const apiOrigin = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/api\/?$/, '')
+
+export function resolveApiImage(path) {
+  if (!path) return null
+  if (/^https?:\/\//.test(path)) return path
+  return `${apiOrigin}/${String(path).replace(/^\/+/, '')}`
+}

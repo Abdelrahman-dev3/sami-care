@@ -13,14 +13,14 @@
 
   الحالة في composables/useGifts.js، والأنماط تُحقن عبر usePageStyles.
 */
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 
 import { usePageStyles } from '@/composables/usePageStyles'
 import { useInternalLinks } from '@/composables/useInternalLinks'
 import { useServiceLocation } from '@/composables/useServiceLocation'
+import { useAuth } from '@/composables/useAuth'
 import { useGifts } from '@/composables/useGifts'
 import pageCss from '@/assets/styles/pages/gifts.css?raw'
-import { fetchBranches } from '@/services/homeApi'
 
 import SIcon from '@/components/common/SIcon.vue'
 import GiftTypeStep from '@/components/gifts/GiftTypeStep.vue'
@@ -33,14 +33,11 @@ import LocationNotice from '@/components/common/LocationNotice.vue'
 import GiftStepper from '@/components/gifts/GiftStepper.vue'
 
 const root = ref(null)
-const branches = ref([])
 
-onMounted(async () => {
-  branches.value = await fetchBranches().catch(() => [])
-})
-
-const { current, openPicker } = useServiceLocation()
-const { state, go, reset } = useGifts()
+const { current, openPicker, locations: branches, loadServiceLocations } = useServiceLocation()
+loadServiceLocations()
+const { requireAuth } = useAuth()
+const { state, go, reset, placeGift } = useGifts()
 
 usePageStyles(pageCss, 'gifts')
 useInternalLinks(root)
@@ -73,16 +70,19 @@ function pickType(gt) {
   openPicker(continueToPicks)
 }
 
-/* إتمام الدفع — نفس تأخير الأصل (2100ms) */
+/* إتمام الإهداء فعليًا في الباك إند */
 function doPay() {
-  payLoading.value = true
-  setTimeout(() => {
-    payLoading.value = false
-    state.done = true
-    state.step = 4
-    state.ref = '#SAMI-2026-' + String(Math.floor(10000 + Math.random() * 89999))
-    scrollTo({ top: 0, behavior: 'smooth' })
-  }, 2100)
+  requireAuth(async () => {
+    payLoading.value = true
+    try {
+      await placeGift()
+      scrollTo({ top: 0, behavior: 'smooth' })
+    } catch (e) {
+      toast(e.message || 'تعذّر إتمام الإهداء، حاول مرة أخرى')
+    } finally {
+      payLoading.value = false
+    }
+  })
 }
 
 function recipientURL() {
@@ -201,8 +201,8 @@ const WHY = [
          <div>
       <h3>عناوين الفروع</h3>
       <template v-for="branch in branches" :key="branch.id">
-        <b>{{ branch.name?.ar || branch.name }}</b>
-        <p>{{ branch.address_line_1 }}<template v-if="branch.contact_number"><br />{{ branch.contact_number }}</template></p>
+        <b>{{ branch.name }}</b>
+        <p>{{ branch.address }}<template v-if="branch.contact_number"><br />{{ branch.contact_number }}</template></p>
       </template>
     </div>
 

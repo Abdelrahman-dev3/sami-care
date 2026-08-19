@@ -1,34 +1,70 @@
 <script setup>
 /*
-  اختيار الوقت والتاريخ — مُرحَّل حرفيًا من bkView1() في src/legacy/packages-gifts.html
-  يشمل: شريط الأيام (12 يومًا) · تصفية الفترة · شبكة المواعيد · وقت الانتهاء المتوقع
+  اختيار الوقت والتاريخ — شريط 12 يوم + مواعيد حقيقية من الباك إند.
+  الموظف بيتحدد تلقائيًا (أول موظف متاح في فرع الباقة) بدون خطوة منفصلة،
+  بنفس فكرة الاختيار التلقائي في حجز الخدمات.
 */
-import { computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { AR_DAYS, AR_MONTHS } from '@/data/packages'
 import { usePackages, fmtTime, fmtDate } from '@/composables/usePackages'
+import { fetchStaff, fetchAvailableTimes } from '@/services/bookingApi'
 
-const { state, pkgOf, bkDays, bkSlots } = usePackages()
+const { state, pkgOf, bkDays } = usePackages()
 
 const B = state.bk
 const days = bkDays()
 const p = computed(() => pkgOf(B.pkg))
 
-/* تصفية المواعيد حسب الفترة — نفس شروط الأصل */
-const slots = computed(() => {
-  if (B.dayIdx == null) return []
-  return bkSlots(days[B.dayIdx]).filter(s => {
-    const h = s.t / 60
+const loadingEmployee = ref(true)
+const slots = ref([])
+const loadingSlots = ref(false)
+
+function toDateKey(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+onMounted(async () => {
+  if (B.employee) { loadingEmployee.value = false; return }
+  try {
+    const rows = await fetchStaff({ branchId: B.branch, serviceId: 0 })
+    const first = (Array.isArray(rows) ? rows : [])[0]
+    if (first) {
+      B.employee = { id: first.id, name: [first.first_name, first.last_name].filter(Boolean).join(' ') || 'موظف' }
+    }
+  } catch {
+    B.employee = null
+  } finally {
+    loadingEmployee.value = false
+  }
+})
+
+async function loadSlots() {
+  if (B.dayIdx == null || !B.employee) { slots.value = []; return }
+  loadingSlots.value = true
+  try {
+    const times = await fetchAvailableTimes({ date: toDateKey(days[B.dayIdx]), staffId: B.employee.id, durationMin: p.value?.dur })
+    slots.value = Array.isArray(times) ? times : []
+  } catch {
+    slots.value = []
+  } finally {
+    loadingSlots.value = false
+  }
+}
+
+watch(() => [B.dayIdx, B.employee?.id], loadSlots)
+
+/* تصفية المواعيد حسب الفترة */
+const filteredSlots = computed(() =>
+  slots.value.filter(t => {
+    const h = Number(t.split(':')[0])
     return B.period === 'all'
       || (B.period === 'am' && h < 12)
       || (B.period === 'pm' && h >= 12 && h < 17)
       || (B.period === 'eve' && h >= 17)
   })
-})
+)
 
-/* وسم "الأكثر طلبًا" للثالث و"آخر موعد" للأخير */
-const slotTag = i => (i === 2 ? 'الأكثر طلبًا' : (i === slots.value.length - 1 ? 'آخر موعد' : ''))
-
-const endTime = computed(() => (B.time != null ? fmtTime(B.time + p.value.dur) : null))
+const slotTag = i => (i === 2 ? 'الأكثر طلبًا' : (i === filteredSlots.value.length - 1 ? 'آخر موعد' : ''))
 
 const PERIODS = [['all', 'كل اليوم', '🗓️'], ['am', 'صباحًا', '☀️'], ['pm', 'مساءً', '🌇']]
 
@@ -49,20 +85,22 @@ const H4B = 'font-family:var(--font-d);font-size:15px;color:var(--ink);margin-bo
     </div>
   </div>
 
-  <div v-if="B.dayIdx != null" class="card" style="padding:20px">
+  <div v-if="loadingEmployee" class="card" style="padding:40px;text-align:center;color:var(--mute);font-size:13.5px">جاري تجهيز الحجز...</div>
+
+  <div v-else-if="B.dayIdx != null" class="card" style="padding:20px">
     <h4 :style="H4B">🕐 {{ fmtDate(days[B.dayIdx]) }}</h4>
     <div class="periods">
       <button v-for="x in PERIODS" :key="x[0]" class="period" :class="{ sel: B.period === x[0] }" :data-bp="x[0]" @click="B.period = x[0]">{{ x[2] }} {{ x[1] }}</button>
     </div>
-    <div class="slots">
-      <template v-if="slots.length">
-        <button v-for="(s, i) in slots" :key="s.t" class="slot" :class="{ sel: B.time === s.t }" :data-bt="s.t"
-                :disabled="s.busy" :style="`animation-delay:${Math.min(i * 0.03, 0.4)}s`" @click="B.time = s.t"
-        ><span v-if="slotTag(i) && !s.busy" class="tag">{{ slotTag(i) }}</span><template v-else>&#32;</template>{{ fmtTime(s.t) }}</button>
+    <div v-if="loadingSlots" :style="EMPTY_STYLE">جاري تحميل الأوقات المتاحة...</div>
+    <div v-else class="slots">
+      <template v-if="filteredSlots.length">
+        <button v-for="(t, i) in filteredSlots" :key="t" class="slot" :class="{ sel: B.time === t }" :data-bt="t"
+                :style="`animation-delay:${Math.min(i * 0.03, 0.4)}s`" @click="B.time = t"
+        ><span v-if="slotTag(i)" class="tag">{{ slotTag(i) }}</span><template v-else>&#32;</template>{{ fmtTime(t) }}</button>
       </template>
       <div v-else :style="EMPTY_STYLE">لا توجد أوقات متاحة في هذه الفترة</div>
     </div>
-    <div v-if="B.time != null" class="end-line"><span>⏱️ مدة الجلسة: <b>{{ p.dur }} دقيقة</b></span><span>الوقت المتوقع للانتهاء: <b>{{ endTime }}</b></span></div>
   </div>
 
   <div v-else class="card" style="padding:40px;text-align:center;color:var(--mute);font-size:13.5px"><b style="display:block;font-family:var(--font-d);font-size:16px;color:var(--ink);margin-bottom:6px">ابدأ باختيار اليوم</b>اختر يومًا من الشريط أعلاه لعرض الأوقات المتاحة</div>

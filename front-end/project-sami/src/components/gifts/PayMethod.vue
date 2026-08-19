@@ -4,19 +4,24 @@
 */
 import { useGifts } from '@/composables/useGifts'
 
-defineProps({
+const props = defineProps({
   m: { type: Object, required: true },
   hasForm: { type: Boolean, default: false },
 })
 
 const { state } = useGifts()
+
+function select() {
+  if (props.m.id !== 'cash') return
+  state.pay = props.m.id
+}
 </script>
 
 <template>
-  <div class="acc-pm" :class="{ sel: state.pay === m.id }" :data-pay="m.id" @click="state.pay = m.id">
+  <div class="acc-pm" :class="{ sel: state.pay === m.id, disabled: m.id !== 'cash' }" :data-pay="m.id" @click="select">
     <div class="head">
       <span class="lg">{{ m.logo }}</span>
-      <span class="tt"><b>{{ m.n }}</b><small>{{ m.d }}</small></span>
+      <span class="tt"><b>{{ m.n }}</b><small>{{ m.id === 'cash' ? m.d : 'قريبًا' }}</small></span>
       <span class="rad"><i></i></span>
     </div>
     <div v-if="hasForm" class="body has"><div class="in">
@@ -31,3 +36,8 @@ const { state } = useGifts()
     </div></div>
   </div>
 </template>
+
+<style scoped>
+.acc-pm.disabled { opacity: .45; }
+.acc-pm.disabled .head { cursor: not-allowed; }
+</style>

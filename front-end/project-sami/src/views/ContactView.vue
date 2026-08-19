@@ -4,20 +4,15 @@
   مُرحَّلة من src/legacy/contact.html إلى مكوّن Vue.
   الماركب منقول حرفيًا لضمان تطابق التصميم — راجع docs/ARCHITECTURE.md
 */
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { usePageStyles } from '@/composables/usePageStyles'
 import { useInternalLinks } from '@/composables/useInternalLinks'
 import { useServiceLocation } from '@/composables/useServiceLocation'
-import { fetchBranches } from '@/services/homeApi'
 import pageCss from '@/assets/styles/pages/contact.css?raw'
 
 const root = ref(null)
-const { current, openPicker } = useServiceLocation()
-const branches = ref([])
-
-onMounted(async () => {
-  branches.value = await fetchBranches().catch(() => [])
-})
+const { current, openPicker, locations: branches, loadServiceLocations } = useServiceLocation()
+loadServiceLocations()
 
 usePageStyles(pageCss, 'contact')
 useInternalLinks(root)
@@ -78,8 +73,8 @@ useInternalLinks(root)
           </h3>
                     <div class="addresses-grid">
             <div v-for="branch in branches" :key="branch.id" class="addr-box">
-              <h4>{{ branch.name?.ar || branch.name }}</h4>
-              <p>{{ branch.address_line_1 }}</p>
+              <h4>{{ branch.name }}</h4>
+              <p>{{ branch.address }}</p>
               <a v-if="branch.contact_number" :href="`tel:${branch.contact_number}`">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/>
@@ -159,8 +154,8 @@ useInternalLinks(root)
             <div>
         <h4>عناوين الفروع</h4>
         <div v-for="branch in branches" :key="branch.id" class="f-branch">
-          <b>{{ branch.name?.ar || branch.name }}</b>
-          <small>{{ branch.address_line_1 }}</small>
+          <b>{{ branch.name }}</b>
+          <small>{{ branch.address }}</small>
           <a v-if="branch.contact_number" :href="`tel:${branch.contact_number}`">{{ branch.contact_number }}</a>
         </div>
         <div class="f-branch"><b>خدمات منزلية</b><small>حلاقة شعر ولحية وماسكات طبيعية</small></div>

@@ -3,7 +3,6 @@
   تأكيد الحجز — مُرحَّل حرفيًا من bkView2() في src/legacy/packages-gifts.html
 */
 import { computed } from 'vue'
-import { BRANCHES } from '@/data/packages'
 import { usePackages, fmtTime, fmtDate, rs } from '@/composables/usePackages'
 import SIcon from '@/components/common/SIcon.vue'
 
@@ -11,7 +10,6 @@ const { state, pkgOf, bkDays } = usePackages()
 
 const B = state.bk
 const p = computed(() => pkgOf(B.pkg))
-const br = computed(() => BRANCHES.find(b => b.id === B.branch))
 const d = computed(() => bkDays()[B.dayIdx])
 
 const I = {
@@ -41,9 +39,9 @@ const TERMS_LINK = 'color:var(--gold-deep);font-weight:600;text-decoration:under
     <div class="pr">{{ rs(p.price) }} <small :style="PR_SMALL">ر.س</small></div>
   </div>
   <div class="card bk-rows" style="margin-bottom:16px">
-    <div class="gs-row"><span class="k"><SIcon :inner="I.pin" :size="15" /> الفرع</span><span class="v">{{ br.name }}</span></div>
+    <div class="gs-row"><span class="k"><SIcon :inner="I.pin" :size="15" /> الفرع</span><span class="v">{{ p.branchName }}</span></div>
     <div class="gs-row"><span class="k"><SIcon :inner="I.cal" :size="15" /> التاريخ</span><span class="v">{{ fmtDate(d) }}</span></div>
-    <div class="gs-row"><span class="k"><SIcon :inner="I.clock" :size="15" /> الوقت</span><span class="v" dir="ltr">{{ fmtTime(B.time) }} – {{ fmtTime(B.time + p.dur) }}</span></div>
+    <div class="gs-row"><span class="k"><SIcon :inner="I.clock" :size="15" /> الوقت</span><span class="v" dir="ltr">{{ fmtTime(B.time) }}</span></div>
     <div class="gs-row"><span class="k"><SIcon :inner="I.info" :size="15" /> مدة الجلسة</span><span class="v">{{ p.dur }} دقيقة</span></div>
   </div>
   <div class="card" style="padding:20px">

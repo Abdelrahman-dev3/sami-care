@@ -57,7 +57,7 @@ hr {
   /* Scroll Handle on hover */
 }
 .iq-scroller-effect ::-webkit-scrollbar-thumb:hover {
-  background: rgb(239.7, 239.7, 239.7);
+  background: rgb(94%, 94%, 94%);
   border-radius: 20px;
   -webkit-transition: all 400ms ease;
   transition: all 400ms ease;

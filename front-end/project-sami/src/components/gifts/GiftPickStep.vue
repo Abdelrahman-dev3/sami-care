@@ -1,19 +1,24 @@
 <script setup>
 /*
-  اختيار الخدمة أو الباقة — مُرحَّل حرفيًا من view2() في src/legacy/gifts.html
-
-  للدالة الأصلية مساران:
-  • gtype === 'svc' → أقسام + خدمات فرعية (اختيار متعدد)
-  • gtype === 'pkg' → كاروسيل الباقات (اختيار واحد)
+  اختيار الخدمة أو الباقة — نسخة حقيقية:
+  • gtype === 'svc' → أقسام وخدمات حقيقية من /Home/categories (نفس منطق ServicesStep.vue)
+  • gtype === 'pkg' → باقات حقيقية عبر usePackages (نفس كتالوج صفحة الباقات)
 */
-import { computed } from 'vue'
-import { CATS, SERVICES, PKGS } from '@/data/gifts'
+import { ref, computed, onMounted } from 'vue'
+import { getCategories } from '@/data/home'
 import { categoryIconPath } from '@/utils/giftIcons'
+import { resolveApiImage } from '@/utils/assetPath'
+import { useLanguage } from '@/composables/useLanguage'
 import { useGifts } from '@/composables/useGifts'
+import { usePackages, rs as rsPkg } from '@/composables/usePackages'
+import { localizeField } from '@/utils/i18nField'
 import SIcon from '@/components/common/SIcon.vue'
 
 const { state, hasSvc, toggleSvc, isFav, toggleFav } = useGifts()
+const { filteredPkgs } = usePackages()
 const emit = defineEmits(['nav'])
+const { state: lang } = useLanguage()
+const pick = t => localizeField(t, lang.lang)
 
 const rs = n => n.toLocaleString('ar-EG-u-nu-latn')
 
@@ -27,26 +32,52 @@ const I = {
   chevL: '<path d="M15 6l-6 6 6 6"/>',
 }
 
-/* ===== مسار الخدمات ===== */
-const CATEGORY_ORDER = ['hair', 'mass', 'skin', 'bath', 'pedi']
-const cats = computed(() => CATEGORY_ORDER.map(id => CATS.find(c => c.id === id)))
-const hasPicks = catId => SERVICES.some(s => s.cat === catId && hasSvc(s.id))
+/* ===== مسار الخدمات — نفس منطق ServicesStep.vue ===== */
+const categories = ref([])
+const loading = ref(true)
 
-const activeCat = computed(() => CATS.find(x => x.id === state.activeCat))
-const activeList = computed(() => SERVICES.filter(s => s.cat === state.activeCat && !s.hidden))
+onMounted(async () => {
+  try {
+    const response = await getCategories()
+    categories.value = response?.status ? (response.data || []) : []
+  } catch {
+    categories.value = []
+  } finally {
+    loading.value = false
+  }
+})
+
+const cats = computed(() => categories.value.map(c => ({
+  id: c.id,
+  name: pick(c.name),
+  image: resolveApiImage(c.image) || c.feature_image || null,
+})))
+
+const activeCategory = computed(() => categories.value.find(c => c.id === state.activeCat) || null)
+const activeCategoryName = computed(() => pick(activeCategory.value?.name))
+
+const activeList = computed(() =>
+  (activeCategory.value?.services || []).map(s => ({
+    id: s.id,
+    categoryId: activeCategory.value.id,
+    categoryName: activeCategoryName.value,
+    name: pick(s.name),
+    desc: pick(s.description) || '',
+    dur: s.duration_min,
+    price: s.default_price,
+  }))
+)
+
+const hasPicks = catId => state.svcs.some(s => s.categoryId === catId)
 const selectedCount = computed(() => activeList.value.filter(s => hasSvc(s.id)).length)
 
-/* ===== مسار الباقات — نفس منطق الفرز الأصلي ===== */
+/* ===== مسار الباقات — فرز محلي فوق الكتالوج الحقيقي ===== */
 const sortedPkgs = computed(() =>
-  PKGS.slice().sort((a, b) =>
+  filteredPkgs.value.slice().sort((a, b) =>
     state.sort === 'low' ? a.price - b.price
       : state.sort === 'high' ? b.price - a.price
         : (b.hot ? 1 : 0) - (a.hot ? 1 : 0))
 )
-
-const HOT_STYLE = 'position:absolute;top:7px;left:34px;background:linear-gradient(135deg,var(--gold-bright),var(--gold));color:var(--ink);font-size:8px;font-weight:700;padding:4px 7px;border-radius:999px;z-index:2'
-const INC_STYLE = 'text-align:right;font-size:8.5px;color:var(--mute);margin:5px 0;border-top:1px dashed var(--line);padding-top:6px'
-const INC_TITLE_STYLE = 'display:block;color:var(--ink);font-size:9px;margin-bottom:4px'
 
 function scrollCaro(dir) {
   const el = document.getElementById('caro')
@@ -58,37 +89,42 @@ function scrollCaro(dir) {
   <!-- ===== اختيار الخدمات ===== -->
   <template v-if="state.gtype === 'svc'">
     <div class="g-head"><h1>اختر الخدمة التي ترغب بإهدائها</h1><p>يمكنك اختيار خدمة واحدة أو أكثر</p></div>
-    <div class="cat-row">
-      <div v-for="c in cats" :key="c.id" class="cat"
-           :class="{ sel: state.activeCat === c.id, 'has-picks': hasPicks(c.id) }"
-           :data-cat="c.id" @click="state.activeCat = c.id">
-        <img :src="c.img" :alt="c.name" loading="lazy" />
-        <span class="chk"><SIcon :inner="I.check" :size="11" /></span>
-        <span class="lbl">{{ c.name }}</span>
-      </div>
-    </div>
 
-    <div v-if="!state.activeCat" class="empty-hint"><b>اختر خدمة لعرض تفاصيلها</b>اختر إحدى الخدمات الأساسية أعلاه لعرض الخدمات الفرعية المتاحة</div>
-    <div v-else class="sub-block">
-      <div class="sub-title">
-        <span class="sub-title__main">
-          خدمات {{ activeCat.name }}
-          <span class="tick"><svg viewBox="0 0 24 24" aria-hidden="true" v-html="categoryIconPath(activeCat.id)"></svg></span>
-        </span>
-        <small>{{ selectedCount ? selectedCount + ' مختارة' : 'اختر خدمة أو أكثر' }}</small>
-      </div>
-      <div class="subs">
-        <div v-for="s in activeList" :key="s.id" class="sub" :class="{ sel: hasSvc(s.id) }" :data-sv="s.id" @click="toggleSvc(s.id)">
-          <div class="top">
-            <span class="si"><svg viewBox="0 0 24 24" aria-hidden="true" v-html="categoryIconPath(activeCat.id)"></svg></span>
-            <b>{{ s.name }}</b>
-            <span class="chk"><SIcon :inner="I.check" :size="12" /></span>
-          </div>
-          <small>{{ s.desc }}</small>
-          <div class="foot"><span class="dur">🕐 {{ s.dur }} دقيقة</span><span class="prc">{{ rs(s.price) }} <small>ر.س</small></span></div>
+    <div v-if="loading" class="empty-hint"><b>جاري تحميل الخدمات...</b></div>
+
+    <template v-else>
+      <div class="cat-row">
+        <div v-for="c in cats" :key="c.id" class="cat"
+             :class="{ sel: state.activeCat === c.id, 'has-picks': hasPicks(c.id) }"
+             :data-cat="c.id" @click="state.activeCat = c.id">
+          <img v-if="c.image" :src="c.image" :alt="c.name" loading="lazy" />
+          <span class="chk"><SIcon :inner="I.check" :size="11" /></span>
+          <span class="lbl">{{ c.name }}</span>
         </div>
       </div>
-    </div>
+
+      <div v-if="!state.activeCat" class="empty-hint"><b>اختر خدمة لعرض تفاصيلها</b>اختر إحدى الخدمات الأساسية أعلاه لعرض الخدمات الفرعية المتاحة</div>
+      <div v-else class="sub-block">
+        <div class="sub-title">
+          <span class="sub-title__main">
+            خدمات {{ activeCategoryName }}
+            <span class="tick"><svg viewBox="0 0 24 24" aria-hidden="true" v-html="categoryIconPath()"></svg></span>
+          </span>
+          <small>{{ selectedCount ? selectedCount + ' مختارة' : 'اختر خدمة أو أكثر' }}</small>
+        </div>
+        <div v-if="!activeList.length" class="empty-hint">لا توجد خدمات متاحة حاليًا ضمن هذا القسم</div>
+        <div v-else class="subs">
+          <div v-for="s in activeList" :key="s.id" class="sub" :class="{ sel: hasSvc(s.id) }" :data-sv="s.id" @click="toggleSvc(s)">
+            <div class="top">
+              <b>{{ s.name }}</b>
+              <span class="chk"><SIcon :inner="I.check" :size="12" /></span>
+            </div>
+            <small>{{ s.desc }}</small>
+            <div class="foot"><span class="dur">🕐 {{ s.dur }} دقيقة</span><span class="prc">{{ rs(s.price) }} <small>ر.س</small></span></div>
+          </div>
+        </div>
+      </div>
+    </template>
 
     <div class="inline-actions">
       <button class="btn btn-prev" data-nav="back" @click="emit('nav', -1)"><SIcon :inner="I.prev" :size="15" /> رجوع</button>
@@ -105,27 +141,28 @@ function scrollCaro(dir) {
         <option value="low">السعر: الأقل أولًا</option>
         <option value="high">السعر: الأعلى أولًا</option>
       </select>
-      <small>{{ Math.min(4, PKGS.length) }} باقات متاحة — مرّر لاستعراض المزيد</small>
+      <small>{{ sortedPkgs.length }} باقات متاحة — مرّر لاستعراض المزيد</small>
     </div>
-    <div class="caro-wrap">
+    <div v-if="!sortedPkgs.length" class="empty-hint">لا توجد باقات متاحة حاليًا</div>
+    <div v-else class="caro-wrap">
       <button class="caro-btn r" data-caro="1" @click="scrollCaro(1)"><SIcon :inner="I.chevR" :size="15" /></button>
       <button class="caro-btn l" data-caro="-1" @click="scrollCaro(-1)"><SIcon :inner="I.chevL" :size="15" /></button>
       <div class="caro" id="caro">
-        <div v-for="(p, i) in sortedPkgs" :key="p.id" class="gpkg" :class="{ sel: state.pkg === p.id }"
-             :data-gp="p.id" :style="`--pc:${p.hex};animation-delay:${i * 0.05}s`" @click="state.pkg = p.id">
+        <div v-for="(p, i) in sortedPkgs" :key="p.id" class="gpkg" :class="{ sel: state.pkg?.id === p.id }"
+             :data-gp="p.id" :style="`--pc:${p.hex};animation-delay:${i * 0.05}s`" @click="state.pkg = p">
           <div class="ph"><img :src="p.img" :alt="p.name" />
-            <span v-if="p.hot" :style="HOT_STYLE">الأكثر طلبًا</span>
+            <span v-if="p.hot" class="hotflag">الأكثر طلبًا</span>
             <button class="fav" :class="{ on: isFav(p.id) }" :data-fav="p.id" @click.stop="toggleFav(p.id)"><SIcon :inner="I.heart" :size="14" /></button>
             <span class="chk"><SIcon :inner="I.check" :size="13" /></span></div>
           <div class="bd">
             <h4>{{ p.name }}</h4>
             <div class="dur">🕐 {{ p.dur }} دقيقة</div>
             <div class="desc">{{ p.desc }}</div>
-            <div :style="INC_STYLE">
-              <b :style="INC_TITLE_STYLE">تشمل الباقة</b>
+            <div class="inc-box">
+              <b class="inc-title">تشمل الباقة</b>
               <div v-for="(x, xi) in p.inc" :key="xi" style="padding:2px 0">✓ {{ x }}</div></div>
-            <div class="prc">{{ rs(p.price) }} <small>ر.س</small></div>
-            <button class="pick"><SIcon :inner="I.box" :size="14" /> {{ state.pkg === p.id ? 'تم الاختيار ✓' : 'استعرض الباقة' }}</button>
+            <div class="prc">{{ rsPkg(p.price) }} <small>ر.س</small></div>
+            <button class="pick">{{ state.pkg?.id === p.id ? 'تم الاختيار ✓' : 'استعرض الباقة' }}</button>
           </div>
         </div>
       </div>
@@ -136,3 +173,9 @@ function scrollCaro(dir) {
     </div>
   </template>
 </template>
+
+<style scoped>
+.hotflag { position: absolute; top: 7px; left: 34px; background: linear-gradient(135deg, var(--gold-bright), var(--gold)); color: var(--ink); font-size: 8px; font-weight: 700; padding: 4px 7px; border-radius: 999px; z-index: 2; }
+.inc-box { text-align: right; font-size: 8.5px; color: var(--mute); margin: 5px 0; border-top: 1px dashed var(--line); padding-top: 6px; }
+.inc-title { display: block; color: var(--ink); font-size: 9px; margin-bottom: 4px; }
+</style>

@@ -1,54 +1,49 @@
 import { reactive, computed } from 'vue'
-import { SERVICES, PKGS, DESIGNS, BRANCHES } from '@/data/gifts'
+import { DESIGNS } from '@/data/gifts'
+import { useAuth } from '@/composables/useAuth'
+import { createGiftCard } from '@/services/giftsApi'
+import { initPayment } from '@/services/bookingApi'
 
 /*
-  حالة صفحة الإهداء — مُرحَّلة من كائن S في src/legacy/gifts.html
+  حالة صفحة الإهداء — مبنية على بيانات حقيقية (خدمات/باقات حقيقية من الـ API)
+  بدل المصفوفات الوهمية القديمة. راجع useBooking.js/usePackages.js لنفس النمط.
 
-  الأصل:
-    const S={step:0,gtype:null,branch:null,activeCat:null,pkg:null,svcs:new Set(),
-             sort:'pop',favs:new Set(),sender:'',name:'',phone:'',msg:'',
-             design:'lux-dark',method:'wa',when:'now',schedDate:'',pay:null,
-             extraCollapsed:false,terms:false,couponIn:'',coupon:0,couponCode:'',
-             done:false,ref:null}
-
-  حُوّلت Set إلى مصفوفة ليعمل التتبّع التفاعلي في Vue، مع الحفاظ على الدلالات.
+  gtype === 'svc'  → state.svcs مصفوفة خدمات حقيقية {id, categoryId, categoryName, name, dur, price}
+  gtype === 'pkg'  → state.pkg الباقة الحقيقية الكاملة (نفس الكائن اللي بترجعه usePackages)
 */
 
 const VAT = 0.15
 
-export const pkgOf = id => PKGS.find(p => p.id === id)
 export const dsgOf = id => DESIGNS.find(d => d.id === id)
-export const brOf = id => BRANCHES.find(b => b.id === id)
-export const svcOf = id => SERVICES.find(s => s.id === id)
 
 const state = reactive({
   step: 0,
   gtype: null,          // 'svc' | 'pkg'
   branch: null,
   activeCat: null,
-  pkg: null,
-  svcs: [],             // كان Set
-  sort: 'pop',
-  favs: [],             // كان Set
+  pkg: null,             // الباقة الحقيقية الكاملة، أو null
+  svcs: [],              // الخدمات الحقيقية المختارة
+  sort: 'pop',           // فرز كتالوج الباقات في هذه الرحلة بس
+  favs: [],
   sender: '', name: '', phone: '', msg: '',
   design: 'lux-dark',
   method: 'wa',
   when: 'now',
   schedDate: '',
   pay: null,
-  extraCollapsed: false,
   terms: false,
-  couponIn: '', coupon: 0, couponCode: '',
+  placing: false,
   done: false,
   ref: null,
+  claimUrl: null,
 })
 
 export function useGifts() {
   /* ===== اختيار الخدمات ===== */
-  const hasSvc = id => state.svcs.includes(id)
-  const toggleSvc = id => {
-    const i = state.svcs.indexOf(id)
-    if (i === -1) state.svcs.push(id)
+  const hasSvc = id => state.svcs.some(s => s.id === id)
+  const toggleSvc = service => {
+    const i = state.svcs.findIndex(s => s.id === service.id)
+    if (i === -1) state.svcs.push(service)
     else state.svcs.splice(i, 1)
   }
 
@@ -60,36 +55,31 @@ export function useGifts() {
     else state.favs.splice(i, 1)
   }
 
-  /* ===== الحسابات — منقولة حرفيًا ===== */
+  /* ===== الحسابات ===== */
   const giftValue = computed(() => {
-    if (state.gtype === 'svc') {
-      return state.svcs.reduce((a, id) => a + svcOf(id).price, 0)
-    }
-    return state.pkg ? pkgOf(state.pkg).price : 0
+    if (state.gtype === 'svc') return state.svcs.reduce((a, s) => a + s.price, 0)
+    return state.pkg?.price || 0
   })
 
   const giftLabel = computed(() => {
     if (state.gtype === 'svc') {
-      const n = state.svcs.length
-      return n ? state.svcs.map(id => svcOf(id).name).join(' + ') : null
+      return state.svcs.length ? state.svcs.map(s => s.name).join(' + ') : null
     }
-    return state.pkg ? pkgOf(state.pkg).name : null
+    return state.pkg?.name || null
   })
 
   const priceParts = computed(() => {
     const val = giftValue.value
-    const fee = state.branch ? brOf(state.branch).fee : 0
-    const vat = Math.round((val + fee) * VAT)
-    const disc = Math.min(state.coupon, val)
-    return { val, fee, vat, disc, total: val + fee + vat - disc }
+    const vat = Math.round(val * VAT)
+    return { val, vat, total: val + vat }
   })
 
-  /* ===== التنقل بين الخطوات — نفس شروط canNext() ===== */
+  /* ===== التنقل بين الخطوات ===== */
   const canNext = computed(() => {
     switch (state.step) {
       case 0: return !!state.gtype
       case 1: return state.gtype === 'svc' ? state.svcs.length > 0 : !!state.pkg
-      case 2: return true
+      case 2: return state.name.trim().length > 1 && state.phone.trim().length >= 9
       case 3: return !!state.pay && state.terms
     }
     return false
@@ -109,16 +99,55 @@ export function useGifts() {
     state.svcs = []
     state.done = false
     state.ref = null
+    state.claimUrl = null
     state.pay = null
     state.terms = false
   }
 
+  /* إرسال الهدية فعليًا للباك إند — خدمة أو باقة واحدة بس لكل هدية */
+  async function placeGift() {
+    if (!canNext.value) return null
+    state.placing = true
+
+    try {
+      const branchId = state.branch === 'home-service' ? 0 : (Number.isInteger(state.branch) ? state.branch : null)
+
+      const payload = {
+        location: {
+          recipient_name: state.name.trim(),
+          recipient_mobile: state.phone.trim(),
+          message: state.msg.trim() || undefined,
+        },
+        branch: branchId,
+      }
+
+      if (state.gtype === 'svc') {
+        payload.services = [{ subServices: state.svcs.map(s => ({ id: s.id })) }]
+      } else {
+        payload.packages = [{ id: state.pkg.id }]
+      }
+
+      const created = await createGiftCard(payload)
+      const payment = await initPayment('cod')
+
+      state.ref = created?.data?.gift_card_id ? `#GIFT-${created.data.gift_card_id}` : '#GIFT'
+      state.claimUrl = created?.data?.claim_url || null
+      state.done = true
+      state.step = 4
+
+      return { created, payment }
+    } finally {
+      state.placing = false
+    }
+  }
+
   return {
     state,
-    pkgOf, dsgOf, brOf, svcOf,
+    dsgOf,
     hasSvc, toggleSvc,
     isFav, toggleFav,
     giftValue, giftLabel, priceParts,
     canNext, go, reset,
+    placeGift,
   }
 }

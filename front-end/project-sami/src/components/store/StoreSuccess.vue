@@ -23,7 +23,6 @@ const I = {
 
 const o = computed(() => props.order)
 const p = computed(() => props.order.parts)
-const isPickup = computed(() => o.value.method === 'pickup')
 const itemsCount = computed(() => o.value.items.reduce((a, i) => a + i.q, 0))
 const thumb = shape => shapeParts(shape, 34)
 </script>
@@ -34,14 +33,14 @@ const thumb = shape => shapeParts(shape, 34)
       <h1>تم تأكيد طلبك بنجاح!</h1>
       <span class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg></span>
     </div>
-    <p class="sub">{{ isPickup ? 'سيكون طلبك جاهزًا للاستلام من ' + o.branch.n + ' خلال ساعات العمل' : 'سيصلك طلبك خلال 24-48 ساعة على العنوان المحدد' }} — وسنرسل لك إشعارًا فور تجهيزه ✨</p>
+    <p class="sub">سيصلك طلبك خلال 24-48 ساعة على العنوان المحدد — وسنرسل لك إشعارًا فور تجهيزه ✨</p>
     <div class="gsuc-grid" style="grid-template-columns:1.2fr 1fr">
       <div class="card gsuc-details">
         <h4>تفاصيل الطلب</h4>
         <div class="gs-row"><span class="k"><SIcon :inner="I.qr" :size="14"/> رقم الطلب</span><span class="v" dir="ltr">{{ o.ref }}</span></div>
         <div class="gs-row"><span class="k"><SIcon :inner="I.user" :size="14"/> العميل</span><span class="v">{{ o.name }}</span></div>
-        <div class="gs-row"><span class="k"><SIcon :inner="isPickup ? I.home : I.truck" :size="14"/> {{ isPickup ? 'الاستلام' : 'التوصيل' }}</span>
-          <span class="v">{{ isPickup ? o.branch.n : o.addr }}</span></div>
+        <div class="gs-row"><span class="k"><SIcon :inner="I.truck" :size="14"/> التوصيل</span>
+          <span class="v">{{ o.addr }}</span></div>
         <div class="gs-row"><span class="k"><SIcon :inner="I.card" :size="14"/> طريقة الدفع</span><span class="v">{{ o.pay }}</span></div>
         <div class="gs-row"><span class="k"><SIcon :inner="I.check" :size="14"/> حالة الطلب</span><span class="v"><span class="chip">قيد التجهيز</span></span></div>
         <div class="gs-row"><span class="k"><SIcon :inner="I.lock" :size="14"/> المبلغ {{ o.pay === 'الدفع عند الاستلام' ? 'المستحق' : 'المدفوع' }}</span>

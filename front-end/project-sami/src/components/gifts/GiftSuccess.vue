@@ -11,7 +11,7 @@ const { state, giftLabel, dsgOf } = useGifts()
 const emit = defineEmits(['recipient', 'track', 'new-gift', 'share', 'home', 'copy-ref'])
 
 const AR_M = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر']
-const now = new Date(2026, 6, 7)
+const now = new Date()
 
 const d = computed(() => dsgOf(state.design))
 const sendName = computed(() => {

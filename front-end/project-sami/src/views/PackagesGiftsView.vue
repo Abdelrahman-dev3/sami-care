@@ -7,13 +7,14 @@
     book     → BookStepper + 4 خطوات + BookSuccess + BookSummary
     gift     → GiftStepper + 4 خطوات + GiftSuccess + GiftSummary
 */
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { usePageStyles } from '@/composables/usePageStyles'
 import { useInternalLinks } from '@/composables/useInternalLinks'
 import { useServiceLocation } from '@/composables/useServiceLocation'
+import { useAuth } from '@/composables/useAuth'
 import { usePackages, rs } from '@/composables/usePackages'
+import { createPackageBooking, initPayment } from '@/services/bookingApi'
 import pageCss from '@/assets/styles/pages/packages-gifts.css?raw'
-import { fetchBranches } from '@/services/homeApi'
 
 import SIcon from '@/components/common/SIcon.vue'
 import PackagesCatalog from '@/components/packages/PackagesCatalog.vue'
@@ -32,15 +33,12 @@ import GiftSuccess from '@/components/packages/GiftSuccess.vue'
 import GiftSummary from '@/components/packages/GiftSummary.vue'
 
 const root = ref(null)
-const branches = ref([])
 
-onMounted(async () => {
-  branches.value = await fetchBranches().catch(() => [])
-})
-
-const { current, openPicker, requireLocation } = useServiceLocation()
+const { current, openPicker, requireLocation, locations: branches, loadServiceLocations } = useServiceLocation()
+loadServiceLocations()
+const { requireAuth } = useAuth()
 const {
-  state, pkgOf,
+  state, pkgOf, bkDays,
   gCanNext, gNextLabel, bkCanNext, bkNextLabel,
   startGift, startBook, backToPackages,
 } = usePackages()
@@ -113,14 +111,37 @@ function doGiftPay() {
   }, 2100)
 }
 
+function toDateKey(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+/* ===== إنشاء حجز الباقة فعليًا في الباك إند ثم الدفع ===== */
 function doBookPay() {
-  payLoading.value = true
-  setTimeout(() => {
-    payLoading.value = false
-    state.bk.done = true
-    state.bk.ref = '#BK-2026-' + String(Math.floor(10000 + Math.random() * 89999))
-    scrollTo({ top: 0, behavior: 'smooth' })
-  }, 2100)
+  requireAuth(async () => {
+    payLoading.value = true
+    try {
+      const B = state.bk
+      const day = bkDays()[B.dayIdx]
+
+      await createPackageBooking({
+        package_id: B.pkg,
+        branch_id: B.branch,
+        date: toDateKey(day),
+        time: B.time,
+        employee_id: B.employee?.id,
+        notes: B.notes || undefined,
+      })
+
+      const payment = await initPayment('cod')
+      state.bk.ref = payment.invoice_id || null
+      state.bk.done = true
+      scrollTo({ top: 0, behavior: 'smooth' })
+    } catch (e) {
+      toast(e.message || 'تعذّر إتمام الحجز، حاول مرة أخرى')
+    } finally {
+      payLoading.value = false
+    }
+  })
 }
 
 /* ===== بدء الرحلات: مكان تنفيذ الخدمة أولًا ===== */
@@ -128,7 +149,7 @@ function doBookPay() {
 function syncBranch() {
   if (current.value) state.siteBranch = current.value.id
 }
-function onBook(id) { requireLocation(() => { syncBranch(); startBook(id) }) }
+function onBook(id) { startBook(id) }
 function onGift(id) { requireLocation(() => { syncBranch(); startGift('pkg', id) }) }
 function onGiftNow() { requireLocation(() => { syncBranch(); startGift(null, null) }) }
 
@@ -228,8 +249,8 @@ function goHome() { location.href = '/' }
             <div>
         <h4>عناوين الفروع</h4>
         <div v-for="branch in branches" :key="branch.id" class="f-branch">
-          <b>{{ branch.name?.ar || branch.name }}</b>
-          <small>{{ branch.address_line_1 }}</small>
+          <b>{{ branch.name }}</b>
+          <small>{{ branch.address }}</small>
           <a v-if="branch.contact_number" :href="`tel:${branch.contact_number}`">{{ branch.contact_number }}</a>
         </div>
         <div class="f-branch"><b>خدمات منزلية</b><small>حلاقة شعر ولحية وماسكات طبيعية</small></div>

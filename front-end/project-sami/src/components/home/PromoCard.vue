@@ -1,7 +1,9 @@
 <script setup>
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import BaseButton from '@/components/common/BaseButton.vue'
-/*import { promos } from '@/data/home'*/
+import { useServiceLocation } from '@/composables/useServiceLocation'
+
 const props = defineProps({
     offers: {
         type: Array,
@@ -12,18 +14,38 @@ const props = defineProps({
         default: false,
     },
 })
-import { useServiceLocation } from '@/composables/useServiceLocation'
 
-/*
-  بطاقتان: عرض ترويجي + الخدمة المنزلية.
-  بطاقة الخدمة المنزلية بتثبّت مكان التنفيذ على 'hm' قبل ما تودّي للحجز،
-  فالمستخدم ميتسألش عن المكان تاني.
-*/
 const router = useRouter()
 const { setLocation } = useServiceLocation()
 
 const HOME_ICON = 'M3 9l9-6 9 6v11a1 1 0 01-1 1H4a1 1 0 01-1-1z'
 const HOME_ICON_DOOR = 'M9 21V12h6v9'
+
+const promoCards = computed(() => {
+  const apiOffers = (props.offers || []).map((offer, index) => ({
+    id: offer.id || `offer-${index}`,
+    type: 'offer',
+    badge: offer.badge || 'خصم',
+    eyebrow: offer.eyebrow || '✦ عرض خاص',
+    title: offer.name || offer.title || 'عرض مميز',
+    text: offer.description || offer.text || 'استمتع بالعروض المميزة من عناية سامي',
+    cta: offer.cta || 'اكتشف العرض',
+    href: offer.href || '/packages-gifts',
+  }))
+
+  return [
+    ...apiOffers,
+    {
+      id: 'home-service',
+      type: 'home',
+      eyebrow: '✦ نصل إليك',
+      title: 'الخدمات المنزلية',
+      text: 'حلاقة وعناية ومساجات طبيعية في راحة منزلك داخل جدة',
+      cta: 'احجز الخدمة المنزلية',
+      href: '/booking',
+    },
+  ]
+})
 
 function goHomeService() {
   setLocation('hm')
@@ -33,7 +55,7 @@ function goHomeService() {
 
 <template>
   <section data-reveal class="home-section container promo-section" aria-label="إعلانات وعروض">
-    <article v-for="promo in promos" :key="promo.id" class="promo-card"
+    <article v-for="promo in promoCards" :key="promo.id" class="promo-card"
              :class="{ 'promo-card--home': promo.type === 'home' }">
       <div class="promo-card__badge" aria-hidden="true">
         <template v-if="promo.type === 'home'">

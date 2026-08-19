@@ -13,7 +13,7 @@ const props = defineProps({
     },
 })
 
-const formatPrice = value => `${value} ريال`
+const formatPrice = value => `${value ?? 0} ريال`
 </script>
 
 <template>
@@ -40,7 +40,7 @@ const formatPrice = value => `${value} ريال`
                 <RouterLink to="/store">
 
                     <AppImage
-                        :src="item.image"
+                        :src="item.product_image"
                         :alt="item.name"
                     />
 

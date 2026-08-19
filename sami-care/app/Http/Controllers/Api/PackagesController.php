@@ -15,7 +15,7 @@ class PackagesController extends Controller
             ->whereDate('end_date', '>=', now())
             ->take(6)
             ->get();
-    
+
         return response()->json([
             'status' => true,
             'data' => $packages

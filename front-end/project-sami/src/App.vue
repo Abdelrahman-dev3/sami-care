@@ -2,6 +2,7 @@
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import LocationPicker from '@/components/common/LocationPicker.vue'
+import AuthModal from '@/components/common/AuthModal.vue'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import CartDrawer from '@/components/store/CartDrawer.vue'
 import { useScrollReveal } from '@/composables/useScrollReveal'
@@ -115,6 +116,7 @@ useScrollReveal()
       <component :is="Component" :key="current.path" />
     </RouterView>
     <LocationPicker />
+    <AuthModal />
     <CartDrawer :open="cartDrawerOpen" @close="closeCart" @checkout="checkoutCart" />
   </template>
 </template>

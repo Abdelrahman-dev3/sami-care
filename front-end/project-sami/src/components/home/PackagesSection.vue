@@ -3,6 +3,7 @@ import SectionTitle from '@/components/common/SectionTitle.vue'
 import AppImage from '@/components/common/AppImage.vue'
 import { useRouter } from 'vue-router'
 import { useServiceLocation } from '@/composables/useServiceLocation'
+import { useLanguage } from '@/composables/useLanguage'
 
 defineProps({
     packages: {
@@ -17,6 +18,11 @@ defineProps({
 
 const router = useRouter()
 const { requireLocation } = useServiceLocation()
+const { state: lang } = useLanguage()
+
+function nameOf(item) {
+    return item.name?.[lang.lang] || item.name?.ar || item.name?.en || item.name
+}
 
 const go = path => {
     requireLocation(() => router.push(path))
@@ -46,10 +52,10 @@ const go = path => {
             >
                 <AppImage
                     :src="item.feature_image"
-                    :alt="item.name"
+                    :alt="nameOf(item)"
                 />
 
-                <h3>{{ item.name }}</h3>
+                <h3>{{ nameOf(item) }}</h3>
 
                 <p v-if="item.description">
                     {{ item.description }}

@@ -286,11 +286,13 @@ class MobileCartController extends Controller
 
     public function storeGiftCard(Request $request)
     {
-        if ($request->filled('services') || $request->filled('location')) {
+        if ($request->filled('services') || $request->filled('packages') || $request->filled('location')) {
             $validated = $request->validate([
-                'services' => ['required', 'array', 'min:1'],
-                'services.*.subServices' => ['required', 'array', 'min:1'],
+                'services' => ['nullable', 'array'],
+                'services.*.subServices' => ['required_with:services', 'array', 'min:1'],
                 'services.*.subServices.*.id' => ['required', 'integer', 'exists:services,id'],
+                'packages' => ['nullable', 'array'],
+                'packages.*.id' => ['required', 'integer', 'exists:packages,id'],
                 'location' => ['required', 'array'],
                 'location.recipient_name' => ['required', 'string', 'max:255'],
                 'location.recipient_mobile' => ['required', 'string', 'max:20'],
@@ -301,16 +303,36 @@ class MobileCartController extends Controller
 
             $serviceIds = [];
 
-            foreach ($validated['services'] as $service) {
+            foreach ($validated['services'] ?? [] as $service) {
                 foreach ($service['subServices'] as $subService) {
                     $serviceIds[] = (int) $subService['id'];
                 }
             }
 
             $serviceIds = array_values(array_unique($serviceIds));
+
+            $packageIds = collect($validated['packages'] ?? [])
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->unique()
+                ->values()
+                ->all();
+
+            if ($serviceIds === [] && $packageIds === []) {
+                return response()->json([
+                    'success' => false,
+                    'status' => false,
+                    'message' => __('messages.gift_card_service_required'),
+                ], 422);
+            }
+
             $subtotal = (float) Service::whereIn('id', $serviceIds)
                 ->where('status', 1)
                 ->sum('default_price');
+
+            $subtotal += (float) Package::whereIn('id', $packageIds)
+                ->where('status', 1)
+                ->sum('package_price');
 
             $giftCard = GiftCard::create([
                 'user_id' => $request->user()->id,
@@ -318,6 +340,7 @@ class MobileCartController extends Controller
                 'recipient_name' => $validated['location']['recipient_name'],
                 'recipient_phone' => $validated['location']['recipient_mobile'],
                 'requested_services' => $serviceIds,
+                'requested_packages' => $packageIds,
                 'message' => $validated['location']['message'] ?? null,
                 'subtotal' => $subtotal,
                 'payment_status' => 0,

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use Modules\Package\Models\Package;
 use Modules\Service\Models\Service;
 
 class GiftCard extends Model
@@ -19,6 +20,7 @@ class GiftCard extends Model
         'recipient_phone',
         'message',
         'requested_services',
+        'requested_packages',
         'user_id',
         'branch_id',
         'booking_ids',
@@ -37,6 +39,7 @@ class GiftCard extends Model
 
     protected $casts = [
         'requested_services' => 'array',
+        'requested_packages' => 'array',
         'booking_ids' => 'array',
         'sent_at' => 'datetime',
         'claimed_at' => 'datetime',
@@ -62,6 +65,17 @@ class GiftCard extends Model
         }
 
         return Service::whereIn('id', $serviceIds)->get();
+    }
+
+    public function getPackagesListAttribute()
+    {
+        $packageIds = $this->requested_packages ?? '[]';
+
+        if (! is_array($packageIds)) {
+            return collect();
+        }
+
+        return Package::whereIn('id', $packageIds)->get();
     }
 
     public function getClaimUrlAttribute(): ?string

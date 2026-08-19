@@ -4,6 +4,8 @@ import SectionTitle from '@/components/common/SectionTitle.vue'
 import AppImage from '@/components/common/AppImage.vue'
 import { useRouter } from 'vue-router'
 import { useServiceLocation } from '@/composables/useServiceLocation'
+import { useLanguage } from '@/composables/useLanguage'
+import { resolveApiImage } from '@/utils/assetPath'
 
 const props = defineProps({
     categories: {
@@ -18,6 +20,11 @@ const props = defineProps({
 
 const router = useRouter()
 const { requireLocation } = useServiceLocation()
+const { state: lang } = useLanguage()
+
+function nameOf(category) {
+    return category.name?.[lang.lang] || category.name?.ar || category.name?.en || category.name
+}
 
 const services = computed(() => {
     return props.categories.flatMap(category => {
@@ -38,9 +45,9 @@ function go(path) {
     <SectionTitle title="خدماتنا" />
     <div class="services-grid">
       <article v-for="service in categories" :key="service.id" class="service-card" data-reveal>
-        <AppImage :src="service.image" :alt="service.name.ar" />
+        <AppImage :src="resolveApiImage(service.image) || service.feature_image" :alt="nameOf(service)" />
         <div class="card-overlay">
-          <h3>{{ service.name.ar }}</h3>
+          <h3>{{ nameOf(service) }}</h3>
           <a href="#" @click.prevent="go(`/services/${service.id}`)">التفاصيل <span>←</span></a>
         </div>
       </article>

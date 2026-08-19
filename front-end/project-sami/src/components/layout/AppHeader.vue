@@ -5,6 +5,7 @@ import { navigation } from '@/data/home'
 import { useServiceLocation } from '@/composables/useServiceLocation'
 import { useLanguage } from '@/composables/useLanguage'
 import { useStore } from '@/composables/useStore'
+import { useAuth } from '@/composables/useAuth'
 
 const route = useRoute()
 const emit = defineEmits(['open-cart'])
@@ -13,6 +14,15 @@ const scrolled = ref(false)
 const { current, openPicker } = useServiceLocation()
 const { state: lang, toggle: toggleLang, t } = useLanguage()
 const { cartQty } = useStore()
+const { user, isAuthenticated, openAuthModal, logout } = useAuth()
+
+function onAccountClick() {
+  if (isAuthenticated.value) {
+    if (confirm('تسجيل الخروج؟')) logout()
+  } else {
+    openAuthModal()
+  }
+}
 const cartBump = ref(false)
 
 /*
@@ -66,7 +76,7 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
       <button class="icon-btn" aria-label="برنامج الولاء" title="برنامج الولاء">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8l4.5 3L12 5l4.5 6L21 8l-1.6 10H4.6z"/></svg>
       </button>
-      <button class="icon-btn" aria-label="حسابي" title="حسابي">
+      <button class="icon-btn" :aria-label="isAuthenticated ? user.first_name : 'حسابي'" :title="isAuthenticated ? user.first_name : 'حسابي'" @click="onAccountClick">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       </button>
       <RouterLink class="nav-book" to="/booking">

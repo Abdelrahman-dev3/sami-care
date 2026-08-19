@@ -103,14 +103,9 @@ class HomeController extends Controller
 
     private function transformPackage(Package $package): array
     {
-        app()->setLocale('ar');
-        $name = $package->name;
-
         return [
             'id' => $package->id,
-            'name' => is_array($name)
-                ? ($name[app()->getLocale()] ?? $name['ar'] ?? reset($name))
-                : $name,
+            'name' => $package->getTranslations('name'),
             'description' => $package->description,
             'feature_image' => $package->image ?: $package->feature_image,
             'package_price' => (float) $package->package_price,
@@ -119,7 +114,6 @@ class HomeController extends Controller
 
     private function transformBranch(Branch $branch): array
     {
-        $name = $branch->name;
         $address = $branch->address;
 
         $addressParts = array_filter([
@@ -129,9 +123,7 @@ class HomeController extends Controller
 
         return [
             'id' => $branch->id,
-            'name' => is_array($name)
-                ? ($name[app()->getLocale()] ?? $name['ar'] ?? reset($name))
-                : $name,
+            'name' => $branch->getTranslations('name'),
             'address' => $addressParts ? implode('، ', $addressParts) : null,
             'image' => $branch->feature_image,
         ];
@@ -139,15 +131,13 @@ class HomeController extends Controller
 
     private function transformReview(BookingReview $review): array
     {
-        $branchName = $review->booking?->branch?->name;
+        $branch = $review->booking?->branch;
 
         return [
             'id' => $review->id,
             'rating' => (int) $review->rating,
             'name' => $review->user?->full_name ?: 'عميل سامي',
-            'place' => is_array($branchName)
-                ? ($branchName[app()->getLocale()] ?? $branchName['ar'] ?? reset($branchName))
-                : $branchName,
+            'place' => $branch?->getTranslations('name'),
             'text' => $review->review_text,
             'when' => $review->created_at?->diffForHumans(),
         ];

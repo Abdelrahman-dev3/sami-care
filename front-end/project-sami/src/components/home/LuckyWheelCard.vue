@@ -1,8 +1,26 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { fetchWheelPrizes } from '@/services/wheelApi'
 
-// كل جايزة: نص (ممكن سطرين) + لون القطاع
-const segments = [
+const props = defineProps({
+  prizes: {
+    type: Array,
+    default: () => [],
+  },
+})
+
+const fetchedPrizes = ref([])
+
+onMounted(async () => {
+  if (props.prizes.length) return
+  try {
+    fetchedPrizes.value = await fetchWheelPrizes()
+  } catch (err) {
+    console.error('LuckyWheelCard prizes error:', err)
+  }
+})
+
+const fallbackSegments = [
   { lines: ['هدية', 'مجانية'], color: '#171310' },
   { lines: ['خصم', '20%'], color: '#caa565' },
   { lines: ['جلسة', 'مجانية'], color: '#171310' },
@@ -11,10 +29,29 @@ const segments = [
   { lines: ['خصم', '10%'], color: '#caa565' },
 ]
 
-const segAngle = 360 / segments.length
+const segments = computed(() => {
+  const source = (props.prizes.length ? props.prizes : fetchedPrizes.value).filter(Boolean)
+
+  if (!source.length) return fallbackSegments
+
+  return source.map((item, index) => {
+    const reward = Number(item.reward_value ?? item.value ?? item.amount ?? 0)
+    const label = item.type || item.name || `جائزة ${index + 1}`
+    const lines = [
+      label,
+      reward > 0 ? `${reward} ${item.unit || 'ريال'}` : 'مكافأة',
+    ]
+
+    return {
+      lines: lines.filter(Boolean),
+      color: index % 2 === 0 ? '#171310' : '#caa565',
+    }
+  })
+})
+
+const segAngle = computed(() => 360 / segments.value.length)
 const CX = 100, CY = 100, R = 92, LABEL_R = 58
 
-// 0deg = أعلى العجلة (12)، والزاوية بتزيد مع عقارب الساعة — نفس منطق دوران العجلة تحت
 function polar(radius, angleDeg) {
   const rad = ((angleDeg - 90) * Math.PI) / 180
   return { x: CX + radius * Math.cos(rad), y: CY + radius * Math.sin(rad) }
@@ -27,10 +64,10 @@ function wedgePath(startAngle, endAngle) {
 }
 
 const wedges = computed(() =>
-  segments.map((seg, i) => {
-    const start = i * segAngle
-    const end = start + segAngle
-    const mid = start + segAngle / 2
+  segments.value.map((seg, i) => {
+    const start = i * segAngle.value
+    const end = start + segAngle.value
+    const mid = start + segAngle.value / 2
     const labelPos = polar(LABEL_R, mid)
     return { ...seg, path: wedgePath(start, end), labelPos }
   })
@@ -45,15 +82,21 @@ function spin() {
   spinning.value = true
   result.value = null
 
-  const idx = Math.floor(Math.random() * segments.length)
-  const targetCenter = idx * segAngle + segAngle / 2
+  const currentSegments = segments.value
+  if (!currentSegments.length) {
+    spinning.value = false
+    return
+  }
+
+  const idx = Math.floor(Math.random() * currentSegments.length)
+  const targetCenter = idx * segAngle.value + segAngle.value / 2
   const extraTurns = 6
   const currentMod = rotation.value % 360
   rotation.value += (360 - currentMod) + extraTurns * 360 + (360 - targetCenter)
 
   setTimeout(() => {
     spinning.value = false
-    result.value = segments[idx].lines.join(' ')
+    result.value = currentSegments[idx].lines.join(' ')
   }, 4200)
 }
 </script>

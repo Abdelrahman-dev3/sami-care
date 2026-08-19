@@ -3,7 +3,6 @@
   نجاح الحجز — مُرحَّل حرفيًا من bkView4() في src/legacy/packages-gifts.html
 */
 import { computed } from 'vue'
-import { BRANCHES } from '@/data/packages'
 import { usePackages, fmtTime, fmtDate, rs } from '@/composables/usePackages'
 import SIcon from '@/components/common/SIcon.vue'
 
@@ -12,7 +11,6 @@ const emit = defineEmits(['home', 'calendar', 'share'])
 
 const B = state.bk
 const p = computed(() => pkgOf(B.pkg))
-const br = computed(() => BRANCHES.find(b => b.id === B.branch))
 const d = computed(() => bkDays()[B.dayIdx])
 
 const I = {
@@ -45,9 +43,9 @@ const WBTN = 'flex:1;padding:11px;font-size:12px'
       <div class="card gsuc-details">
         <h4>تفاصيل الحجز</h4>
         <div class="gs-row"><span class="k"><SIcon :inner="I.box" :size="14" /> الباقة</span><span class="v">{{ p.name }}</span></div>
-        <div class="gs-row"><span class="k"><SIcon :inner="I.pin" :size="14" /> الفرع</span><span class="v">{{ br.name }}</span></div>
+        <div class="gs-row"><span class="k"><SIcon :inner="I.pin" :size="14" /> الفرع</span><span class="v">{{ p.branchName }}</span></div>
         <div class="gs-row"><span class="k"><SIcon :inner="I.cal" :size="14" /> التاريخ</span><span class="v">{{ fmtDate(d) }}</span></div>
-        <div class="gs-row"><span class="k"><SIcon :inner="I.clock" :size="14" /> الوقت</span><span class="v" dir="ltr">{{ fmtTime(B.time) }} – {{ fmtTime(B.time + p.dur) }}</span></div>
+        <div class="gs-row"><span class="k"><SIcon :inner="I.clock" :size="14" /> الوقت</span><span class="v" dir="ltr">{{ fmtTime(B.time) }}</span></div>
         <div class="gs-row"><span class="k"><SIcon :inner="I.info" :size="14" /> مدة الجلسة</span><span class="v">{{ p.dur }} دقيقة</span></div>
         <div class="gs-row"><span class="k"><SIcon :inner="I.card" :size="14" /> المبلغ المدفوع</span><span class="v" :style="AMT">{{ rs(p.price) }} ر.س</span></div>
         <div class="gs-row"><span class="k"><SIcon :inner="I.qr" :size="14" /> رمز الحجز</span><span class="v" dir="ltr">{{ B.ref }}</span></div>

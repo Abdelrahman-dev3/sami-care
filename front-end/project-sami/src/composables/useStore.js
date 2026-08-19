@@ -3,6 +3,11 @@
 
 import { reactive, computed, ref } from 'vue'
 import { fetchShopCatalog } from '@/services/shopApi'
+import {
+  fetchProductDetail, fetchLogisticZones,
+  getCartList, addToCart as apiAddToCart, updateCart as apiUpdateCart, removeCart as apiRemoveCart,
+  getAddressList, addAddress, placeOrder as apiPlaceOrder,
+} from '@/services/productsApi'
 
 
 
@@ -40,6 +45,7 @@ async function loadProducts() {
             pr: Number(p.min_price ?? p.max_price ?? 0),
             image: p.image || p.feature_image || null,
             cat: cat.id,
+            branchId: p.branch_id ?? null,
             shape: 'jar',
             best: 0,
             ts: p.id,
@@ -65,7 +71,35 @@ async function loadProducts() {
 
 loadProducts()
 
-const pOf = id => products.value.find(p => p.id === id)
+/* منطقة الشحن — الموقع بيخدم منطقة واحدة حاليًا، فبنجيبها مرة واحدة ونستخدمها في كل مكان */
+const logisticZone = ref(null)
+let zoneLoaded = false
+
+async function loadLogisticZone() {
+  if (zoneLoaded) return
+  zoneLoaded = true
+  try {
+    const zones = await fetchLogisticZones()
+    logisticZone.value = zones?.[0] || null
+  } catch {
+    logisticZone.value = null
+  }
+}
+
+loadLogisticZone()
+
+/* مفاتيح state.cart دايمًا نصوص (خاصية كائن JS)، بينما id المنتج رقم من الـ API — بنوحّد النوع هنا مرة واحدة */
+const pOf = id => products.value.find(p => p.id === Number(id))
+
+/* تحويل رقم/معرّف منتج إلى product_variation_id — مطلوب في كل نداءات السلة الحقيقية */
+const variationIdCache = {}
+async function resolveVariationId(productId) {
+  if (variationIdCache[productId]) return variationIdCache[productId]
+  const detail = await fetchProductDetail(productId)
+  const id = detail?.variation_data?.[0]?.id
+  if (id) variationIdCache[productId] = id
+  return id
+}
 
 
 const state = reactive({
@@ -78,9 +112,8 @@ const state = reactive({
   firstAdd: true,
   page: 'store',       // store | checkout | success
   order: null,
+  placing: false,
   ck: {
-    method: 'pickup',
-    branch: 'qr',
     addr: '',
     name: 'محمد عبدالله',
     phone: '+966 50 123 4567',
@@ -134,10 +167,10 @@ export function useStore() {
     return state.showAll ? l : l.slice(0, 8)
   })
 
-  /* ===== الدفع — منقول حرفيًا من ckParts() و ckCan() ===== */
+  /* ===== الدفع ===== */
   const ckParts = computed(() => {
     const sub = cartTotal.value
-    const ship = state.ck.method === 'delivery' ? 25 : 0
+    const ship = logisticZone.value?.standard_delivery_charge ?? 0
     const vat = Math.round(sub * 0.15)
     return { sub, ship, vat, total: sub + vat + ship }
   })
@@ -149,28 +182,98 @@ export function useStore() {
       c.phone.trim().length >= 9 &&
       !!c.pay &&
       c.terms &&
-      (c.method === 'pickup' || c.addr.trim().length > 4)
+      c.addr.trim().length > 4
   })
 
-  /* إنشاء الطلب — نفس منطق placeOrder الأصلي */
-  function placeOrder(branches, payMethods) {
-    if (!ckCan.value) return null
-    const c = state.ck
-    state.order = {
-      ref: '#ORD-2607-' + Math.floor(1000 + Math.random() * 9000),
-      items: Object.entries(state.cart).map(([id, q]) => ({ p: pOf(id), q })),
-      parts: ckParts.value,
-      method: c.method,
-      branch: branches.find(b => b.id === c.branch),
-      addr: c.addr,
-      pay: payMethods.find(m => m.id === c.pay).n,
-      name: c.name,
-      phone: c.phone,
+  /*
+    مزامنة السلة المحلية مع سلة حقيقية في الباك إند — الإضافة للسلة نفسها
+    تفضل محلية وسريعة أثناء التصفح، والمزامنة الحقيقية بتحصل هنا بس عند الدفع
+    (بعد التأكد من تسجيل الدخول)، بنفس فكرة requireAuth في الحجز.
+  */
+  async function syncCartToBackend(locationId) {
+    const existing = (await getCartList())?.data || []
+    const localIds = new Set(Object.keys(state.cart).map(Number))
+
+    for (const item of existing) {
+      if (!localIds.has(item.product_id)) await apiRemoveCart(item.id).catch(() => {})
     }
-    clearCart()
-    state.firstAdd = true
-    state.page = 'success'
-    return state.order
+
+    for (const [idStr, qty] of Object.entries(state.cart)) {
+      const id = Number(idStr)
+      const variationId = await resolveVariationId(id)
+      if (!variationId) continue
+
+      const existingItem = existing.find(c => c.product_id === id)
+      if (existingItem) {
+        await apiUpdateCart({ cart_id: existingItem.id, product_variation_id: variationId, qty })
+      } else {
+        await apiAddToCart({ product_id: id, product_variation_id: variationId, qty, location_id: locationId })
+      }
+    }
+  }
+
+  /* التأكد من وجود عنوان — بننشئ واحد من بيانات نموذج الدفع لو مفيش عنوان محفوظ */
+  async function ensureAddressId() {
+    const existing = (await getAddressList())?.data || []
+    if (existing.length) return existing[0].id
+
+    const c = state.ck
+    const [first_name, ...rest] = c.name.trim().split(/\s+/)
+    const created = await addAddress({
+      first_name,
+      last_name: rest.join(' ') || first_name,
+      address_line_1: c.addr,
+      city: 166,   // جدة — المدينة الوحيدة المخدومة حاليًا
+      state: 4123,
+      country: 247,
+      is_primary: 1,
+    })
+    const list = (await getAddressList())?.data || []
+    return list[0]?.id ?? created?.id
+  }
+
+  /* إنشاء الطلب فعليًا في الباك إند */
+  async function placeOrder() {
+    if (!ckCan.value) return null
+    state.placing = true
+
+    try {
+      const c = state.ck
+      const itemsSnapshot = Object.entries(state.cart).map(([id, q]) => ({ p: pOf(Number(id)), q }))
+      const locationId = itemsSnapshot[0]?.p?.branchId
+
+      await syncCartToBackend(locationId)
+      const addressId = await ensureAddressId()
+      await loadLogisticZone()
+
+      const result = await apiPlaceOrder({
+        shipping_address_id: addressId,
+        billing_address_id: addressId,
+        phone: c.phone,
+        location_id: locationId,
+        chosen_logistic_zone_id: logisticZone.value?.id,
+        shipping_delivery_type: 'standard',
+        payment_method: 'cod',
+        payment_status: 'pending',
+      })
+
+      state.order = {
+        ref: result?.product?.id ? `#ORD-${result.product.id}` : '#ORD',
+        items: itemsSnapshot,
+        parts: ckParts.value,
+        addr: c.addr,
+        pay: 'الدفع عند الاستلام',
+        name: c.name,
+        phone: c.phone,
+      }
+
+      clearCart()
+      state.firstAdd = true
+      state.page = 'success'
+      return state.order
+    } finally {
+      state.placing = false
+    }
   }
 
   return {

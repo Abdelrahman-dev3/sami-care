@@ -3,12 +3,12 @@
     <div class="offcanvas offcanvas-end" tabindex="-1" id="form-offcanvas" aria-labelledby="form-offcanvasLabel">
       <div class="offcanvas-header">
         <h5 class="offcanvas-title" id="form-offcanvasLabel">
-            <template v-if="currentId != 0">
-                <span v-if="parent_id !== null">{{editNestedTitle}}</span> <span v-else>{{editTitle}}</span>
-            </template>
-            <template v-else>
-                <span v-if="parent_id !== null">{{createNestedTitle}}</span> <span v-else>{{createTitle}}</span>
-            </template>
+          <template v-if="currentId != 0">
+            <span v-if="parent_id !== null">{{ editNestedTitle }}</span> <span v-else>{{ editTitle }}</span>
+          </template>
+          <template v-else>
+            <span v-if="parent_id !== null">{{ createNestedTitle }}</span> <span v-else>{{ createTitle }}</span>
+          </template>
         </h5>
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
       </div>
@@ -17,70 +17,96 @@
           <div class="col-12">
             <div class="form-group">
               <div class="text-center">
-                <img :src="ImageViewer || defaultImage" alt="feature-image" class="img-fluid mb-2 avatar-140 avatar-rounded" />
+                <img :src="ImageViewer || defaultImage" alt="feature-image"
+                  class="img-fluid mb-2 avatar-140 avatar-rounded" />
                 <div v-if="validationMessage" class="text-danger mb-2">{{ validationMessage }}</div>
                 <div class="d-flex align-items-center justify-content-center gap-2">
-                  <input type="file" ref="profileInputRef" class="form-control d-none" id="feature_image" name="feature_image" @change="fileUpload" accept=".jpeg, .jpg, .png, .gif" />
+                  <input type="file" ref="profileInputRef" class="form-control d-none" id="feature_image"
+                    name="feature_image" @change="fileUpload" accept=".jpeg, .jpg, .png, .gif" />
                   <label class="btn btn-info" for="feature_image">{{ $t('messages.upload') }}</label>
-                  <input type="button" class="btn btn-danger" name="remove" :value="$t('messages.remove')" @click="removeLogo()" v-if="ImageViewer" />
+                  <input type="button" class="btn btn-danger" name="remove" :value="$t('messages.remove')"
+                    @click="removeLogo()" v-if="ImageViewer" />
                 </div>
               </div>
             </div>
 
             <div class="form-group" v-if="isSubCategory">
-              <label for="category" class="form-label">{{$t('category.lbl_parent_category')}}</label>
-              <Multiselect v-bind="singleSelectOption" v-model="parent_id" :value="parent_id"  :placeholder="$t('category.placeholder_parent_category')" :options="categories"></Multiselect>
+              <label for="category" class="form-label">{{ $t('category.lbl_parent_category') }}</label>
+              <Multiselect v-bind="singleSelectOption" v-model="parent_id" :value="parent_id"
+                :placeholder="$t('category.placeholder_parent_category')" :options="categories"></Multiselect>
             </div>
-            <InputField
-              :is-required="true"
-              :label="$t('category.lbl_name') + ' ' + $t('settings.translate.ar')"
-              :placeholder="$t('category.placeholder_name')"
-              v-model="nameAr"
-              :error-message="nameArError"
-              :error-messages="errorMessages['name'] && errorMessages['name']['ar']"
-            />
+            <InputField :is-required="true" :label="$t('category.lbl_name') + ' ' + $t('settings.translate.ar')"
+              :placeholder="$t('category.placeholder_name')" v-model="nameAr" :error-message="nameArError"
+              :error-messages="errorMessages['name'] && errorMessages['name']['ar']" />
 
-            <InputField
-              :is-required="true"
-              :label="$t('category.lbl_name') + ' ' + $t('settings.translate.en')"
-              :placeholder="$t('category.placeholder_name')"
-              v-model="nameEn"
-              :error-message="nameEnError"
-              :error-messages="errorMessages['name'] && errorMessages['name']['en']"
-            />
+            <InputField :is-required="true" :label="$t('category.lbl_name') + ' ' + $t('settings.translate.en')"
+              :placeholder="$t('category.placeholder_name')" v-model="nameEn" :error-message="nameEnError"
+              :error-messages="errorMessages['name'] && errorMessages['name']['en']" />
+
+            <div class="row mt-3">
+              <div class="col-md-12">
+                <div class="form-group">
+                  <label class="form-label">
+                    {{ $t('category.minimum_duration') }}
+                  </label>
+
+                  <input type="number" min="0" class="form-control" v-model="durMin" />
+                </div>
+              </div>
+
+              <div class="col-md-12">
+                <div class="form-group">
+                  <label class="form-label">
+                    {{ $t('category.maximum_duration') }}
+                  </label>
+
+                  <input type="number" min="0" class="form-control" v-model="durMax" />
+                </div>
+              </div>
+
+              <div class="col-md-12">
+                <div class="form-group">
+                  <label class="form-label">
+                    {{ $t('category.price_from') }}
+                  </label>
+
+                  <input type="number" min="0" class="form-control" v-model="price_from" />
+                </div>
+              </div>
+            </div>
 
             <div v-for="field in customefield" :key="field.id">
-              <FormElement v-model="custom_fields_data" :name="field.name" :label="field.label" :type="field.type" :required="field.required" :options="field.value"  :field_id="field.id"  ></FormElement>
+              <FormElement v-model="custom_fields_data" :name="field.name" :label="field.label" :type="field.type"
+                :required="field.required" :options="field.value" :field_id="field.id" />
             </div>
             <div class="form-group">
-                <div class="d-flex justify-content-between align-items-center">
-                    <label class="form-label d-none">
-                        {{ $t('service.lbl_visible_home') }}
-                    </label>
-                    <div class="form-check form-switch">
-                      <input
-                        class="form-check-input"
-                        type="checkbox"
-                        v-model="is_visible"
-                        :true-value="1"
-                        :false-value="0"
-                      />
-                    </div>
+              <div class="d-flex justify-content-between align-items-center">
+                <label class="form-label d-none">
+                  {{ $t('service.lbl_visible_home') }}
+                </label>
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" v-model="is_visible" :true-value="1"
+                    :false-value="0" />
                 </div>
+              </div>
             </div>
 
             <div class="form-group">
               <div class="d-flex justify-content-between align-items-center">
-                <label class="form-label" for="category-status">{{$t('category.lbl_status')}}</label>
+                <label class="form-label" for="category-status">{{ $t('category.lbl_status') }}</label>
                 <div class="form-check form-switch">
-                  <input class="form-check-input" :value="1" name="status" id="category-status" type="checkbox" v-model="status" />
+                  <input class="form-check-input" :value="1" name="status" id="category-status" type="checkbox"
+                    v-model="status" />
                 </div>
               </div>
             </div>
           </div>
         </div>
+
+
+
       </div>
-    <FormFooter :IS_SUBMITED="IS_SUBMITED"></FormFooter>
+      <FormFooter :IS_SUBMITED="IS_SUBMITED"></FormFooter>
     </div>
   </form>
 </template>
@@ -137,7 +163,7 @@ const updatecurrentId = (e) => {
   currentId.value = Number(e.detail.form_id)
   parent_id.value = e.detail.parent_id || null
   category_name.value = null
-  if(props.isSubCategory) {
+  if (props.isSubCategory) {
     getCategories()
     parent_id.value = -1
   }
@@ -171,8 +197,8 @@ const fileUpload = async (e) => {
   const maxSizeInBytes = maxSizeInMB * 1024 * 1024;
 
   if (!allowedTypes.includes(file.type)) {
-    window.errorSnackbar('Only JPG, JPEG, and PNG files are allowed.'); 
-   profileInputRef.value.value = ''; // Clear the file input
+    window.errorSnackbar('Only JPG, JPEG, and PNG files are allowed.');
+    profileInputRef.value.value = ''; // Clear the file input
     return;
   }
 
@@ -188,7 +214,7 @@ const fileUpload = async (e) => {
     await readFile(file, (fileB64) => {
       ImageViewer.value = fileB64;
       profileInputRef.value.value = '';
-      validationMessage.value = ''; 
+      validationMessage.value = '';
     });
     feature_image.value = file;
   } else {
@@ -212,12 +238,15 @@ const defaultData = () => {
   ImageViewer.value = props.defaultImage
   errorMessages.value = {}
   return {
-     name: {
-        ar: '',
-        en: ''
-      },
+    name: {
+      ar: '',
+      en: ''
+    },
     parent_id: props.categoryId ?? null,
     is_visible: 0,
+    durMin: 0,
+    durMax: 0,
+    price_from: 0,
     status: true,
     feature_image: null,
     custom_fields_data: {
@@ -227,12 +256,12 @@ const defaultData = () => {
 
 //  Reset Form
 const setFormData = (data) => {
-  if(data.feature_image === props.defaultImage) {
-      ImageViewer.value = null;
-    }
-    else {
-      ImageViewer.value = data.feature_image;
-    }
+  if (data.feature_image === props.defaultImage) {
+    ImageViewer.value = null;
+  }
+  else {
+    ImageViewer.value = data.feature_image;
+  }
   category_name.value = data.category_name
   let parsedName = { ar: '', en: '' }
 
@@ -254,6 +283,9 @@ const setFormData = (data) => {
       parent_id: data.parent_id,
       is_visible: data.is_visible ?? 0,
       status: data.status ? true : false,
+      durMin: data.durMin ?? 0,
+      durMax: data.durMax ?? 0,
+      price_from: data.price_from ?? 0,
       feature_image: data.feature_image,
       custom_fields_data: data.custom_field_data
     }
@@ -282,17 +314,17 @@ const specialCharsRegex = /[!@#$%^&*(),.?":{}|<>\-_;'\/+=\[\]\\]/;
 // Validations
 const validationSchema = yup.object({
   name: yup.object({
-      ar: yup.string()
-        .required('Arabic name is required')
-        .test('is-valid-ar', 'Arabic name must not contain numbers or special characters', value =>
-          value && !specialCharsRegex.test(value) && !numberRegex.test(value)
-        ),
-      en: yup.string()
-        .required('English name is required')
-        .test('is-valid-en', 'English name must not contain numbers or special characters', value =>
-          value && !specialCharsRegex.test(value) && !numberRegex.test(value)
-        )
-    })
+    ar: yup.string()
+      .required('Arabic name is required')
+      .test('is-valid-ar', 'Arabic name must not contain numbers or special characters', value =>
+        value && !specialCharsRegex.test(value) && !numberRegex.test(value)
+      ),
+    en: yup.string()
+      .required('English name is required')
+      .test('is-valid-en', 'English name must not contain numbers or special characters', value =>
+        value && !specialCharsRegex.test(value) && !numberRegex.test(value)
+      )
+  })
 })
 
 
@@ -303,6 +335,9 @@ const { value: nameAr, errorMessage: nameArError } = useField('name.ar')
 const { value: nameEn, errorMessage: nameEnError } = useField('name.en')
 const { value: parent_id } = useField('parent_id')
 const { value: status } = useField('status')
+const { value: durMin } = useField('durMin')
+const { value: durMax } = useField('durMax')
+const { value: price_from } = useField('price_from')
 const { value: is_visible } = useField('is_visible')
 const { value: feature_image } = useField('feature_image')
 const { value: custom_fields_data } = useField('custom_fields_data')
@@ -310,9 +345,9 @@ const { value: custom_fields_data } = useField('custom_fields_data')
 // Form Submit
 const IS_SUBMITED = ref(false)
 const formSubmit = handleSubmit((values) => {
-  if(IS_SUBMITED.value) return false
+  if (IS_SUBMITED.value) return false
   IS_SUBMITED.value = true
-  values.name = JSON.stringify(values.name); 
+  values.name = JSON.stringify(values.name);
   values.custom_fields_data = JSON.stringify(values.custom_fields_data)
   if (currentId.value > 0) {
     updateRequest({ url: UPDATE_URL, id: currentId.value, body: values, type: 'file' }).then((res) => reset_datatable_close_offcanvas(res))

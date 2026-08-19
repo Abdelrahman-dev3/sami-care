@@ -168,6 +168,7 @@ class OrdersController extends Controller
 
                 $orderItem = new OrderItem;
                 $orderItem->order_id = $order->id;
+                $orderItem->product_id = $cart->product_id;
                 $orderItem->product_variation_id = $cart->product_variation_id;
                 $orderItem->qty = $cart->qty;
                 $orderItem->location_id = $location_id;

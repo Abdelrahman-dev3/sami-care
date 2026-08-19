@@ -27,7 +27,7 @@ class BranchDetailResource extends JsonResource
         return [
             'id' => $this->id,
             'slug' => $this->slug,
-            'name' => $this->name,
+            'name' => $this->getTranslations('name'),
             'address_line_1' => $this->address->address_line_1,
             'latitude' => $this->address->latitude,
             'longitude' => $this->address->longitude,

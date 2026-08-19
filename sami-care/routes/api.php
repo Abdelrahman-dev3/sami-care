@@ -174,7 +174,7 @@ Route::controller(AuthController::class)->group(function () {
 
     Route::post('resend-login-otp', 'resendLoginOtp');
 
-    Route::get('logout', 'logout');
+    Route::get('logout', 'logout')->middleware('auth:sanctum');
 });
 
 
@@ -261,7 +261,7 @@ Route::controller(AuthController::class)->group(function () {
 
     Route::post('resend-login-otp', 'resendLoginOtp');
 
-    Route::get('logout', 'logout');
+    Route::get('logout', 'logout')->middleware('auth:sanctum');
 });
 
 
