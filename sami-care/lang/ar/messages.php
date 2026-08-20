@@ -571,5 +571,6 @@ return [
     'final_price'      => 'السعر النهائي',
     'go_to_cart'       => 'الذهاب إلى السلة',
     'remove'           => 'حذف',
+    'new_notification' => 'إشعار جديد',
 
 ];

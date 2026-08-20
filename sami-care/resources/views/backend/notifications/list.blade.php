@@ -5,7 +5,23 @@
     <div class="dropdown-menu-1 overflow-y-auto list-style-1 mb-0 notification-height">
         @if(isset($notifications) && count($notifications) > 0)
             @foreach($notifications->sortByDesc('created_at')->take(5) as $notification)
-              @if($notification->data['data']['notification_group']=='booking')
+              @if(($notification->data['module'] ?? null) === 'CafeOrder')
+                <div class="dropdown-item-1 float-none p-3 list-unstyled iq-sub-card {{ $notification->read_at ? '' : 'notify-list-bg'}}">
+                    <a href="{{ $notification->data['url_backend'] }}">
+                        <div class="list-item d-flex">
+                            <div class="me-3 mt-1">
+                                <button type="button" class="btn btn-soft-primary btn-icon rounded-pill">
+                                    <i class="{{ $notification->data['icon'] ?? 'fa-solid fa-mug-hot' }}"></i>
+                                </button>
+                            </div>
+                            <div class="list-style-detail">
+                                <h6 class="mb-1">{{ $notification->data['title'] }}</h6>
+                                <p class="text-body mb-0">{{ $notification->data['text'] }}</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+              @elseif($notification->data['data']['notification_group']=='booking')
                 <div class="dropdown-item-1 float-none p-3 list-unstyled iq-sub-card  {{ $notification->read_at ? '':'notify-list-bg'}} ">
                   <a href="{{ route('backend.bookings.index', ['booking_id' => $notification->data['data']['id']]) }}" class="">
                     <h6>{{ $notification->data['subject']}}</h6>

@@ -19,8 +19,8 @@ class HomeController extends Controller
         // 1. Categories (Services)
         $categories = Category::where('status', 1)
             ->whereNull('parent_id')
-            ->with(['services' => function ($query) {
-                $query->where('status', 1);
+            ->with(['media', 'services' => function ($query) {
+                $query->where('status', 1)->with('media');
             }])
             ->orderBy('sort_order')
             ->orderBy('id')
@@ -29,7 +29,7 @@ class HomeController extends Controller
 
         // 2. Offers
         $offers = Package::query()
-            ->with(['branch', 'service.services'])
+            ->with(['media', 'branch.media', 'service.media', 'service.services.media'])
             ->where('status', 1)
             ->offerPackages()
             ->latest('id')
@@ -46,6 +46,7 @@ class HomeController extends Controller
 
         // 4. Packages
         $packages = Package::query()
+            ->with('media')
             ->where('status', 1)
             ->activeBasePackages()
             ->latest('id')
@@ -55,7 +56,7 @@ class HomeController extends Controller
 
 
         // 5. Branches
-        $branches = Branch::with('address.state_data')
+        $branches = Branch::with(['address.state_data', 'media'])
             ->where('status', 1)
             ->whereNull('deleted_by')
             ->take(6)
@@ -137,7 +138,7 @@ class HomeController extends Controller
             'id' => $review->id,
             'rating' => (int) $review->rating,
             'name' => $review->user?->full_name ?: 'عميل سامي',
-            'place' => $branch?->getTranslations('name'),
+            'place' => $branch?->getTranslation('name', app()->getLocale()),
             'text' => $review->review_text,
             'when' => $review->created_at?->diffForHumans(),
         ];

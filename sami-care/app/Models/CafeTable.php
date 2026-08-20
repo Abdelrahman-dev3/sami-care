@@ -45,7 +45,7 @@ class CafeTable extends BaseModel
 
     public function getOrderUrlAttribute()
     {
-        return route('cafe.table', $this->code);
+        return url('/cafe/menu?table='.$this->id);
     }
 
     public function getQrUrlAttribute()

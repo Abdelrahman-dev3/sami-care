@@ -140,7 +140,6 @@
                             <option value="">{{ __('wheel.select_type') }}</option>
                             <option value="points">{{ __('wheel.points') }}</option>
                             <option value="wallet_balance">{{ __('wheel.wallet balance') }}</option>
-                            <option value="discount_rate">{{ __('wheel.Discount Rate') }}</option>
                         </select>
                     </div>
 

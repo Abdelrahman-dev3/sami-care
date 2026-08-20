@@ -206,16 +206,28 @@ class NotificationsController extends Controller
         $user = auth()->user();
         $unread_count = 0;
         $unread_total_count = 0;
+        $latest = null;
 
         if (isset($user->unreadNotifications)) {
             $unread_count = $user->unreadNotifications->where('created_at', '>', $user->last_notification_seen)->count();
             $unread_total_count = $user->unreadNotifications->count();
+
+            $latestNotification = $user->unreadNotifications->sortByDesc('created_at')->first();
+            if ($latestNotification) {
+                $latest = [
+                    'id' => $latestNotification->id,
+                    'title' => $latestNotification->data['title'] ?? $latestNotification->data['subject'] ?? __('messages.new_notification'),
+                    'text' => $latestNotification->data['text'] ?? strip_tags($latestNotification->data['message'] ?? ''),
+                    'url' => $latestNotification->data['url_backend'] ?? null,
+                ];
+            }
         }
 
         return response()->json([
             'status' => true,
             'counts' => $unread_count,
             'unread_total_count' => $unread_total_count,
+            'latest' => $latest,
         ]);
     }
 }

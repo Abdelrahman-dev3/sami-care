@@ -24,6 +24,7 @@ class RegisterResource extends JsonResource
             'api_token' => $this->api_token,
             'avatar' => $this->avatar,
             'login_type' => $this->login_type,
+            'wheel_reward' => $this->wheel_reward ?? null,
         ];
     }
 }

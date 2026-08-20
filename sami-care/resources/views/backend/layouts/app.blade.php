@@ -275,6 +275,53 @@
             }
         }
 
+        // --- تنبيه صوتي + إشعار سطح مكتب لما يوصل إشعار جديد ---
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+
+        function playNotificationChime() {
+            try {
+                const Ctx = window.AudioContext || window.webkitAudioContext;
+                const ctx = new Ctx();
+                const now = ctx.currentTime;
+                [880, 1320].forEach(function(freq, i) {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.value = freq;
+                    const start = now + i * 0.14;
+                    gain.gain.setValueAtTime(0, start);
+                    gain.gain.linearRampToValueAtTime(0.18, start + 0.02);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.3);
+                    osc.connect(gain).connect(ctx.destination);
+                    osc.start(start);
+                    osc.stop(start + 0.32);
+                });
+                setTimeout(function() {
+                    ctx.close();
+                }, 700);
+            } catch (e) {}
+        }
+
+        function showDesktopNotification(title, body, url) {
+            if (!('Notification' in window) || Notification.permission !== 'granted') return;
+
+            const n = new Notification(title || 'إشعار جديد', {
+                body: body || '',
+                icon: "{{ asset('images/samilogo.png') }}",
+                tag: 'sami-care-notification',
+            });
+
+            n.onclick = function() {
+                window.focus();
+                if (url) window.location.href = url;
+                n.close();
+            };
+        }
+
+        let lastKnownUnreadTotal = null;
+
         function getNotificationCounts() {
             var url = "{{ route('notification.counts') }}";
 
@@ -297,11 +344,22 @@
                     } else {
                         $('.notification_list span.dots').addClass('d-none')
                     }
+
+                    if (lastKnownUnreadTotal !== null && res.unread_total_count > lastKnownUnreadTotal) {
+                        playNotificationChime();
+                        showDesktopNotification(
+                            res.latest ? res.latest.title : null,
+                            res.latest ? res.latest.text : null,
+                            res.latest ? res.latest.url : null
+                        );
+                    }
+                    lastKnownUnreadTotal = res.unread_total_count;
                 }
             });
         }
 
         getNotificationCounts();
+        setInterval(getNotificationCounts, 10000);
     </script>
 
     <script>

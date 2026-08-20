@@ -26,6 +26,7 @@ class LoginResource extends JsonResource
             'profile_image' => $this->avatar,
             'login_type' => $this->login_type,
             'profile_image' => $this->media->pluck('original_url')->first(),
+            'wheel_reward' => $this->wheel_reward ?? null,
 
         ];
     }

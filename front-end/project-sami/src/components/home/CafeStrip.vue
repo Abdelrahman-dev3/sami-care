@@ -3,23 +3,29 @@
   شريط صغير لسامي كافي في الصفحة الرئيسية — لمحة عن المكان
   من غير ما ياخد مساحة قسم كامل.
 */
+import { resolveBackendUrl } from '@/utils/assetPath'
+
+const cafeUrl = resolveBackendUrl('/cafe')
 </script>
 
 <template>
   <section data-reveal class="home-section container cafe-strip" aria-label="سامي كافي">
-    <div class="cafe-strip__img">
-      <img src="/images/cafe-interior-clean.webp" alt="سامي كافي داخل الفرع" loading="lazy" />
-    </div>
-    <div class="cafe-strip__copy">
-      <span class="cafe-strip__eyebrow">☕ سامي كافي</span>
-      <h3>لأن التجربة <span>لا تنتهي عند الخدمة</span></h3>
-      <p>استرخِ مع قهوة مختصة قبل جلستك أو بعدها — ركن هادئ داخل الفرع مفتوح لعملائنا.</p>
-      <ul class="cafe-strip__chips">
-        <li>قهوة مختصة</li>
-        <li>ركن هادئ</li>
-        <li>واي فاي مجاني</li>
-      </ul>
-    </div>
+    <a :href="cafeUrl" class="cafe-strip__link">
+      <div class="cafe-strip__img">
+        <img src="/images/cafe-interior-clean.webp" alt="سامي كافي داخل الفرع" loading="lazy" />
+      </div>
+      <div class="cafe-strip__copy">
+        <span class="cafe-strip__eyebrow">☕ سامي كافي</span>
+        <h3>لأن التجربة <span>لا تنتهي عند الخدمة</span></h3>
+        <p>استرخِ مع قهوة مختصة قبل جلستك أو بعدها — ركن هادئ داخل الفرع مفتوح لعملائنا.</p>
+        <ul class="cafe-strip__chips">
+          <li>قهوة مختصة</li>
+          <li>ركن هادئ</li>
+          <li>واي فاي مجاني</li>
+        </ul>
+        <span class="cafe-strip__cta">اطلب من الكافيه الآن ←</span>
+      </div>
+    </a>
   </section>
 </template>
 
@@ -27,7 +33,10 @@
 .cafe-strip{display:grid;grid-template-columns:1.15fr 1fr;align-items:stretch;gap:0;
   overflow:hidden;border-radius:20px;border:1px solid var(--border);
   background:linear-gradient(160deg,#14100b,#080706);color:#fff;
-  box-shadow:0 20px 40px -30px rgba(0,0,0,.7)}
+  box-shadow:0 20px 40px -30px rgba(0,0,0,.7);transition:box-shadow .25s,transform .25s}
+.cafe-strip:hover{box-shadow:0 24px 48px -28px rgba(0,0,0,.8);transform:translateY(-2px)}
+
+.cafe-strip__link{display:contents;color:inherit;text-decoration:none;cursor:pointer}
 
 .cafe-strip__img{position:relative;min-height:190px}
 .cafe-strip__img img{width:100%;height:100%;object-fit:cover;display:block;
@@ -44,6 +53,9 @@
 .cafe-strip__chips{display:flex;flex-wrap:wrap;gap:7px;list-style:none;margin:0;padding:0}
 .cafe-strip__chips li{padding:5px 12px;border-radius:999px;font-size:10.5px;
   border:1px solid rgba(233,207,142,.32);color:var(--gold-light,#f2d28e)}
+
+.cafe-strip__cta{display:inline-flex;align-items:center;gap:6px;margin-top:16px;
+  font-size:12px;font-weight:700;color:var(--gold)}
 
 @media(max-width:760px){
   .cafe-strip{grid-template-columns:1fr}

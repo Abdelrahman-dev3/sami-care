@@ -8,6 +8,7 @@ use App\Http\Resources\LoginResource;
 use App\Http\Resources\RegisterResource;
 use App\Models\User;
 use App\Services\TaqnyatSmsService;
+use App\Services\WheelSpinService;
 use Illuminate\Support\Facades\Validator;
 use Auth;
 use Illuminate\Http\Request;
@@ -144,6 +145,16 @@ class AuthController extends Controller
 
         Cache::forget('login_otp_'.$phone);
         Cache::forget($attemptKey);
+
+        $linkedSpin = app(WheelSpinService::class)->linkIpToUser($user, $request->ip());
+        if ($linkedSpin) {
+            $user->wheel_reward = [
+                'won' => $linkedSpin->won,
+                'type' => $linkedSpin->reward_type,
+                'value' => (float) $linkedSpin->reward_value,
+            ];
+        }
+
         $user['api_token'] = $user->createToken(setting('app_name'))->plainTextToken;
 
         return $this->sendResponse(new LoginResource($user), __('messages.user_login'));
@@ -267,8 +278,18 @@ class AuthController extends Controller
         ]);
     
         $user->assignRole('user');
+
+        $linkedSpin = app(WheelSpinService::class)->linkIpToUser($user, $request->ip());
+        if ($linkedSpin) {
+            $user->wheel_reward = [
+                'won' => $linkedSpin->won,
+                'type' => $linkedSpin->reward_type,
+                'value' => (float) $linkedSpin->reward_value,
+            ];
+        }
+
         $user['api_token'] = $user->createToken(setting('app_name'))->plainTextToken;
-    
+
         return $this->sendResponse(new RegisterResource($user), __('messages.register_successfull'));
     }
 

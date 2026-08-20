@@ -32,6 +32,7 @@ use App\Http\Controllers\Api\BookingsController;
 use App\Http\Controllers\Api\MobileCartController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\WheelController;
+use App\Http\Controllers\Api\CafeController;
 use App\Http\Controllers\Backend\TermsAndConditionsController;
 
 /*
@@ -69,6 +70,12 @@ Route::prefix('Home')->group(function () {
 
 Route::controller(AdController::class)->group(function () {
     Route::get('/ads', 'index');
+});
+
+Route::prefix('cafe')->controller(CafeController::class)->group(function () {
+    Route::get('/menu', 'menu');
+    Route::post('/orders', 'storeOrder');
+    Route::get('/orders/{id}', 'showOrder');
 });
 
 Route::prefix('blogs')->controller(BlogController::class)->group(function () {

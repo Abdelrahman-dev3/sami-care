@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { fetchWheelPrizes } from '@/services/wheelApi'
+import { fetchWheelInfo, spinWheel } from '@/services/wheelApi'
 
 const props = defineProps({
   prizes: {
@@ -10,23 +10,28 @@ const props = defineProps({
 })
 
 const fetchedPrizes = ref([])
+const wheelEnabled = ref(true)
+const canSpin = ref(true)
+const errorMessage = ref('')
 
 onMounted(async () => {
-  if (props.prizes.length) return
   try {
-    fetchedPrizes.value = await fetchWheelPrizes()
+    const info = await fetchWheelInfo()
+    wheelEnabled.value = info.enabled !== false
+    canSpin.value = info.can_spin !== false
+    if (!props.prizes.length) fetchedPrizes.value = info.prizes || []
   } catch (err) {
     console.error('LuckyWheelCard prizes error:', err)
   }
 })
 
 const fallbackSegments = [
-  { lines: ['هدية', 'مجانية'], color: '#171310' },
-  { lines: ['خصم', '20%'], color: '#caa565' },
-  { lines: ['جلسة', 'مجانية'], color: '#171310' },
-  { lines: ['200 نقطة', 'ولاء'], color: '#caa565' },
-  { lines: ['خصم', '15%'], color: '#171310' },
-  { lines: ['خصم', '10%'], color: '#caa565' },
+  { id: null, lines: ['هدية', 'مجانية'], color: '#171310' },
+  { id: null, lines: ['خصم', '20%'], color: '#caa565' },
+  { id: null, lines: ['جلسة', 'مجانية'], color: '#171310' },
+  { id: null, lines: ['200 نقطة', 'ولاء'], color: '#caa565' },
+  { id: null, lines: ['خصم', '15%'], color: '#171310' },
+  { id: null, lines: ['خصم', '10%'], color: '#caa565' },
 ]
 
 const segments = computed(() => {
@@ -36,13 +41,14 @@ const segments = computed(() => {
 
   return source.map((item, index) => {
     const reward = Number(item.reward_value ?? item.value ?? item.amount ?? 0)
-    const label = item.type || item.name || `جائزة ${index + 1}`
+    const label = item.type === 'wallet_balance' ? 'رصيد محفظة' : item.type === 'points' ? 'نقاط ولاء' : (item.type || item.name || `جائزة ${index + 1}`)
     const lines = [
       label,
-      reward > 0 ? `${reward} ${item.unit || 'ريال'}` : 'مكافأة',
+      reward > 0 ? `${reward} ${item.unit || ''}`.trim() : 'مكافأة',
     ]
 
     return {
+      id: item.id ?? null,
       lines: lines.filter(Boolean),
       color: index % 2 === 0 ? '#171310' : '#caa565',
     }
@@ -77,10 +83,36 @@ const rotation = ref(0)
 const spinning = ref(false)
 const result = ref(null)
 
-function spin() {
-  if (spinning.value) return
+const spinDisabled = computed(() => spinning.value || !wheelEnabled.value || !canSpin.value)
+
+async function spin() {
+  if (spinDisabled.value) return
+
   spinning.value = true
   result.value = null
+  errorMessage.value = ''
+
+  let response
+  try {
+    response = await spinWheel()
+  } catch (err) {
+    spinning.value = false
+    errorMessage.value = err.message || 'حدث خطأ، حاول مرة أخرى'
+    return
+  }
+
+  if (response?.already_used) {
+    spinning.value = false
+    canSpin.value = false
+    errorMessage.value = response.message || 'لقد استخدمت عجلة الحظ من قبل'
+    return
+  }
+
+  if (!response?.status) {
+    spinning.value = false
+    errorMessage.value = response?.message || 'حدث خطأ، حاول مرة أخرى'
+    return
+  }
 
   const currentSegments = segments.value
   if (!currentSegments.length) {
@@ -88,7 +120,10 @@ function spin() {
     return
   }
 
-  const idx = Math.floor(Math.random() * currentSegments.length)
+  const wonPrizeId = response.data?.prize?.id ?? null
+  let idx = wonPrizeId !== null ? currentSegments.findIndex(s => s.id === wonPrizeId) : -1
+  if (idx === -1) idx = Math.floor(Math.random() * currentSegments.length)
+
   const targetCenter = idx * segAngle.value + segAngle.value / 2
   const extraTurns = 6
   const currentMod = rotation.value % 360
@@ -96,7 +131,8 @@ function spin() {
 
   setTimeout(() => {
     spinning.value = false
-    result.value = currentSegments[idx].lines.join(' ')
+    canSpin.value = false
+    result.value = response.message
   }, 4200)
 }
 </script>
@@ -139,12 +175,15 @@ function spin() {
       <div class="lucky-wheel-card__content">
         <h3>جرّب حظك<br />واربح مكافآت فورية!</h3>
         <p>خصومات وجوائز متنوعة بانتظارك</p>
-        <button class="lucky-wheel-card__cta" :disabled="spinning" @click="spin">
-          <span>{{ spinning ? 'جاري التدوير...' : 'دوّس العجلة الآن' }}</span>
+        <button class="lucky-wheel-card__cta" :disabled="spinDisabled" @click="spin">
+          <span>{{ spinning ? 'جاري التدوير...' : (!wheelEnabled ? 'العجلة غير متاحة حاليًا' : (!canSpin ? 'لقد استخدمت العجلة من قبل' : 'دوّس العجلة الآن')) }}</span>
           <i>←</i>
         </button>
         <Transition name="fade">
-          <p v-if="result" class="lucky-wheel-card__result">🎉 مبروك! ربحت: <b>{{ result }}</b></p>
+          <p v-if="result" class="lucky-wheel-card__result">🎉 {{ result }}</p>
+        </Transition>
+        <Transition name="fade">
+          <p v-if="errorMessage && !result" class="lucky-wheel-card__error">{{ errorMessage }}</p>
         </Transition>
       </div>
     </div>

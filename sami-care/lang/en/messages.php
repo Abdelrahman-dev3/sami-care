@@ -510,5 +510,6 @@ return [
 
     'alert' => 'Alert',
     'login_required' => 'Please log in to use this feature',
+    'new_notification' => 'New notification',
 
 ];

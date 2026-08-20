@@ -66,4 +66,6 @@ return [
     'status_ready' => 'تم التحضير',
     'status_delivered' => 'تم التوصيل',
     'status_cancelled' => 'ملغي',
+    'new_order_notification_title' => 'طلب جديد من الكافيه',
+    'new_order_notification_text' => 'طلب جديد رقم :number من طاولة :table',
 ];

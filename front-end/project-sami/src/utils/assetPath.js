@@ -17,3 +17,12 @@ export function resolveApiImage(path) {
   if (/^https?:\/\//.test(path)) return path
   return `${apiOrigin}/${String(path).replace(/^\/+/, '')}`
 }
+
+/*
+  روابط زي /cafe بتتقدَّم من تطبيق Laravel نفسه، مش من هذا الـSPA —
+  لازم يبقى رابط مطلق لأصل الباك إند وإلا هيتلقفه راوتر project-sami
+  ويرجّعه للصفحة الرئيسية.
+*/
+export function resolveBackendUrl(path) {
+  return `${apiOrigin}/${String(path).replace(/^\/+/, '')}`
+}

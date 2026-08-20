@@ -608,6 +608,7 @@ return [
     'wheel_not_winner' => 'Unfortunately, you did not win this time. Better luck next time.',
     'wheel_not_available_now' => 'There are no gifts available now.',
     'wheel_try_again_on' => 'You can spin again on :date.',
+    'wheel_already_used' => 'You have already used the lucky wheel before. It can only be spun once.',
     'wheel_spin_error' => 'An error occurred while spinning the wheel. Please try again.',
     'wheel_history_reward' => 'Wheel reward: :points loyalty points',
     'wheel_history_no_reward' => 'Wheel spin without reward',

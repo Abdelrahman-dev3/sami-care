@@ -60,11 +60,11 @@ class WheelController extends Controller
         }
 
         $request->validate([
-            'gift_type' => 'required|string|max:255',
+            'gift_type' => 'required|in:points,wallet_balance',
             'reward_value' => 'required|numeric|min:1',
         ], [
             'gift_type.required' => 'برجاء اختيار نوع الهدية.',
-            'gift_type.string' => 'نوع الهدية يجب أن يكون نصًا.',
+            'gift_type.in' => 'نوع الهدية يجب أن يكون نقاط ولاء أو رصيد محفظة.',
             'reward_value.required' => 'برجاء إدخال قيمة المكافأة.',
             'reward_value.numeric' => 'قيمة المكافأة يجب أن تكون رقمًا.',
             'reward_value.min' => 'قيمة المكافأة يجب ألا تقل عن 1.',

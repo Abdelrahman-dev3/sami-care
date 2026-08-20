@@ -66,4 +66,6 @@ return [
     'status_ready' => 'Ready',
     'status_delivered' => 'Delivered',
     'status_cancelled' => 'Cancelled',
+    'new_order_notification_title' => 'New cafe order',
+    'new_order_notification_text' => 'New order #:number from table :table',
 ];

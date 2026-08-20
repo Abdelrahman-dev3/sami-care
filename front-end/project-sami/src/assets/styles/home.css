@@ -136,6 +136,7 @@
 .lucky-wheel-card__cta:disabled{opacity:.7;cursor:progress}
 .lucky-wheel-card__result{margin:14px 0 0;font-size:13px;color:var(--gold-light)}
 .lucky-wheel-card__result b{color:#fff}
+.lucky-wheel-card__error{margin:14px 0 0;font-size:13px;color:#e08a8a}
 
 @media(max-width:950px){.lucky-wheel-card{flex-direction:column;padding:28px 22px;text-align:center}}
 @media(max-width:560px){.lucky-wheel-card__wheel-wrap{width:165px;height:165px}.lucky-wheel-card__label{font-size:9px}.lucky-wheel-card__content h3{font-size:21px}}

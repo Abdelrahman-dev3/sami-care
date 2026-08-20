@@ -146,10 +146,14 @@ Route::controller(SignController::class)->group(function () {
 
 $dashboardRedirect = fn() => redirect('/app');
 
-Route::get('/cafe', $dashboardRedirect)->name('cafe.index');
-Route::get('/cafe/table/{code}', $dashboardRedirect)->name('cafe.table');
-Route::post('/cafe/table/{code}/orders', $dashboardRedirect)->name('cafe.orders.store');
 Route::get('/sami-care-info', $dashboardRedirect)->name('center.info');
+
+$cafeApp = function () {
+    return response()->file(public_path('cafe-app/index.html'));
+};
+
+Route::get('/cafe', $cafeApp)->name('cafe.index');
+Route::get('/cafe/{any}', $cafeApp)->where('any', '.*');
 
 Route::controller(TaqnyatSmsController::class)->group(function () {
     Route::get('/sms-messages', 'index')->name('app.sms');
