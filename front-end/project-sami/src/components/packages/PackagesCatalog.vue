@@ -3,7 +3,7 @@
   كتالوج الباقات — مُرحَّل حرفيًا من viewPackages() في src/legacy/packages-gifts.html
 */
 import { computed } from 'vue'
-import { FILTERS, BRANCHES } from '@/data/packages'
+import { BRANCHES } from '@/data/packages'
 import { usePackages } from '@/composables/usePackages'
 import SIcon from '@/components/common/SIcon.vue'
 
@@ -59,10 +59,6 @@ const PERKS = [
     <template v-else>
       <span>حدد فرعك أولًا لعرض الأسعار والمواعيد المتاحة بدقة</span><button id="branchGateChange" class="primary" @click="emit('pick-branch')">اختر الفرع</button>
     </template>
-  </div>
-
-  <div class="filters">
-    <button v-for="f in FILTERS" :key="f.id" class="flt" :class="{ on: state.filter === f.id }" :data-f="f.id" @click="state.filter = f.id"><SIcon :inner="f.ic" :size="16" /> {{ f.n }}</button>
   </div>
 
   <div class="pkgs" :style="gridCols">

@@ -246,6 +246,9 @@ export function useStore() {
       const addressId = await ensureAddressId()
       await loadLogisticZone()
 
+      /* الباك إند (OrdersController@store) بيخصم من المحفظة فورًا لو payment_method='wallet' وبيحوّل
+         حالة الدفع paid على طول؛ غير كده (cod) الطلب بيفضل pending لحد الاستلام. */
+      const isWallet = c.pay === 'wallet'
       const result = await apiPlaceOrder({
         shipping_address_id: addressId,
         billing_address_id: addressId,
@@ -253,8 +256,8 @@ export function useStore() {
         location_id: locationId,
         chosen_logistic_zone_id: logisticZone.value?.id,
         shipping_delivery_type: 'standard',
-        payment_method: 'cod',
-        payment_status: 'pending',
+        payment_method: c.pay || 'cod',
+        payment_status: isWallet ? 'paid' : 'pending',
       })
 
       state.order = {

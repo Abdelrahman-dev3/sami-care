@@ -440,7 +440,7 @@ class ReportsController extends Controller
 
     public function order_report_index_data(DataTables $datatable, Request $request)
     {
-        $bookings = Booking::with('booking_service.employee', 'booking_service.service', 'user', 'paidTransaction');
+        $bookings = Booking::with('booking_service.employee', 'booking_service.service', 'user', 'bookingTransaction');
 
 
         $filter = $request->filter;

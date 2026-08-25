@@ -12,6 +12,7 @@ const ContactView = () => import('@/views/ContactView.vue')
 const GiftRecipientView = () => import('@/views/GiftRecipientView.vue')
 const BlogView = () => import('@/views/BlogView.vue')
 const BlogDetailView = () => import('@/views/BlogDetailView.vue')
+const AccountView = () => import('@/views/AccountView.vue')
 
 
 const router = createRouter({
@@ -36,6 +37,7 @@ const router = createRouter({
     { path: '/branches', alias: '/branches.html', name: 'branches', component: BranchesView },
     { path: '/contact', alias: '/contact.html', name: 'contact', component: ContactView },
     { path: '/gift-recipient', alias: '/gift-recipient.html', name: 'gift-recipient', component: GiftRecipientView },
+    { path: '/account', name: 'account', component: AccountView },
     { path: '/:pathMatch(.*)*', redirect: '/' },
     { path: '/blog', alias: '/blog.html', name: 'blog', component: BlogView },
     { path: '/blog/:slug', name: 'blog-detail', component: BlogDetailView },

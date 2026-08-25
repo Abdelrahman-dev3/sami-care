@@ -128,7 +128,13 @@ export function useGifts() {
       }
 
       const created = await createGiftCard(payload)
-      const payment = await initPayment('cod')
+      /* "المحفظة"/"نقاط الولاء" في PAYS مش بوابات دفع حقيقية بالنسبة للباك إند — أعلام إضافية
+         بتتفعّل فوق بوابة أساسية (راجع تعليق initPayment في bookingApi.js). ده اللي كان مفقود
+         وسبب إن المحفظة ما كانتش بتتخصم أبدًا مهما اختار العميل — كان دايمًا بيتبعت 'cod' ثابت. */
+      const wallet = state.pay === 'wallet'
+      const loyalty = state.pay === 'points'
+      const gateway = (wallet || loyalty || !state.pay) ? 'cod' : (state.pay === 'card' || state.pay === 'mada' || state.pay === 'apple' || state.pay === 'stc') ? 'card' : state.pay
+      const payment = await initPayment(gateway, { wallet, loyalty })
 
       state.ref = created?.data?.gift_card_id ? `#GIFT-${created.data.gift_card_id}` : '#GIFT'
       state.claimUrl = created?.data?.claim_url || null

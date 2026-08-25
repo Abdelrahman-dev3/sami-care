@@ -1,9 +1,11 @@
 import { authFetch } from '@/services/apiClient'
+import { useLanguage } from '@/composables/useLanguage'
 
 const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
 
 async function publicGet(path) {
-  const response = await fetch(`${apiBaseUrl}${path}`, { headers: { Accept: 'application/json' } })
+  const { state: langState } = useLanguage()
+  const response = await fetch(`${apiBaseUrl}${path}`, { headers: { Accept: 'application/json', 'frezka-localization': langState.lang } })
   const payload = await response.json()
   if (!response.ok || payload?.status === false) throw new Error(payload?.message || 'حدث خطأ، حاول مرة أخرى')
   return payload.data

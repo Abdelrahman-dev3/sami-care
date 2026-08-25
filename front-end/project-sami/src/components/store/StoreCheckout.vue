@@ -5,13 +5,14 @@
   الأنماط السطرية (inline styles) مُبقاة كما هي عمدًا:
   نقلها إلى ملف الأنماط قد يغيّر أولوية التطبيق (specificity) ويكسر الشكل.
 */
+import { ref } from 'vue'
 import { CK_PAYS } from '@/data/store'
 import { rs, shapeParts } from '@/utils/storeHelpers'
 import { useStore } from '@/composables/useStore'
 import SIcon from '@/components/common/SIcon.vue'
 
 const emit = defineEmits(['back', 'placed'])
-const { state, cartItems, ckParts, ckCan } = useStore()
+const { state, cartItems, ckParts, ckCan, placeOrder } = useStore()
 const c = state.ck
 
 const I = {
@@ -22,14 +23,25 @@ const I = {
 
 const thumb = shape => shapeParts(shape, 34)
 
+/* mada/apple/card لسه مش مفعّلة (زي طرق الدفع في باقي الموقع) — cod والمحفظة بس شغالين فعليًا بالباك إند */
+const ENABLED_PAYS = ['cod', 'wallet']
+
+const error = ref('')
+
 function selectMethod(m) {
-  if (m.id !== 'cod') return
+  if (!ENABLED_PAYS.includes(m.id)) return
   c.pay = m.id
 }
 
-function submit() {
+async function submit() {
   if (!ckCan.value) return
-  emit('placed')
+  error.value = ''
+  try {
+    await placeOrder()
+    emit('placed')
+  } catch (e) {
+    error.value = e.message || 'تعذّر إتمام الطلب، حاول مرة أخرى'
+  }
 }
 </script>
 
@@ -59,16 +71,17 @@ function submit() {
 
       <div class="card" style="padding:22px">
         <h4 style="font-family:var(--font-d);font-size:16px;color:var(--ink);margin-bottom:14px">3️⃣ طريقة الدفع</h4>
-        <div v-for="m in CK_PAYS" :key="m.id" class="acc-pm" :class="{ sel: c.pay === m.id, disabled: m.id !== 'cod' }" :data-ckpay="m.id">
+        <div v-for="m in CK_PAYS" :key="m.id" class="acc-pm" :class="{ sel: c.pay === m.id, disabled: !ENABLED_PAYS.includes(m.id) }" :data-ckpay="m.id">
           <div class="head" @click="selectMethod(m)"><span class="lg">{{ m.logo }}</span>
-            <span class="tt"><b>{{ m.n }}</b><small>{{ m.id === 'cod' ? m.d : 'قريبًا' }}</small></span>
+            <span class="tt"><b>{{ m.n }}</b><small>{{ ENABLED_PAYS.includes(m.id) ? m.d : 'قريبًا' }}</small></span>
             <span class="rad"><i></i></span></div>
         </div>
+        <p v-if="error" style="color:#b42318;font-size:12.5px;margin:12px 0 0">{{ error }}</p>
         <span class="terms-chk" :class="{ on: c.terms }" id="ckTerms" @click="c.terms = !c.terms"><i><SIcon :inner="I.check" :size="11"/></i>
           أوافق على <a href="https://sami-care.sa/TermsAndConditions">الشروط والأحكام وسياسة الاسترجاع</a></span>
         <div class="inline-actions">
           <button class="btn btn-prev" id="backStore2" @click="emit('back')"><SIcon :inner="I.arrowR" :size="15"/> الرجوع للمتجر</button>
-          <button class="btn btn-gold" id="placeOrder" :disabled="!ckCan" @click="submit"><SIcon :inner="I.lock" :size="15"/> إتمام الطلب — {{ rs(ckParts.total) }} ر.س</button>
+          <button class="btn btn-gold" id="placeOrder" :disabled="!ckCan || state.placing" @click="submit"><SIcon :inner="I.lock" :size="15"/> {{ state.placing ? 'جارٍ إتمام الطلب...' : `إتمام الطلب — ${rs(ckParts.total)} ر.س` }}</button>
         </div>
         <div class="after-pay" style="font-size:11.5px;color:var(--mute);text-align:center;margin-top:12px">🔒 جميع عمليات الدفع آمنة ومشفرة</div>
       </div>

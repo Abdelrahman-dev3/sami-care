@@ -1,10 +1,12 @@
 import { useAuth } from '@/composables/useAuth'
+import { useLanguage } from '@/composables/useLanguage'
 
 const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
 
 export async function fetchWheelInfo() {
+  const { state: langState } = useLanguage()
   const response = await fetch(`${apiBaseUrl}/Home/wheel/prizes`, {
-    headers: { Accept: 'application/json' },
+    headers: { Accept: 'application/json', 'frezka-localization': langState.lang },
   })
 
   const payload = await response.json()
@@ -24,11 +26,13 @@ export async function fetchWheelPrizes() {
 
 export async function spinWheel() {
   const { token } = useAuth()
+  const { state: langState } = useLanguage()
 
   const response = await fetch(`${apiBaseUrl}/Home/wheel/spin`, {
     method: 'POST',
     headers: {
       Accept: 'application/json',
+      'frezka-localization': langState.lang,
       ...(token.value ? { Authorization: `Bearer ${token.value}` } : {}),
     },
   })

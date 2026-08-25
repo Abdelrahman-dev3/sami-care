@@ -7,7 +7,7 @@
   --line:rgba(143,113,52,.22); --line-dark:rgba(198,161,91,.22);
   --green:#2E8B57; --green-bright:#3fa46b;
   --ease:cubic-bezier(.33,.9,.35,1); --dur:.26s;
-  --font-d:'Noto Kufi Arabic',serif; --font-b:'Readex Pro',sans-serif;
+  --font-d:'Lama Sans',serif; --font-b:'Lama Sans',sans-serif;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:var(--font-b);background:var(--ink);color:var(--text);-webkit-font-smoothing:antialiased;overflow-x:hidden}

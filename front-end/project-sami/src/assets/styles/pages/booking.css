@@ -8,7 +8,7 @@
   --green:#2E8B57; --green-bg:#EAF5EC;
   --c-hair:#C6963F; --c-skin:#D96A8B; --c-pedi:#B9743B; --c-mass:#8B6FC0; --c-bath:#4E9E6F;
   --ease:cubic-bezier(.33,.9,.35,1); --dur:.26s;
-  --font-d:'Noto Kufi Arabic',serif; --font-b:'Readex Pro',sans-serif;
+  --font-d:'Lama Sans',serif; --font-b:'Lama Sans',sans-serif;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:var(--font-b);background:var(--ink);color:var(--text);-webkit-font-smoothing:antialiased;overflow-x:hidden}

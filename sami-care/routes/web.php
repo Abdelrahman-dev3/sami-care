@@ -16,7 +16,7 @@ use App\Http\Controllers\GiftCardController;
 use App\Http\Controllers\Backend\GiftController;
 use App\Http\Controllers\HomeBookingController;
 use App\Http\Controllers\Backend\InvoiceController;
-use App\Http\Controllers\API\CouponValidationController;
+use App\Http\Controllers\Api\CouponValidationController;
 use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\Backend\LoyaltyController;
 use App\Http\Controllers\FrontendLoyaltyController;

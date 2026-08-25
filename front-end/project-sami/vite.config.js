@@ -4,7 +4,7 @@ import { fileURLToPath, URL } from 'node:url'
 export default defineConfig({ plugins:[vue()], server: {
     proxy: {
         '/api': {
-            target: 'http://127.0.0.1:8000',
+            target: 'https://dashboard.sami-care.sa',
             changeOrigin: true,
             secure: false,
         },

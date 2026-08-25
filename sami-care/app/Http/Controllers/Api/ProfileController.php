@@ -11,6 +11,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Modules\Booking\Models\Booking;
+use Modules\Package\Models\UserPackage;
+use Modules\Product\Models\Order;
 use Modules\Promotion\Models\Coupon;
 use Modules\Wallet\Models\Wallet;
 
@@ -21,7 +23,7 @@ class ProfileController extends Controller
         $user = Auth::user()->loadMissing('affiliate');
 
         $bookingsQuery = Booking::query()
-            ->with(['branch', 'services.employee', 'services.service', 'paidTransaction'])
+            ->with(['branch', 'services.employee', 'services.service', 'bookingTransaction'])
             ->where('created_by', $user->id)
             ->whereHas('services')
             ->whereNull('deleted_by');
@@ -37,6 +39,23 @@ class ProfileController extends Controller
 
         $giftCards = GiftCard::query()
             ->where('user_id', $user->id)
+            ->where('payment_status', 1)
+            ->latest('id')
+            ->get();
+
+        /* UserPackage بتتعمل وقت الإضافة للسلة مش وقت الدفع، فلازم نتأكد إن الحجز المرتبط
+           بيها فعلاً مدفوع (paid) وإلا هنعرض باقات لسه في السلة وكأنها اتشرت فعلاً. */
+        $userPackages = UserPackage::query()
+            ->with('package')
+            ->where('user_id', $user->id)
+            ->whereHas('booking', fn ($q) => $q->paid())
+            ->latest('id')
+            ->get();
+
+        $orders = Order::query()
+            ->with('orderItems.product')
+            ->where('user_id', $user->id)
+            ->where('payment_status', 'paid')
             ->latest('id')
             ->get();
 
@@ -75,6 +94,8 @@ class ProfileController extends Controller
                     'pending_bookings_count' => $currentBookings->count(),
                     'completed_bookings_count' => $completedBookings->count(),
                     'gift_cards_count' => $giftCards->count(),
+                    'packages_count' => $userPackages->count(),
+                    'orders_count' => $orders->count(),
                 ],
                 'payment_methods' => [
                     ['key' => 'visa', 'image_url' => asset('images/icons/visa.png')],
@@ -97,6 +118,26 @@ class ProfileController extends Controller
                 'current_bookings' => $currentBookings->map(fn(Booking $booking) => $this->transformBooking($booking, true))->values(),
                 'completed_bookings' => $completedBookings->map(fn(Booking $booking) => $this->transformBooking($booking, false))->values(),
                 'gift_cards' => $giftCards->map(fn(GiftCard $giftCard) => $this->transformGiftCard($giftCard))->values(),
+                'purchased_packages' => $userPackages->map(fn(UserPackage $userPackage) => [
+                    'id' => $userPackage->id,
+                    'package_id' => $userPackage->package_id,
+                    'name' => $this->localizedValue($userPackage->package?->name),
+                    'image' => $userPackage->package?->feature_image,
+                    'price' => (float) $userPackage->package_price,
+                    'purchase_date' => $this->formatDate($userPackage->purchase_date) ?: $this->formatDate($userPackage->created_at),
+                ])->values(),
+                'purchased_products' => $orders->flatMap(fn(Order $order) => $order->orderItems->map(function ($item) use ($order) {
+                    return [
+                        'order_id' => $order->id,
+                        'product_id' => $item->product_id,
+                        'name' => $this->localizedValue($item->product?->name),
+                        'image' => $item->product?->feature_image,
+                        'qty' => (int) $item->qty,
+                        'unit_price' => (float) $item->unit_price,
+                        'total_price' => (float) $item->total_price,
+                        'purchase_date' => $this->formatDate($order->created_at),
+                    ];
+                }))->values(),
             ],
         ]);
     }

@@ -1,8 +1,11 @@
+import { useLanguage } from '@/composables/useLanguage'
+
 const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
 
 async function request(path) {
+  const { state: langState } = useLanguage()
   const response = await fetch(`${apiBaseUrl}${path}`, {
-    headers: { Accept: 'application/json' },
+    headers: { Accept: 'application/json', 'frezka-localization': langState.lang },
   })
 
   let payload = null

@@ -1,6 +1,6 @@
 <script setup>
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { navigation } from '@/data/home'
 import { useServiceLocation } from '@/composables/useServiceLocation'
 import { useLanguage } from '@/composables/useLanguage'
@@ -8,17 +8,18 @@ import { useStore } from '@/composables/useStore'
 import { useAuth } from '@/composables/useAuth'
 
 const route = useRoute()
+const router = useRouter()
 const emit = defineEmits(['open-cart'])
 const open = ref(false)
 const scrolled = ref(false)
 const { current, openPicker } = useServiceLocation()
 const { state: lang, toggle: toggleLang, t } = useLanguage()
 const { cartQty } = useStore()
-const { user, isAuthenticated, openAuthModal, logout } = useAuth()
+const { user, isAuthenticated, openAuthModal } = useAuth()
 
 function onAccountClick() {
   if (isAuthenticated.value) {
-    if (confirm('تسجيل الخروج؟')) logout()
+    router.push('/account')
   } else {
     openAuthModal()
   }

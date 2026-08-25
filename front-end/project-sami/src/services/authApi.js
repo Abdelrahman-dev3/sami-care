@@ -1,11 +1,15 @@
+import { useLanguage } from '@/composables/useLanguage'
+
 const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
 
 async function request(path, body) {
+  const { state: langState } = useLanguage()
   const response = await fetch(`${apiBaseUrl}${path}`, {
     method: 'POST',
     headers: {
       Accept: 'application/json',
       'Content-Type': 'application/json',
+      'frezka-localization': langState.lang,
     },
     body: JSON.stringify(body),
   })
@@ -31,9 +35,11 @@ export const sendLoginOtp = mobile => request('/login', { mobile })
 export const verifyLoginOtp = (mobile, otp) => request('/verify-login-otp', { mobile, otp })
 
 export async function logout(token) {
+  const { state: langState } = useLanguage()
   await fetch(`${apiBaseUrl}/logout`, {
     headers: {
       Accept: 'application/json',
+      'frezka-localization': langState.lang,
       Authorization: `Bearer ${token}`,
     },
   })

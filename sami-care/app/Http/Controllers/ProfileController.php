@@ -17,7 +17,7 @@ class ProfileController extends Controller
     {
         $user = auth()->user();
 
-        $baseQuery = Booking::with('service.service', 'service.employee', 'paidTransaction')->whereHas('service')->where('created_by', $user->id)->whereNull('deleted_by');
+        $baseQuery = Booking::with('service.service', 'service.employee', 'bookingTransaction')->whereHas('service')->where('created_by', $user->id)->whereNull('deleted_by');
 
         $completedGift = GiftCard::where('user_id', $user->id)->count();
 
@@ -34,7 +34,7 @@ class ProfileController extends Controller
         $points = LoyaltyPoint::where('user_id', $user->id)->value('points') ?? 0;
 
 
-        $bookings = Booking::with('service.service', 'paidTransaction')->where('created_by', $user->id)->whereHas('services')->whereNull('deleted_by')->get();
+        $bookings = Booking::with('service.service', 'bookingTransaction')->where('created_by', $user->id)->whereHas('services')->whereNull('deleted_by')->get();
 
         return view('frontend.profile.index', compact('user', 'balance', 'referralBalance', 'points', 'bookings', 'pending', 'completed', 'coupons', 'completedGift'));
     }
@@ -111,7 +111,7 @@ class ProfileController extends Controller
 
     public function complateBookings()
     {
-        $bookings = Booking::with('service.service', 'service.employee', 'paidTransaction')
+        $bookings = Booking::with('service.service', 'service.employee', 'bookingTransaction')
             ->where('created_by', auth()->user()->id)
             ->whereNull('deleted_by')
             ->paid()

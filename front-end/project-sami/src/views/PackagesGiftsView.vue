@@ -218,7 +218,7 @@ function goHome() { location.href = '/' }
   <div class="wrap">
     <div class="f-grid">
       <div class="f-brand">
-        <a class="logo" href="/"><span class="mark"><img src="/logo.png" alt="عناية سامي" style="width:29px;height:29px;object-fit:contain" /></span><span class="name"><b>عناية سامي</b><span>SAMI CARE</span></span></a>
+        <RouterLink class="logo" to="/"><span class="mark"><img src="/logo.png" alt="عناية سامي" style="width:29px;height:29px;object-fit:contain" /></span><span class="name"><b>عناية سامي</b><span>SAMI CARE</span></span></RouterLink>
         <p>مركز متخصص في العناية الرجالية المتكاملة بجدة، حيث تلتقي الفخامة بالاحترافية في كل تفصيلة.</p>
         <div class="socials">
           <a href="https://x.com/samicare_sa" aria-label="X"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-6.8 7.8L23.3 22h-6.3l-4.9-6.4L6.5 22H3.4l7.3-8.3L1 2h6.5l4.4 5.8L18.9 2zm-1.1 18h1.7L7.1 3.9H5.3L17.8 20z"/></svg></a>
@@ -229,20 +229,19 @@ function goHome() { location.href = '/' }
       <div>
         <h4>روابط مهمة</h4>
         <ul class="f-links">
-          <li><a href="/">الرئيسية</a></li>
-          <li><a href="/booking">حجز موعد</a></li>
-          <li><a href="/#services">خدماتنا</a></li>
-          <li><a href="/packages-gifts">الباقات</a></li>
-          <li><a href="/gifts">الهدايا</a></li>
+          <li><RouterLink to="/">الرئيسية</RouterLink></li>
+          <li><RouterLink to="/booking">حجز موعد</RouterLink></li>
+          <li><RouterLink to="/#services">خدماتنا</RouterLink></li>
+          <li><RouterLink to="/packages-gifts">الباقات</RouterLink></li>
+          <li><RouterLink to="/gifts">الهدايا</RouterLink></li>
         </ul>
       </div>
       <div>
         <h4>استكشف</h4>
         <ul class="f-links">
-          <li><a href="/store">المتجر</a></li>
-          <li><a href="/branches">فروعنا</a></li>
-          <li><a href="/contact">تواصل معنا</a></li>
-          <li></li>
+          <li><RouterLink to="/store">المتجر</RouterLink></li>
+          <li><RouterLink to="/branches">فروعنا</RouterLink></li>
+          <li><RouterLink to="/contact">تواصل معنا</RouterLink></li>
           <li><a href="https://sami-care.sa/TermsAndConditions">الشروط والأحكام</a></li>
         </ul>
       </div>

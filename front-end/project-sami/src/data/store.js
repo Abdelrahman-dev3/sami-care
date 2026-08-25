@@ -41,6 +41,7 @@ export const CK_PAYS = [
  {id:'mada',n:'مدى',d:'ادفع باستخدام بطاقات مدى',logo:'مدى mada',form:true},
  {id:'apple',n:'Apple Pay',d:'دفع سريع وآمن عبر أجهزتك',logo:' Pay',form:false},
  {id:'card',n:'فيزا / ماستركارد',d:'بطاقات ائتمانية أو مسبقة الدفع',logo:'VISA ●●',form:true},
+ {id:'wallet',n:'المحفظة',d:'ادفع من رصيدك في سامي',logo:'👛',form:false},
  {id:'cod',n:'الدفع عند الاستلام',d:'ادفع عند استلام طلبك',logo:'💵',form:false},
 ]
 

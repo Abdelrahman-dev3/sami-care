@@ -36,15 +36,15 @@ function branchName(branch) {
         <h3>عن سامي</h3>
         <RouterLink to="/">الرئيسية</RouterLink><RouterLink to="/services">خدماتنا</RouterLink>
         <RouterLink to="/store">المنتجات</RouterLink><RouterLink to="/packages-gifts">الباقات</RouterLink>
-        <a href="/blog">المدونة</a><a href="/#about">عن سامي</a>
+        <RouterLink to="/blog">المدونة</RouterLink><RouterLink to="/#about">عن سامي</RouterLink>
       </div>
       <div class="footer-brand">
         <RouterLink to="/"><img src="/logo.png" alt="عناية سامي" /></RouterLink>
       </div>
       <div class="footer-help">
         <h3>مساعدة</h3>
-        <RouterLink to="/contact">تواصل معنا</RouterLink><a href="#">الشكاوى والاقتراحات</a>
-        <a href="#">سياسة الخصوصية</a><a href="#">الشروط والأحكام</a>
+        <RouterLink to="/contact">تواصل معنا</RouterLink><RouterLink to="/contact">الشكاوى والاقتراحات</RouterLink>
+        <a href="https://sami-care.sa/TermsAndConditions">الشروط والأحكام وسياسة الخصوصية</a>
       </div>
             <div class="footer-branches">
         <h3>عناوين الفروع</h3>

@@ -1,5 +1,6 @@
 import { ref, computed } from 'vue'
 import { useLanguage } from '@/composables/useLanguage'
+import { resolveBackendUrl } from '@/utils/assetPath'
 
 /*
   مكان تنفيذ الخدمة — حالة مشتركة بين صفحات Vue والصفحات القديمة.
@@ -54,7 +55,7 @@ async function loadServiceLocations() {
   locationsError.value = null
 
   try {
-    const response = await fetch('/api/branches', {
+    const response = await fetch(resolveBackendUrl('/api/branches'), {
       method: 'GET',
       headers: {
         'Accept': 'application/json',

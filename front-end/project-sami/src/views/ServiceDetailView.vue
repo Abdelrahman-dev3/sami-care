@@ -6,6 +6,7 @@ import LocationNotice from '@/components/common/LocationNotice.vue'
 import SIcon from '@/components/common/SIcon.vue'
 import { useServiceLocation } from '@/composables/useServiceLocation'
 import { useLanguage } from '@/composables/useLanguage'
+import { useBooking } from '@/composables/useBooking'
 import { getCategories } from '@/data/home'
 import { resolveApiImage } from '@/utils/assetPath'
 import { localizeField } from '@/utils/i18nField'
@@ -16,10 +17,29 @@ const id = computed(() => Number(route.params.id))
 
 const { requireLocation } = useServiceLocation()
 const { state: lang } = useLanguage()
+const { state: bookingState, toggleSvc, reset: resetBooking } = useBooking()
 const pick = t => localizeField(t, lang.lang)
 
-const goBooking = () => {
-  requireLocation(() => router.push('/booking'))
+/* الضغط على "احجز الآن" لخدمة محددة لازم يوصلها محددة على طول في صفحة الحجز،
+   مش يرجع المستخدم لشاشة اختيار الخدمات من الصفر (كان بيتجاهل أي خدمة اتحددت هنا). */
+const goBooking = (service = null) => {
+  requireLocation(() => {
+    resetBooking()
+    if (service) {
+      toggleSvc({
+        id: service.id,
+        categoryId: category.value.id,
+        categoryName: categoryName.value,
+        name: service.name,
+        dur: service.dur,
+        price: service.price,
+      })
+      bookingState.step = 1
+    } else {
+      bookingState.activeCat = category.value.id
+    }
+    router.push('/booking')
+  })
 }
 
 /*
@@ -129,7 +149,7 @@ watch(id, loadCategories)
             <p v-if="tagline" class="sd-hero__lead">{{ tagline }}</p>
 
             <div class="sd-hero__cta">
-              <a href="#" class="sd-btn sd-btn--gold" @click.prevent="goBooking">
+              <a href="#" class="sd-btn sd-btn--gold" @click.prevent="goBooking()">
                 احجز الآن <i>←</i>
               </a>
             </div>
@@ -158,7 +178,7 @@ watch(id, loadCategories)
                   {{ s.dur }} دقيقة
                 </p>
                 <p class="sd-var__price">يبدأ من {{ s.price }} ر.س</p>
-                <a href="#" class="sd-var__btn" @click.prevent="goBooking">
+                <a href="#" class="sd-var__btn" @click.prevent="goBooking(s)">
                   احجز الآن <i>←</i>
                 </a>
               </div>

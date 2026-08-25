@@ -23,7 +23,7 @@ class MobileCartController extends Controller
         $userId = $request->user()->id;
         app(CartExpirationService::class)->clearExpired($userId);
 
-        $bookings = Booking::with(['service.service', 'service.employee', 'services', 'paidTransaction'])
+        $bookings = Booking::with(['service.service', 'service.employee', 'services', 'bookingTransaction'])
             ->where('created_by', $userId)
             ->whereNotIn('status', ['cancelled', 'completed'])
             ->where('payment_type', 'cart')

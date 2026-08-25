@@ -13,13 +13,13 @@ use App\Http\Controllers\Backend\ContactMessageController;
 use App\Http\Controllers\GiftCardController;
 use App\Http\Controllers\HomeBookingController;
 use App\Http\Controllers\BookingCartController;
-use App\Http\Controllers\API\CouponValidationController;
-use App\Http\Controllers\API\SystemUtilityController;
+use App\Http\Controllers\Api\CouponValidationController;
+use App\Http\Controllers\Api\SystemUtilityController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PackageDetailsController;
 use App\Http\Controllers\Backend\UserController;
 use Modules\Service\Http\Controllers\Backend\API\ServiceController;
-use App\Http\Controllers\API\PaymentController;
+use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\AdController;
 use App\Http\Controllers\Api\BlogController;
 use App\Http\Controllers\Api\CategoriesController;
@@ -100,8 +100,6 @@ Route::controller(LoyaltyController::class)->group(function () {
 });
 
 Route::controller(CouponController::class)->group(function () {
-    Route::get('/validate-coupon', 'validateCoupon');
-    Route::get('/validate-invoice-coupon', 'validateInvoiceCoupon');
     Route::get('/available-coupons', 'availableCoupons');
 });
 
