@@ -55,6 +55,7 @@ const state = reactive({
   done: false,
   bookRef: null,
   bookingIds: [],
+  walletBalance: null,   // يتحمّل فى PayStep.vue من /profile — لازم يكون معروف قبل السماح باختيار "المحفظة"
 })
 
 export function useBooking() {
@@ -101,7 +102,9 @@ export function useBooking() {
       case 3:
         return !!(state.cust.name.trim() && state.cust.phone.trim())
       case 4:
-        return !!state.pay
+        /* لو اختار "المحفظة" لازم الرصيد يغطي القيمة كاملة — مفيش دعم لدفع جزء من المحفظة
+           وباقي المبلغ ببوابة تانية فى الواجهة الحالية (راجع نفس الملاحظة فى useGifts.js). */
+        return !!state.pay && (state.pay !== 'wallet' || (state.walletBalance ?? 0) >= priceParts.value.total)
     }
     return false
   })

@@ -91,7 +91,10 @@ async function doPay() {
       mobileNo: state.cust.phone,
     })
 
-    const payment = await initPayment(state.pay)
+    /* gateway:'cod' فى الباك إند بيتجاهل علم wallet وبيخصم عربون نسبي ثابت مش القيمة الكاملة —
+       راجع نفس الملاحظة فى useGifts.js. أي بوابة غير cod بتاخد المسار الصح لخصم الرصيد كامل. */
+    const isWallet = state.pay === 'wallet'
+    const payment = await initPayment(isWallet ? 'card' : state.pay, { wallet: isWallet })
     state.bookRef = payment.invoice_id || null
     state.done = true
     scrollTo({ top: 0, behavior: 'smooth' })
@@ -153,7 +156,8 @@ function goHome() { reset(); location.href = '/' }
           <li><RouterLink to="/store">المتجر</RouterLink></li>
           <li><RouterLink to="/branches">فروعنا</RouterLink></li>
           <li><RouterLink to="/contact">تواصل معنا</RouterLink></li>
-          <li><a href="https://sami-care.sa/TermsAndConditions">الشروط والأحكام</a></li>
+          <li><RouterLink to="/terms">الشروط والأحكام</RouterLink></li>
+          <li><RouterLink to="/privacy-policy">سياسة الخصوصية</RouterLink></li>
         </ul>
       </div>
       <div>

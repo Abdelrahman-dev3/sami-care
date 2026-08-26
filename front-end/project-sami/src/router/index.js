@@ -13,6 +13,8 @@ const GiftRecipientView = () => import('@/views/GiftRecipientView.vue')
 const BlogView = () => import('@/views/BlogView.vue')
 const BlogDetailView = () => import('@/views/BlogDetailView.vue')
 const AccountView = () => import('@/views/AccountView.vue')
+const TermsView = () => import('@/views/TermsView.vue')
+const PrivacyPolicyView = () => import('@/views/PrivacyPolicyView.vue')
 
 
 const router = createRouter({
@@ -38,6 +40,8 @@ const router = createRouter({
     { path: '/contact', alias: '/contact.html', name: 'contact', component: ContactView },
     { path: '/gift-recipient', alias: '/gift-recipient.html', name: 'gift-recipient', component: GiftRecipientView },
     { path: '/account', name: 'account', component: AccountView },
+    { path: '/terms', alias: '/TermsAndConditions', name: 'terms', component: TermsView },
+    { path: '/privacy-policy', name: 'privacy-policy', component: PrivacyPolicyView },
     { path: '/:pathMatch(.*)*', redirect: '/' },
     { path: '/blog', alias: '/blog.html', name: 'blog', component: BlogView },
     { path: '/blog/:slug', name: 'blog-detail', component: BlogDetailView },

@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import BaseButton from '@/components/common/BaseButton.vue'
+import SectionTitle from '@/components/common/SectionTitle.vue'
 import { useServiceLocation } from '@/composables/useServiceLocation'
 
 const props = defineProps({
@@ -55,6 +56,7 @@ function goHomeService() {
 
 <template>
   <section data-reveal class="home-section container promo-section" aria-label="إعلانات وعروض">
+    <SectionTitle v-if="offers && offers.length" title="العروض الحالية" />
     <article v-for="promo in promoCards" :key="promo.id" class="promo-card"
              :class="{ 'promo-card--home': promo.type === 'home' }">
       <div class="promo-card__badge" aria-hidden="true">

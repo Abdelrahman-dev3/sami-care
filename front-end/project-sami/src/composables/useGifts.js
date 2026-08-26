@@ -36,6 +36,7 @@ const state = reactive({
   done: false,
   ref: null,
   claimUrl: null,
+  walletBalance: null,   // يتحمّل فى GiftPayStep.vue من /profile — لازم يكون معروف قبل السماح باختيار "المحفظة"
 })
 
 export function useGifts() {
@@ -80,7 +81,9 @@ export function useGifts() {
       case 0: return !!state.gtype
       case 1: return state.gtype === 'svc' ? state.svcs.length > 0 : !!state.pkg
       case 2: return state.name.trim().length > 1 && state.phone.trim().length >= 9
-      case 3: return !!state.pay && state.terms
+      /* لو اختار "المحفظة" لازم الرصيد يغطي القيمة كاملة — مفيش دعم لدفع جزء من المحفظة وباقي
+         المبلغ ببوابة تانية فى الواجهة الحالية (راجع تعليق placeGift). */
+      case 3: return !!state.pay && state.terms && (state.pay !== 'wallet' || (state.walletBalance ?? 0) >= priceParts.value.total)
     }
     return false
   })
@@ -128,13 +131,14 @@ export function useGifts() {
       }
 
       const created = await createGiftCard(payload)
-      /* "المحفظة"/"نقاط الولاء" في PAYS مش بوابات دفع حقيقية بالنسبة للباك إند — أعلام إضافية
-         بتتفعّل فوق بوابة أساسية (راجع تعليق initPayment في bookingApi.js). ده اللي كان مفقود
-         وسبب إن المحفظة ما كانتش بتتخصم أبدًا مهما اختار العميل — كان دايمًا بيتبعت 'cod' ثابت. */
+      /* مهم جدًا: gateway:'cod' فى الباك إند (PaymentOrchestratorService::handleCod) بيتجاهل
+         علم wallet تمامًا وبيخصم نسبة عربون ثابتة (cod_deposit_percent، افتراضيًا 30%) مش القيمة
+         الكاملة — ده كان سبب خصم قيمة غلط لما اليوزر يختار "المحفظة". المسار الصحيح لخصم المبلغ
+         الكامل من المحفظة هو أي gateway غير cod (بيدخل PaymentSubMethodsService اللي بيخصم
+         القيمة الحقيقية كاملة)؛ القيمة الحرفية للبوابة مش مهمة هنا لأنها بترجع 'sub_methods' طالما
+         الرصيد كافي (canNext بيتأكد من كده قبل ما نوصل هنا) فمفيش استدعاء حقيقي لأي بوابة دفع. */
       const wallet = state.pay === 'wallet'
-      const loyalty = state.pay === 'points'
-      const gateway = (wallet || loyalty || !state.pay) ? 'cod' : (state.pay === 'card' || state.pay === 'mada' || state.pay === 'apple' || state.pay === 'stc') ? 'card' : state.pay
-      const payment = await initPayment(gateway, { wallet, loyalty })
+      const payment = await initPayment(wallet ? 'card' : 'cod', { wallet })
 
       state.ref = created?.data?.gift_card_id ? `#GIFT-${created.data.gift_card_id}` : '#GIFT'
       state.claimUrl = created?.data?.claim_url || null

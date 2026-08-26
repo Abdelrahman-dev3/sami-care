@@ -1,0 +1,15 @@
+# SPA history-mode fallback — بدون الملف ده أي دخول مباشر لأي رابط غير الرئيسية
+# (تحديث الصفحة، رابط منسوخ، نتيجة بحث، أو أي <a href> عادي) بيدّي 404 من الأباتشي
+# لأنه بيدور على ملف/فولدر حقيقي بنفس المسار مش موجود فعليًا على السيرفر.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # الملفات والفولدرات الحقيقية (assets، الصور، إلخ) تتقدّم زي ما هي
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # أي حاجة تانية ترجع لـ index.html عشان Vue Router يتولى التوجيه من المتصفح
+  RewriteRule . /index.html [L]
+</IfModule>

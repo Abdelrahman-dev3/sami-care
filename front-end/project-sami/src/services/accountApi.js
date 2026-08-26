@@ -28,6 +28,12 @@ export async function sendSupportMessage(message) {
   return authFetch('/contact', { method: 'POST', body: { message } })
 }
 
+/* /contact محمي بـ auth:sanctum وبيطلب name/email كحقول إجبارية (مش بس message) —
+   نفس الـ endpoint اللي بتستخدمه sendSupportMessage لكن بكل الحقول اللي فورمة "تواصل معنا" بتجمعها. */
+export async function sendContactMessage({ name, email, phone, message }) {
+  return authFetch('/contact', { method: 'POST', body: { name, email, phone, message } })
+}
+
 export async function deleteAccount() {
   return authFetch('/delete-account', { method: 'POST' })
 }

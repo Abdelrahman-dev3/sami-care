@@ -194,7 +194,8 @@ const WHY = [
           <li><RouterLink to="/store">المتجر</RouterLink></li>
           <li><RouterLink to="/branches">فروعنا</RouterLink></li>
           <li><RouterLink to="/contact">تواصل معنا</RouterLink></li>
-          <li><a href="https://sami-care.sa/TermsAndConditions">الشروط والأحكام</a></li>
+          <li><RouterLink to="/terms">الشروط والأحكام</RouterLink></li>
+          <li><RouterLink to="/privacy-policy">سياسة الخصوصية</RouterLink></li>
         </ul>
       </div>
          <div>

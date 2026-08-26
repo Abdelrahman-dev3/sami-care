@@ -44,7 +44,7 @@ function branchName(branch) {
       <div class="footer-help">
         <h3>مساعدة</h3>
         <RouterLink to="/contact">تواصل معنا</RouterLink><RouterLink to="/contact">الشكاوى والاقتراحات</RouterLink>
-        <a href="https://sami-care.sa/TermsAndConditions">الشروط والأحكام وسياسة الخصوصية</a>
+        <RouterLink to="/terms">الشروط والأحكام</RouterLink><RouterLink to="/privacy-policy">سياسة الخصوصية</RouterLink>
       </div>
             <div class="footer-branches">
         <h3>عناوين الفروع</h3>

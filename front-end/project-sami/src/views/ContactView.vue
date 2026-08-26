@@ -8,14 +8,49 @@ import { ref } from 'vue'
 import { usePageStyles } from '@/composables/usePageStyles'
 import { useInternalLinks } from '@/composables/useInternalLinks'
 import { useServiceLocation } from '@/composables/useServiceLocation'
+import { useAuth } from '@/composables/useAuth'
+import { sendContactMessage } from '@/services/accountApi'
 import pageCss from '@/assets/styles/pages/contact.css?raw'
 
 const root = ref(null)
 const { current, openPicker, locations: branches, loadServiceLocations } = useServiceLocation()
 loadServiceLocations()
+const { requireAuth } = useAuth()
 
 usePageStyles(pageCss, 'contact')
 useInternalLinks(root)
+
+const sending = ref(false)
+
+function submitContact() {
+  const name = document.getElementById('cName')?.value.trim() || ''
+  const phone = document.getElementById('cPhone')?.value.trim() || ''
+  const email = document.getElementById('cMail')?.value.trim() || ''
+  const message = document.getElementById('cMsg')?.value.trim() || ''
+
+  if (!name || !phone || !email || !message) {
+    alert('من فضلك أكمل كل الحقول المطلوبة (الاسم، الهاتف، البريد الإلكتروني، الرسالة)')
+    return
+  }
+
+  requireAuth(async () => {
+    sending.value = true
+    try {
+      await sendContactMessage({ name, email, phone, message })
+      const toast = document.getElementById('toast')
+      toast?.classList.add('on')
+      setTimeout(() => toast?.classList.remove('on'), 2600)
+      document.getElementById('cName').value = ''
+      document.getElementById('cPhone').value = ''
+      document.getElementById('cMail').value = ''
+      document.getElementById('cMsg').value = ''
+    } catch (e) {
+      alert(e.message || 'تعذّر إرسال رسالتك، حاول مرة أخرى')
+    } finally {
+      sending.value = false
+    }
+  })
+}
 
 </script>
 
@@ -45,7 +80,7 @@ useInternalLinks(root)
             <textarea id="cMsg" placeholder="اكتب استفسارك أو رسالتك هنا..."></textarea>
           </div>
         </div>
-        <button class="btn btn-gold" id="sendBtn" style="margin-top: 15px;">إرسال الرسالة</button>
+        <button class="btn btn-gold" id="sendBtn" style="margin-top: 15px;" :disabled="sending" @click="submitContact">{{ sending ? 'جارٍ الإرسال...' : 'إرسال الرسالة' }}</button>
       </div>
 
       <!-- معلومات التواصل اليمينية -->
@@ -147,7 +182,8 @@ useInternalLinks(root)
           <li><RouterLink to="/store">المتجر</RouterLink></li>
           <li><RouterLink to="/branches">فروعنا</RouterLink></li>
           <li><RouterLink to="/contact">تواصل معنا</RouterLink></li>
-          <li><a href="https://sami-care.sa/TermsAndConditions">الشروط والأحكام</a></li>
+          <li><RouterLink to="/terms">الشروط والأحكام</RouterLink></li>
+          <li><RouterLink to="/privacy-policy">سياسة الخصوصية</RouterLink></li>
         </ul>
       </div>
             <div>

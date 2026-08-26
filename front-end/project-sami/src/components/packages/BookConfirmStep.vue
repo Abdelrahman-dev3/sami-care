@@ -48,6 +48,6 @@ const TERMS_LINK = 'color:var(--gold-deep);font-weight:600;text-decoration:under
     <div class="fld" style="margin:0"><label>📝 ملاحظات (اختياري)</label>
       <textarea id="bkNotes" placeholder="أضف أي ملاحظة..." v-model="B.notes"></textarea></div>
     <div :style="TERMS_BOX">
-      🛡️ بالتأكيد على الحجز، فإنك توافق على <a href="https://sami-care.sa/TermsAndConditions" :style="TERMS_LINK">الشروط والأحكام</a></div>
+      🛡️ بالتأكيد على الحجز، فإنك توافق على <RouterLink to="/terms" :style="TERMS_LINK">الشروط والأحكام</RouterLink></div>
   </div>
 </template>

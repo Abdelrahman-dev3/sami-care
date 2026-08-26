@@ -78,7 +78,7 @@ async function submit() {
         </div>
         <p v-if="error" style="color:#b42318;font-size:12.5px;margin:12px 0 0">{{ error }}</p>
         <span class="terms-chk" :class="{ on: c.terms }" id="ckTerms" @click="c.terms = !c.terms"><i><SIcon :inner="I.check" :size="11"/></i>
-          أوافق على <a href="https://sami-care.sa/TermsAndConditions">الشروط والأحكام وسياسة الاسترجاع</a></span>
+          أوافق على <RouterLink to="/terms" @click.stop>الشروط والأحكام وسياسة الاسترجاع</RouterLink></span>
         <div class="inline-actions">
           <button class="btn btn-prev" id="backStore2" @click="emit('back')"><SIcon :inner="I.arrowR" :size="15"/> الرجوع للمتجر</button>
           <button class="btn btn-gold" id="placeOrder" :disabled="!ckCan || state.placing" @click="submit"><SIcon :inner="I.lock" :size="15"/> {{ state.placing ? 'جارٍ إتمام الطلب...' : `إتمام الطلب — ${rs(ckParts.total)} ر.س` }}</button>

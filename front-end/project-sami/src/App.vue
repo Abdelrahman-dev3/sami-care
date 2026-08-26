@@ -15,13 +15,13 @@ const navigating = ref(false)
 const cartDrawerOpen = ref(false)
 const { state: storeState } = useStore()
 const isMobile = ref(media.matches)
-const viewByRoute = { home:'home', services:'services', 'service-detail':'services', booking:'booking', store:'store', gifts:'gifts', 'packages-gifts':'packages', branches:'branches', contact:'account', 'gift-recipient':'gifts' }
+const viewByRoute = { home:'home', services:'services', 'service-detail':'services', booking:'booking', store:'store', gifts:'gifts', 'packages-gifts':'packages', branches:'branches', contact:'account', 'gift-recipient':'gifts', terms:'terms', 'privacy-policy':'privacy' }
 /*
   مهم: أي تعديل على public/mobile/index.html لازم يتبعه تغيير الرقم ده،
   لأنه هو اللي بيكسر كاش المتصفح للإطار. من غيره المتصفح بيفضل يعرض
   النسخة القديمة مهما اتغيّر الملف.
 */
-const mobileVersion = '20260804-booking-no-stage-shake-v36'
+const mobileVersion = '20260826-i18n-static-v41'
 const initialMobileView = viewByRoute[route.name] || 'home'
 const mobileSrc = `/mobile/index.html?view=${initialMobileView}&v=${mobileVersion}`
 const syncMedia = event => { isMobile.value = event.matches }

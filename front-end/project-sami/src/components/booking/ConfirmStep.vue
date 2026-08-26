@@ -60,6 +60,6 @@ const dateLabel = computed(() => (state.date ? fmtDate(state.date) : ''))
       <small style="font-size:11.5px;color:var(--mute);display:block;margin-bottom:7px">📝 ملاحظات إضافية (اختياري)</small>
       <textarea placeholder="اكتب أي ملاحظة أو طلب خاص بالجلسة..." v-model="state.notes"></textarea>
     </div>
-    <div class="terms">🛡️ بالتأكيد على الحجز، فإنك توافق على <a href="https://sami-care.sa/TermsAndConditions">الشروط والأحكام</a> و<a href="https://sami-care.sa/TermsAndConditions">سياسة الخصوصية</a></div>
+    <div class="terms">🛡️ بالتأكيد على الحجز، فإنك توافق على <RouterLink to="/terms">الشروط والأحكام</RouterLink> و<RouterLink to="/privacy-policy">سياسة الخصوصية</RouterLink></div>
   </div>
 </template>

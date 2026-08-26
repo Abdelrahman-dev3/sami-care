@@ -3,16 +3,34 @@
   الدفع — مُرحَّل حرفيًا من view4() في src/legacy/gifts.html
   يشمل: وسائل الدفع الأساسية · الخيارات الإضافية القابلة للطي · كود الخصم · الشروط
 */
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { PAY_MAIN, PAY_FLEX, PAY_BAL } from '@/data/gifts'
 import { useGifts } from '@/composables/useGifts'
+import { fetchProfile } from '@/services/accountApi'
 import SIcon from '@/components/common/SIcon.vue'
 import PayMethod from './PayMethod.vue'
 
-const { state, canNext } = useGifts()
+const { state, canNext, priceParts } = useGifts()
 const emit = defineEmits(['nav', 'pay'])
 
 const collapsed = computed(() => state.pay === 'apple' && state.extraCollapsed)
+
+onMounted(async () => {
+  try {
+    const res = await fetchProfile()
+    state.walletBalance = res?.data?.balances?.wallet ?? 0
+  } catch { /* يفضل النص الثابت لو فشل التحميل */ }
+})
+
+const payBal = computed(() => PAY_BAL.map(m =>
+  m.id === 'wallet' && state.walletBalance !== null
+    ? { ...m, d: `الرصيد الحالي ${state.walletBalance} ر.س` }
+    : m
+))
+
+const walletInsufficient = computed(() =>
+  state.pay === 'wallet' && state.walletBalance !== null && state.walletBalance < priceParts.value.total
+)
 
 const I = {
   card:  '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>',
@@ -40,11 +58,12 @@ const I = {
       </div>
       <div class="pay-group" style="margin-bottom:4px">
         <b><span class="gi"><SIcon :inner="I.wallet" :size="14" /></span> المحفظة والولاء</b>
-        <PayMethod v-for="m in PAY_BAL" :key="m.id" :m="m" />
+        <PayMethod v-for="m in payBal" :key="m.id" :m="m" />
+        <p v-if="walletInsufficient" style="color:#b42318;font-size:12px;margin-top:8px">رصيد محفظتك لا يكفي لدفع القيمة كاملة، اختر وسيلة دفع أخرى.</p>
       </div>
     </div>
     <span class="terms-chk" :class="{ on: state.terms }" id="termsChk" @click="state.terms = !state.terms"><i><SIcon :inner="I.check" :size="11" /></i>
-      أوافق على <a href="https://sami-care.sa/TermsAndConditions">الشروط والأحكام وسياسة الخصوصية</a></span>
+      أوافق على <RouterLink to="/terms" @click.stop>الشروط والأحكام</RouterLink> و<RouterLink to="/privacy-policy" @click.stop>سياسة الخصوصية</RouterLink></span>
     <div class="inline-actions">
       <button class="btn btn-prev" data-nav="back" @click="emit('nav', -1)"><SIcon :inner="I.prev" :size="15" /> الرجوع</button>
       <button class="btn btn-gold" id="doPay" :disabled="!canNext" @click="emit('pay')"><SIcon :inner="I.lock" :size="15" /> إتمام الإهداء</button>

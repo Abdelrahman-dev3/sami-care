@@ -101,9 +101,28 @@ class Service extends BaseModel
 
     protected function getFeatureImageAttribute()
     {
-        $media = $this->getFirstMediaUrl('feature_image');
+        /*$media = $this->getFirstMediaUrl('feature_image');
 
-        return isset($media) && ! empty($media) ? $media : default_feature_image();
+        return isset($media) && ! empty($media) ? $media : default_feature_image();*/
+        
+            $media = $this->getFirstMedia('feature_image');
+
+    // لو الـ Media موجودة والملف فعلاً موجود
+    if ($media && $media->exists()) {
+        $path = $media->getPath();
+
+        if (file_exists($path)) {
+            return $media->getUrl();
+        }
+    }
+
+    // لو الملف غير موجود → استخدم صورة الـ Category
+    if ($this->category) {
+        return $this->category->feature_image;
+    }
+
+    return default_feature_image();
+
     }
 
     public function scopeActive($query)

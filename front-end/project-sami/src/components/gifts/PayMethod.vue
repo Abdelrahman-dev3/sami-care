@@ -11,17 +11,19 @@ const props = defineProps({
 
 const { state } = useGifts()
 
+const ENABLED_PAYS = ['cash', 'wallet']
+
 function select() {
-  if (props.m.id !== 'cash') return
+  if (!ENABLED_PAYS.includes(props.m.id)) return
   state.pay = props.m.id
 }
 </script>
 
 <template>
-  <div class="acc-pm" :class="{ sel: state.pay === m.id, disabled: m.id !== 'cash' }" :data-pay="m.id" @click="select">
+  <div class="acc-pm" :class="{ sel: state.pay === m.id, disabled: !ENABLED_PAYS.includes(m.id) }" :data-pay="m.id" @click="select">
     <div class="head">
       <span class="lg">{{ m.logo }}</span>
-      <span class="tt"><b>{{ m.n }}</b><small>{{ m.id === 'cash' ? m.d : 'قريبًا' }}</small></span>
+      <span class="tt"><b>{{ m.n }}</b><small>{{ ENABLED_PAYS.includes(m.id) ? m.d : 'قريبًا' }}</small></span>
       <span class="rad"><i></i></span>
     </div>
     <div v-if="hasForm" class="body has"><div class="in">

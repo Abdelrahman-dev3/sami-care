@@ -132,7 +132,10 @@ function doBookPay() {
         notes: B.notes || undefined,
       })
 
-      const payment = await initPayment('cod')
+      /* gateway:'cod' بيتجاهل علم wallet تمامًا وبيخصم عربون نسبي ثابت مش القيمة الكاملة —
+         راجع نفس الملاحظة فى useGifts.js. أي بوابة غير cod بتاخد المسار الصح لخصم الرصيد كامل. */
+      const isWallet = B.pay === 'wallet'
+      const payment = await initPayment(isWallet ? 'card' : 'cod', { wallet: isWallet })
       state.bk.ref = payment.invoice_id || null
       state.bk.done = true
       scrollTo({ top: 0, behavior: 'smooth' })
@@ -242,7 +245,8 @@ function goHome() { location.href = '/' }
           <li><RouterLink to="/store">المتجر</RouterLink></li>
           <li><RouterLink to="/branches">فروعنا</RouterLink></li>
           <li><RouterLink to="/contact">تواصل معنا</RouterLink></li>
-          <li><a href="https://sami-care.sa/TermsAndConditions">الشروط والأحكام</a></li>
+          <li><RouterLink to="/terms">الشروط والأحكام</RouterLink></li>
+          <li><RouterLink to="/privacy-policy">سياسة الخصوصية</RouterLink></li>
         </ul>
       </div>
             <div>

@@ -1552,6 +1552,178 @@ function localized(v){
 }
 function escHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 
+/* ===== ترجمة النصوص الثابتة (chrome) — عربي/إنجليزي =====
+   نفس فلسفة src/composables/useLanguage.js فى الديسكتوب بالظبط: قاموس
+   مفاتيحه النص العربى الأصلى، ومطابقة تامة (exact match) بس — أى نص
+   مش موجود كمفتاح (زى البيانات الديناميكية القادمة من الـ API عبر
+   localized()) ما بيتلمسش خالص. بيشتغل فى الاتجاهين (عربى↔إنجليزى) عن
+   طريق تخزين النص الأصلى أول مرة تتشاف فيها العقدة (WeakMap)، فسواء
+   كانت العقدة دايمة (الهيدر/التابار) أو بتتجدد كل render() (شاشات
+   #screens)، الترجمة والرجوع للعربى بيشتغلوا صح فى الحالتين. */
+const STATIC_DICT={
+ '➕ خدمات إضافية':'➕ Extra services','⏱️ المدة الإجمالية':'⏱️ Total duration','⏱️ المدة الإجمالية:':'⏱️ Total duration:',
+ '© 2026 عناية سامي، جميع الحقوق محفوظة.':'© 2026 Sami Care, all rights reserved.','★ موصى به':'★ Recommended',
+ '✂️ اختر الخدمة الأساسية':'✂️ Choose the main service','✂️ إهداء خدمات محددة':'✂️ Gift specific services','✂️ عدد الخدمات':'✂️ Number of services',
+ '✍️ تفاصيل الإهداء':'✍️ Gift details','✓ تم تأكيد الحجز':'✓ Booking confirmed','☕ استراحة وراحة للعميل':'☕ A break and comfort for the client',
+ 'ابتداءً من':'Starting from','ابدأ باختيار التاريخ':'Start by choosing a date','ابدأ رحلتك واحجز خدمتك الأولى الآن':'Start your journey and book your first service now',
+ 'احجز':'Book','احجز الآن':'Book now','احجز خدمة منزلية':'Book a home service','احجز موعدك الآن':'Book your appointment now',
+ 'احجز موعدك واستمتع بخدمة راقية وتجربة لا تُنسى.':'Book your appointment and enjoy a refined service and an unforgettable experience.',
+ 'احنا هنا لمساعدتك، ابعتلنا رسالتك':'We’re here to help — send us your message',
+ 'اختر الباقة التي ترغب بإهدائها':'Choose the package you’d like to gift',
+ 'اختر التجربة التي تناسبك، وتعرّف على تفاصيلها وأنواعها وأسعارها قبل الحجز.':'Choose the experience that suits you, and learn about its details, types, and prices before booking.',
+ 'اختر الخدمات التي ترغب بإهدائها':'Choose the services you’d like to gift','اختر الفرع':'Choose a branch','اختر الفرع الأقرب':'Choose the nearest branch',
+ 'اختر الفرع الأقرب لك لبدء الحجز':'Choose your nearest branch to start booking','اختر القسم المناسب لك':'Choose the right section for you',
+ 'اختر القسم ثم الخدمات المناسبة':'Choose the section, then the right services','اختر المعالج أو الحلاق الخاص بك':'Choose your own therapist or barber',
+ 'اختر الموعد':'Choose the appointment','اختر تجربتك':'Choose your experience',
+ 'اختر خدمات بعينها من الفروع والأقسام كما في الموقع.':'Choose specific services from branches and sections, just like on the website.',
+ 'اختر خدمة واحدة أو أكثر':'Choose one or more services','اختر طريقة الدفع المناسبة وأكمل حجزك بأمان':'Choose the right payment method and complete your booking safely',
+ 'اختر ما يناسبك لإهداء تجربة مميزة لمن تحب':'Choose what suits you to gift a special experience to someone you love',
+ 'اختر موقع الخدمة':'Choose the service location','اختر نوع الهدية وأكمل الحجز مباشرة':'Choose the gift type and complete the booking directly',
+ 'اختر يومًا من التقويم لعرض الأوقات المتاحة':'Choose a day from the calendar to view available times','اختيار سريع':'Quick pick',
+ 'آخر تحديث: 2026 — هذا نص مبدئي قابل للتحديث من إدارة عناية سامي.':'Last updated: 2026 — this is placeholder text that Sami Care management can update.',
+ 'إدارة بياناتك الشخصية':'Manage your personal data','إدارة بياناتك وتفضيلاتك':'Manage your data and preferences',
+ 'إدارة عضويتك و نقاطك ومزاياك':'Manage your membership, points, and perks','إدارة عناوين التوصيل الخاصة بك':'Manage your delivery addresses',
+ 'أدخل بياناتك وبيانات المستلم ورسالتك الخاصة':'Enter your details, the recipient’s details, and your personal message','آراء عملائنا':'Our customers’ reviews',
+ 'إرسال الآن':'Send now','إرسال فوري الآن':'Send instantly now','أرسل هدية':'Send a gift','استثنائية':'Exceptional',
+ 'استكشف الباقات':'Explore packages','استكشف الباقات المتاحة وابدأ تجربتك':'Explore the available packages and start your experience',
+ 'استكشف الباقة':'Explore the package','استكشف الخدمات':'Explore services','استلام أو توصيل':'Pickup or delivery',
+ 'استمتع بوقتك في أجواء مريحة مع قهوة مختصة، مشروبات وحلويات أثناء زيارتك.':'Enjoy your time in a comfortable atmosphere with specialty coffee, drinks, and sweets during your visit.',
+ 'اسم المستلم':'Recipient’s name','اسم صديقك (المستلم) *':'Your friend’s name (recipient) *','اسمك (المرسل)':'Your name (sender)','اسمك (المرسل) *':'Your name (sender) *',
+ 'أصلي 100%':'100% genuine','إضافة إلى Google Wallet':'Add to Google Wallet','اضغط لعرض المواقع المتاحة.':'Tap to view available locations.',
+ 'أضف عنوانًا جديدًا لتسهيل عمليات التوصيل':'Add a new address to make delivery easier','أضف لمستك الخاصة مع رسالة وتصميم بطاقة الإهداء':'Add your personal touch with a message and gift-card design',
+ 'اطلب من الكافيه الآن':'Order from the café now','إعدادات الحساب':'Account settings','إغلاق':'Close','اكتشف خدمات عناية سامي':'Discover Sami Care’s services',
+ 'أكمل الدفع لإرسال هديتك':'Complete payment to send your gift','الإجمالي':'Total','الإجمالي الحالي':'Current total','الإجمالي شامل الضريبة':'Total including tax',
+ 'الاسم':'Name','الأسئلة الشائعة':'FAQ','الأكثر طلبًا':'Most requested','الأكثر مبيعًا':'Best-selling','الآن':'Now',
+ 'الباقات اللي اشتريتها':'The packages you’ve bought','الباقات المميزة':'Featured packages','البريد الإلكتروني':'Email','التاريخ':'Date',
+ 'الحلاقة':'Grooming','الخدمات':'Services','الخدمات المنزلية':'Home services','الخدمة المنزلية':'Home service','الدعم والمساعدة':'Support & help',
+ 'الدفع':'Payment','الرئيسية':'Home','السابق':'Previous','السلة 🛒':'Cart 🛒','الشروط والأحكام':'Terms & Conditions','الضريبة':'Tax','العروض الحالية':'Current offers',
+ 'العودة إلى الرئيسية':'Back to home','الفرع':'Branch','الفروع':'Branches','الفريق':'Team','المبلغ':'Amount','المبلغ قبل الضريبة':'Amount before tax',
+ 'المجموع الفرعي':'Subtotal','المدة الإجمالية':'Total duration','المستلم':'Recipient',
+ 'المستلم يستطيع الاستفادة من الهدية في الفرع المختار أو الخدمة المنزلية':'The recipient can use the gift at the selected branch or via the home service',
+ 'المنتجات':'Products','المنتجات اللي اشتريتها من المتجر':'The products you’ve bought from the store','الهدية':'The gift',
+ 'أهدِ باقة عناية فاخرة أو مبلغ مالي مخصص':'Gift a luxury care package or a custom cash amount','أهدِ تجربة عناية فاخرة':'Gift a luxurious care experience',
+ 'إهداء باقة':'Gift a package','إهداء جديد':'New gift','إهداء خدمة':'Gift a service','أوافق على الشروط والأحكام':'I agree to the Terms & Conditions',
+ 'أي موظف':'Any staff member','باقات جاهزة بقيمة أعلى':'Ready-made packages of higher value',
+ 'باقات مميزة تمنح تجربة متكاملة من العناية والراحة':'Special packages offering a complete care and relaxation experience','باقاتي':'My packages',
+ 'باقة جاهزة بقيمة واضحة وتجربة متكاملة للمستلم.':'A ready-made package with clear value and a complete experience for the recipient.','باقة فاخرة':'Luxury package',
+ 'بطاقات الإهداء اللي اشتريتها لأصدقائك':'Gift cards you’ve bought for your friends','بطاقات هدايا تناسب كل المناسبات':'Gift cards for every occasion','بطاقة شحن رصيد':'Balance top-up card',
+ 'بيانات الإهداء':'Gift details','بيانات العميل':'Customer details','بيانات بسيطة عشان نقدر نوصلك بجائزتك لو ربحت':'Simple details so we can reach you with your prize if you win',
+ 'تأكيد الحجز':'Confirm booking','تأكيد ولف العجلة':'Confirm and spin the wheel','تجارب حقيقية من عملائنا':'Real experiences from our customers',
+ 'تجربة حلاقة':'A grooming experience','تجربة كاملة':'A complete experience','تحديد موظف':'Choose a staff member','تسجيل الدخول':'Log in',
+ 'تسوق الآن':'Shop now','تسوّق الآن':'Shop now','تسوق حسب الفئة':'Shop by category','تسوّق من المتجر الآن':'Shop from the store now',
+ 'تصاميم فاخرة ومخصصة لجميع المناسبات':'Luxury, custom designs for every occasion','تصفح المتجر وأضف منتجاتك المفضلة':'Browse the store and add your favorite products',
+ 'تعديل البيانات':'Edit details','تغيير الفرع':'Change branch','تفاصيل الجلسة':'Session details','تفاصيل الحجز':'Booking details','تفاصيل الخدمة':'Service details',
+ 'تفاصيل الموعد':'Appointment details','تفاصيل الهدية':'Gift details','تقييم':'Rating','تليق بك':'Worthy of you',
+ 'تم إرسال الهدية بنجاح':'Gift sent successfully','تم إرسال رسالتك':'Your message has been sent','تم التحقق منها ✓':'Verified ✓','تم تأكيد حجزك بنجاح!':'Your booking is confirmed!',
+ 'تم تجهيز هديتك وإرسالها للمستلم، وسيتم إشعاره فور استلامها.':'Your gift has been prepared and sent to the recipient — they’ll be notified as soon as they receive it.',
+ 'تمارا':'Tamara','تمام 🎊':'Done 🎊','تواصل معنا':'Contact us','توصيل سريع لجميع الطلبات':'Fast delivery for all orders',
+ 'جارٍ التحقق من التوفر...':'Checking availability...','جارٍ التحميل...':'Loading...','جاري تحميل الأوقات المتاحة...':'Loading available times...','جاري تحميل الموظفين...':'Loading staff...',
+ 'جاهز لتجربة مختلفة؟':'Ready for a different experience?','جدولة الإرسال':'Schedule sending','جدولة لوقت محدد':'Schedule for a specific time','جرّب حظك':'Try your luck',
+ 'جلسة مريحة':'A relaxing session','جميع المعاملات تتم بأمان وتشفير كامل':'All transactions are secure and fully encrypted','جميع عمليات الدفع محمية':'All payments are protected',
+ 'جودة مختارة بعناية':'Carefully selected quality','حالة كل خدمة':'Status of each service','حجز سريع':'Quick booking','حجوزاتي':'My bookings','حجوزاتي 📅':'My bookings 📅',
+ 'حدد الأقرب لك للمتابعة.':'Select the nearest one to continue.','حدد الفرع الأقرب لك.':'Select your nearest branch.',
+ 'حدد ما إذا كنت تريد إرسالها الآن أو جدولتها لوقت لاحق':'Decide whether to send it now or schedule it for later',
+ 'حدد موظف لهذه الخدمة أولًا في خطوة الموظف':'Choose a staff member for this service first, in the staff step','حذف':'Delete','حذف الحساب':'Delete account',
+ 'حساب جديد':'New account','حسابي':'My account','حفظ العنوان':'Save address','خبراء متخصصون':'Specialized experts','خدمات إضافية':'Extra services',
+ 'خدماتنا':'Our services','خدماتنا تصل إليك في منزلك':'Our services come to you at home',
+ 'خدمة رجالية بتجربة راقية، تنفيذ احترافي، واهتمام بالتفاصيل من لحظة الدخول حتى نهاية الجلسة.':'A men’s service with a refined experience, professional execution, and attention to detail from the moment you arrive until the session ends.',
+ 'خدمتك أينما كنت':'Your service, wherever you are','خريطة الموقع':'Site map','خصص هديتك لتكون أجمل':'Customize your gift to make it even more beautiful',
+ 'خصم':'Discount','خصومات وجوائز متنوعة بانتظارك':'A variety of discounts and prizes await you','دعم عملاء 24/7':'24/7 customer support','دفع آمن ومشفر':'Secure, encrypted payment',
+ 'ر.س':'SAR','راجع تفاصيل جلستك قبل الانتقال للدفع':'Review your session details before proceeding to payment',
+ 'راجع تفاصيل جلستك قبل تأكيد الحجز والدفع':'Review your session details before confirming the booking and payment','راحة تامة بخدمة احترافية أينما كنت':'Complete comfort with professional service wherever you are',
+ 'رأيك يهمنا ويساعدنا في تقديم الأفضل دائمًا':'Your feedback matters to us and helps us always deliver our best','رسالة الإهداء':'Gift message','رسوم الخدمة المنزلية':'Home-service fee',
+ 'رصيد المحفظة':'Wallet balance','رصيد محفظتك لا يكفي لدفع القيمة كاملة، اختر وسيلة دفع أخرى.':'Your wallet balance isn’t enough to cover the full amount — choose another payment method.',
+ 'رقم الجوال':'Mobile number','رقم الطلب':'Order number','رقم جوال المستلم':'Recipient’s mobile number','رقم جوال صديقك (المستلم) *':'Your friend’s mobile number (recipient) *',
+ 'رمز التحقق':'Verification code','رمز الحجز':'Booking code','ريال':'SAR','ستظهر الخدمات المتاحة هنا':'Available services will appear here',
+ 'سجّل دخولك أول عشان تشوف حجوزاتك':'Log in first to see your bookings','سجّل دخولك عشان تلف العجلة':'Log in to spin the wheel',
+ 'سجّل دخولك عشان توصل لحجوزاتك ومحفظتك ونقاطك':'Log in to access your bookings, wallet, and points','سلتك فارغة':'Your cart is empty','سياسة الخصوصية':'Privacy Policy',
+ 'سيتم إرسال الهدية مباشرة بعد إتمام الدفع':'The gift will be sent right after payment is completed',
+ 'سيتم عرض الأوقات المتاحة فعليًا حسب توفر كل موظف — اختر وقتًا لكل خدمة.':'Available times will reflect each staff member’s actual availability — choose a time for each service.',
+ 'شارك تجربتك':'Share your experience','شحن سريع':'Fast top-up','صالحة 6 أشهر':'Valid for 6 months','صالحة لمدة 6 أشهر':'Valid for 6 months',
+ 'ضريبة القيمة المضافة (15%)':'VAT (15%)','طرق الدفع المتاحة':'Available payment methods','طريقة الإرسال':'Sending method','طريقة ووقت الإرسال':'Sending method and time',
+ 'عرض الكل':'View all','عرض لفترة محدودة':'Limited-time offer','عناية سامي':'Sami Care','عناية سامي | التطبيق':'Sami Care | App',
+ 'فاجئ حد تحبه بهدية من عناية سامي':'Surprise someone you love with a gift from Sami Care','فروعنا':'Our branches','فروعنا الفاخرة المجهزة لخدمتك':'Our luxury branches, fully equipped to serve you',
+ 'في الموعد':'On time','في مكان واحد':'In one place','قريبًا':'Coming soon','قيمة الهدية':'Gift value','كاش':'Cash','كل خدماتنا':'All our services',
+ 'لا تنتهي عند الخدمة':'It doesn’t end at the service','لا توجد أوقات متاحة لهذا اليوم':'No available times for this day','لا توجد باقات في هذا التصنيف':'No packages in this category',
+ 'لا توجد باقات مشتراة بعد':'No packages purchased yet','لا توجد حجوزات بعد':'No bookings yet','لا توجد منتجات مشتراة بعد':'No products purchased yet',
+ 'لا يوجد عناوين محفوظة':'No saved addresses','لا يوجد موظف متاح — جرّب "تحديد موظف" يدويًا':'No staff available — try “Choose a staff member” manually',
+ 'لا يوجد موظفون متاحون لهذه الخدمة في هذا الفرع':'No staff available for this service at this branch','لأن التجربة':'Because the experience','لأن العناية أسلوب حياة.':'Because care is a lifestyle.',
+ 'لتجربة يومية':'For everyday use','لسه ما بعتّش أي هدية':'You haven’t sent any gifts yet','لماذا تختارها؟':'Why choose it?','ماذا ترغب بإهدائه؟':'What would you like to gift?',
+ 'ماذا يحدث الآن؟':'What happens now?','متاح الآن':'Available now','متاحة داخل جدة · رسوم انتقال ثابتة':'Available within Jeddah · fixed travel fee','مجانًا':'Free',
+ 'مدى':'mada','مساعدة ودعم':'Help & support','مشاركة رابط الهدية':'Share gift link','معاينة صفحة المستلم':'Preview recipient page',
+ 'معاينة كرت الإهداء كما سيظهر للمستلم':'Preview the gift card as the recipient will see it','ملاحظات إضافية':'Additional notes','من 5':'out of 5',
+ 'من الحلاقة السريعة إلى تجربة VIP الكاملة.':'From a quick trim to the full VIP experience.','مناسب للاستخدام اليومي':'Suitable for daily use',
+ 'منتج مختار من عناية سامي ليكمل تجربة العناية اليومية بجودة فاخرة ولمسة صالون.':'A product selected by Sami Care to complete your daily care routine with luxury quality and a salon touch.',
+ 'منتجات أخرى قد تعجبك':'Other products you might like','منتجات أصلية':'Genuine products','منتجات عناية بجودة عالية للرجل المهتم بأدق التفاصيل.':'High-quality care products for the man who cares about every detail.',
+ 'منتجات مختارة لك':'Products selected for you','منتجاتي':'My products','نتطلع لخدمتك وتقديم تجربة استثنائية تليق بك.':'We look forward to serving you and giving you an exceptional experience worthy of you.',
+ 'نحن هنا لخدمتك دائمًا':'We’re always here to serve you','نحن هنا لمساعدتك':'We’re here to help you',
+ 'نفخر بثقة عملائنا ونسعى دائمًا لتقديم تجربة استثنائية':'We’re proud of our customers’ trust and always strive to give an exceptional experience','نقطة':'Point',
+ 'نوع الهدية':'Gift type','هتقدر تتابع حجوزاتك الحالية والسابقة بعد تسجيل الدخول':'You’ll be able to track your current and past bookings after logging in',
+ 'هدية رقمية':'Digital gift','هنتواصل معاك في أقرب وقت':'We’ll get in touch with you as soon as possible','واتساب':'WhatsApp','واربح مكافآت فورية!':'and win instant rewards!',
+ 'وسياسة الخصوصية والإهداء':'and the Privacy & Gifting Policy','وفّر 25%':'Save 25%','وقت الإرسال':'Send time',
+ ' إضافة إلى Apple Wallet':' Add to Apple Wallet','🎁 اختر نوع الإهداء':'🎁 Choose the gift type','🎁 الإهداء والملخص':'🎁 Gift & summary',
+ '🎁 إهداء باقة فاخرة':'🎁 Gift a luxury package','🎁 هل تريد إهداء الحجز لصديق؟':'🎁 Would you like to gift this booking to a friend?',
+ '🎨 اختر قالب كرت الإهداء':'🎨 Choose a gift-card template','🏠 خدمة تصل إليه':'🏠 A service that comes to them','👛 المحفظة':'👛 Wallet',
+ '👤 الموظف المفضل':'👤 Preferred staff member','👤 الموظف:':'👤 Staff:','💰 المبلغ الإجمالي:':'💰 Total amount:','💳 اختر طريقة الدفع':'💳 Choose a payment method',
+ '💳 الدفع الآمن':'💳 Secure payment','💵 حدد قيمة رصيد الإهداء':'💵 Set the gift balance amount','💵 عند الاستلام':'💵 Cash on arrival',
+ '📅 اختر التاريخ والوقت':'📅 Choose the date and time','📅 التاريخ':'📅 Date','📅 التاريخ:':'📅 Date:','📋 ملخص الحجز':'📋 Booking summary',
+ '📍 اختر الفرع':'📍 Choose a branch','📍 اختيار الفرع أو الخدمة المنزلية':'📍 Choose a branch or home service','📍 الفرع':'📍 Branch','📍 الفرع:':'📍 Branch:',
+ '📍 الوصول للفرع':'📍 Arriving at the branch','🔒 الدفع آمن ومشفّر':'🔒 Payment is secure and encrypted','🔒 جميع عمليات الدفع آمنة ومشفرة':'🔒 All payments are secure and encrypted',
+ '🕐 وقت إرسال الهدية':'🕐 Gift send time','🕐 وقت البدء:':'🕐 Start time:','🗓️ خطة الجلسة بالتتابع':'🗓️ Session plan in sequence',
+ '🛡️ بالتأكيد على الحجز، فإنك توافق على الشروط والأحكام':'🛡️ By confirming the booking, you agree to the Terms & Conditions',
+ // خصائص (alt/placeholder/title/aria-label)
+ 'إهداء باقة':'Gift a package','إهداء خدمة':'Gift a service','حلاق محترف يقدم خدمة للعميل':'A professional barber serving a client',
+ 'زيت اللحية الذهبي':'Golden beard oil','سامي كافي داخل الفرع':'Sami Café inside the branch','عناية سامي':'Sami Care','غرفة عناية سامي':'A Sami Care room',
+ 'غسول البشرة':'Skin cleanser','كريم الترطيب':'Moisturizing cream','هدية عناية سامي':'A Sami Care gift','احجز الآن':'Book now',
+ 'اختر مكان تنفيذ الخدمة':'Choose where the service takes place','آراء العملاء':'Customer reviews','إعلانات وعروض':'Ads & offers','إغلاق السلة':'Close cart',
+ 'إغلاق':'Close','انستقرام':'Instagram','برنامج الولاء':'Loyalty program','بطاقات الهدايا':'Gift cards','بوابات الدفع':'Payment gateways',
+ 'تسجيل الدخول':'Log in','حذف المنتج':'Remove product','حذف':'Delete','زيادة الكمية':'Increase quantity','زيادة':'Increase',
+ 'سامي كافي':'Sami Café','سلة التسوق':'Shopping cart','شبكة':'Grid','فيسبوك':'Facebook','قائمة':'Menu','مفضلة':'Favorite','نقص':'Decrease',
+ 'وسائل الدفع':'Payment methods','أحمد محمد':'Ahmed Mohamed','أدخل اسمك بالكامل':'Enter your full name','أدخل الاسم':'Enter the name',
+ 'اسم العائلة':'Last name','اسم العنوان (المنزل، العمل...)':'Address name (Home, Work...)','اسمك':'Your name','أضف أي ملاحظة...':'Add a note...',
+ 'اكتب استفسارك أو رسالتك هنا...':'Write your question or message here...','اكتب أي ملاحظة أو طلب خاص بالجلسة...':'Write any note or special request for the session...',
+ 'اكتب رسالتك الخاصة هنا...':'Write your personal message here...','اكتب رسالتك من القلب...':'Write your message from the heart...',
+ 'الاسم الأول':'First name','الاسم كما هو على البطاقة':'Name as shown on the card','الحي، الشارع، رقم المبنى...':'District, street, building number...',
+ 'تفاصيل العنوان':'Address details','باقاتنا المميزة':'Our featured packages','تطبيق عناية سامي للجوال':'Sami Care mobile app','عميل موثّق':'Verified customer',
+ 'منتجات العناية':'Care products','فتح السلة':'Open cart','تغيير اللغة':'Change language','الإشعارات':'Notifications',
+}
+const I18N_ATTRS=['placeholder','title','aria-label','alt'];
+const I18N_TEXT_ORIG=new WeakMap(),I18N_ATTR_ORIG=new WeakMap();
+function i18nTextNode(node,lang){
+ if(!I18N_TEXT_ORIG.has(node)){
+  const trimmed=(node.data||'').trim();
+  if(!trimmed||!Object.prototype.hasOwnProperty.call(STATIC_DICT,trimmed))return;
+  I18N_TEXT_ORIG.set(node,node.data);
+ }
+ const orig=I18N_TEXT_ORIG.get(node),trimmedOrig=orig.trim(),translated=STATIC_DICT[trimmedOrig];
+ node.data=lang==='en'&&translated?orig.replace(trimmedOrig,translated):orig;
+}
+function i18nAttrs(el,lang){
+ let store=I18N_ATTR_ORIG.get(el);
+ I18N_ATTRS.forEach(attr=>{
+  if(!el.hasAttribute(attr))return;
+  if(!store){store={};I18N_ATTR_ORIG.set(el,store)}
+  if(store[attr]===undefined){
+   const val=el.getAttribute(attr);
+   if(!Object.prototype.hasOwnProperty.call(STATIC_DICT,val))return;
+   store[attr]=val;
+  }
+  const orig=store[attr];
+  el.setAttribute(attr,lang==='en'&&STATIC_DICT[orig]?STATIC_DICT[orig]:orig);
+ });
+}
+const I18N_SKIP_TAGS={SCRIPT:1,STYLE:1,TEXTAREA:1,INPUT:1};
+function translateStaticText(root){
+ if(!root)return;
+ const lang=getLang();
+ if(root.nodeType===3){i18nTextNode(root,lang);return}
+ if(root.nodeType!==1)return;
+ i18nAttrs(root,lang);
+ const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode(n){const p=n.parentElement;return(!p||I18N_SKIP_TAGS[p.tagName])?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT}});
+ let t;while((t=walker.nextNode()))i18nTextNode(t,lang);
+ root.querySelectorAll?.(I18N_ATTRS.map(a=>`[${a}]`).join(',')).forEach(el=>i18nAttrs(el,lang));
+}
+
 /* لقطة من القوائم الثابتة أعلاه، تُستخدم كنمط بصري (لون/أيقونة/صورة افتراضية) عند تدوير أي عنصر حي جديد
    ما دام الباك-إند لسه ما بيرجّعش تفاصيل شكلية زي الألوان أو أيقونات SVG أو الإيموجي. */
 const STYLE_PKG=DPKGS.map(p=>({hex:p.hex,ico:p.ico,img:p.img}));
@@ -1633,6 +1805,7 @@ function mapProduct(raw,catId){
   pr:Number(raw.min_price??raw.max_price??0)||0,
   img:raw.feature_image||raw.product_image||IMG.p2,
   d:localized(raw.short_description)||localized(raw.description)||'',
+  branchId:raw.branch_id??null,
  };
 }
 function mapBranchSimple(raw){
@@ -1701,11 +1874,13 @@ function applyDynamicData(){
   }catch(e){console.warn('sami: تعذر تجهيز بيانات الباقات',e)}
  }else console.warn('sami: فشل تحميل الباقات، سيتم استخدام البيانات الافتراضية',pkgsRes.reason);
 
- /* العروض */
+ /* العروض — لو القائمة الحقيقية فاضية (مفيش باقات من نوع "عرض" فى لوحة التحكم دلوقتى) لازم
+    نمسح البيانات الوهمية الافتراضية بدل ما نسيبها ظاهرة كأنها عروض حقيقية دايمًا؛ القسم نفسه
+    بيتخفى تلقائيًا فى homeHTML() لو OFFERS فاضية. */
  if(offersRes.status==='fulfilled'){
   try{
    const list=offersRes.value.data||[];
-   if(list.length){OFFERS.length=0;OFFERS.push(...list.map(mapOffer))}
+   OFFERS.length=0;OFFERS.push(...list.map(mapOffer));
   }catch(e){console.warn('sami: تعذر تجهيز بيانات العروض',e)}
  }else console.warn('sami: فشل تحميل العروض',offersRes.reason);
 
@@ -1816,11 +1991,15 @@ function applyDynamicData(){
   }catch(e){console.warn('sami: تعذر تجهيز التصنيفات والخدمات',e)}
  }else console.warn('sami: فشل تحميل التصنيفات',catRes.reason);
 
- /* عجلة الحظ */
+ /* عجلة الحظ — نفس /Home/wheel/prizes اللي بيستخدمه fetchWheelInfo فى الديسكتوب،
+    بيرجع can_spin/already_used حقيقيين (مبنيين على IP) عشان نفس منطق "استخدام مرة واحدة". */
  if(wheelRes.status==='fulfilled'){
   try{
-   const list=wheelRes.value.data?.prizes||[];
+   const d=wheelRes.value.data||{};
+   const list=d.prizes||[];
    if(list.length){WHEEL.length=0;WHEEL.push(...list.map(mapWheelPrize))}
+   S.wheelEnabled=d.enabled!==false;
+   S.wheelCanSpin=d.can_spin!==false;
   }catch(e){console.warn('sami: تعذر تجهيز جوائز العجلة',e)}
  }else console.warn('sami: فشل تحميل جوائز العجلة',wheelRes.reason);
 
@@ -1906,9 +2085,20 @@ async function fetchServiceSlotsReal(dateKey,staffId,durationMin){
   return Array.isArray(res)?res:[];
  }catch(e){return[]}
 }
+/* لازم تتنفّذ فى الحالتين: أول تحميل (لسه من غير cache) وكمان لما اليوزر يرجع لوضع "auto"
+   بعد ما كان جرّب "تحديد موظف" — لأن ensureBookingEmployees بيتجاهل أي خدمة متاحة بيانتها
+   خلاص (cached) فمكانش بيحصل تعيين تلقائي تاني، وده كان بيسيب S.bookEmp فاضي فى وضع auto. */
+function autoAssignEmployees(){
+ if(S.bookMode!=='auto'&&S.bookMode)return;
+ bSelSvcs().forEach(s=>{
+  const list=S.bookStaffByService[s.id];
+  if(list?.length&&!S.bookEmp[s.id])S.bookEmp[s.id]=list[0];
+ });
+}
 function ensureBookingEmployees(){
  const branch=bBranch();
  const branchId=branch?.home?0:(branch?.realId??0);
+ autoAssignEmployees();
  bSelSvcs().forEach(s=>{
   if(S.bookStaffByService[s.id]||S.bookStaffLoading[s.id])return;
   S.bookStaffLoading[s.id]=true;
@@ -1916,7 +2106,7 @@ function ensureBookingEmployees(){
    const list=rows.map(u=>({id:u.id,name:[u.first_name,u.last_name].filter(Boolean).join(' ')||u.username||'موظف'}));
    S.bookStaffByService[s.id]=list;
    S.bookStaffLoading[s.id]=false;
-   if((S.bookMode==='auto'||!S.bookMode)&&list.length&&!S.bookEmp[s.id])S.bookEmp[s.id]=list[0];
+   autoAssignEmployees();
    render();
   });
  });
@@ -1942,6 +2132,7 @@ function syncBookingStepData(){
  if(!S.bookWizard||S.bookDone)return;
  if(S.bookStep>=3)ensureBookingEmployees();
  if(S.bookStep>=4)ensureBookingSlots();
+ if(S.bookStep>=6&&getAuth()&&!_accountData)loadAccountData();
 }
 /* POST /mobile/cart/bookings ثم POST /payments/init — نفس نداءات doPay() في BookingView.vue
    بالديسكتوب بالحرف. محمي بمصادقة، فمحتاج تسجيل دخول حقيقي (متاح دلوقتي عبر authPost). */
@@ -1965,7 +2156,10 @@ async function attemptRealBookingSubmit(){
   customerName:S.bookCust.name||'',
   mobileNo:S.bookCust.phone||'',
  });
- const payment=await authPost('/payments/init',{gateway:'cod',page_type:'cart'});
+ /* gateway:'cod' فى الباك إند بيتجاهل علم wallet وبيخصم عربون نسبي ثابت مش القيمة الكاملة —
+    راجع نفس الملاحظة فى attemptRealGiftSubmit. أي بوابة غير cod بتاخد المسار الصح لخصم كامل الرصيد. */
+ const isWallet=S.bookPay==='wallet';
+ const payment=await authPost('/payments/init',{gateway:isWallet?'card':'cod',page_type:'cart',...(isWallet?{wallet:true}:{})});
  return payment;
 }
 /* بطاقة إهداء حقيقية عبر POST /gift-cards ثم POST /payments/init — نوع "إهداء خدمات" فقط
@@ -1988,11 +2182,17 @@ async function attemptRealGiftSubmit(){
   if(!Number.isFinite(pkgId)||pkgId<=0)throw new Error('اختر باقة للإهداء');
   payload.packages=[{id:pkgId}];
  }
- const created=await authPost('/gift-cards',payload);
- /* wallet/loyalty أعلام إضافية فوق بوابة أساسية — مش بوابات مستقلة (راجع نفس الملاحظة في bookingApi.js بالديسكتوب) */
- const wallet=S.giftPay==='wallet',loyalty=S.giftPay==='points';
- const gateway=(wallet||loyalty||!S.giftPay)?'cod':(S.giftPay==='tabby'?'tabby':'card');
- const payment=await authPost('/payments/init',{gateway,page_type:'cart',...(wallet?{wallet:true}:{}) ,...(loyalty?{loyalty:true}:{})});
+ /* /gift-cards (من غير prefix) route مش محمي بـ auth:sanctum فى الباك إند، فـ auth()->user()
+    فيه بيرجع null دايمًا حتى مع توكن صحيح ويرد "يرجى تسجيل الدخول" — لازم /mobile/cart/gift-cards
+    بالظبط زي الديسكتوب (createGiftCard في services/giftsApi.js) عشان يتحقق فعليًا من التوكن. */
+ const created=await authPost('/mobile/cart/gift-cards',payload);
+ /* مهم: gateway:'cod' فى الباك إند (PaymentOrchestratorService::handleCod) بيتجاهل علم wallet
+    تمامًا وبيخصم نسبة عربون ثابتة (cod_deposit_percent) مش القيمة الكاملة — ده كان سبب خصم قيمة
+    غلط لما اليوزر يختار "المحفظة". أي بوابة تانية غير cod بتاخد مسار PaymentSubMethodsService
+    الصح اللي بيخصم القيمة الحقيقية كاملة؛ القيمة الحرفية للبوابة مش مهمة هنا (بترجع 'sub_methods'
+    طالما الرصيد كافي، وده اتأكد منه فى canGiftWizNext قبل ما نوصل هنا). */
+ const wallet=S.giftPay==='wallet';
+ const payment=await authPost('/payments/init',{gateway:wallet?'card':'cod',page_type:'cart',...(wallet?{wallet:true}:{})});
  return{created,payment};
 }
 /* ================= الحالة ================= */
@@ -2003,7 +2203,7 @@ const S={
  svSel:null, svExtras:new Set(), detailSelections:new Set(), barOpen:false,
  cart:new Map(), favs:new Set(),
  bookings:[], heroI:0, offerI:0, tstI:0,
- spinning:false, wheelDeg:0,
+ spinning:false, wheelDeg:0, wheelEnabled:true, wheelCanSpin:true,
  wheelUser: JSON.parse(localStorage.getItem('samiWheelUser')||'null'),
  fulfillment:'pickup',
  
@@ -2083,6 +2283,8 @@ else if(INITIAL_VIEW==='packages'){
 }
 else if(INITIAL_VIEW==='account')S.tab='account';
 else if(INITIAL_VIEW==='services'){S.tab='home';S.svPage=false;S.subPage='services';}
+else if(INITIAL_VIEW==='terms'){S.tab='home';S.svPage=false;S.subPage='terms';}
+else if(INITIAL_VIEW==='privacy'){S.tab='home';S.svPage=false;S.subPage='privacy';}
 /* Keep an active booking alive if the mobile iframe is refreshed by the host/router. */
 const BOOKING_SESSION_KEY='sami:active-booking:v1';
 function saveBookingSession(){
@@ -2272,18 +2474,29 @@ async function resolveVariationId(productId){
   return vId;
  }catch(e){return null}
 }
-async function syncMobileCartToBackend(){
+/* لازم نفس location_id بالظبط فى add-to-cart وفى place-order، لأن الباك إند (OrdersController@store)
+   بيجيب عربة اليوزر بشرط Cart::where('location_id',$location_id) — أي اختلاف (زي ما كان حاصل لما
+   place-order كان بيبعت location_id:1 ثابت رغم إن add-to-cart ما كانش بيبعته خالص فيفضل NULL) يخلي
+   الاستعلام يرجع صفر صفوف، فالطلب يتسجل "فاضي" من غير أي عناصر لكن الباك إند برضه بيرد status:true
+   فيبان للعميل إن الشراء نجح رغم إنه ملهوش أي أثر حقيقي. نفس منطق itemsSnapshot[0]?.p?.branchId
+   فى useStore.js بالديسكتوب: قيمة واحدة (فرع أول عنصر فى السلة) بتتبعت مع كل عناصر add-to-cart
+   وبرضه فى place-order، عشان الاستعلام يلاقيهم كلهم. */
+function mobileCartLocationId(){
+ const first=[...S.cart.keys()][0];
+ return first?PRODUCTS.find(p=>p.id===first)?.branchId??null:null;
+}
+async function syncMobileCartToBackend(locationId){
  const existing=(await authGet('/get-cart-list'))?.data||[];
  const localIds=new Set([...S.cart.keys()].map(realProductId));
  for(const item of existing){
-  if(!localIds.has(item.product_id))await authPost('/remove-cart?cart_id='+item.id,{}).catch(()=>{});
+  if(!localIds.has(item.product_id))await authGet('/remove-cart?cart_id='+item.id).catch(()=>{});
  }
  for(const[id,qty]of S.cart.entries()){
   const pid=realProductId(id),variationId=await resolveVariationId(id);
   if(!variationId)continue;
   const existingItem=existing.find(c=>c.product_id===pid);
   if(existingItem)await authPost('/update-cart',{cart_id:existingItem.id,product_variation_id:variationId,qty});
-  else await authPost('/add-to-cart',{product_id:pid,product_variation_id:variationId,qty});
+  else await authPost('/add-to-cart',{product_id:pid,product_variation_id:variationId,qty,location_id:locationId});
  }
 }
 async function ensureMobileAddressId(){
@@ -2301,22 +2514,27 @@ async function ensureMobileAddressId(){
 }
 async function submitMobileOrder(payWith){
  if(!getAuth())throw new Error('سجّل دخولك الأول عشان تكمل الشراء');
- await syncMobileCartToBackend();
+ const locationId=mobileCartLocationId();
+ await syncMobileCartToBackend(locationId);
  const addressId=await ensureMobileAddressId();
  const zones=await apiGet('/get-logisticzone-list').catch(()=>null);
  const zone=zones?.data?.[0]||null;
  const isWallet=payWith==='wallet';
  const auth=getAuth();
- return authPost('/place-order',{
+ const res=await authPost('/place-order',{
   shipping_address_id:addressId,
   billing_address_id:addressId,
   phone:auth?.mobile||'',
-  location_id:1,
+  location_id:locationId,
   chosen_logistic_zone_id:zone?.id,
   shipping_delivery_type:'standard',
   payment_method:payWith||'cod',
   payment_status:isWallet?'paid':'pending',
  });
+ /* الباك إند بيرد status:true حتى لو العربة اتلاقت فاضية (خطأ فى الرسالة مش نوع الاستجابة) —
+    نتحقق يدويًا من إن أوردر اتعمل فعلًا (بيرجع product.id) قبل ما نعتبرها عملية ناجحة. */
+ if(!res?.product?.id)throw new Error('تعذّر إتمام الطلب — السلة فارغة أو غير متزامنة، حاول مرة أخرى');
+ return res;
 }
 function refreshBadge(pop){
  const badges=$$('[data-cart-badge]'),n=cartQty();
@@ -2412,29 +2630,35 @@ function openWheelRegisterSheet(){
  });
 }
 /* دوران حقيقي عبر POST /Home/wheel/spin (نفس endpoint وسلوك الديسكتوب بالحرف — راجع
-   spinWheel في bookingApi... services/wheelApi.js وLuckyWheelCard.vue). النتيجة (ربح/خسارة،
-   الجائزة، رصيد المحفظة/النقاط) حقيقية من الباك-إند؛ زاوية توقف العجلة بصريًا عشوائية فقط
-   (نفس حال الديسكتوب — الباك-إند مبيرجعش id للجائزة الفعلية نقدر نطابقه بصريًا). */
+   spinWheel في services/wheelApi.js وLuckyWheelCard.vue). الباك إند (Api\WheelController@spin)
+   فعليًا بيرجّع data.prize.id للجائزة الحقيقية اللي كسبها العميل، فبنستخدمه لتحديد نفس القطعة
+   اللي تقف عليها العجلة بصريًا — مش عشوائي. الاستخدام مرة واحدة بيتفرض بالـ IP من الباك إند
+   (WheelSpinService::hasSpun)، ونعكسه هنا بتعطيل الزرار فورًا بعد أي محاولة (ناجحة أو already_used). */
 async function doSpin(){
  const sp=$('#spinBtn');
- if(S.spinning)return;
+ if(S.spinning||!S.wheelEnabled||!S.wheelCanSpin)return;
  S.spinning=true;if(sp)sp.disabled=true;render();
  try{
   const auth=getAuth();
   const body=auth?{}:{name:S.wheelUser?.name||'',phone:S.wheelUser?.phone||''};
   const res=auth?await authPost('/Home/wheel/spin',body):await apiPost('/Home/wheel/spin',body);
-  const win=Math.floor(Math.random()*WHEEL.length);
+  const wonId=res?.data?.prize?.id??null;
+  let win=wonId!==null?WHEEL.findIndex(w=>w.id===wonId):-1;
+  if(win===-1)win=Math.floor(Math.random()*WHEEL.length);
   const seg=360/WHEEL.length;
   const current=((S.wheelDeg%360)+360)%360;
   const target=(360-win*seg)%360;
   S.wheelDeg+=5*360+((target-current+360)%360);
   const wsvg=$('#wheelSvg');if(wsvg)wsvg.style.transform=`rotate(${S.wheelDeg}deg)`;
+  S.wheelCanSpin=false;
   setTimeout(()=>{
-   S.spinning=false;if(sp)sp.disabled=false;
+   S.spinning=false;render();
    openWheelResultSheet(res?.message||'شكرًا لمشاركتك',!!res?.won);
   },3700);
  }catch(e){
-  S.spinning=false;if(sp)sp.disabled=false;render();
+  S.spinning=false;
+  if(e.payload?.already_used)S.wheelCanSpin=false;
+  render();
   toast((e.payload?.login_required?'الرقم مسجّل بالفعل — سجّل دخولك عشان تلف العجلة. ':'')+(e.message||'تعذّر تدوير العجلة، حاول مرة أخرى'));
  }
 }
@@ -2603,7 +2827,7 @@ function homeHTML(){
   </div>
   <div class="im"><img src="assets/extracted/home-service-barber-exact.webp" alt="خدمة حلاقة منزلية" loading="lazy"></div>
  </div></div>
- <section class="sec">
+ ${OFFERS.length?`<section class="sec">
   <div class="sec-h"><h2><span class="hi">${svg('<path d="M20 7l-9 9-4-4M20 12v7H4V5h11"/>',15)}</span> العروض الحالية</h2></div>
  </section>
  <div class="hscroll" id="offerTrack" style="scroll-snap-type:x mandatory">
@@ -2612,7 +2836,7 @@ function homeHTML(){
     <button class="btn btn-org" data-go="book">احجز الآن</button></div>
    <div class="dots odots">${OFFERS.map((_,j)=>`<i class="${j===i?'on':''}"></i>`).join('')}</div>
   </div>`).join('')}
- </div>
+ </div>`:''}
  <!-- الشاشة 3 -->
  <section class="sec product-heading">
   <div class="sec-h"><h2><span class="hi">${svg('<path d="M6 7h12l1.5 14h-15zM8 7a4 4 0 018 0"/>',15)}</span> منتجات مختارة لك</h2><a data-go="store">${svg('<path d="M15 6l-6 6 6 6"/>',12)} عرض الكل</a></div>
@@ -2629,7 +2853,7 @@ function homeHTML(){
   <div class="wtxt">
    <h3>جرّب حظك<b>واربح مكافآت فورية!</b></h3>
    <p>خصومات وجوائز متنوعة بانتظارك</p>
-   <button class="btn btn-org" id="spinBtn">${svg('<path d="M15 6l-6 6 6 6"/>',12)} <span>دور العجلة الآن</span> ${svg('<circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M6 6l12 12M18 6L6 18"/>',13)}</button>
+   <button class="btn btn-org" id="spinBtn" ${(!S.wheelEnabled||!S.wheelCanSpin)?'disabled':''}>${svg('<path d="M15 6l-6 6 6 6"/>',12)} <span>${!S.wheelEnabled?'العجلة غير متاحة حاليًا':!S.wheelCanSpin?'لقد استخدمت العجلة من قبل':'دور العجلة الآن'}</span> ${svg('<circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M6 6l12 12M18 6L6 18"/>',13)}</button>
   </div>
   <div class="wheel-wrap">
    <svg class="wheel-pin" viewBox="0 0 18 20" fill="currentColor"><path d="M9 20L0 4a9 9 0 0118 0z"/></svg>
@@ -2704,7 +2928,7 @@ function homeHTML(){
     <div class="footer-branch">${svg('<path d="M3 11l9-7 9 7v9H3zM9 20v-6h6v6"/>',13)}<span><b>الخدمة المنزلية</b><small>خدمتك أينما كنت</small></span></div>
    </div></section>
   </div>
-  <div class="footer-legal"><a href="https://sami-care.sa/TermsAndConditions">الشروط والأحكام وسياسة الخصوصية</a><a href="branches.html">خريطة الموقع</a></div>
+  <div class="footer-legal"><a data-go="terms">الشروط والأحكام</a><a data-go="privacy">سياسة الخصوصية</a><a href="branches.html">خريطة الموقع</a></div>
   <div class="footer-pay-title">طرق الدفع المتاحة</div><div class="footer-pay"><span>كاش</span><span class="tamara">تمارا</span><span class="tabby">tabby</span><span> Pay</span><span class="mada">مدى</span></div>
   <small class="footer-copy">© 2026 عناية سامي، جميع الحقوق محفوظة.</small>
  </footer>`;
@@ -2774,6 +2998,41 @@ function packagesHTML(){
    </div>
   </article>`).join('')}</div>
  ${list.length?'':'<div class="pk-empty">لا توجد باقات في هذا التصنيف</div>'}`;
+}
+
+/* محتوى مبدئي (Placeholder) لحين توفير نص رسمي معتمد — نفس النص المستخدم فى
+   src/views/TermsView.vue و PrivacyPolicyView.vue بالديسكتوب، للحفاظ على تطابق المحتوى. */
+function legalSectionsHTML(sections){
+ return sections.map(s=>`<div class="m-card m-detail" style="margin:0 16px 12px;text-align:right">
+  <h4>${s[0]}</h4>
+  ${Array.isArray(s[1])?`<ul style="margin:8px 0 0;padding-inline-start:18px;color:var(--mute);font-size:13px;line-height:1.9">${s[1].map(li=>`<li>${li}</li>`).join('')}</ul>`:`<p style="margin:8px 0 0;color:var(--mute);font-size:13px;line-height:1.9">${s[1]}</p>`}
+ </div>`).join('');
+}
+function termsPageHTML(){
+ const sections=[
+  ['قبول الشروط','باستخدامك لموقع وتطبيق عناية سامي، فإنك توافق على الالتزام بهذه الشروط والأحكام بالكامل. إذا كنت لا توافق على أي جزء منها، يُرجى التوقف عن استخدام خدماتنا.'],
+  ['الحجوزات والمواعيد',['يجب تسجيل الدخول برقم جوال صحيح لإتمام أي حجز خدمة أو باقة.','يمكن إلغاء أو تعديل الموعد قبل وقت كافٍ من الموعد المحدد وفق سياسة الفرع.','التأخر عن الموعد المحدد قد يؤدي إلى تقليص مدة الخدمة أو إعادة الجدولة.']],
+  ['الأسعار والدفع','جميع الأسعار المعروضة شاملة لضريبة القيمة المضافة ما لم يُذكر خلاف ذلك. تتم عمليات الدفع عبر وسائل الدفع المتاحة داخل المنصة فقط.'],
+  ['بطاقات الهدايا','بطاقات الهدايا الرقمية صالحة للاستخدام خلال المدة الموضحة عند الإصدار، ولا يمكن استرجاع قيمتها نقدًا.'],
+  ['الاستخدام المقبول','يُمنع استخدام المنصة لأي غرض غير قانوني أو بطريقة قد تضر بالخدمة أو بالمستخدمين الآخرين.'],
+  ['التعديلات','تحتفظ عناية سامي بحقها في تعديل هذه الشروط في أي وقت، وسيتم نشر أي تحديث على هذه الصفحة.'],
+ ];
+ return subHero({img:IMG.groom,crumb:'الشروط والأحكام',title:'الشروط<br>والأحكام',sub:'يرجى قراءة هذه الشروط بعناية قبل استخدام خدمات عناية سامي'})+
+  `<div style="margin-top:14px">${legalSectionsHTML(sections)}</div>
+   <p style="margin:0 16px 20px;color:var(--mute);font-size:11.5px">آخر تحديث: 2026 — هذا نص مبدئي قابل للتحديث من إدارة عناية سامي.</p>`;
+}
+function privacyPageHTML(){
+ const sections=[
+  ['البيانات التي نجمعها',['الاسم ورقم الجوال المستخدمين لإنشاء الحساب وتسجيل الدخول.','بيانات الحجوزات والطلبات (الخدمات، الباقات، المنتجات، الهدايا).','العنوان عند طلب توصيل منتجات أو خدمة منزلية.']],
+  ['كيف نستخدم بياناتك','نستخدم بياناتك لتنفيذ حجوزاتك وطلباتك، والتواصل معك بخصوصها، وتحسين تجربتك داخل التطبيق والموقع.'],
+  ['مشاركة البيانات','لا تتم مشاركة بياناتك الشخصية مع أي طرف ثالث إلا في الحدود اللازمة لإتمام الخدمة (مثل بوابات الدفع وشركات التوصيل).'],
+  ['حماية البيانات','نتخذ إجراءات تقنية وتنظيمية معقولة لحماية بياناتك من الوصول أو الاستخدام غير المصرح به.'],
+  ['حقوقك','يمكنك طلب الاطلاع على بياناتك أو تحديثها أو حذف حسابك من خلال صفحة "حسابي" أو بالتواصل مع فريق الدعم.'],
+  ['التعديلات','قد يتم تحديث سياسة الخصوصية من وقت لآخر، وسيتم نشر أي تعديل على هذه الصفحة.'],
+ ];
+ return subHero({img:IMG.groom,crumb:'سياسة الخصوصية',title:'سياسة<br>الخصوصية',sub:'كيف نجمع بياناتك ونستخدمها ونحميها داخل منصة عناية سامي'})+
+  `<div style="margin-top:14px">${legalSectionsHTML(sections)}</div>
+   <p style="margin:0 16px 20px;color:var(--mute);font-size:11.5px">آخر تحديث: 2026 — هذا نص مبدئي قابل للتحديث من إدارة عناية سامي.</p>`;
 }
 
 function homeSvcHTML(){
@@ -3108,8 +3367,10 @@ function addressesHTML(){
 function supportHTML(){
  if(S.supportSent)return`<div class="pg-head acc-head"><h1>الدعم والمساعدة</h1></div>
   <div class="empty"><span class="ei2">${svg('<path d="M20 6L9 17l-5-5"/>',26)}</span><b>تم إرسال رسالتك</b><p>هنتواصل معاك في أقرب وقت</p></div>`;
+ const u=_accountData?.user||{};
  return`<div class="pg-head acc-head"><h1>الدعم والمساعدة</h1><p>احنا هنا لمساعدتك، ابعتلنا رسالتك</p></div>
  <form id="supportForm" style="display:grid;gap:10px;margin:0 16px 20px">
+  <input id="supportEmail" type="email" dir="ltr" placeholder="بريدك الإلكتروني" value="${escHtml(u.email||'')}" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--line);font-family:inherit">
   <textarea id="supportMsg" rows="5" placeholder="اكتب رسالتك هنا..." style="width:100%;padding:13px 16px;border-radius:13px;border:1.5px solid var(--line);font-family:inherit;font-size:14px;resize:vertical">${escHtml(S.supportMsg)}</textarea>
   ${S.authError?`<p style="color:#b42318;font-size:12px;margin:0">${escHtml(S.authError)}</p>`:''}
   <button type="submit" class="btn btn-org" style="min-height:46px" ${S.authLoading?'disabled':''}>${S.authLoading?'جارٍ الإرسال...':'إرسال'}</button>
@@ -3457,6 +3718,23 @@ function wizServiceHTML(){
   <span class="service-info"><b>${s.name}</b><small>${s.desc}</small><span class="service-meta"><small>◷ ${s.dur} دقيقة</small><span class="price">${rs(s.price)} ر.س</span></span></span>
   <span class="pick-mark">${S.bookServices.has(s.id)?'✓':'+'}</span></button>`).join('')}</div>`:`<div class="booking-empty"><img src="assets/booking/empty-chair.webp" alt="كرسي الحلاقة"><h2>اختر القسم المناسب لك</h2><p>ستظهر الخدمات المتاحة هنا</p><span class="empty-dots"><i></i><i></i><i></i></span></div>`}`;
 }
+function wizAutoEmployeeStatusHTML(){
+ /* لولا الحالة دى، وضع "أي موظف" كان بيسمح بالتقدم فورًا (canWizNext بيتأكد بس إن الوضع=auto)
+    حتى لو التحميل لسه شغال أو محتاجش يتلاقاش موظف متاح خالص لخدمة معينة — يعني الحجز ممكن
+    يتبعت بـ staffId=undefined من غير ما اليوزر يعرف إن حاجة غلط. دلوقتى canWizNext بيتأكد إن
+    كل خدمة معاها موظف فعليًا قبل السماح بالتقدم، والشاشة دى بتوضح للمستخدم السبب لو اتعطل. */
+ return bSelSvcs().map(s=>{
+  const loading=S.bookStaffLoading[s.id];
+  const list=S.bookStaffByService[s.id];
+  const sel=S.bookEmp[s.id];
+  const status=sel
+   ?`<b>${escHtml(sel.name)}</b>`
+   :(loading||list===undefined)
+   ?`<b style="color:var(--mute)">جارٍ التحقق من التوفر...</b>`
+   :`<b style="color:#b42318">لا يوجد موظف متاح — جرّب "تحديد موظف" يدويًا</b>`;
+  return`<div class="m-detail-row"><span>${escHtml(s.name)}</span>${status}</div>`;
+ }).join('');
+}
 function wizEmployeeHTML(){
  const manual=S.bookMode==='manual';
  const rows=bSelSvcs().map(s=>{
@@ -3476,7 +3754,7 @@ function wizEmployeeHTML(){
  return`<div class="employee-modes">
   <button class="employee-mode ${!manual?'sel':''}" data-w-mode="auto"><span class="mode-badge">★ موصى به</span><span class="mode-icon">${svg('<path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>',34)}</span><b>أي موظف</b><i class="mode-check">${!manual?'✓':''}</i></button>
   <button class="employee-mode ${manual?'sel':''}" data-w-mode="manual"><span class="mode-icon">${svg('<path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>',34)}</span><b>تحديد موظف</b><i class="mode-check">${manual?'✓':''}</i></button>
- </div><div class="employee-tip"><span class="spark">${!manual?'★':'✦'}</span><p>${!manual?'تم اختيار أفضل موظف متاح لكل خدمة تلقائيًا.':'اختر الموظف الذي تفضله لكل خدمة، وسيتم تأكيد توفره مع موعدك.'}</p></div>${manual?`<div class="employee-groups">${rows}</div>`:''}`;
+ </div><div class="employee-tip"><span class="spark">${!manual?'★':'✦'}</span><p>${!manual?'يتم اختيار أفضل موظف متاح لكل خدمة تلقائيًا.':'اختر الموظف الذي تفضله لكل خدمة، وسيتم تأكيد توفره مع موعدك.'}</p></div>${manual?`<div class="employee-groups">${rows}</div>`:`<div class="m-card m-detail" style="margin-top:10px"><h4>حالة كل خدمة</h4>${wizAutoEmployeeStatusHTML()}</div>`}`;
 }
 function wizDateTimeHTML(){
  if(!S.bookCalStart){const t=new Date();t.setHours(0,0,0,0);S.bookCalStart=t}
@@ -3531,11 +3809,17 @@ function wizSummaryHTML(){
   <div class="m-summary-mini"><div class="row"><span>المبلغ قبل الضريبة</span><b>${rs(p.sub)} ر.س</b></div><div class="row"><span>الضريبة</span><b>${rs(p.vat)} ر.س</b></div><div class="row"><span>الإجمالي</span><b>${rs(p.total)} ر.س</b></div></div>
  </div>`;
 }
+const ENABLED_BOOK_PAYS=['cash','wallet'];
 function wizPaymentHTML(){
  const p=bPriceParts();
- const ENABLED_BOOK_PAYS=['cash'];
+ const walletBal=_accountData?.balances?.wallet??0;
  return`<div class="m-panel-title"><h1>الدفع</h1><p>اختر طريقة الدفع المناسبة وأكمل حجزك بأمان</p></div>
- <div class="m-stack">${B_PAY_METHODS.filter(m=>m.id!=='wallet').map(m=>`<button class="m-pay ${S.bookPay===m.id?'sel':''} ${ENABLED_BOOK_PAYS.includes(m.id)?'':'disabled'}" data-w-pay="${m.id}" ${ENABLED_BOOK_PAYS.includes(m.id)?'':'disabled'}><span class="logo">${m.logo}</span><span><b>${m.n}</b><small>${ENABLED_BOOK_PAYS.includes(m.id)?m.d:'قريبًا'}</small></span><span style="margin-inline-start:auto;color:var(--org)">${S.bookPay===m.id?'✓':''}</span></button>`).join('')}</div>
+ <div class="m-stack">${B_PAY_METHODS.map(m=>{
+  const en=ENABLED_BOOK_PAYS.includes(m.id);
+  const label=en?(m.id==='wallet'?`الرصيد الحالي ${rs(walletBal)} ر.س`:m.d):'قريبًا';
+  return`<button class="m-pay ${S.bookPay===m.id?'sel':''} ${en?'':'disabled'}" data-w-pay="${m.id}" ${en?'':'disabled'}><span class="logo">${m.logo}</span><span><b>${m.n}</b><small>${label}</small></span><span style="margin-inline-start:auto;color:var(--org)">${S.bookPay===m.id?'✓':''}</span></button>`;
+ }).join('')}</div>
+ ${S.bookPay==='wallet'&&walletBal<p.total?'<p style="color:#b42318;font-size:12px;margin:8px 0 0">رصيد محفظتك لا يكفي لدفع القيمة كاملة، اختر وسيلة دفع أخرى.</p>':''}
  ${S.bookError?`<p style="color:#b42318;font-size:12.5px;margin:12px 0 0">${escHtml(S.bookError)}</p>`:''}
  <div class="m-summary-mini" style="margin-top:12px"><div class="row"><span>الخدمات</span><b>${rs(p.sub)} ر.س</b></div><div class="row"><span>الضريبة</span><b>${rs(p.vat)} ر.س</b></div><div class="row"><span>الإجمالي</span><b>${rs(p.total)} ر.س</b></div></div><div class="m-secure">🔒 جميع عمليات الدفع آمنة ومشفرة</div>`;
 }
@@ -3550,9 +3834,13 @@ function canWizNext(){
  if(S.bookDone)return true;
  if(S.bookStep===1)return!!S.bookBranch;
  if(S.bookStep===2)return S.bookServices.size>0;
- if(S.bookStep===3)return S.bookMode==='auto'||(S.bookMode==='manual'&&bSelSvcs().every(s=>S.bookEmp[s.id]));
+ /* لازم كل خدمة معاها موظف فعليًا (سواء تلقائي أو يدوي) قبل التقدم — كان وضع "auto" بيسمح
+    بالتقدم فورًا من غير ما ينتظر التحميل أو يتأكد إن فيه موظف متاح أصلًا (راجع wizAutoEmployeeStatusHTML). */
+ if(S.bookStep===3)return!!S.bookMode&&bSelSvcs().every(s=>S.bookEmp[s.id]);
  if(S.bookStep===4)return!!S.bookDate&&bSelSvcs().every(s=>S.bookTime[s.id]);
  if(S.bookStep===5)return !!(S.bookCust.name.trim()&&S.bookCust.phone.trim());
+ /* لو اختار "المحفظة" لازم الرصيد يغطي القيمة كاملة — نفس منطق الديسكتوب فى useBooking.js. */
+ if(S.bookPay==='wallet'&&(_accountData?.balances?.wallet??0)<bPriceParts().total)return false;
  return!!S.bookPay&&!S.bookSubmitting;
 }
 function wizardHTML(){
@@ -3741,13 +4029,11 @@ function giftWizardHTML() {
 /* ===== سيناريو الهدية الكامل للموبايل مثل الموقع ===== */
 function gBranch(){return B_BRANCHES.find(b=>b.id===S.giftBranch)}
 function gSelSvcs(){return [...S.giftServices].map(bSvc).filter(Boolean)}
-function gPkgList(){
- return [
-  {id:'relax',name:'باقة الاسترخاء',desc:'استرخاء كامل وتجديد الطاقة',price:420,dur:120,img:IMG.msg,ic:'🌿'},
-  {id:'groom',name:'باقة العريس',desc:'تجهيز متكامل ليومك الأهم',price:690,dur:180,img:IMG.groom,ic:'👑'},
-  {id:'full',name:'باقة العناية الكاملة',desc:'من الرأس إلى القدم',price:560,dur:150,img:IMG.hero1,ic:'✦'},
- ];
-}
+/* كانت قائمة وهمية بمعرّفات نصية ثابتة ('relax'/'groom'/'full') مش موجودة فى قاعدة البيانات —
+   ده كان سبب فشل إهداء الباقات دايمًا (Number('relax') يطلع NaN فيرفضها attemptRealGiftSubmit)
+   رغم إن إهداء الخدمات شغال لأنه بيستخدم IDs حقيقية. لازم نفس DPKGS الحقيقية المستخدمة فى
+   packagesHTML(). */
+function gPkgList(){return DPKGS;}
 function gPkg(){return gPkgList().find(p=>p.id===S.giftPkg)}
 function gValue(){return S.giftType==='svc'?gSelSvcs().reduce((a,s)=>a+s.price,0):(gPkg()?gPkg().price:S.giftAmount)}
 function gFee(){return S.giftBranch==='hm'?60:0}
@@ -3792,7 +4078,7 @@ function giftWizBranchHTML(){
 }
 function giftWizContentHTML(){
  if(S.giftType==='pkg'){
-  return`<div class="m-panel-title"><h1>اختر الباقة التي ترغب بإهدائها</h1><p>باقات مميزة تمنح تجربة متكاملة من العناية والراحة</p></div>${gMiniSummary()}<div class="m-stack">${gPkgList().map(p=>`<button class="m-card ${S.giftPkg===p.id?'sel':''}" data-g-pkg="${p.id}"><div class="m-branch-img"><img src="${p.img}" alt="${p.name}"><span class="flag">${p.ic} ${p.dur} دقيقة</span></div><div class="m-card-body"><h3>${p.name}</h3><div class="addr">${p.desc}</div><div class="m-meta"><span>${rs(p.price)} ر.س</span><span>هدية رقمية</span><span>صالحة 6 أشهر</span></div><button class="m-pick">${S.giftPkg===p.id?'✓ تم الاختيار':'اختيار الباقة'}</button></div></button>`).join('')}</div>`;
+  return`<div class="m-panel-title"><h1>اختر الباقة التي ترغب بإهدائها</h1><p>باقات مميزة تمنح تجربة متكاملة من العناية والراحة</p></div>${gMiniSummary()}<div class="m-stack">${gPkgList().map(p=>`<article class="m-card ${S.giftPkg===p.id?'sel':''}" data-g-pkg="${p.id}"><div class="m-branch-img"><img src="${p.img}" alt="${p.name}"><span class="flag">${p.dur} دقيقة</span></div><div class="m-card-body"><h3>${p.name}</h3><div class="addr">${p.desc}</div><div class="m-meta"><span>${rs(p.price)} ر.س</span><span>هدية رقمية</span><span>صالحة 6 أشهر</span></div><button class="m-pick">${S.giftPkg===p.id?'✓ تم الاختيار':'اختيار الباقة'}</button></div></article>`).join('')}</div>`;
  }
  /*
    نفس واجهة اختيار الخدمات المستخدمة في مسار الحجز (m-cat-row + m-service)
@@ -3817,10 +4103,17 @@ function giftWizCustomizeHTML(){
   <div class="m-card m-detail"><h4>طريقة ووقت الإرسال</h4><div class="m-periods"><button class="m-period ${S.giftMethod==='wa'?'sel':''}" data-g-method="wa">واتساب</button><button class="m-period ${S.giftMethod==='sms'?'sel':''}" data-g-method="sms">SMS</button><button class="m-period ${S.giftMethod==='mail'?'sel':''}" data-g-method="mail">بريد</button></div><div class="m-periods"><button class="m-period ${S.giftSchedule==='now'?'sel':''}" data-g-schedule="now">إرسال الآن</button><button class="m-period ${S.giftSchedule==='later'?'sel':''}" data-g-schedule="later">جدولة الإرسال</button></div>${S.giftSchedule==='later'?`<label class="m-field"><small>وقت الإرسال</small><input type="datetime-local" id="gDate" value="${S.giftDate}"></label>`:''}</div>
  </div>`;
 }
+const ENABLED_GIFT_PAYS=['cash','wallet'];
 function giftWizCheckoutHTML(){
  const p=gParts();
+ const walletBal=_accountData?.balances?.wallet??0;
  return`<div class="m-panel-title"><h1>أكمل الدفع لإرسال هديتك</h1><p>سيتم إرسال الهدية مباشرة بعد إتمام الدفع</p></div>${gMiniSummary()}
- <div class="m-stack">${B_PAY_METHODS.filter(m=>m.id!=='cash').map(m=>`<button class="m-pay ${S.giftPay===m.id?'sel':''}" data-g-pay="${m.id}"><span class="logo">${m.logo}</span><span><b>${m.n}</b><small>${m.d}</small></span><span style="margin-inline-start:auto;color:var(--org)">${S.giftPay===m.id?'✓':''}</span></button>`).join('')}</div>
+ <div class="m-stack">${B_PAY_METHODS.map(m=>{
+  const en=ENABLED_GIFT_PAYS.includes(m.id);
+  const label=en?(m.id==='wallet'?`الرصيد الحالي ${rs(walletBal)} ر.س`:m.d):'قريبًا';
+  return`<button class="m-pay ${S.giftPay===m.id?'sel':''} ${en?'':'disabled'}" data-g-pay="${m.id}" ${en?'':'disabled'}><span class="logo">${m.logo}</span><span><b>${m.n}</b><small>${label}</small></span><span style="margin-inline-start:auto;color:var(--org)">${S.giftPay===m.id?'✓':''}</span></button>`;
+ }).join('')}</div>
+ ${S.giftPay==='wallet'&&walletBal<p.total?'<p style="color:#b42318;font-size:12px;margin:8px 16px 0">رصيد محفظتك لا يكفي لدفع القيمة كاملة، اختر وسيلة دفع أخرى.</p>':''}
  <div class="m-card m-detail" style="margin-top:12px"><h4>الشروط والأحكام</h4><button class="m-pay ${S.giftTerms?'sel':''}" id="gTerms"><span class="logo">✓</span><span><b>أوافق على الشروط والأحكام</b><small>وسياسة الخصوصية والإهداء</small></span></button></div>
  <div class="m-summary-mini" style="margin-top:12px"><div class="row"><span>قيمة الهدية</span><b>${rs(p.val)} ر.س</b></div>${p.fee?`<div class="row"><span>رسوم الخدمة المنزلية</span><b>${rs(p.fee)} ر.س</b></div>`:''}${p.disc?`<div class="row"><span>خصم</span><b>- ${rs(p.disc)} ر.س</b></div>`:''}<div class="row"><span>الضريبة</span><b>${rs(p.vat)} ر.س</b></div><div class="row"><span>الإجمالي</span><b>${rs(p.total)} ر.س</b></div></div><div class="m-secure">🔒 الدفع آمن ومشفّر</div>`;
 }
@@ -3837,6 +4130,9 @@ function canGiftWizNext(){
  if(S.giftStep===2)return!!S.giftBranch;
  if(S.giftStep===3)return S.giftType==='svc'?S.giftServices.size>0:!!S.giftPkg;
  if(S.giftStep===4)return !!(S.giftSender.trim()&&S.giftRecipient.trim()&&S.giftPhone.trim().length>=8&&(S.giftSchedule==='now'||S.giftDate));
+ /* لو اختار "المحفظة" لازم الرصيد يغطي القيمة كاملة — مفيش دعم لدفع جزء من المحفظة وباقي
+    المبلغ ببوابة تانية فى الواجهة الحالية (نفس منطق الديسكتوب فى useGifts.js). */
+ if(S.giftPay==='wallet'&&(_accountData?.balances?.wallet??0)<gParts().total)return false;
  return!!S.giftPay&&S.giftTerms;
 }
 function giftWizardHTML(){
@@ -3859,7 +4155,7 @@ function render(){
  if(S.giftWizard)html=giftWizardHTML();
  else if(S.bookWizard)html=serviceSheet?'<div class="booking-underlay" aria-hidden="true"></div>'+wizardHTML():wizardHTML();
  else if(S.bookLaunch)html='<div class="booking-underlay booking-launch-underlay" aria-hidden="true"></div>';
- else if(S.tab==='home')html=S.subPage==='services'?allServicesHTML():S.subPage==='pkg'?packagesHTML():S.subPage==='hsv'?homeSvcHTML():S.subPage==='gift'?giftsPageHTML():S.svPage?serviceHTML():homeHTML();
+ else if(S.tab==='home')html=S.subPage==='services'?allServicesHTML():S.subPage==='pkg'?packagesHTML():S.subPage==='hsv'?homeSvcHTML():S.subPage==='gift'?giftsPageHTML():S.subPage==='terms'?termsPageHTML():S.subPage==='privacy'?privacyPageHTML():S.svPage?serviceHTML():homeHTML();
  else if(S.tab==='store')html=storeHTML();
  else if(S.tab==='cart')html=cartHTML();
  else if(S.tab==='bookings')html=bookingsHTML();
@@ -3883,11 +4179,13 @@ function render(){
  document.body.classList.toggle('booking-service-sheet-open',serviceSheet);
  document.querySelector('.hd')?.classList.toggle('scrolled',window.scrollY>36);
  scr.innerHTML=`<div class="screen on">${html}</div>`;
+ translateStaticText(scr);
  /* الشريط اللاصق */
  let bar=$('#bookbar');
  if(!bar){bar=document.createElement('div');bar.id='bookbar';bar.className='bookbar';document.body.appendChild(bar)}
  const showBar=S.tab==='home'&&S.svPage&&S.svSel&&!S.bookWizard&&!S.giftWizard;
  bar.innerHTML=showBar?bookbarHTML():'';
+ translateStaticText(bar);
  bar.classList.toggle('on',!!showBar);
  bar.classList.toggle('open',!!showBar&&S.barOpen);
  const wizardOpen=S.bookWizard||S.giftWizard;
@@ -3942,6 +4240,7 @@ function bind(){
        }
      } else {
        S.giftStep++;
+       if(S.giftStep===5&&getAuth()&&!_accountData)loadAccountData();
        render();
      }
    });
@@ -4159,6 +4458,8 @@ function bind(){
   else if(g==='sent-gifts'){S.tab='account';S.accSub='sent-gifts';render();scrollTo({top:0,behavior:'smooth'})}
   else if(g==='support'){S.tab='account';S.accSub='support';S.authError='';S.supportSent=false;render();scrollTo({top:0,behavior:'smooth'})}
   else if(g==='settings'){S.tab='account';S.accSub='settings';S.authError='';render();scrollTo({top:0,behavior:'smooth'})}
+  else if(g==='terms'){S.tab='home';S.svPage=false;S.subPage='terms';render();scrollTo({top:0,behavior:'smooth'})}
+  else if(g==='privacy'){S.tab='home';S.svPage=false;S.subPage='privacy';render();scrollTo({top:0,behavior:'smooth'})}
   else if(g==='logout'){
    if(confirm('تسجيل الخروج؟')){
     authGet('/logout').catch(()=>{});
@@ -4243,7 +4544,7 @@ function bind(){
   });
   const sp=$('#spinBtn');
   if(sp)sp.addEventListener('click',()=>{
-   if(S.spinning)return;
+   if(S.spinning||!S.wheelEnabled||!S.wheelCanSpin)return;
    if(!getAuth()&&!S.wheelUser){openWheelRegisterSheet();return}
    doSpin();
   });
@@ -4417,11 +4718,16 @@ function bind(){
  if(supportForm)supportForm.addEventListener('submit',async e=>{
   e.preventDefault();
   const message=($('#supportMsg')?.value||'').trim();
+  const email=($('#supportEmail')?.value||'').trim();
   S.authError='';
   if(!message){S.authError='اكتب رسالتك أولًا';render();return}
+  if(!email){S.authError='أدخل بريدك الإلكتروني';render();return}
   S.authLoading=true;render();
   try{
-   await authPost('/contact',{message});
+   /* /contact بيطلب name/email إجبارية مش بس message — نجيب الاسم من بيانات الحساب المسجّل دخوله. */
+   const u=_accountData?.user||{};
+   const name=[u.first_name,u.last_name].filter(Boolean).join(' ')||'عميل سامي';
+   await authPost('/contact',{name,email,phone:u.mobile||'',message});
    S.supportSent=true;S.supportMsg='';
   }catch(err){S.authError=err.message||'تعذر إرسال الرسالة'}
   finally{S.authLoading=false;render()}
@@ -4565,8 +4871,9 @@ document.addEventListener('click', function(e){
 
 /* ===== تغيير اللغة =====
    يبدّل lang/dir ويخزّن الاختيار، وبيعيد تجهيز البيانات الحية (localized) باللغة الجديدة
-   فورًا من غير ما يطلب من الباك-إند تاني (راجع applyDynamicData أعلاه). نصوص الشاشات الثابتة
-   (اللي مش جايه من الـ API) لسه عربية — ده أساس تاني منفصل يحتاج قاموس ترجمة كامل لاحقًا. */
+   فورًا من غير ما يطلب من الباك-إند تاني (راجع applyDynamicData أعلاه)، وبيترجم الهيدر/التابار
+   الثابتين فورًا (translateStaticText)، وبيعمل render() عشان الشاشة الحالية تتترجم هي كمان
+   (راجع STATIC_DICT وtranslateStaticText فوق). */
 (function(){
   var btn = document.getElementById('langBtn');
   var lbl = document.getElementById('langLabel');
@@ -4577,11 +4884,14 @@ document.addEventListener('click', function(e){
     if (lbl) lbl.textContent = l === 'ar' ? 'EN' : 'ع';
     btn.title = l === 'ar' ? 'English' : 'العربية';
     setLang(l);
+    translateStaticText(document.querySelector('.hd'));
+    translateStaticText(document.getElementById('tabbarWrap'));
   };
   apply(getLang());
   btn.addEventListener('click', function(){
     apply(getLang() === 'ar' ? 'en' : 'ar');
     applyDynamicData();
+    render();
   });
 })();
 </script>

@@ -1,14 +1,28 @@
 <script setup>
-import { useBooking } from '@/composables/useBooking'
+import { computed, onMounted } from 'vue'
+import { useBooking, rs } from '@/composables/useBooking'
+import { fetchProfile } from '@/services/accountApi'
 
-const { state } = useBooking()
+const { state, priceParts } = useBooking()
 
-const PAY_METHODS = [
+onMounted(async () => {
+  try {
+    const res = await fetchProfile()
+    state.walletBalance = res?.data?.balances?.wallet ?? 0
+  } catch { /* يفضل بدون رصيد معروض لو فشل التحميل */ }
+})
+
+const PAY_METHODS = computed(() => [
   { id: 'cod', n: 'الدفع عند الوصول', d: 'ادفع عند وصولك للفرع', logo: '💵', enabled: true },
+  { id: 'wallet', n: 'المحفظة', d: state.walletBalance !== null ? `الرصيد الحالي ${rs(state.walletBalance)} ر.س` : 'ادفع من رصيد محفظتك', logo: '👛', enabled: true },
   { id: 'mada', n: 'مدى', d: 'قريبًا', logo: 'مدى', enabled: false },
   { id: 'card', n: 'بطاقات الائتمان والخصم', d: 'قريبًا — Visa / Mastercard', logo: 'VISA', enabled: false },
   { id: 'tabby', n: 'تابي', d: 'قريبًا', logo: 'tabby', enabled: false },
-]
+])
+
+const walletInsufficient = computed(() =>
+  state.pay === 'wallet' && state.walletBalance !== null && state.walletBalance < priceParts.value.total
+)
 
 const TRUST = [
   ['ضمان الجودة', 'نضمن لك أفضل تجربة', '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/>'],
@@ -34,6 +48,7 @@ function selectMethod(m) {
         <span><b>{{ m.n }}</b><small>{{ m.d }}</small></span>
         <span class="rad"><i></i></span>
       </div>
+      <p v-if="walletInsufficient" style="color:#b42318;font-size:12px;margin-top:8px">رصيد محفظتك لا يكفي لدفع القيمة كاملة، اختر وسيلة دفع أخرى.</p>
     </div>
     <div class="secure-line">🔒 جميع عمليات الدفع آمنة ومشفرة</div>
   </div>

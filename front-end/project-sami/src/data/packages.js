@@ -115,5 +115,6 @@ export const BK_PAYS=[
  {id:'visa',n:'Visa',logo:'VISA'},
  {id:'mc',n:'ماستركارد',logo:'●● MC'},
  {id:'apple',n:'أبل باي',logo:' Pay'},
+ {id:'wallet',n:'المحفظة',logo:'👛'},
  {id:'cash',n:'الدفع عند الوصول',logo:'💵'},
 ]
