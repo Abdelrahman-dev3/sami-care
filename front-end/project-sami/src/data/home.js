@@ -18,7 +18,7 @@ export const getHomeData = async () => {
 }
 
 //export const navigation=[{label:'الرئيسية',to:'/'},{label:'خدماتنا',to:'/services'},{label:'الاهداء',to:'/gifts'},{label:'المنتجات',to:'/store'},{label:'الباقات',to:'/packages-gifts'},{label:'المدونة',href:'#blog'},{label:'عن سامي',href:'#about'},{label:'تواصل معنا',to:'/contact'}]
-export const navigation=[{label:'الرئيسية',to:'/'},{label:'خدماتنا',to:'/services'},{label:'الاهداء',to:'/gifts'},{label:'المنتجات',to:'/store'},{label:'الباقات',to:'/packages-gifts'},{label:'المدونة',to:'/blog'},{label:'عن سامي',to:'/#about'},{label:'تواصل معنا',to:'/contact'}]
+export const navigation=[{label:'الرئيسية',to:'/'},{label:'خدماتنا',to:'/services'},{label:'الاهداء',to:'/gifts'},{label:'المنتجات',to:'/store'},{label:'الباقات',to:'/packages-gifts'},{label:'المدونة',to:'/blog'},{label:'عن سامي',to:'/#about'}/*,{label:'تواصل معنا',to:'/contact'}*/]
 
 export const features=[{icon:'♙',title:'فريق متخصص',text:'خبرات في خدمتكم'},{icon:'♔',title:'منتجات فاخرة',text:'الأفضل دائماً'},{icon:'✿',title:'أعلى معايير النظافة',text:'سلامتك أولويتنا'},{icon:'♕',title:'جودة مضمونة',text:'رضاكم هدفنا'}]
 

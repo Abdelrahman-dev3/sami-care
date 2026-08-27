@@ -1,19 +1,21 @@
-import{r as b,h as m,c as a,b as n,u as s,F as u,e as v,d as w,o as r,q as p,t,a as e,w as y}from"./index-BRzvpxnI.js";import{u as k,a as z}from"./useInternalLinks-vlzQGtpv.js";import{_ as B}from"./AppFooter-D0uud0O4.js";const C=`
+import{r as y,h as A,s as L,c as d,b as n,m as g,t as p,a as i,F as w,e as k,u as z,d as a,y as r,z as M,o as s,q as B,J as _}from"./index-DRmIOvU6.js";import{u as j,a as I}from"./useInternalLinks-C5bGJrEd.js";import{s as D}from"./accountApi-Cxd2lFgQ.js";const S=`
 :root{
   --ink:#0A0906; --coal:#14110C;
   --gold:#CE9234; --gold-bright:#E8BE6C; --gold-deep:#9C6B1F;
   --champagne:#F0E6CF; --ivory:#F8F4EB; --paper:#FBFAF6; --card:#FFFFFF;
   --smoke:#9A9080; --mute:#7d745f; --text:#2A2519;
   --line:rgba(143,113,52,.22); --line-dark:rgba(198,161,91,.22);
+  --green:#2E8B57; --green-bright:#3fa46b;
   --ease:cubic-bezier(.33,.9,.35,1); --dur:.26s;
   --font-d:'Lama Sans',serif; --font-b:'Lama Sans',sans-serif;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:var(--font-b);background:var(--ink);color:var(--text);-webkit-font-smoothing:antialiased;overflow-x:hidden}
 ::selection{background:var(--gold);color:var(--ink)}
-img{max-width:100%;display:block;border-radius:12px}
+img{max-width:100%;display:block}
 a{color:inherit;text-decoration:none}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,textarea{font-family:inherit;font-size:14px;color:var(--ink);outline:none}
 .wrap{width:min(1280px,94%);margin-inline:auto}
 
 /* ===== الهيدر ===== */
@@ -34,7 +36,7 @@ nav.links a.on::after{content:"";position:absolute;bottom:0;right:0;left:0;heigh
 .loyal{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--gold);color:var(--gold-bright);
   padding:9px 18px;border-radius:999px;font-size:13px}
 
-.shell{background:var(--paper);border-radius:26px 26px 0 0;min-height:calc(100vh - 71px);padding-bottom:80px;position:relative}
+.shell{background:var(--paper);border-radius:26px 26px 0 0;min-height:calc(100vh - 71px);padding:50px 0 80px;position:relative}
 
 /* ===== الأزرار ===== */
 .btn{display:inline-flex;align-items:center;gap:10px;justify-content:center;padding:14px 30px;border-radius:14px;
@@ -43,26 +45,57 @@ nav.links a.on::after{content:"";position:absolute;bottom:0;right:0;left:0;heigh
 .btn-gold{color:var(--ink);background:linear-gradient(135deg,var(--gold-bright) 0%,var(--gold) 50%,var(--gold-deep) 120%);
   box-shadow:0 12px 26px -10px rgba(143,113,52,.65)}
 .btn-gold:hover{transform:translateY(-2px);box-shadow:0 18px 34px -10px rgba(143,113,52,.7)}
-.btn-line{border:1.5px solid var(--gold);color:var(--gold-deep);background:#fff}
-.btn-line:hover{background:rgba(198,161,91,.08);transform:translateY(-2px)}
 
-/* ===== محتوى الصفحة ===== */
-.page-head{padding:60px 0 30px;text-align:center}
-.page-head h1{font-family:var(--font-d);font-size:clamp(30px,4.5vw,48px);color:var(--ink);margin-bottom:12px}
-.page-head p{color:var(--mute);font-size:16px;max-width:600px;margin-inline:auto;line-height:1.7}
+/* ===== محتوى صفحة تواصل معنا ===== */
+.contact-grid{display:grid;grid-template-columns:1.2fr 1.5fr;gap:30px;margin-top:20px;align-items:stretch}
 
-.branches-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:20px}
-.branch-card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:24px;display:flex;flex-direction:column;
-  box-shadow:0 14px 30px -22px rgba(80,60,20,.25);transition:transform var(--dur) var(--ease),box-shadow var(--dur) var(--ease)}
-.branch-card:hover{transform:translateY(-5px);box-shadow:0 20px 40px -20px rgba(80,60,20,.35)}
-.branch-img{width:100%;height:180px;background:#EAE5DB;border-radius:12px;overflow:hidden;position:relative;margin-bottom:18px}
-.branch-img img{width:100%;height:100%;object-fit:cover;transition:transform .7s var(--ease)}
-.branch-card:hover .branch-img img{transform:scale(1.05)}
-.branch-info{flex:1}
-.branch-info h3{font-family:var(--font-d);font-size:22px;color:var(--ink);margin-bottom:12px}
-.branch-meta{display:flex;flex-direction:column;gap:10px;margin-bottom:20px;font-size:14px;color:var(--mute)}
-.branch-meta span{display:flex;align-items:center;gap:10px}
-.branch-meta span svg{color:var(--gold-deep);flex-shrink:0}
+/* البطاقة اليسرى: فورم الإدخال */
+.form-card{background:#fff;border:1px solid var(--line);border-radius:24px;padding:40px;position:relative;overflow:hidden;
+  box-shadow:0 14px 30px -22px rgba(80,60,20,.25);display:flex;flex-direction:column;justify-content:space-between}
+/* زاوية ذهبية جمالية مثل الصورة */
+.form-card::before{content:"";position:absolute;top:0;left:0;width:70px;height:70px;
+  background:linear-gradient(135deg, var(--gold-bright) 50%, transparent 50%);opacity:.85}
+.form-card h2{font-family:var(--font-d);font-size:26px;color:var(--ink);margin-bottom:24px;padding-top:10px}
+.fld{display:flex;flex-direction:column;gap:6px;margin-bottom:20px}
+.fld label{font-size:12.5px;color:var(--mute);font-weight:600}
+.fld input, .fld textarea{border:1px solid var(--line);border-radius:12px;padding:13px 16px;background:var(--ivory);
+  transition:border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease)}
+.fld input:focus, .fld textarea:focus{border-color:var(--gold);box-shadow:0 0 0 4px rgba(206,146,52,.12);background:#fff}
+.fld textarea{resize:none;height:110px}
+
+/* البطاقة اليمنى: بيانات التواصل والمعلومات */
+.info-card{background:#fff;border:1px solid var(--line);border-radius:24px;padding:40px;
+  box-shadow:0 14px 30px -22px rgba(80,60,20,.25);display:flex;flex-direction:column;gap:30px}
+
+.info-section{border-bottom:1px dashed var(--line);padding-bottom:24px}
+.info-section:last-of-type{border:none;padding-bottom:0}
+.info-section h3{font-family:var(--font-d);font-size:19px;color:var(--gold-deep);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.info-section h3 svg{color:var(--gold-deep)}
+
+/* تفاصيل المواعيد والعناوين */
+.sched-detail{font-size:15px;color:var(--ink);line-height:1.7}
+.sched-detail b{color:var(--gold-deep)}
+
+.addresses-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.addr-box h4{font-family:var(--font-d);font-size:16.5px;color:var(--ink);margin-bottom:6px}
+.addr-box p{font-size:13.5px;color:var(--mute);line-height:1.6}
+.addr-box a{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--gold-deep);font-weight:700;margin-top:8px}
+
+.home-services p{font-size:14.5px;color:var(--mute);line-height:1.6;margin-bottom:8px}
+.home-services a{display:inline-flex;align-items:center;gap:8px;font-size:15px;color:var(--gold-deep);font-weight:700}
+
+/* زر الواتساب الأخضر الأنيق والسريع */
+.whatsapp-btn{display:flex;align-items:center;justify-content:center;gap:10px;background:var(--green);color:#fff;
+  padding:16px;border-radius:14px;font-size:15.5px;font-weight:700;box-shadow:0 10px 22px -10px rgba(46,139,87,.45);
+  transition:all var(--dur) var(--ease)}
+.whatsapp-btn:hover{background:var(--green-bright);transform:translateY(-2px);box-shadow:0 14px 26px -10px rgba(46,139,87,.55)}
+
+/* توست النجاح */
+.toast{position:fixed;bottom:24px;right:24px;z-index:500;background:var(--ink);color:var(--champagne);
+  border:1px solid var(--line);padding:14px 24px;border-radius:14px;display:flex;align-items:center;gap:10px;
+  font-size:13.5px;font-weight:600;opacity:0;pointer-events:none;transition:all .3s var(--ease);box-shadow:0 10px 24px -10px rgba(0,0,0,.4)}
+.toast.on{opacity:1;transform:translateY(-10px)}
+.toast svg{color:var(--gold-bright)}
 
 /* ===== الفوتر ===== */
 footer{background:#070604;border-top:1px solid var(--line);padding:70px 0 30px;color:var(--champagne)}
@@ -78,14 +111,15 @@ footer{background:#070604;border-top:1px solid var(--line);padding:70px 0 30px;c
 .foot-copy{border-top:1px solid rgba(198,161,91,.1);padding-top:30px;text-align:center;font-size:12.5px;color:var(--smoke)}
 
 @media(max-width:1024px){
-  .branches-grid{grid-template-columns:1fr 1fr}
+  .contact-grid{grid-template-columns:1fr}
   .foot-grid{grid-template-columns:1fr 1fr}
 }
 @media(max-width:700px){
   nav.links{display:none}
-  .branches-grid{grid-template-columns:1fr}
+  .form-card{padding:24px}
+  .info-card{padding:24px}
+  .addresses-grid{grid-template-columns:1fr}
   .foot-grid{grid-template-columns:1fr}
-  .page-head{padding:40px 0 15px}
 }
 
 /* ===== تحسين الهيدر الموحد ===== */
@@ -195,4 +229,4 @@ footer{background:radial-gradient(circle at 18% 0,rgba(232,190,108,.16),transpar
 .loc-txt small{display:block;font-size:10.5px;color:#8b8379;line-height:1.6;margin-top:3px}
 .loc-txt em{display:flex;align-items:center;gap:5px;font-style:normal;font-size:10px;color:#2E8B57;margin-top:5px}
 .loc-txt em::before{content:"";width:6px;height:6px;border-radius:50%;background:#2E8B57}
-`,E={class:"shell"},_={class:"wrap"},F={key:0,class:"page-head"},A={key:1,class:"branches-grid"},D={class:"branch-img"},j=["src","alt"],L={class:"branch-info"},S={class:"branch-meta"},V={key:0},M={key:1},Y={key:2},N=["onClick"],T={__name:"BranchesView",setup(I){const d=b(null),{locations:g,locationsLoading:c,loadServiceLocations:x,setLocation:f}=m();k(C,"branches"),z(d),x();function h(l){f(l.id),location.href="/booking"}return(l,i)=>(r(),a("div",{ref_key:"root",ref:d,class:""},[n("div",E,[n("div",_,[i[5]||(i[5]=n("div",{class:"page-head"},[n("h1",null,"فروعنا الفاخرة"),n("p",null,"اختر الفرع الأقرب إليك لبدء حجز خدماتك. فروعنا مجهزة بالكامل لتقدم لك أرقى تجارب العناية والاسترخاء.")],-1)),s(c)?(r(),a("div",F,[...i[0]||(i[0]=[n("p",null,"جاري تحميل الفروع...",-1)])])):(r(),a("div",A,[(r(!0),a(u,null,v(s(g),o=>(r(),a("div",{key:o.id,class:"branch-card"},[n("div",D,[o.image?(r(),a("img",{key:0,src:o.image,alt:o.name},null,8,j)):p("",!0)]),n("div",L,[n("h3",null,t(o.name),1),n("div",S,[n("span",null,[i[1]||(i[1]=n("svg",{width:"16",height:"16",viewBox:"0 0 24 24",fill:"none",stroke:"currentColor","stroke-width":"2"},[n("path",{d:"M21 10c0 7-9 12-9 12S3 17 3 10a9 9 0 0118 0z"}),n("circle",{cx:"12",cy:"10",r:"3"})],-1)),e(t(o.address),1)]),o.home?(r(),a("span",V,[...i[2]||(i[2]=[n("svg",{width:"16",height:"16",viewBox:"0 0 24 24",fill:"none",stroke:"currentColor","stroke-width":"2"},[n("path",{d:"M3 9l9-6 9 6v11a1 1 0 01-1 1H4a1 1 0 01-1-1z"}),n("path",{d:"M9 21V12h6v9"})],-1),e("خدمة VIP",-1)])])):o.contact_number?(r(),a("span",M,[i[3]||(i[3]=n("svg",{width:"16",height:"16",viewBox:"0 0 24 24",fill:"none",stroke:"currentColor","stroke-width":"2"},[n("path",{d:"M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0122 16.92z"})],-1)),e(t(o.contact_number),1)])):p("",!0),o.rating_star?(r(),a("span",Y,[i[4]||(i[4]=n("svg",{width:"16",height:"16",viewBox:"0 0 24 24",fill:"none",stroke:"currentColor","stroke-width":"2"},[n("path",{d:"M12 2l2.9 6.2 6.6.8-4.9 4.6 1.3 6.6L12 17l-5.9 3.2 1.3-6.6L2.5 9l6.6-.8z"})],-1)),e("تقييم "+t(o.rating_star),1)])):p("",!0)])]),n("a",{href:"#",class:"btn btn-gold",style:{width:"100%"},onClick:y(P=>h(o),["prevent"])},t(o.home?"احجز الخدمة المنزلية":"احجز في هذا الفرع"),9,N)]))),128))]))])]),w(B)],512))}};export{T as default};
+`,V={class:"shell"},N={class:"wrap"},P={class:"contact-grid"},Y={class:"form-card"},H=["disabled"],R={class:"info-card"},T={class:"info-section"},q={class:"addresses-grid"},$=["href"],J={class:"wrap"},X={class:"f-grid"},G={class:"f-brand"},K={class:"f-links"},O={class:"f-links"},Q=["href"],tn={__name:"ContactView",setup(U){const f=y(null),{locations:b,loadServiceLocations:C}=A();C();const{requireAuth:E}=L();j(S,"contact"),I(f);const c=y(!1);function F(){var h,m,u,v;const x=((h=document.getElementById("cName"))==null?void 0:h.value.trim())||"",t=((m=document.getElementById("cPhone"))==null?void 0:m.value.trim())||"",e=((u=document.getElementById("cMail"))==null?void 0:u.value.trim())||"",o=((v=document.getElementById("cMsg"))==null?void 0:v.value.trim())||"";if(!x||!t||!e||!o){alert("من فضلك أكمل كل الحقول المطلوبة (الاسم، الهاتف، البريد الإلكتروني، الرسالة)");return}E(async()=>{c.value=!0;try{await D({name:x,email:e,phone:t,message:o});const l=document.getElementById("toast");l==null||l.classList.add("on"),setTimeout(()=>l==null?void 0:l.classList.remove("on"),2600),document.getElementById("cName").value="",document.getElementById("cPhone").value="",document.getElementById("cMail").value="",document.getElementById("cMsg").value=""}catch(l){alert(l.message||"تعذّر إرسال رسالتك، حاول مرة أخرى")}finally{c.value=!1}})}return(x,t)=>{const e=M("RouterLink");return s(),d("div",{ref_key:"root",ref:f,class:""},[n("div",V,[n("div",N,[n("div",P,[n("div",Y,[t[0]||(t[0]=g('<div><h2>تواصل معنا</h2><div class="fld"><label>الاسم بالكامل *</label><input type="text" id="cName" placeholder="أدخل اسمك بالكامل"></div><div class="fld"><label>رقم الهاتف *</label><input type="text" id="cPhone" placeholder="05xxxxxxxx"></div><div class="fld"><label>البريد الإلكتروني</label><input type="email" id="cMail" placeholder="name@example.com"></div><div class="fld"><label>الرسالة</label><textarea id="cMsg" placeholder="اكتب استفسارك أو رسالتك هنا..."></textarea></div></div>',1)),n("button",{class:"btn btn-gold",id:"sendBtn",style:{"margin-top":"15px"},disabled:c.value,onClick:F},p(c.value?"جارٍ الإرسال...":"إرسال الرسالة"),9,H)]),n("div",R,[t[3]||(t[3]=g('<div class="info-section"><h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg> مواعيد العمل </h3><div class="sched-detail"> يومياً من <b>9:00 صباحاً</b> إلى <b>1:00 صباحاً</b> (بعد منتصف الليل) </div></div>',1)),n("div",T,[t[2]||(t[2]=n("h3",null,[n("svg",{width:"20",height:"20",viewBox:"0 0 24 24",fill:"none",stroke:"currentColor","stroke-width":"2"},[n("path",{d:"M21 10c0 7-9 12-9 12S3 17 3 10a9 9 0 0118 0z"}),n("circle",{cx:"12",cy:"10",r:"3"})]),i(" العناوين ")],-1)),n("div",q,[(s(!0),d(w,null,k(z(b),o=>(s(),d("div",{key:o.id,class:"addr-box"},[n("h4",null,p(o.name),1),n("p",null,p(o.address),1),o.contact_number?(s(),d("a",{key:0,href:`tel:${o.contact_number}`},[t[1]||(t[1]=n("svg",{width:"12",height:"12",viewBox:"0 0 24 24",fill:"none",stroke:"currentColor","stroke-width":"2"},[n("path",{d:"M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"})],-1)),i(" "+p(o.contact_number),1)],8,$)):B("",!0)]))),128))])]),t[4]||(t[4]=g('<div class="info-section"><h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg> خدمات منزلية </h3><div class="home-services"><p>نوفر خدمة الحلاقة والعناية في منزلك لراحتك التامة (شعر، لحية، وماسكات طبيعية).</p><a href="tel:+966585555555">📞 966585555555+</a></div></div><a href="https://wa.me/963959415545" class="whatsapp-btn" target="_blank" rel="noopener"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg> التواصل السريع عبر الواتساب </a>',2))])])])]),t[22]||(t[22]=n("div",{class:"toast",id:"toast"},[n("svg",{width:"16",height:"16",viewBox:"0 0 24 24",fill:"none",stroke:"currentColor","stroke-width":"2.6"},[n("path",{d:"M20 6L9 17l-5-5"})]),n("span",null,"تم إرسال رسالتك بنجاح! شكراً لتواصلك معنا.")],-1)),n("footer",null,[n("div",J,[n("div",X,[n("div",G,[a(e,{class:"logo",to:"/"},{default:r(()=>[...t[5]||(t[5]=[n("span",{class:"mark"},[n("img",{src:_,alt:"عناية سامي",style:{width:"29px",height:"29px","object-fit":"contain"}})],-1),n("span",{class:"name"},[n("b",null,"عناية سامي"),n("span",null,"SAMI CARE")],-1)])]),_:1}),t[6]||(t[6]=g('<p>مركز متخصص في العناية الرجالية المتكاملة بجدة، حيث تلتقي الفخامة بالاحترافية في كل تفصيلة.</p><div class="socials"><a href="https://x.com/samicare_sa" aria-label="X"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-6.8 7.8L23.3 22h-6.3l-4.9-6.4L6.5 22H3.4l7.3-8.3L1 2h6.5l4.4 5.8L18.9 2zm-1.1 18h1.7L7.1 3.9H5.3L17.8 20z"></path></svg></a><a href="https://www.instagram.com/samicare.sa/" aria-label="انستقرام"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.5" cy="6.5" r="1" fill="currentColor"></circle></svg></a><a href="https://www.facebook.com/samicare.sa" aria-label="فيسبوك"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"></path></svg></a></div>',2))]),n("div",null,[t[12]||(t[12]=n("h4",null,"روابط مهمة",-1)),n("ul",K,[n("li",null,[a(e,{to:"/"},{default:r(()=>[...t[7]||(t[7]=[i("الرئيسية",-1)])]),_:1})]),n("li",null,[a(e,{to:"/booking"},{default:r(()=>[...t[8]||(t[8]=[i("حجز موعد",-1)])]),_:1})]),n("li",null,[a(e,{to:"/#services"},{default:r(()=>[...t[9]||(t[9]=[i("خدماتنا",-1)])]),_:1})]),n("li",null,[a(e,{to:"/packages-gifts"},{default:r(()=>[...t[10]||(t[10]=[i("الباقات",-1)])]),_:1})]),n("li",null,[a(e,{to:"/gifts"},{default:r(()=>[...t[11]||(t[11]=[i("الهدايا",-1)])]),_:1})])])]),n("div",null,[t[18]||(t[18]=n("h4",null,"استكشف",-1)),n("ul",O,[n("li",null,[a(e,{to:"/store"},{default:r(()=>[...t[13]||(t[13]=[i("المتجر",-1)])]),_:1})]),n("li",null,[a(e,{to:"/branches"},{default:r(()=>[...t[14]||(t[14]=[i("فروعنا",-1)])]),_:1})]),n("li",null,[a(e,{to:"/contact"},{default:r(()=>[...t[15]||(t[15]=[i("تواصل معنا",-1)])]),_:1})]),n("li",null,[a(e,{to:"/terms"},{default:r(()=>[...t[16]||(t[16]=[i("الشروط والأحكام",-1)])]),_:1})]),n("li",null,[a(e,{to:"/privacy-policy"},{default:r(()=>[...t[17]||(t[17]=[i("سياسة الخصوصية",-1)])]),_:1})])])]),n("div",null,[t[19]||(t[19]=n("h4",null,"عناوين الفروع",-1)),(s(!0),d(w,null,k(z(b),o=>(s(),d("div",{key:o.id,class:"f-branch"},[n("b",null,p(o.name),1),n("small",null,p(o.address),1),o.contact_number?(s(),d("a",{key:0,href:`tel:${o.contact_number}`},p(o.contact_number),9,Q)):B("",!0)]))),128)),t[20]||(t[20]=n("div",{class:"f-branch"},[n("b",null,"خدمات منزلية"),n("small",null,"حلاقة شعر ولحية وماسكات طبيعية")],-1))])]),t[21]||(t[21]=g('<div class="f-bottom"><small>© 2026 عناية سامي — جميع الحقوق محفوظة</small><div class="pay" aria-label="بوابات الدفع"><span title="Visa">VISA</span><span title="Mastercard">Mastercard</span><span title="مدى">mada</span><span title="Tabby">tabby</span><span title="Apple Pay">Pay</span></div></div>',1))])])],512)}}};export{tn as default};

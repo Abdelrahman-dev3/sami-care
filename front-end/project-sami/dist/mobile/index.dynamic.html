@@ -4871,8 +4871,9 @@ document.addEventListener('click', function(e){
 
 /* ===== تغيير اللغة =====
    يبدّل lang/dir ويخزّن الاختيار، وبيعيد تجهيز البيانات الحية (localized) باللغة الجديدة
-   فورًا من غير ما يطلب من الباك-إند تاني (راجع applyDynamicData أعلاه). نصوص الشاشات الثابتة
-   (اللي مش جايه من الـ API) لسه عربية — ده أساس تاني منفصل يحتاج قاموس ترجمة كامل لاحقًا. */
+   فورًا من غير ما يطلب من الباك-إند تاني (راجع applyDynamicData أعلاه)، وبيترجم الهيدر/التابار
+   الثابتين فورًا (translateStaticText)، وبيعمل render() عشان الشاشة الحالية تتترجم هي كمان
+   (راجع STATIC_DICT وtranslateStaticText فوق). */
 (function(){
   var btn = document.getElementById('langBtn');
   var lbl = document.getElementById('langLabel');

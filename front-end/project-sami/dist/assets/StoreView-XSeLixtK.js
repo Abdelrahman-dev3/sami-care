@@ -1,4 +1,4 @@
-import{i as P,M as L,o as t,c as s,b as e,n as A,t as i,q as O,a as g,u as r,N as D,x as J,O as K,P as k,m as G,F as $,e as Y,d,L as f,p as Q,B as X,Q as re,_ as oe,r as T,z as te,H as U,y as ae,w as ie,h as se,s as le,G as Z,S as pe,J as de,I as ge}from"./index-BRzvpxnI.js";import{u as ce,a as xe}from"./useInternalLinks-vlzQGtpv.js";const be=`
+import{i as P,M as L,o as t,c as s,b as e,n as A,t as i,q as O,a as g,u as r,N as D,x as J,O as K,P as k,m as G,F as $,e as Y,d,L as f,p as Q,B as X,Q as re,_ as oe,r as T,z as te,H as U,y as ae,w as ie,h as se,s as le,G as Z,S as pe,J as de,I as ge}from"./index-DRmIOvU6.js";import{u as ce,a as xe}from"./useInternalLinks-C5bGJrEd.js";const be=`
 :root{
   --ink:#0A0906; --coal:#14110C;
   --gold:#CE9234; --gold-bright:#E8BE6C; --gold-deep:#9C6B1F;

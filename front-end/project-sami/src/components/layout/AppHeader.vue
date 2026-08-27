@@ -74,9 +74,7 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="21" r="1.6"/><circle cx="19" cy="21" r="1.6"/><path d="M1 1h4l2.7 13.4a2 2 0 002 1.6h9.7a2 2 0 002-1.6L23 6H6"/></svg>
         <span class="count">{{ cartQty }}</span>
       </button>
-      <button class="icon-btn" aria-label="برنامج الولاء" title="برنامج الولاء">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8l4.5 3L12 5l4.5 6L21 8l-1.6 10H4.6z"/></svg>
-      </button>
+      
       <button class="icon-btn" :aria-label="isAuthenticated ? user.first_name : 'حسابي'" :title="isAuthenticated ? user.first_name : 'حسابي'" @click="onAccountClick">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       </button>

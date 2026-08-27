@@ -30,7 +30,7 @@ const cafeUrl = resolveBackendUrl('/cafe')
 </template>
 
 <style scoped>
-.cafe-strip{display:grid;grid-template-columns:1.15fr 1fr;align-items:stretch;gap:0;
+.cafe-strip{margin-bottom:20px;display:grid;grid-template-columns:1.15fr 1fr;align-items:stretch;gap:0;
   overflow:hidden;border-radius:20px;border:1px solid var(--border);
   background:linear-gradient(160deg,#14100b,#080706);color:#fff;
   box-shadow:0 20px 40px -30px rgba(0,0,0,.7);transition:box-shadow .25s,transform .25s}
