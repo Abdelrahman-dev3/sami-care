@@ -1,6 +1,7 @@
 <script setup>
 import SectionTitle from '@/components/common/SectionTitle.vue'
 import AppImage from '@/components/common/AppImage.vue'
+import Skeleton from '@/components/common/SkeletonLoader.vue'
 
 const props = defineProps({
     products: {
@@ -24,8 +25,13 @@ const formatPrice = value => `${value ?? 0} ريال`
     >
         <SectionTitle title="منتجات العناية" />
 
-        <div v-if="loading">
-            جاري تحميل المنتجات...
+        <!-- Skeleton Loading -->
+        <div v-if="loading" class="product-grid">
+            <article v-for="n in 3" :key="n" data-reveal style="display:flex;flex-direction:column;align-items:center;gap:8px;min-height:230px">
+                <Skeleton width="100%" height="145px" border-radius="8px" />
+                <Skeleton width="75%" height="13px" variant="text" />
+                <Skeleton width="50%" height="13px" variant="text" />
+            </article>
         </div>
 
         <div

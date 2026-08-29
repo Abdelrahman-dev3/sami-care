@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { fetchAddresses, addAddress, removeAddress } from '@/services/accountApi'
+import Skeleton from '@/components/common/SkeletonLoader.vue'
 
 const addresses = ref([])
 const loading = ref(false)
@@ -54,7 +55,10 @@ onMounted(load)
 
 <template>
   <div class="addresses">
-    <div v-if="loading" class="empty">جارٍ التحميل...</div>
+    <div v-if="loading" class="empty" style="display:flex;flex-direction:column;gap:12px">
+      <Skeleton height="52px" border-radius="8px" />
+      <Skeleton height="52px" border-radius="8px" />
+    </div>
     <template v-else>
       <p v-if="error" class="err">{{ error }}</p>
       <div v-if="!addresses.length" class="empty">

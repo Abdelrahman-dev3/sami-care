@@ -1,0 +1,1 @@
+import{v as e,c as t,o}from"./index-DE6Dokyg.js";const c={style:{padding:"40px","text-align":"center"}},s={__name:"GiftRecipientView",setup(n){return e(()=>{location.replace("/gift-recipient/"+location.search+location.hash)}),(a,i)=>(o(),t("p",c,"يتم تحويلك إلى صفحة مستلم الهدية..."))}};export{s as default};

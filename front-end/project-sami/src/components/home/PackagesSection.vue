@@ -5,6 +5,8 @@ import { useRouter } from 'vue-router'
 import { useServiceLocation } from '@/composables/useServiceLocation'
 import { useLanguage } from '@/composables/useLanguage'
 
+import Skeleton from '@/components/common/SkeletonLoader.vue'
+
 defineProps({
     packages: {
         type: Array,
@@ -37,8 +39,13 @@ const go = path => {
     >
         <SectionTitle title="باقاتنا المميزة" />
 
-        <div v-if="loading">
-            جاري تحميل الباقات...
+        <!-- Skeleton Loading -->
+        <div v-if="loading" class="package-grid package-grid--home">
+            <article v-for="n in 3" :key="n" data-reveal style="display:flex;flex-direction:column;align-items:center;gap:8px;min-height:210px;justify-content:center">
+                <Skeleton width="100px" height="100px" variant="circle" />
+                <Skeleton width="80%" height="14px" variant="text" />
+                <Skeleton width="90px" height="30px" border-radius="18px" />
+            </article>
         </div>
 
         <div

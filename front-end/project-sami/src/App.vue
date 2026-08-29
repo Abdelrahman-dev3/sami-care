@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import LocationPicker from '@/components/common/LocationPicker.vue'
 import AuthModal from '@/components/common/AuthModal.vue'
 import AppHeader from '@/components/layout/AppHeader.vue'
+import AppFooter from '@/components/layout/AppFooter.vue'
 import CartDrawer from '@/components/store/CartDrawer.vue'
 import { useScrollReveal } from '@/composables/useScrollReveal'
 import { useStore } from '@/composables/useStore'
@@ -115,6 +116,7 @@ useScrollReveal()
     <RouterView v-slot="{ Component, route: current }">
       <component :is="Component" :key="current.path" />
     </RouterView>
+    <AppFooter class="global-site-footer" />
     <LocationPicker />
     <AuthModal />
     <CartDrawer :open="cartDrawerOpen" @close="closeCart" @checkout="checkoutCart" />
@@ -123,5 +125,6 @@ useScrollReveal()
 
 <style>
 .global-mobile-shell{width:100%;height:100dvh;background:#e8e1d6;overflow:hidden}.global-mobile-frame{display:block;width:100%;height:100%;border:0;background:#e8e1d6}
+#app footer:not(.sami-unified-footer){display:none!important}
 @media(max-width:640px){html,body,#app{width:100%;height:100%;margin:0;overflow:hidden}}
 </style>

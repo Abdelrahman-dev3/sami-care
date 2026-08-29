@@ -8,6 +8,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { AR_DAYS, AR_MONTHS } from '@/data/packages'
 import { usePackages, fmtTime, fmtDate } from '@/composables/usePackages'
 import { fetchStaff, fetchAvailableTimes } from '@/services/bookingApi'
+import Skeleton from '@/components/common/SkeletonLoader.vue'
 
 const { state, pkgOf, bkDays } = usePackages()
 
@@ -85,14 +86,16 @@ const H4B = 'font-family:var(--font-d);font-size:15px;color:var(--ink);margin-bo
     </div>
   </div>
 
-  <div v-if="loadingEmployee" class="card" style="padding:40px;text-align:center;color:var(--mute);font-size:13.5px">جاري تجهيز الحجز...</div>
+  <div v-if="loadingEmployee" class="card" style="padding:20px">
+    <Skeleton height="72px" border-radius="12px" />
+  </div>
 
   <div v-else-if="B.dayIdx != null" class="card" style="padding:20px">
     <h4 :style="H4B">🕐 {{ fmtDate(days[B.dayIdx]) }}</h4>
     <div class="periods">
       <button v-for="x in PERIODS" :key="x[0]" class="period" :class="{ sel: B.period === x[0] }" :data-bp="x[0]" @click="B.period = x[0]">{{ x[2] }} {{ x[1] }}</button>
     </div>
-    <div v-if="loadingSlots" :style="EMPTY_STYLE">جاري تحميل الأوقات المتاحة...</div>
+    <div v-if="loadingSlots" :style="EMPTY_STYLE"><Skeleton height="44px" border-radius="10px" /></div>
     <div v-else class="slots">
       <template v-if="filteredSlots.length">
         <button v-for="(t, i) in filteredSlots" :key="t" class="slot" :class="{ sel: B.time === t }" :data-bt="t"

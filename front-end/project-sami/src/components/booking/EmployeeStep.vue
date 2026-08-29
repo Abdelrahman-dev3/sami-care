@@ -3,6 +3,8 @@ import { ref, reactive, watch, onMounted } from 'vue'
 import { useBooking } from '@/composables/useBooking'
 import { useServiceLocation } from '@/composables/useServiceLocation'
 import { fetchStaff } from '@/services/bookingApi'
+import { categoryAccent, categoryIconKey, categoryIconPath } from '@/utils/giftIcons'
+import Skeleton from '@/components/common/SkeletonLoader.vue'
 
 const { state, selSvcs, setEmployee } = useBooking()
 const { current } = useServiceLocation()
@@ -24,6 +26,36 @@ function employeeName(u) {
   return [u.first_name, u.last_name].filter(Boolean).join(' ') || u.username || 'موظف'
 }
 
+function assignAutoStaff() {
+  if (state.mode !== 'auto') return
+  selSvcs.value.forEach(s => {
+    const list = staffByService[s.id]
+    if (list?.length && !state.emp[s.id]) setEmployee(s.id, list[0])
+  })
+}
+
+function chooseMode(mode) {
+  state.mode = mode
+  assignAutoStaff()
+}
+
+function iconKeyForService(service) {
+  return service.icon || categoryIconKey(service.categoryId)
+}
+
+function serviceStyle(service) {
+  return { '--acc': categoryAccent(iconKeyForService(service)) }
+}
+
+function isEmployeeSelected(serviceId, employee) {
+  return String(state.emp[serviceId]?.id ?? '') === String(employee.id ?? '')
+}
+
+function selectEmployee(serviceId, employee) {
+  state.mode = 'manual'
+  setEmployee(serviceId, employee)
+}
+
 async function loadStaff(service) {
   if (staffByService[service.id]) return
   loadingByService[service.id] = true
@@ -32,9 +64,7 @@ async function loadStaff(service) {
     const rows = await fetchStaff({ branchId, serviceId: service.id })
     const list = (Array.isArray(rows) ? rows : []).map(u => ({ id: u.id, name: employeeName(u) }))
     staffByService[service.id] = list
-    if (state.mode === 'auto' && list.length && !state.emp[service.id]) {
-      setEmployee(service.id, list[0])
-    }
+    assignAutoStaff()
   } catch {
     staffByService[service.id] = []
   } finally {
@@ -48,20 +78,14 @@ function loadAll() {
 
 onMounted(loadAll)
 watch(() => selSvcs.value.map(s => s.id), loadAll)
-watch(() => state.mode, mode => {
-  if (mode !== 'auto') return
-  selSvcs.value.forEach(s => {
-    const list = staffByService[s.id]
-    if (list?.length && !state.emp[s.id]) setEmployee(s.id, list[0])
-  })
-})
+watch(() => state.mode, assignAutoStaff)
 </script>
 
 <template>
   <div class="panel-head"><h1>اختر طريقة اختيار الموظف</h1><p>يمكنك اختيار الموظف بنفسك لكل خدمة أو ترك الأمر لنا لاختيار الأفضل لك</p></div>
 
   <div class="mode-grid">
-    <div class="mode dark" :class="{ sel: state.mode === 'auto' }" @click="state.mode = 'auto'">
+    <div class="mode dark" :class="{ sel: state.mode === 'auto' }" @click="chooseMode('auto')">
       <span class="chk"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>
       <span class="mi"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M5 21c0-4 3-6 7-6s7 2 7 6"/></svg></span>
       <h3>اختيار تلقائي</h3><div class="sub-t">سنختار لك أفضل فريق متاح</div>
@@ -70,7 +94,7 @@ watch(() => state.mode, mode => {
         <li v-for="(x, i) in AUTO_LIST" :key="i"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6L9 17l-5-5"/></svg> {{ x }}</li>
       </ul>
     </div>
-    <div class="mode" :class="{ sel: state.mode === 'manual' }" @click="state.mode = 'manual'">
+    <div class="mode" :class="{ sel: state.mode === 'manual' }" @click="chooseMode('manual')">
       <span class="chk"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>
       <span class="mi"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
       <h3>اختيار موظف محدد</h3><div class="sub-t">اختر الموظف المناسب لكل خدمة</div>
@@ -82,16 +106,24 @@ watch(() => state.mode, mode => {
   </div>
 
   <div v-if="state.mode === 'manual'" class="emp-section">
-    <div v-for="s in selSvcs" :key="s.id" class="emp-row">
-      <div class="emp-cat"><b>{{ s.name }}</b><small>{{ s.categoryName }}</small></div>
-      <div v-if="loadingByService[s.id]" class="empty-hint">جاري تحميل الموظفين...</div>
+    <div v-for="s in selSvcs" :key="s.id" class="emp-row" :style="serviceStyle(s)">
+      <div class="emp-cat">
+        <span class="cat-ico"><svg viewBox="0 0 24 24" aria-hidden="true" v-html="categoryIconPath(iconKeyForService(s))"></svg></span>
+        <span class="emp-cat__info">
+          <b>{{ s.name }}</b>
+          <small>{{ s.categoryName }}</small>
+        </span>
+      </div>
+      <div v-if="loadingByService[s.id]" class="empty-hint">
+        <Skeleton height="44px" border-radius="8px" />
+      </div>
       <div v-else-if="!staffByService[s.id]?.length" class="empty-hint">لا يوجد موظفون متاحون لهذه الخدمة في هذا الفرع</div>
       <div v-else class="emp-list">
-        <div v-for="e in staffByService[s.id]" :key="e.id" class="emp" :class="{ sel: state.emp[s.id]?.id === e.id }" @click="setEmployee(s.id, e)">
+        <button v-for="e in staffByService[s.id]" :key="e.id" type="button" class="emp" :class="{ sel: isEmployeeSelected(s.id, e) }" @click.stop="selectEmployee(s.id, e)">
           <span class="chk"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>
           <span class="av" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
           <b>{{ e.name }}</b>
-        </div>
+        </button>
       </div>
     </div>
   </div>

@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
+import PageSkeleton from '@/components/common/PageSkeleton.vue'
 import { fetchBlogs } from '@/services/blogApi'
 import { assetPath } from '@/utils/assetPath'
 import '@/assets/styles/home.css'
@@ -61,7 +62,7 @@ onMounted(() => loadBlogs())
       </section>
 
       <section class="container blog-list" aria-live="polite">
-        <div v-if="loading" class="blog-state">جاري تحميل المدونات...</div>
+        <PageSkeleton v-if="loading" variant="list" />
         <div v-else-if="error" class="blog-state blog-state--error">{{ error }}</div>
         <div v-else-if="!blogs.length" class="blog-state">لا توجد مدونات منشورة حاليا.</div>
 

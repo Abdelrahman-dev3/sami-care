@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import AppFooter from '@/components/layout/AppFooter.vue'
+import PageSkeleton from '@/components/common/PageSkeleton.vue'
 import LocationNotice from '@/components/common/LocationNotice.vue'
 import SIcon from '@/components/common/SIcon.vue'
 import { useServiceLocation } from '@/composables/useServiceLocation'
@@ -118,7 +119,7 @@ watch(id, loadCategories)
 
       <!-- Loading -->
       <div v-if="loading" class="sd-state">
-        جاري تحميل الخدمة...
+        <PageSkeleton variant="detail" />
       </div>
 
       <!-- Error -->

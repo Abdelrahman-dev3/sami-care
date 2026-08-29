@@ -10,4 +10,44 @@ export const CAT_ICONS = {
   bath:'<path d="M6 3v10m12-10v10M4 13h16v2c0 4-3 6-8 6s-8-2-8-6z"/><path d="M8 7h8M7 10h10"/>'
 }
 
+export const CAT_ICON_BY_ID = {
+  1: 'bath',
+  2: 'pedi',
+  3: 'hair',
+  4: 'skin',
+  5: 'mass',
+}
+
+export const CAT_ACCENTS = {
+  hair: 'var(--c-hair)',
+  skin: 'var(--c-skin)',
+  pedi: 'var(--c-pedi)',
+  mass: 'var(--c-mass)',
+  bath: 'var(--c-bath)',
+}
+
+const HINTS = [
+  ['bath', ['bath', 'hammam', 'moroccan']],
+  ['pedi', ['pedi', 'pedicure']],
+  ['skin', ['skin', 'facial']],
+  ['mass', ['mass', 'massage']],
+  ['hair', ['hair', 'barber', 'haircut']],
+]
+
+export const categoryIconKey = category => {
+  if (!category) return 'hair'
+
+  const id = typeof category === 'object' ? category.id : category
+  const byId = CAT_ICON_BY_ID[id]
+  if (byId) return byId
+
+  const text = typeof category === 'object'
+    ? `${category.slug || ''} ${category.key || ''} ${category.image || ''} ${category.feature_image || ''}`.toLowerCase()
+    : String(category).toLowerCase()
+
+  return HINTS.find(([, words]) => words.some(word => text.includes(word)))?.[0] || 'hair'
+}
+
+export const categoryAccent = key => CAT_ACCENTS[key] || CAT_ACCENTS.hair
+
 export const categoryIconPath = id => CAT_ICONS[id] || CAT_ICONS.hair

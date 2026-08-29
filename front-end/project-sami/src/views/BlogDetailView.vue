@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
+import PageSkeleton from '@/components/common/PageSkeleton.vue'
 import { fetchBlog } from '@/services/blogApi'
 import { assetPath } from '@/utils/assetPath'
 import '@/assets/styles/home.css'
@@ -52,7 +53,9 @@ watch(() => route.params.slug, slug => loadBlog(slug))
     <AppHeader />
 
     <main>
-      <section v-if="loading" class="container blog-detail-state">جاري تحميل المدونة...</section>
+      <section v-if="loading" class="container blog-detail-state">
+        <PageSkeleton variant="detail" />
+      </section>
 
       <section v-else-if="error" class="container blog-detail-state blog-detail-state--error">
         <p>{{ error }}</p>

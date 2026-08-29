@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import BaseButton from '@/components/common/BaseButton.vue'
 import SectionTitle from '@/components/common/SectionTitle.vue'
+import Skeleton from '@/components/common/SkeletonLoader.vue'
 import { useServiceLocation } from '@/composables/useServiceLocation'
 
 const props = defineProps({
@@ -56,7 +57,25 @@ function goHomeService() {
 
 <template>
   <section data-reveal class="home-section container promo-section" aria-label="إعلانات وعروض">
-    <SectionTitle v-if="offers && offers.length" title="العروض الحالية" />
+    <SectionTitle v-if="(offers && offers.length) || loading" title="العروض الحالية" />
+
+    <!-- Skeleton Loading -->
+    <template v-if="loading">
+      <article v-for="n in 2" :key="n" class="promo-card">
+        <div class="promo-card__badge" style="display:flex;align-items:center;justify-content:center">
+          <Skeleton width="86px" height="86px" variant="circle" />
+        </div>
+        <div class="promo-card__text" style="display:flex;flex-direction:column;gap:8px;flex:1">
+          <Skeleton width="100px" height="12px" variant="text" />
+          <Skeleton width="200px" height="20px" variant="text" />
+          <Skeleton width="85%" height="14px" variant="text" />
+        </div>
+        <Skeleton width="130px" height="42px" border-radius="30px" />
+      </article>
+    </template>
+
+    <!-- Real Content -->
+    <template v-else>
     <article v-for="promo in promoCards" :key="promo.id" class="promo-card"
              :class="{ 'promo-card--home': promo.type === 'home' }">
       <div class="promo-card__badge" aria-hidden="true">
@@ -79,6 +98,7 @@ function goHomeService() {
                   href="#" @click.prevent="goHomeService" />
       <BaseButton v-else class="promo-card__cta" :label="promo.cta" :href="promo.href" />
     </article>
+    </template>
   </section>
 </template>
 

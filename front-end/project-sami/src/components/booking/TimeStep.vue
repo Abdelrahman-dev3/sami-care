@@ -2,6 +2,7 @@
 import { ref, reactive, computed, watch } from 'vue'
 import { useBooking, fmtTimeStr, fmtDur } from '@/composables/useBooking'
 import { fetchAvailableTimes } from '@/services/bookingApi'
+import Skeleton from '@/components/common/SkeletonLoader.vue'
 
 const AR_DAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت']
 const AR_MONTHS = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر']
@@ -104,7 +105,9 @@ const dateTitle = computed(() => (state.date ? `${AR_DAYS[state.date.getDay()]} 
     <div v-for="s in selSvcs" :key="s.id" class="card detail-card" style="margin-top:14px">
       <h4>{{ s.name }} <small style="font-weight:400;color:var(--mute)">مع {{ state.emp[s.id]?.name || '—' }}</small></h4>
 
-      <div v-if="loadingByService[s.id]" class="empty-hint">جاري تحميل الأوقات المتاحة...</div>
+      <div v-if="loadingByService[s.id]" class="empty-hint">
+        <Skeleton height="44px" border-radius="8px" />
+      </div>
       <div v-else-if="!slotsByService[s.id]?.length" class="empty-hint">لا توجد أوقات متاحة لهذا اليوم</div>
       <div v-else class="slots">
         <button v-for="t in slotsByService[s.id]" :key="t" class="slot" :class="{ sel: state.time[s.id] === t }" @click="setTime(s.id, t)">

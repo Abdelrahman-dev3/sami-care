@@ -35,9 +35,17 @@ html { scrollbar-gutter: stable }
     background: #080a0b !important;
     color: #fff !important;
     direction: rtl;
+    display: flex !important;
+    flex-flow: row nowrap !important;
+    align-items: center !important;
     /* الهيدر بيفضل ثابت — الحركة دي لتغيّر الشكل عند النزول بس */
     transition: background-color .3s ease, box-shadow .35s ease, backdrop-filter .3s ease;
   }
+
+  .site-header .brand { flex: 0 0 auto; display: flex; align-items: center; }
+  .site-header .menu-toggle { display: none; }
+  .site-header > nav { display: flex; flex: 1 1 auto; min-width: 0; }
+  .site-header .header-tools { flex: 0 0 auto; display: flex; align-items: center; }
 
   /* حالة "نازل لتحت": ظل خفيف وزجاجية بسيطة تفصل الهيدر عن المحتوى */
   .site-header.is-scrolled {
@@ -51,7 +59,8 @@ html { scrollbar-gutter: stable }
 /* شاشات متوسطة: نضبط اللوجو على ارتفاع الهيدر الأصغر */
 @media (min-width: 641px) and (max-width: 950px) {
   .brand img { width: 56px !important; height: 56px !important }
-  .site-header { padding-inline: 22px !important; gap: 18px !important }
+  .site-header { padding-inline: 22px !important; gap: 18px !important; }
+  .site-header .header-tools { gap: 8px; }
 }
 
 /* الجوال بيشتغل داخل iframe منفصل — الهيدر ده مش بيتعرض أصلًا */

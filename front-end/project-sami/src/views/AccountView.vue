@@ -9,6 +9,7 @@ import AccountGiftCards from '@/components/account/AccountGiftCards.vue'
 import AccountPackages from '@/components/account/AccountPackages.vue'
 import AccountProducts from '@/components/account/AccountProducts.vue'
 import AccountSettings from '@/components/account/AccountSettings.vue'
+import PageSkeleton from '@/components/common/PageSkeleton.vue'
 
 const { isAuthenticated, openAuthModal } = useAuth()
 
@@ -76,7 +77,7 @@ watch(isAuthenticated, (v) => { if (v) loadProfile() })
         >{{ t.label }}</button>
       </div>
 
-      <div v-if="loading" class="account-state">جارٍ التحميل...</div>
+      <PageSkeleton v-if="loading" variant="account" />
       <div v-else-if="error" class="account-state error">{{ error }}</div>
       <template v-else>
         <AccountOverview v-if="activeTab === 'overview'" :profile="profile" @go="activeTab = $event" />

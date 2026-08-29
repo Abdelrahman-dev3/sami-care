@@ -13,6 +13,7 @@ import { useGifts } from '@/composables/useGifts'
 import { usePackages, rs as rsPkg } from '@/composables/usePackages'
 import { localizeField } from '@/utils/i18nField'
 import SIcon from '@/components/common/SIcon.vue'
+import Skeleton from '@/components/common/SkeletonLoader.vue'
 
 const { state, hasSvc, toggleSvc, isFav, toggleFav } = useGifts()
 const { filteredPkgs } = usePackages()
@@ -90,7 +91,10 @@ function scrollCaro(dir) {
   <template v-if="state.gtype === 'svc'">
     <div class="g-head"><h1>اختر الخدمة التي ترغب بإهدائها</h1><p>يمكنك اختيار خدمة واحدة أو أكثر</p></div>
 
-    <div v-if="loading" class="empty-hint"><b>جاري تحميل الخدمات...</b></div>
+    <div v-if="loading" class="empty-hint" style="display:grid;gap:10px">
+      <Skeleton height="64px" border-radius="12px" />
+      <Skeleton height="92px" border-radius="12px" />
+    </div>
 
     <template v-else>
       <div class="cat-row">

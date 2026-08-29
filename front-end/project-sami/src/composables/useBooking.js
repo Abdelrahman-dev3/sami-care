@@ -84,7 +84,7 @@ export function useBooking() {
   })
 
   function setEmployee(serviceId, employee) {
-    state.emp[serviceId] = employee
+    state.emp = { ...state.emp, [String(serviceId)]: employee }
   }
 
   function setTime(serviceId, time) {

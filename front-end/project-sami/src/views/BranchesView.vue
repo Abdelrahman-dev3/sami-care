@@ -9,6 +9,7 @@ import { usePageStyles } from '@/composables/usePageStyles'
 import { useInternalLinks } from '@/composables/useInternalLinks'
 import { useServiceLocation } from '@/composables/useServiceLocation'
 import AppFooter from '@/components/layout/AppFooter.vue'
+import PageSkeleton from '@/components/common/PageSkeleton.vue'
 import pageCss from '@/assets/styles/pages/branches.css?raw'
 
 const root = ref(null)
@@ -34,7 +35,7 @@ function bookHere(branch) {
       <p>اختر الفرع الأقرب إليك لبدء حجز خدماتك. فروعنا مجهزة بالكامل لتقدم لك أرقى تجارب العناية والاسترخاء.</p>
     </div>
 
-    <div v-if="locationsLoading" class="page-head"><p>جاري تحميل الفروع...</p></div>
+    <PageSkeleton v-if="locationsLoading" variant="list" />
 
     <div v-else class="branches-grid">
       <div v-for="branch in locations" :key="branch.id" class="branch-card">

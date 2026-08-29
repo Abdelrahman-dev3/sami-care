@@ -1,12 +1,13 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { getCategories } from '@/data/home'
-import { categoryIconPath } from '@/utils/giftIcons'
+import { categoryAccent, categoryIconKey, categoryIconPath } from '@/utils/giftIcons'
 import { resolveApiImage } from '@/utils/assetPath'
 import { useServiceLocation } from '@/composables/useServiceLocation'
 import { useLanguage } from '@/composables/useLanguage'
 import { useBooking, rs } from '@/composables/useBooking'
 import { localizeField } from '@/utils/i18nField'
+import Skeleton from '@/components/common/SkeletonLoader.vue'
 
 const { state, hasSvc, toggleSvc } = useBooking()
 const { current } = useServiceLocation()
@@ -35,12 +36,14 @@ const cats = computed(() => categories.value.map(c => ({
 
 const activeCategory = computed(() => categories.value.find(c => c.id === state.activeCat) || null)
 const activeCategoryName = computed(() => pick(activeCategory.value?.name))
+const activeCategoryIcon = computed(() => categoryIconKey(activeCategory.value))
 
 const list = computed(() =>
   (activeCategory.value?.services || []).map(s => ({
     id: s.id,
     categoryId: activeCategory.value.id,
     categoryName: activeCategoryName.value,
+    icon: activeCategoryIcon.value,
     name: pick(s.name),
     desc: pick(s.description) || '',
     dur: s.duration_min,
@@ -50,6 +53,8 @@ const list = computed(() =>
 
 const hasPicks = catId => state.services.some(s => s.categoryId === catId)
 const selN = computed(() => list.value.filter(s => hasSvc(s.id)).length)
+const serviceStyle = service => ({ '--acc': categoryAccent(service.icon) })
+const serviceIcon = service => categoryIconPath(service.icon)
 </script>
 
 <template>
@@ -60,7 +65,10 @@ const selN = computed(() => list.value.filter(s => hasSvc(s.id)).length)
     <span class="bi">مكان التنفيذ: <b>{{ current.name }}</b><small>{{ current.address }}</small></span>
   </div>
 
-  <div v-if="loading" class="empty-hint"><b>جاري تحميل الخدمات...</b></div>
+  <div v-if="loading" class="empty-hint" style="display:grid;gap:10px">
+    <Skeleton height="64px" border-radius="12px" />
+    <Skeleton height="92px" border-radius="12px" />
+  </div>
 
   <template v-else>
     <div class="cat-row">
@@ -78,14 +86,15 @@ const selN = computed(() => list.value.filter(s => hasSvc(s.id)).length)
       <div class="sub-title">
         <span class="sub-title__main">
           خدمات {{ activeCategoryName }}
-          <span class="tick"><svg viewBox="0 0 24 24" aria-hidden="true" v-html="categoryIconPath()"></svg></span>
+          <span class="tick"><svg viewBox="0 0 24 24" aria-hidden="true" v-html="categoryIconPath(activeCategoryIcon)"></svg></span>
         </span>
         <small>{{ selN ? selN + ' مختارة' : 'اختر خدمة أو أكثر' }}</small>
       </div>
       <div v-if="!list.length" class="empty-hint">لا توجد خدمات متاحة حاليًا ضمن هذا القسم</div>
       <div v-else class="subs">
-        <div v-for="s in list" :key="s.id" class="sub" :class="{ sel: hasSvc(s.id) }" :data-svc="s.id" @click="toggleSvc(s)">
+        <div v-for="s in list" :key="s.id" class="sub" :class="{ sel: hasSvc(s.id) }" :data-svc="s.id" :style="serviceStyle(s)" @click="toggleSvc(s)">
           <div class="top">
+            <span class="si"><svg viewBox="0 0 24 24" aria-hidden="true" v-html="serviceIcon(s)"></svg></span>
             <b>{{ s.name }}</b>
             <span class="chk"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>
           </div>

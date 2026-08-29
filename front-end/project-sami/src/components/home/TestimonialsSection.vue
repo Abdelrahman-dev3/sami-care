@@ -1,5 +1,6 @@
 <script setup>
 import SectionTitle from '@/components/common/SectionTitle.vue'
+import Skeleton from '@/components/common/SkeletonLoader.vue'
 const props = defineProps({
     reviews: {
         type: Array,
@@ -16,6 +17,34 @@ const props = defineProps({
   <section data-reveal class="home-section container reviews" aria-label="آراء العملاء">
     <SectionTitle title="آراء عملائنا" />
     <p class="reviews__sub">نفخر بثقة عملائنا ونسعى دائمًا لتقديم تجربة استثنائية</p>
+
+    <!-- Skeleton Loading -->
+    <template v-if="loading">
+      <div class="reviews__stats" style="opacity:0.6">
+        <div class="rstat"><Skeleton width="30px" height="30px" variant="circle" /><Skeleton width="90px" height="12px" variant="text" /><Skeleton width="60px" height="10px" variant="text" /></div>
+        <div class="rstat"><Skeleton width="40px" height="22px" variant="text" /><Skeleton width="80px" height="13px" variant="text" /><Skeleton width="30px" height="10px" variant="text" /></div>
+        <div class="rstat"><Skeleton width="26px" height="26px" variant="circle" /><Skeleton width="50px" height="22px" variant="text" /><Skeleton width="30px" height="10px" variant="text" /></div>
+      </div>
+      <div class="reviews__grid">
+        <article v-for="n in 3" :key="n" class="rcard" style="min-height:200px">
+          <div class="rcard__photo"><Skeleton width="100%" height="100%" border-radius="0" /></div>
+          <div class="rcard__copy" style="display:flex;flex-direction:column;gap:10px;padding:18px 16px">
+            <Skeleton width="80px" height="13px" variant="text" />
+            <Skeleton width="120px" height="14px" variant="text" />
+            <Skeleton width="100%" height="12px" variant="text" />
+            <Skeleton width="90%" height="12px" variant="text" />
+            <Skeleton width="60%" height="12px" variant="text" />
+            <div style="display:flex;justify-content:space-between;margin-top:auto;padding-top:10px;border-top:1px solid var(--border)">
+              <Skeleton width="60px" height="10px" variant="text" />
+              <Skeleton width="80px" height="10px" variant="text" />
+            </div>
+          </div>
+        </article>
+      </div>
+    </template>
+
+    <!-- Real Content -->
+    <template v-else>
 
     <!-- شريط التقييم الموحّد — نفس ترتيب نسخة الجوال -->
     <div class="reviews__stats">
@@ -73,6 +102,7 @@ const props = defineProps({
         </div>
       </article>
     </div>
+    </template>
   </section>
 </template>
 

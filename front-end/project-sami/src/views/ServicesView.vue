@@ -4,6 +4,7 @@ import { categoryIconPath } from '@/utils/giftIcons'
 import { resolveApiImage } from '@/utils/assetPath'
 import { RouterLink, useRouter } from 'vue-router'
 import AppFooter from '@/components/layout/AppFooter.vue'
+import PageSkeleton from '@/components/common/PageSkeleton.vue'
 import LocationNotice from '@/components/common/LocationNotice.vue'
 import { useServiceLocation } from '@/composables/useServiceLocation'
 import { useLanguage } from '@/composables/useLanguage'
@@ -210,12 +211,7 @@ const perks = [
 
 
         <!-- Loading -->
-        <div
-          v-if="loading"
-          class="sv-state"
-        >
-          جاري تحميل الخدمات...
-        </div>
+        <PageSkeleton v-if="loading" variant="list" />
 
 
         <!-- Error -->
