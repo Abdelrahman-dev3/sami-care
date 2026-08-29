@@ -404,7 +404,7 @@ const perks = [
 
     </main>
 
-    <AppFooter />
+  
 
   </div>
 </template>

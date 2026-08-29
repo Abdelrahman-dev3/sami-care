@@ -95,7 +95,7 @@ onMounted(() => loadBlogs())
       </section>
     </main>
 
-    <AppFooter />
+    
   </div>
 </template>
 

@@ -101,7 +101,7 @@ onMounted(() => {
         <FinalCta />
       </div>
     </main>
-    <AppFooter />
+  
   </div>
 </template>
 

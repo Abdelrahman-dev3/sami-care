@@ -55,6 +55,6 @@ function bookHere(branch) {
   </div>
 </div>
 
-<AppFooter />
+
   </div>
 </template>

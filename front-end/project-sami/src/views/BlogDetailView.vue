@@ -88,7 +88,7 @@ watch(() => route.params.slug, slug => loadBlog(slug))
       </article>
     </main>
 
-    <AppFooter />
+    
   </div>
 </template>
 

@@ -15,7 +15,7 @@ const BlogDetailView = () => import('@/views/BlogDetailView.vue')
 const AccountView = () => import('@/views/AccountView.vue')
 const TermsView = () => import('@/views/TermsView.vue')
 const PrivacyPolicyView = () => import('@/views/PrivacyPolicyView.vue')
-
+const AboutView = () => import('@/views/AboutView.vue')
 
 const router = createRouter({
   history: createWebHistory(),
@@ -45,7 +45,7 @@ const router = createRouter({
     { path: '/:pathMatch(.*)*', redirect: '/' },
     { path: '/blog', alias: '/blog.html', name: 'blog', component: BlogView },
     { path: '/blog/:slug', name: 'blog-detail', component: BlogDetailView },
-
+    { path: '/page-about', alias: '/about.html', name: 'about', component: AboutView },
   ]
 })
 
