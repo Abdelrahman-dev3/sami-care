@@ -66,7 +66,7 @@ class ProfileController extends Controller
             ->latest('id')
             ->get();
 
-        $walletBalance = (float) (Wallet::where('user_id', $user->id)->value('amount') ?? 0);
+        $walletBalance = (float) (Wallet::where('user_id', $user->id)->where('status', 1)->value('amount') ?? 0);
         $loyaltyPoints = (int) (LoyaltyPoint::where('user_id', $user->id)->value('points') ?? 0);
 
         return response()->json([

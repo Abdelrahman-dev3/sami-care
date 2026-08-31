@@ -7,6 +7,7 @@
   الملخص الجانبي يظهر عند اختيار خدمة واحدة على الأقل.
 */
 import { ref, computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { usePageStyles } from '@/composables/usePageStyles'
 import { useInternalLinks } from '@/composables/useInternalLinks'
 import { useServiceLocation } from '@/composables/useServiceLocation'
@@ -25,11 +26,12 @@ import BookingSuccess from '@/components/booking/BookingSuccess.vue'
 import BookingSummary from '@/components/booking/BookingSummary.vue'
 
 const root = ref(null)
+const route = useRoute()
 const { current, locations, loadServiceLocations } = useServiceLocation()
 const { requireAuth } = useAuth()
 
 loadServiceLocations()
-const { state, selSvcs, priceParts, canProceed, nextLabel, reset } = useBooking()
+const { state, selSvcs, priceParts, canProceed, nextLabel, reset, payableTotal, walletDiscount, loyaltyPointsUsed } = useBooking()
 
 usePageStyles(pageCss, 'booking')
 useInternalLinks(root)
@@ -37,6 +39,7 @@ useInternalLinks(root)
 const payLoading = ref(false)
 const toastMsg = ref('')
 const toastOn = ref(false)
+const AMT = 'color:var(--gold-deep);font-family:var(--font-d);font-size:17px'
 
 function toast(msg) {
   toastMsg.value = msg
@@ -46,9 +49,24 @@ function toast(msg) {
 }
 
 const hasSvc = computed(() => state.services.length > 0)
+const footerTotal = computed(() => state.step === 4 ? payableTotal.value : priceParts.value.total)
+function decodeReceipt(code) {
+  if (!code) return null
+  try {
+    const normalized = String(code).replace(/-/g, '+').replace(/_/g, '/')
+    const padded = normalized.padEnd(normalized.length + ((4 - normalized.length % 4) % 4), '=')
+    const data = JSON.parse(decodeURIComponent(escape(atob(padded))))
+    return data && typeof data === 'object' ? data : null
+  } catch {
+    return null
+  }
+}
+const receipt = computed(() => decodeReceipt(route.query.receipt))
+const isReceiptMode = computed(() => !!receipt.value)
+const receiptServices = computed(() => Array.isArray(receipt.value?.s) ? receipt.value.s : [])
 
 /* الملخص الجانبي يبدأ من اختيار الموظف ويستمر حتى الدفع، بما فيها اختيار الوقت */
-const showBookingSummary = computed(() => !state.done && hasSvc.value && state.step >= 1)
+const showBookingSummary = computed(() => !isReceiptMode.value && !state.done && hasSvc.value && state.step >= 1)
 const stageCols = computed(() => (showBookingSummary.value ? 'minmax(0,1fr) minmax(285px,315px)' : '1fr'))
 
 function goBack() {
@@ -91,10 +109,33 @@ async function doPay() {
       mobileNo: state.cust.phone,
     })
 
-    /* gateway:'cod' فى الباك إند بيتجاهل علم wallet وبيخصم عربون نسبي ثابت مش القيمة الكاملة —
-       راجع نفس الملاحظة فى useGifts.js. أي بوابة غير cod بتاخد المسار الصح لخصم الرصيد كامل. */
-    const isWallet = state.pay === 'wallet'
-    const payment = await initPayment(isWallet ? 'card' : state.pay, { wallet: isWallet })
+    const rewards = state.rewards
+    const partialWalletAmount = Number(walletDiscount.value.toFixed(2))
+    const fullWalletAmount = state.pay === 'wallet'
+      ? Math.min(Number(state.walletBalance) || 0, payableTotal.value || priceParts.value.total)
+      : 0
+    const walletAmount = Math.max(partialWalletAmount, fullWalletAmount)
+    const loyaltyPoints = loyaltyPointsUsed.value
+    const hasWallet = walletAmount > 0
+    const hasLoyalty = loyaltyPoints > 0
+    const couponCode = rewards.couponApplied || ''
+
+    /* بوابة cod بتعامل الدفع كعربون محفظة مستقل؛ عند استخدام المحفظة/النقاط كخصومات جزئية
+       نمرر الطلب لمسار البوابات العادي حتى تُخصم المكافآت أولًا ثم يُحصّل المتبقي. */
+    const gateway = hasWallet || hasLoyalty || state.pay === 'wallet'
+      ? 'card'
+      : (state.pay || 'card')
+    const payment = await initPayment(gateway, {
+      wallet: hasWallet,
+      walletAmount,
+      loyalty: hasLoyalty,
+      loyaltyPoints,
+      couponCode,
+    })
+    if (payment.payment_url) {
+      window.location.href = payment.payment_url
+      return
+    }
     state.bookRef = payment.invoice_id || null
     state.done = true
     scrollTo({ top: 0, behavior: 'smooth' })
@@ -111,12 +152,38 @@ function goHome() { reset(); location.href = '/' }
 <template>
   <div ref="root">
     <div class="shell">
-    <BookingStepper />
+    <BookingStepper v-if="!isReceiptMode" />
 
     <div class="wrap">
       <div class="stage" id="stage" :style="`grid-template-columns:${stageCols}`">
         <main class="panel" id="panel">
-          <BookingSuccess v-if="state.done" @home="goHome" @calendar="toast('تمت إضافة الموعد إلى التقويم')" @share="toast('تم نسخ رابط الحجز للمشاركة')" />
+          <div v-if="isReceiptMode" class="success-wrap receipt-wrap">
+            <div class="suc-ic">
+              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg>
+            </div>
+            <h1>تفاصيل الحجز</h1>
+            <p class="sub">تم فتح تفاصيل الحجز من رمز QR</p>
+            <div class="suc-grid receipt-grid">
+              <div class="card suc-details">
+                <h4>بيانات الحجز</h4>
+                <div class="sd-row"><span class="k">رقم الفاتورة</span><span class="v receipt-code">{{ receipt.r || '—' }}</span></div>
+                <div class="sd-row"><span class="k">الفرع</span><span class="v">{{ receipt.b || '—' }}</span></div>
+                <div class="sd-row"><span class="k">التاريخ</span><span class="v">{{ receipt.d || '—' }}</span></div>
+                <div class="sd-row"><span class="k">مدة الجلسة</span><span class="v">{{ receipt.u || '—' }}</span></div>
+                <div class="sd-row"><span class="k">الفريق</span><span class="v">{{ receipt.e || '—' }}</span></div>
+                <div class="sd-row"><span class="k">المبلغ</span><span class="v" :style="AMT">{{ rs(Number(receipt.p) || 0) }} ر.س</span></div>
+              </div>
+              <div class="card suc-details receipt-services">
+                <h4>الخدمات</h4>
+                <div v-for="(svc, i) in receiptServices" :key="i" class="receipt-service">
+                  <b>{{ svc[0] }}</b>
+                  <small>{{ svc[1] || '—' }} · {{ svc[2] || receipt.e || '—' }}</small>
+                  <span>{{ rs(Number(svc[3]) || 0) }} ر.س</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <BookingSuccess v-else-if="state.done" @home="goHome" @calendar="toast('تمت إضافة الموعد إلى التقويم')" @share="toast('تم نسخ رابط الحجز للمشاركة')" />
           <ServicesStep v-else-if="state.step === 0" />
           <EmployeeStep v-else-if="state.step === 1" />
           <TimeStep v-else-if="state.step === 2" />
@@ -176,7 +243,7 @@ function goHome() { reset(); location.href = '/' }
   </div>
 </footer>
 
-    <div class="footbar" id="footbar" v-show="!state.done">
+    <div class="footbar" id="footbar" v-show="!state.done && !isReceiptMode">
       <div class="wrap in">
         <button class="btn btn-back" id="btnBack" :style="{ visibility: state.step === 0 ? 'hidden' : 'visible' }" @click="goBack">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
@@ -184,7 +251,7 @@ function goHome() { reset(); location.href = '/' }
         </button>
         <div class="fb-mid" id="fbMid">
           <span>🔒 بياناتك محمية وآمنة</span>
-          <span v-if="hasSvc" class="tot">المبلغ الإجمالي <b>{{ rs(priceParts.total) }} ر.س</b></span>
+          <span v-if="hasSvc" class="tot">المبلغ الإجمالي <b>{{ rs(Math.round(footerTotal)) }} ر.س</b></span>
         </div>
         <button class="btn" :class="state.step === 4 ? 'btn-pay' : 'btn-gold'" id="btnNext" :disabled="!canProceed" @click="goNext">{{ nextLabel }} <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 12H5M11 18l-6-6 6-6"/></svg></button>
       </div>

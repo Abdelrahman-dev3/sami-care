@@ -16,7 +16,9 @@ class PaymentController extends Controller
             'page_type' => 'nullable|in:cart,payment',
             'coupon_code' => 'nullable|string',
             'wallet' => 'sometimes|boolean',
+            'wallet_amount' => 'nullable|numeric|min:0',
             'loyalty' => 'sometimes|boolean',
+            'loyalty_points' => 'nullable|integer|min:0',
             'payment_source' => 'nullable|string',
         ]);
 
@@ -25,7 +27,9 @@ class PaymentController extends Controller
             'page_type' => $data['page_type'] ?? 'cart',
             'coupon_code' => $data['coupon_code'] ?? null,
             'wallet' => $data['wallet'] ?? false,
+            'wallet_amount' => $data['wallet_amount'] ?? null,
             'loyalty' => $data['loyalty'] ?? false,
+            'loyalty_points' => $data['loyalty_points'] ?? null,
             'payment_source' => $data['payment_source'] ?? 'src_card',
             'channel' => 'api',
             'is_mobile' => true,

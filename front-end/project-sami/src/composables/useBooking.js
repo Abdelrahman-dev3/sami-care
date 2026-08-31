@@ -52,6 +52,19 @@ const state = reactive({
   notes: '',
 
   pay: null,
+  pointValue: 0.5,
+  loyaltyPoints: null,
+  rewards: {
+    useWallet: false,
+    walletAmount: 0,
+    useLoyalty: false,
+    loyaltyPoints: 0,
+    couponCode: '',
+    couponApplied: '',
+    couponDiscount: 0,
+    couponStatus: '',
+    couponMessage: '',
+  },
   done: false,
   bookRef: null,
   bookingIds: [],
@@ -83,6 +96,37 @@ export function useBooking() {
     return { sub, vat, total: sub + vat }
   })
 
+  const pointValue = computed(() => Math.max(Number(state.pointValue) || 0.5, 0.01))
+  const couponDiscount = computed(() => {
+    if (!state.rewards.couponApplied) return 0
+    return Math.min(Math.max(Number(state.rewards.couponDiscount) || 0, 0), priceParts.value.total)
+  })
+  const walletDiscount = computed(() => {
+    if (!state.rewards.useWallet) return 0
+    const remaining = Math.max(priceParts.value.total - couponDiscount.value, 0)
+    return Math.min(
+      Math.max(Number(state.rewards.walletAmount) || 0, 0),
+      Math.max(Number(state.walletBalance) || 0, 0),
+      remaining,
+    )
+  })
+  const loyaltyPointsUsed = computed(() => {
+    if (!state.rewards.useLoyalty) return 0
+    const remaining = Math.max(priceParts.value.total - couponDiscount.value - walletDiscount.value, 0)
+    const byAmount = Math.ceil(remaining / pointValue.value)
+    return Math.min(
+      Math.max(parseInt(state.rewards.loyaltyPoints, 10) || 0, 0),
+      Math.max(parseInt(state.loyaltyPoints, 10) || 0, 0),
+      byAmount,
+    )
+  })
+  const loyaltyDiscount = computed(() => {
+    const remaining = Math.max(priceParts.value.total - couponDiscount.value - walletDiscount.value, 0)
+    return Math.min(loyaltyPointsUsed.value * pointValue.value, remaining)
+  })
+  const rewardDiscountTotal = computed(() => couponDiscount.value + walletDiscount.value + loyaltyDiscount.value)
+  const payableTotal = computed(() => Math.max(priceParts.value.total - rewardDiscountTotal.value, 0))
+
   function setEmployee(serviceId, employee) {
     state.emp = { ...state.emp, [String(serviceId)]: employee }
   }
@@ -102,9 +146,10 @@ export function useBooking() {
       case 3:
         return !!(state.cust.name.trim() && state.cust.phone.trim())
       case 4:
-        /* لو اختار "المحفظة" لازم الرصيد يغطي القيمة كاملة — مفيش دعم لدفع جزء من المحفظة
-           وباقي المبلغ ببوابة تانية فى الواجهة الحالية (راجع نفس الملاحظة فى useGifts.js). */
-        return !!state.pay && (state.pay !== 'wallet' || (state.walletBalance ?? 0) >= priceParts.value.total)
+        if (payableTotal.value <= 0) {
+          return !!(state.rewards.useWallet || state.rewards.useLoyalty || state.rewards.couponApplied || state.pay)
+        }
+        return !!state.pay && (state.pay !== 'wallet' || (state.walletBalance ?? 0) >= payableTotal.value)
     }
     return false
   })
@@ -131,6 +176,15 @@ export function useBooking() {
     state.time = {}
     state.notes = ''
     state.pay = null
+    state.rewards.useWallet = false
+    state.rewards.walletAmount = 0
+    state.rewards.useLoyalty = false
+    state.rewards.loyaltyPoints = 0
+    state.rewards.couponCode = ''
+    state.rewards.couponApplied = ''
+    state.rewards.couponDiscount = 0
+    state.rewards.couponStatus = ''
+    state.rewards.couponMessage = ''
     state.done = false
     state.bookRef = null
     state.bookingIds = []
@@ -140,6 +194,7 @@ export function useBooking() {
     state, VAT,
     hasSvc, toggleSvc,
     selSvcs, subTotal, totalDur, priceParts,
+    pointValue, couponDiscount, walletDiscount, loyaltyPointsUsed, loyaltyDiscount, rewardDiscountTotal, payableTotal,
     setEmployee, setTime,
     canProceed, nextLabel,
     go, reset,

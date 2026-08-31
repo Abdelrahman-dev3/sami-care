@@ -1,1 +1,0 @@
-function n(r,i){let t=r;if(typeof t=="string"){const e=t.trim();if(e.startsWith("{")&&e.endsWith("}"))try{t=JSON.parse(e)}catch{return r}}return t&&typeof t=="object"?t[i]||t.ar||t.en||"":r??""}export{n as l};

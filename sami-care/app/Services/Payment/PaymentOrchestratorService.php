@@ -50,7 +50,9 @@ class PaymentOrchestratorService
 
         $submethods = [
             'wallet' => (bool) ($input['wallet'] ?? false),
+            'wallet_amount' => isset($input['wallet_amount']) ? max(0, (float) $input['wallet_amount']) : null,
             'loyalty' => (bool) ($input['loyalty'] ?? false),
+            'loyalty_points' => isset($input['loyalty_points']) ? max(0, (int) $input['loyalty_points']) : null,
         ];
         $subResult = app(PaymentSubMethodsService::class)->apply($userId, new Request($submethods), $grossAmount, false);
         if (isset($subResult['error'])) {
@@ -194,7 +196,13 @@ class PaymentOrchestratorService
                     ->first();
 
                 if (! $wallet && $requiredDeposit > 0) {
-                    throw new \RuntimeException('Wallet not found.');
+                    $user = User::find($userId);
+                    $wallet = Wallet::create([
+                        'user_id' => $userId,
+                        'title' => trim(($user?->first_name ?? '') . ' ' . ($user?->last_name ?? '')) ?: ($user?->username ?? 'Wallet'),
+                        'amount' => 0,
+                        'status' => 1,
+                    ]);
                 }
 
                 $walletBalance = (float) ($wallet->amount ?? 0);

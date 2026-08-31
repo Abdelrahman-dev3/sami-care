@@ -113,7 +113,9 @@ class PaymentController extends Controller
             'gateway' => $request->paymentMethod,
             'coupon_code' => $request->invoiceCopon ?? null,
             'wallet' => (bool) $request->wallet,
+            'wallet_amount' => $request->wallet_amount,
             'loyalty' => (bool) $request->loyalty,
+            'loyalty_points' => $request->loyalty_points,
             'payment_source' => $request->payment_source ?? 'src_card',
             'channel' => 'web',
         ]);

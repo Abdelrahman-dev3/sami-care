@@ -3,7 +3,6 @@ import { ref, computed, onMounted } from 'vue'
 import { categoryIconPath } from '@/utils/giftIcons'
 import { resolveApiImage } from '@/utils/assetPath'
 import { RouterLink, useRouter } from 'vue-router'
-import AppFooter from '@/components/layout/AppFooter.vue'
 import PageSkeleton from '@/components/common/PageSkeleton.vue'
 import LocationNotice from '@/components/common/LocationNotice.vue'
 import { useServiceLocation } from '@/composables/useServiceLocation'
@@ -403,8 +402,6 @@ const perks = [
       </section>
 
     </main>
-
-    <AppFooter />
 
   </div>
 </template>

@@ -40,15 +40,25 @@ export async function createPackageBooking(payload) {
   بوابات دفع مستقلة، دي أعلام إضافية (booleans) بتتفعّل فوق أي بوابة عشان تغطي المبلغ كله أو
   جزء منه من رصيد المحفظة/النقاط قبل ما الباقي (لو فيه) يتحصّل بالبوابة المختارة.
 */
-export async function initPayment(gateway, { wallet, loyalty, couponCode } = {}) {
+export async function initPayment(gateway, { wallet, walletAmount, loyalty, loyaltyPoints, couponCode } = {}) {
   return authFetch('/payments/init', {
     method: 'POST',
     body: {
       gateway,
       page_type: 'cart',
       ...(wallet ? { wallet: true } : {}),
+      ...(walletAmount ? { wallet_amount: walletAmount } : {}),
       ...(loyalty ? { loyalty: true } : {}),
+      ...(loyaltyPoints ? { loyalty_points: loyaltyPoints } : {}),
       ...(couponCode ? { coupon_code: couponCode } : {}),
     },
   })
+}
+
+export async function fetchLoyaltyPointValue() {
+  return authFetch('/loyalty/point-value')
+}
+
+export async function validateInvoiceCoupon(couponCode) {
+  return authFetch(`/validate-invoice-coupon?coupon_code=${encodeURIComponent(couponCode)}`)
 }

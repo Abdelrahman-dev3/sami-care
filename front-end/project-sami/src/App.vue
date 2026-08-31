@@ -1,5 +1,5 @@
 <script setup>
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import LocationPicker from '@/components/common/LocationPicker.vue'
 import AuthModal from '@/components/common/AuthModal.vue'
@@ -22,9 +22,15 @@ const viewByRoute = { home:'home', services:'services', 'service-detail':'servic
   لأنه هو اللي بيكسر كاش المتصفح للإطار. من غيره المتصفح بيفضل يعرض
   النسخة القديمة مهما اتغيّر الملف.
 */
-const mobileVersion = '20260826-i18n-static-v41'
-const initialMobileView = viewByRoute[route.name] || 'home'
-const mobileSrc = `/mobile/index.html?view=${initialMobileView}&v=${mobileVersion}`
+const mobileVersion = '20260830-booking-rewards-v47'
+const mobileSrc = computed(() => {
+  const params = new URLSearchParams({
+    view: viewByRoute[route.name] || 'home',
+    v: mobileVersion,
+  })
+  if (route.query.receipt) params.set('receipt', route.query.receipt)
+  return `/mobile/index.html?${params.toString()}`
+})
 const syncMedia = event => { isMobile.value = event.matches }
 const motionTargets = [
   '.hero-box','.hero-person','.about-section > *','.section-title','.home-section > *',

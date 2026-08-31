@@ -28,7 +28,7 @@ class ProfileController extends Controller
         $coupons = Coupon::with('promotion')->where('is_expired', 0)->where('use_limit', '>=', 1)->count();
 
 
-        $wallet = Wallet::where('user_id', $user->id)->first();
+        $wallet = Wallet::where('user_id', $user->id)->where('status', 1)->first();
         $balance = $wallet ? $wallet->amount : 0.00;
         $referralBalance = optional($user->affiliate)->wallet_available ?? 0.00;
         $points = LoyaltyPoint::where('user_id', $user->id)->value('points') ?? 0;
