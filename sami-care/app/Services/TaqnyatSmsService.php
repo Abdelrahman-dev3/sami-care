@@ -106,7 +106,7 @@ class TaqnyatSmsService
         ]);
     }
 
-    public function sendGiftCardRecipientMessage(GiftCard $giftCard)
+    /*public function sendGiftCardRecipientMessage(GiftCard $giftCard)
     {
         $this->giftSmsLog()->info('Building gift card recipient SMS', [
             'gift_card_id' => $giftCard->id,
@@ -132,6 +132,44 @@ class TaqnyatSmsService
             'gift_services' => $serviceNames,
             'gift_total' => $this->formatMoney($giftCard->subtotal ?? 0),
             'gift_url' => $giftCard->claim_url ?? '',
+            'app_name' => setting('app_name'),
+        ]);
+
+        $this->giftSmsLog()->info('Gift card recipient SMS finished', [
+            'gift_card_id' => $giftCard->id,
+            'sent' => (bool) $result,
+            'last_error' => $this->lastError,
+        ]);
+
+        return $result;
+    }*/
+
+    public function sendGiftCardRecipientMessage(GiftCard $giftCard)
+    {
+        $this->giftSmsLog()->info('Building gift card recipient SMS', [
+            'gift_card_id' => $giftCard->id,
+            'recipient_phone' => $giftCard->recipient_phone,
+            'payment_status' => (int) $giftCard->payment_status,
+            'gift_status' => $giftCard->gift_status,
+            'share_url' => $giftCard->share_url,
+        ]);
+
+        $serviceNames = $giftCard->services_list
+            ->map(fn (Service $service) => $this->resolveDisplayValue($service->name))
+            ->filter()
+            ->implode(', ');
+
+        $senderName = trim(($giftCard->user?->first_name ?? '') . ' ' . ($giftCard->user?->last_name ?? ''));
+
+        $result = $this->sendMessageFromSetting($giftCard->recipient_phone, 'taqnyat_recipient', [
+            'recipient_name' => $giftCard->recipient_name,
+            'recipient_phone' => $giftCard->recipient_phone,
+            'sender_name' => $senderName,
+            'gift_ref' => (string) $giftCard->id,
+            'ref' => (string) $giftCard->id,
+            'gift_services' => $serviceNames,
+            'gift_total' => $this->formatMoney($giftCard->subtotal ?? 0),
+            'gift_url' => $giftCard->share_url ?? '',
             'app_name' => setting('app_name'),
         ]);
 

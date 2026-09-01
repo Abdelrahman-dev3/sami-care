@@ -16,21 +16,16 @@ const navigating = ref(false)
 const cartDrawerOpen = ref(false)
 const { state: storeState } = useStore()
 const isMobile = ref(media.matches)
+const useMobileFrame = computed(() => isMobile.value && route.name !== 'about')
 const viewByRoute = { home:'home', services:'services', 'service-detail':'services', booking:'booking', store:'store', gifts:'gifts', 'packages-gifts':'packages', branches:'branches', contact:'account', 'gift-recipient':'gifts', terms:'terms', 'privacy-policy':'privacy' }
 /*
-  مهم: أي تعديل على public/mobile/index.html لازم يتبعه تغيير الرقم ده،
-  لأنه هو اللي بيكسر كاش المتصفح للإطار. من غيره المتصفح بيفضل يعرض
-  النسخة القديمة مهما اتغيّر الملف.
+  Ù…Ù‡Ù…: Ø£ÙŠ ØªØ¹Ø¯ÙŠÙ„ Ø¹Ù„Ù‰ public/mobile/index.html Ù„Ø§Ø²Ù… ÙŠØªØ¨Ø¹Ù‡ ØªØºÙŠÙŠØ± Ø§Ù„Ø±Ù‚Ù… Ø¯Ù‡ØŒ
+  Ù„Ø£Ù†Ù‡ Ù‡Ùˆ Ø§Ù„Ù„ÙŠ Ø¨ÙŠÙƒØ³Ø± ÙƒØ§Ø´ Ø§Ù„Ù…ØªØµÙØ­ Ù„Ù„Ø¥Ø·Ø§Ø±. Ù…Ù† ØºÙŠØ±Ù‡ Ø§Ù„Ù…ØªØµÙØ­ Ø¨ÙŠÙØ¶Ù„ ÙŠØ¹Ø±Ø¶
+  Ø§Ù„Ù†Ø³Ø®Ø© Ø§Ù„Ù‚Ø¯ÙŠÙ…Ø© Ù…Ù‡Ù…Ø§ Ø§ØªØºÙŠÙ‘Ø± Ø§Ù„Ù…Ù„Ù.
 */
-const mobileVersion = '20260830-booking-rewards-v47'
-const mobileSrc = computed(() => {
-  const params = new URLSearchParams({
-    view: viewByRoute[route.name] || 'home',
-    v: mobileVersion,
-  })
-  if (route.query.receipt) params.set('receipt', route.query.receipt)
-  return `/mobile/index.html?${params.toString()}`
-})
+const mobileVersion = '20260826-i18n-static-v41'
+const initialMobileView = viewByRoute[route.name] || 'home'
+const mobileSrc = `/mobile/index.html?view=${initialMobileView}&v=${mobileVersion}`
 const syncMedia = event => { isMobile.value = event.matches }
 const motionTargets = [
   '.hero-box','.hero-person','.about-section > *','.section-title','.home-section > *',
@@ -111,14 +106,14 @@ useScrollReveal()
 </script>
 
 <template>
-  <div v-if="isMobile" class="global-mobile-shell">
-    <iframe class="global-mobile-frame" :src="mobileSrc" allow="fullscreen; clipboard-write; web-share" title="تطبيق عناية سامي للجوال"></iframe>
+  <div v-if="useMobileFrame" class="global-mobile-shell">
+    <iframe class="global-mobile-frame" :src="mobileSrc" allow="fullscreen; clipboard-write; web-share" title="ØªØ·Ø¨ÙŠÙ‚ Ø¹Ù†Ø§ÙŠØ© Ø³Ø§Ù…ÙŠ Ù„Ù„Ø¬ÙˆØ§Ù„"></iframe>
   </div>
   <template v-else>
-    <!-- الهيدر خارج RouterView: نسخة واحدة تعيش طول عمر التطبيق فلا تُعاد بناؤها عند الانتقال -->
+    <!-- Ø§Ù„Ù‡ÙŠØ¯Ø± Ø®Ø§Ø±Ø¬ RouterView: Ù†Ø³Ø®Ø© ÙˆØ§Ø­Ø¯Ø© ØªØ¹ÙŠØ´ Ø·ÙˆÙ„ Ø¹Ù…Ø± Ø§Ù„ØªØ·Ø¨ÙŠÙ‚ ÙÙ„Ø§ ØªÙØ¹Ø§Ø¯ Ø¨Ù†Ø§Ø¤Ù‡Ø§ Ø¹Ù†Ø¯ Ø§Ù„Ø§Ù†ØªÙ‚Ø§Ù„ -->
     <AppHeader @open-cart="openCart" />
     <div class="route-progress" :class="{ 'is-active': navigating }" aria-hidden="true"></div>
-    <!-- بدون Transition: الصفحة الجديدة تظهر فورًا عند الضغط، بدون نزول وطلوع -->
+    <!-- Ø¨Ø¯ÙˆÙ† Transition: Ø§Ù„ØµÙØ­Ø© Ø§Ù„Ø¬Ø¯ÙŠØ¯Ø© ØªØ¸Ù‡Ø± ÙÙˆØ±Ù‹Ø§ Ø¹Ù†Ø¯ Ø§Ù„Ø¶ØºØ·ØŒ Ø¨Ø¯ÙˆÙ† Ù†Ø²ÙˆÙ„ ÙˆØ·Ù„ÙˆØ¹ -->
     <RouterView v-slot="{ Component, route: current }">
       <component :is="Component" :key="current.path" />
     </RouterView>
@@ -134,3 +129,4 @@ useScrollReveal()
 #app footer:not(.sami-unified-footer){display:none!important}
 @media(max-width:640px){html,body,#app{width:100%;height:100%;margin:0;overflow:hidden}}
 </style>
+

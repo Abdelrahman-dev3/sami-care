@@ -284,7 +284,7 @@ class MobileCartController extends Controller
         ], 201);
     }
 
-    public function storeGiftCard(Request $request)
+    /*public function storeGiftCard(Request $request)
     {
         if ($request->filled('services') || $request->filled('packages') || $request->filled('location')) {
             $validated = $request->validate([
@@ -389,6 +389,127 @@ class MobileCartController extends Controller
                 'gift_card_id' => $giftCard->id,
                 'subtotal' => (float) $giftCard->subtotal,
                 'claim_url' => $giftCard->claim_url,
+            ],
+        ], 201);
+    }*/
+
+    public function storeGiftCard(Request $request)
+    {
+        if ($request->filled('services') || $request->filled('packages') || $request->filled('location')) {
+            $validated = $request->validate([
+                'services' => ['nullable', 'array'],
+                'services.*.subServices' => ['required_with:services', 'array', 'min:1'],
+                'services.*.subServices.*.id' => ['required', 'integer', 'exists:services,id'],
+                'packages' => ['nullable', 'array'],
+                'packages.*.id' => ['required', 'integer', 'exists:packages,id'],
+                'location' => ['required', 'array'],
+                'location.recipient_name' => ['required', 'string', 'max:255'],
+                'location.recipient_mobile' => ['required', 'string', 'max:20'],
+                'location.message' => ['nullable', 'string', 'max:1000'],
+                'send_channel' => ['nullable', 'in:wa,sms,link,mail,print'],
+                'branch' => ['nullable', 'integer'],
+                'branch_id' => ['nullable', 'integer'],
+            ]);
+
+            $serviceIds = [];
+
+            foreach ($validated['services'] ?? [] as $service) {
+                foreach ($service['subServices'] as $subService) {
+                    $serviceIds[] = (int) $subService['id'];
+                }
+            }
+
+            $serviceIds = array_values(array_unique($serviceIds));
+
+            $packageIds = collect($validated['packages'] ?? [])
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->unique()
+                ->values()
+                ->all();
+
+            if ($serviceIds === [] && $packageIds === []) {
+                return response()->json([
+                    'success' => false,
+                    'status' => false,
+                    'message' => __('messages.gift_card_service_required'),
+                ], 422);
+            }
+
+            $subtotal = (float) Service::whereIn('id', $serviceIds)
+                ->where('status', 1)
+                ->sum('default_price');
+
+            $subtotal += (float) Package::whereIn('id', $packageIds)
+                ->where('status', 1)
+                ->sum('package_price');
+
+            $giftCard = GiftCard::create([
+                'user_id' => $request->user()->id,
+                'branch_id' => (int) ($validated['branch_id'] ?? $validated['branch'] ?? 0) ?: null,
+                'recipient_name' => $validated['location']['recipient_name'],
+                'recipient_phone' => $validated['location']['recipient_mobile'],
+                'requested_services' => $serviceIds,
+                'requested_packages' => $packageIds,
+                'message' => $validated['location']['message'] ?? null,
+                'subtotal' => $subtotal,
+                'payment_status' => 0,
+                'gift_status' => GiftCard::STATUS_PENDING_PAYMENT,
+                'send_channel' => $validated['send_channel'] ?? 'link',
+        ]);
+
+            $giftCard->ensureClaimToken();
+
+            return response()->json([
+                'success' => true,
+                'status' => true,
+                'message' => __('messages.gift_added_success'),
+                'data' => [
+                    'gift_card_id' => $giftCard->id,
+                    'subtotal' => (float) $giftCard->subtotal,
+                    'claim_url' => $giftCard->claim_url,
+                    'share_url' => $giftCard->share_url,
+                    'claim_token' => $giftCard->claim_token,
+                ],
+            ], 201);
+        }
+
+        $validated = $request->validate([
+            'recipient_name' => ['required', 'string', 'max:255'],
+            'recipient_phone' => ['required', 'string', 'max:20'],
+            'requested_services' => ['required', 'array', 'min:1'],
+            'requested_services.*' => ['integer', 'exists:services,id'],
+            'optional_services' => ['nullable', 'string', 'max:100'],
+            'branch_id' => ['nullable', 'integer'],
+            'send_channel' => ['nullable', 'in:wa,sms,link,mail,print'],
+        ]);
+
+        $subtotal = (float) Service::whereIn('id', array_map('intval', $validated['requested_services']))->sum('default_price');
+
+        $giftCard = GiftCard::create([
+            'user_id' => $request->user()->id,
+            'branch_id' => (int) ($validated['branch_id'] ?? 0) ?: null,
+            'recipient_name' => $validated['recipient_name'],
+            'recipient_phone' => $validated['recipient_phone'],
+            'message' => $validated['optional_services'] ?? null,
+            'requested_services' => $validated['requested_services'],
+            'subtotal' => $subtotal,
+            'payment_status' => 0,
+            'gift_status' => GiftCard::STATUS_PENDING_PAYMENT,
+            'send_channel' => $validated['send_channel'] ?? 'link',
+        ]);
+
+
+        $giftCard->ensureClaimToken();
+        return response()->json([
+            'success' => true,
+            'message' => __('messages.gift_added_success'),
+            'data' => [
+                'gift_card_id' => $giftCard->id,
+                'subtotal' => (float) $giftCard->subtotal,
+                'claim_url' => $giftCard->claim_url,
+                    'share_url' => $giftCard->share_url,
+                    'claim_token' => $giftCard->claim_token,
             ],
         ], 201);
     }

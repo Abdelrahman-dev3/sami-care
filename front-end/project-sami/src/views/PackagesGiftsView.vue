@@ -14,6 +14,7 @@ import { useServiceLocation } from '@/composables/useServiceLocation'
 import { useAuth } from '@/composables/useAuth'
 import { usePackages, rs } from '@/composables/usePackages'
 import { createPackageBooking, initPayment } from '@/services/bookingApi'
+import { createGiftCard } from '@/services/giftsApi'
 import pageCss from '@/assets/styles/pages/packages-gifts.css?raw'
 
 import SIcon from '@/components/common/SIcon.vue'
@@ -101,14 +102,34 @@ function goNext() {
 
 /* ===== إتمام الدفع — نفس تأخير الأصل ===== */
 function doGiftPay() {
-  payLoading.value = true
-  setTimeout(() => {
-    payLoading.value = false
-    state.done = true
-    state.gstep = 4
-    state.ref = '#GIFT-2026-' + String(Math.floor(10000 + Math.random() * 89999))
-    scrollTo({ top: 0, behavior: 'smooth' })
-  }, 2100)
+  requireAuth(async () => {
+    payLoading.value = true
+    try {
+      const created = await createGiftCard({
+        packages: [{ id: state.gpkg }],
+        location: {
+          recipient_name: state.name.trim(),
+          recipient_mobile: state.phone.trim(),
+          message: state.msg.trim() || undefined,
+        },
+        branch: state.siteBranch || null,
+        send_channel: state.method || 'link',
+      })
+      const wallet = state.pay === 'wallet'
+      await initPayment(wallet ? 'card' : 'cod', { wallet })
+      state.ref = created?.data?.gift_card_id ? `#GIFT-${created.data.gift_card_id}` : '#GIFT'
+      state.claimUrl = created?.data?.share_url || created?.data?.claim_url || null
+      state.claimToken = created?.data?.claim_token || null
+      state.done = true
+      state.gstep = 4
+      scrollTo({ top: 0, behavior: 'smooth' })
+    } catch (error) {
+      console.error('Package gift error:', error)
+      toast(error?.message || 'تعذر إنشاء الهدية، حاول مرة أخرى')
+    } finally {
+      payLoading.value = false
+    }
+  })
 }
 
 function toDateKey(d) {
@@ -197,7 +218,7 @@ function goHome() { location.href = '/' }
           <GiftStepper />
           <div v-if="state.done" class="view on">
             <GiftSuccess
-              @recipient="location.href = '/gift-recipient?ref=' + encodeURIComponent(state.ref || '')"
+              @recipient="state.claimUrl && (location.href = state.claimUrl)"
               @new-gift="newGift"
               @copy-self="toast('تم إرسال نسخة من الهدية إلى بريدك')"
               @share="toast('تم نسخ رابط الهدية للمشاركة')"

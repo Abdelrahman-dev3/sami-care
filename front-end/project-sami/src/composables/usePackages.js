@@ -118,6 +118,8 @@ const state = reactive({
   saveCard: true,
   done: false,
   ref: null,
+  claimUrl: null,
+  claimToken: null,
 
   siteBranch: readBranch(),
 
@@ -200,6 +202,8 @@ export function usePackages() {
     state.gpkg = pkg
     state.done = false
     state.ref = null
+    state.claimUrl = null
+    state.claimToken = null
     scrollTo({ top: 0, behavior: 'smooth' })
   }
 

@@ -852,7 +852,7 @@ footer.site-footer{background:#080a0b;color:#eee;padding:45px 30px 20px;border-t
 .pcard:hover .pimg .prod-photo{transform:scale(1.07)}
 .pcard:hover .pimg svg.prod{transform:scale(1.07) translateY(-3px)}
 .pcard .pimg .shelf{position:absolute;bottom:0;inset-inline:0;height:26%;
-  background:linear-gradient(180deg,rgba(233,207,142,.1),rgba(20,16,9,.6));border-top:1px solid rgba(233,207,142,.22)}
+  background:linear-gradient(180deg,rgba(233,207,142,.1),rgba(20,16,9,.6));}
 .fav2{position:absolute;top:11px;left:11px;z-index:3;width:32px;height:32px;border-radius:50%;
   background:rgba(255,253,247,.92);display:grid;place-items:center;color:var(--mute);transition:all .25s var(--ease)}
 .fav2:hover{transform:scale(1.12)}

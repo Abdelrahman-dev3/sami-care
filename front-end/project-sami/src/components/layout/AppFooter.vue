@@ -45,11 +45,17 @@ function branchName(branch) {
         </div>
         <div>
           <h4>عناوين الفروع</h4>
+           <div class="f-branch">
+            <b>الادارة</b>
+           
+            <a href="tel:0569472722">0569472722</a>
+          </div>
           <div v-for="branch in displayBranches" :key="branch.id" class="f-branch">
             <b>{{ branchName(branch) }}</b>
             <small>{{ branch.address || branch.address_line_1 }}</small>
             <a v-if="branch.contact_number" :href="`tel:${branch.contact_number}`">{{ branch.contact_number }}</a>
           </div>
+         
         </div>
       </div>
       <div class="f-bottom">
@@ -67,7 +73,7 @@ function branchName(branch) {
 .f-brand{min-width:0}.f-brand .logo{display:flex;align-items:center;gap:11px}.f-brand .mark{width:56px;height:56px;display:grid;place-items:center;border:1.5px solid #ce9234;border-radius:14px;overflow:hidden}.f-brand .mark img{width:100%;height:100%;object-fit:contain}.f-brand .name b{font-size:17px;color:#f0e6cf;display:block;line-height:1.15}.f-brand .name span{font-size:10px;color:#9a9080;letter-spacing:.08em}.f-brand p{max-width:330px;color:#cfc5b3;line-height:1.9;font-size:14px;margin-top:18px}
 .socials{display:flex;gap:10px;margin-top:18px}.socials a{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;border:1px solid rgba(198,161,91,.34);color:#f0c978;background:rgba(255,255,255,.03)}
 .sami-unified-footer h4{font-family:inherit;color:#f7d995;margin:0 0 12px;font-size:22px}.f-links{display:grid;gap:8px;list-style:none;padding:0;margin:0}.f-links a{color:#cfc5b3;line-height:1.9;font-size:14px}.f-links a:hover{color:#f0c978}
-.f-branch{display:grid;gap:3px;margin-bottom:12px}.f-branch b{color:#fff}.f-branch small{color:#b8ad9d;line-height:1.8}.f-branch a{color:#f0c978;font-size:13px}
+.f-branch{display:grid;gap:3px;margin-bottom:12px}.f-branch b{color:#fff}.f-branch small{color:#b8ad9d;line-height:1.8}.f-branch a{color:#f0c978;font-size:13px;text-align: right;direction:ltr;}
 .f-bottom{max-width:1200px;margin:34px auto 0;padding-top:18px;border-top:1px solid rgba(255,255,255,.1);display:grid;grid-template-columns:auto minmax(320px,1fr);align-items:center;gap:18px;color:#b8ad9d;font-size:13px}.pay{justify-self:end;display:grid;grid-template-columns:repeat(5,minmax(72px,1fr));gap:10px;width:min(100%,520px)}.pay span{min-height:46px;border-radius:14px;display:grid;place-items:center;border:1px solid rgba(232,190,108,.3);background:linear-gradient(160deg,rgba(255,255,255,.1),rgba(255,255,255,.03));color:#f7d995;font-size:0;font-weight:900;position:relative;overflow:hidden}.pay span::before{font-size:13px;line-height:1}.pay span:nth-child(1)::before{content:'VISA';font-style:italic;font-size:15px;color:#fff}.pay span:nth-child(2)::before{content:'MC';font-size:14px;color:#111;background:linear-gradient(90deg,#eb001b 0 50%,#f79e1b 50%);width:38px;height:24px;border-radius:999px;display:grid;place-items:center}.pay span:nth-child(3)::before{content:'مدى';font-size:16px;color:#9fe7c1}.pay span:nth-child(4)::before{content:'tabby';font-size:14px;color:#b8f7d0}.pay span:nth-child(5)::before{content:'Pay';font-size:15px;color:#fff}
 @media(max-width:900px){.f-grid{grid-template-columns:1fr 1fr}.f-brand{grid-column:1/-1}.f-bottom{grid-template-columns:1fr}.pay{justify-self:stretch;width:100%}}
 @media(max-width:640px){.sami-unified-footer{padding:42px 16px calc(22px + env(safe-area-inset-bottom))}.f-grid{grid-template-columns:1fr 1fr;gap:22px 14px}.f-brand,.f-grid>div:last-child{grid-column:1/-1}.f-brand{text-align:center}.f-brand .logo{justify-content:center}.f-brand p{max-width:none;margin-inline:auto;font-size:13px}.socials{justify-content:center}.sami-unified-footer h4{font-size:15px;margin-bottom:10px}.f-links a{font-size:12.5px}.f-branch{background:rgba(255,255,255,.035);border:1px solid rgba(198,161,91,.18);border-radius:14px;padding:12px}.f-bottom{margin-top:24px;text-align:center}.pay{grid-template-columns:repeat(3,1fr);gap:8px}.pay span{min-height:44px;border-radius:12px}.pay span:nth-child(5){grid-column:2/3}}

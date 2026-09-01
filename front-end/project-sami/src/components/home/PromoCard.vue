@@ -57,7 +57,7 @@ const promoCards = computed(() => {
     },*/
 
     {id:1,type:'offer',title:'عرض الافتتاح',text:'خصم 25% على جميع الباقات هذا الأسبوع',badge:'25%',cta:'اكتشف العرض',href:'/packages-gifts'},
-  {id:2,type:'home',eyebrow:'✦ نصل إليك',title:'الخدمات المنزلية',text:'حلاقة وعناية وماسكات طبيعية في راحة منزلك داخل جدة',cta:'احجز الخدمة المنزلية',href:'/booking'}
+  {id:2,type:'home',eyebrow:'✦ نصل إليك',title:'الخدمات المنزلية',text:'حلاقة وعناية وماسكات طبيعية في راحة منزلك داخل جدة',cta:'احجز الخدمة المنزلية',href:'/booking?branch=hm'}
   ]
 })
 

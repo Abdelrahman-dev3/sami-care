@@ -36,6 +36,7 @@ const state = reactive({
   done: false,
   ref: null,
   claimUrl: null,
+  claimToken: null,
   walletBalance: null,   // يتحمّل فى GiftPayStep.vue من /profile — لازم يكون معروف قبل السماح باختيار "المحفظة"
 })
 
@@ -122,6 +123,7 @@ export function useGifts() {
           message: state.msg.trim() || undefined,
         },
         branch: branchId,
+        send_channel: state.method || 'link',
       }
 
       if (state.gtype === 'svc') {
@@ -141,7 +143,8 @@ export function useGifts() {
       const payment = await initPayment(wallet ? 'card' : 'cod', { wallet })
 
       state.ref = created?.data?.gift_card_id ? `#GIFT-${created.data.gift_card_id}` : '#GIFT'
-      state.claimUrl = created?.data?.claim_url || null
+      state.claimUrl = created?.data?.share_url || created?.data?.claim_url || null
+      state.claimToken = created?.data?.claim_token || null
       state.done = true
       state.step = 4
 

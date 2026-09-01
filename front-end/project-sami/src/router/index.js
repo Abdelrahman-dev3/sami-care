@@ -42,10 +42,11 @@ const router = createRouter({
     { path: '/account', name: 'account', component: AccountView },
     { path: '/terms', alias: '/TermsAndConditions', name: 'terms', component: TermsView },
     { path: '/privacy-policy', name: 'privacy-policy', component: PrivacyPolicyView },
+    { path: '/page-about', alias: '/about.html', name: 'about', component: AboutView },
     { path: '/:pathMatch(.*)*', redirect: '/' },
     { path: '/blog', alias: '/blog.html', name: 'blog', component: BlogView },
     { path: '/blog/:slug', name: 'blog-detail', component: BlogDetailView },
-    { path: '/page-about', alias: '/about.html', name: 'about', component: AboutView },
+    
   ]
 })
 

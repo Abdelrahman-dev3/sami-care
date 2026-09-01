@@ -79,7 +79,7 @@ nav.links a.on::after{content:"";position:absolute;bottom:0;right:0;left:0;heigh
 .addresses-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
 .addr-box h4{font-family:var(--font-d);font-size:16.5px;color:var(--ink);margin-bottom:6px}
 .addr-box p{font-size:13.5px;color:var(--mute);line-height:1.6}
-.addr-box a{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--gold-deep);font-weight:700;margin-top:8px}
+.addr-box a{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--gold-deep);font-weight:700;margin-top:8px;direction: ltr;}
 
 .home-services p{font-size:14.5px;color:var(--mute);line-height:1.6;margin-bottom:8px}
 .home-services a{display:inline-flex;align-items:center;gap:8px;font-size:15px;color:var(--gold-deep);font-weight:700}

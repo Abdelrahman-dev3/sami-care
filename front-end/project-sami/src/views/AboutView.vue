@@ -1,70 +1,87 @@
 <script setup>
-import SectionTitle from './SectionTitle.vue'
-import { stats } from '../data/site'
+import { onMounted, ref } from 'vue'
+import HeroSection from '@/components/about-page/HeroSection.vue'
+import QuickActions from '@/components/about-page/QuickActions.vue'
+import AboutSection from '@/components/about-page/AboutSection.vue'
+import ServicesSection from '@/components/about-page/ServicesSection.vue'
+import ContactSection from '@/components/about-page/ContactSection.vue'
+import BranchesSection from '@/components/about-page/BranchesSection.vue'
+import FeaturesSection from '@/components/about-page/FeaturesSection.vue'
+import PageActions from '@/components/about-page/PageActions.vue'
+import SiteFooter from '@/components/about-page/SiteFooter.vue'
+import StickyActions from '@/components/about-page/StickyActions.vue'
+import { useAboutReveal } from '@/composables/useAboutReveal'
+import { getHomeContent } from '@/data/home'
+
+const toast = ref('')
+const serviceCategories = ref([])
+const servicesLoading = ref(true)
+const servicesError = ref('')
+let toastTimer
+
+async function loadServices() {
+  try {
+    const homeData = await getHomeContent()
+    serviceCategories.value = homeData.categories || []
+  } catch (error) {
+    console.error('About services API error:', error)
+    servicesError.value = 'تعذر تحميل الخدمات حاليًا'
+  } finally {
+    servicesLoading.value = false
+  }
+}
+
+function notify(message) {
+  toast.value = message
+  clearTimeout(toastTimer)
+
+  toastTimer = setTimeout(() => {
+    toast.value = ''
+  }, 2300)
+}
+
+useAboutReveal()
+onMounted(loadServices)
 </script>
 
 <template>
-  <section class="about-page">
-    <SectionTitle title="نبذة عن المركز" />
+  <div class="about-design-page" dir="rtl">
+    <main class="about-app-shell">
+      <HeroSection logo="/logo.png" />
+      <QuickActions />
+      <AboutSection />
+      <ServicesSection :categories="serviceCategories" :loading="servicesLoading" :error="servicesError" />
+      <ContactSection />
+      <BranchesSection />
+      <FeaturesSection />
+      <PageActions @notify="notify" />
+      <SiteFooter class="sami-unified-footer" logo="/logo.png" />
+    </main>
 
-    <div class="card about reveal">
-      <p>
-        <b>مركز عناية سامي للرجال</b> — وجهتك المتكاملة للعناية الرجالية الفاخرة في جدة.
-        نقدم تجربة تجمع بين الأصالة والاحترافية...
-      </p>
+    <StickyActions />
 
-      <div class="stats">
-        <div v-for="stat in stats" :key="stat.label">
-          <b>{{ stat.value }}</b>
-          <small>{{ stat.label }}</small>
-        </div>
+    <Transition name="toast">
+      <div v-if="toast" class="toast" role="status">
+        {{ toast }}
       </div>
-    </div>
-  </section>
+    </Transition>
+  </div>
 </template>
 
-<style scoped>
-.about-page {
-  padding: 20px 16px 40px;
-  background: #f7f3ee;
-  min-height: 100vh;
+<style src="@/assets/styles/about-page.css"></style>
+
+<style>
+#app:has(.about-design-page) > .site-header,
+#app:has(.about-design-page) > .global-site-footer {
+  display: none !important;
+}
+@media (min-width: 641px) {
+    body {
+        padding-top: 0 !important;
+    }
 }
 
-.card.about {
-  background: #fff;
-  border: 1px solid rgba(140, 110, 80, 0.16);
-  border-radius: 18px;
-  padding: 18px;
-  color: #4e4436;
-  line-height: 2;
-  font-size: 13px;
-}
 
-.card.about b {
-  color: #9c6b1f;
-}
-
-.stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  margin-top: 18px;
-  padding-top: 14px;
-  border-top: 1px dashed rgba(140, 110, 80, 0.16);
-}
-
-.stats div {
-  text-align: center;
-}
-
-.stats b {
-  display: block;
-  font-size: 20px;
-  color: #221f1f;
-}
-
-.stats small {
-  color: #8a7b6c;
-  font-size: 10px;
-}
 </style>
+
+
