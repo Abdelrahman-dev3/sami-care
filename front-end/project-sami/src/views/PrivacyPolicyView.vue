@@ -45,6 +45,6 @@ const SECTIONS = [
         </div>
       </div>
     </div>
-    <AppFooter />
+    
   </div>
 </template>

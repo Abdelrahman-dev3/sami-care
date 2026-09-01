@@ -41,7 +41,7 @@ function branchName(branch) {
         </div>
         <div>
           <h4>استكشف</h4>
-          <ul class="f-links"><li><RouterLink to="/store">المتجر</RouterLink></li><li><RouterLink to="/branches">فروعنا</RouterLink></li><li><RouterLink to="/contact">تواصل معنا</RouterLink></li><li><RouterLink to="/terms">الشروط والأحكام</RouterLink></li><li><RouterLink to="/privacy-policy">سياسة الخصوصية</RouterLink></li></ul>
+          <ul class="f-links"><li><RouterLink to="/store">المتجر</RouterLink></li><li><RouterLink to="/branches">فروعنا</RouterLink></li><li><RouterLink to="/contact">تواصل معنا</RouterLink></li><li><RouterLink to="/page-about">صفحة تعريفية</RouterLink></li><li><RouterLink to="/terms">الشروط والأحكام</RouterLink></li><li><RouterLink to="/privacy-policy">سياسة الخصوصية</RouterLink></li></ul>
         </div>
         <div>
           <h4>عناوين الفروع</h4>
