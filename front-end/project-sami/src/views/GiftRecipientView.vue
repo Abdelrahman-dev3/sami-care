@@ -1,208 +1,71 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { SENDS } from '@/data/gifts'
+import GiftCard from '@/components/gifts/GiftCard.vue'
 import SIcon from '@/components/common/SIcon.vue'
 import { fetchGiftClaim } from '@/services/giftsApi'
+import { useLanguage } from '@/composables/useLanguage'
 
 const loading = ref(true)
 const error = ref('')
 const gift = ref(null)
-
+const { state: language } = useLanguage()
 const AR_M = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر']
-
-const refCode = computed(() => {
-  const params = new URLSearchParams(window.location.search)
-  return params.get('token') || ''
-})
-
-const sendName = computed(() => {
-  const m = SENDS.find(x => x.id === (gift.value?.send_channel || gift.value?.method))
-  return m ? m.n : ''
-})
-
-const giftLabel = computed(() => gift.value?.label || 'هدية')
+const refCode = computed(() => new URLSearchParams(window.location.search).get('token') || '')
 const sentAt = computed(() => {
   if (!gift.value) return ''
-  const now = new Date(gift.value.created_at || Date.now())
-  return `${now.getDate()} ${AR_M[now.getMonth()]} ${now.getFullYear()}`
+  const date = new Date(gift.value.created_at || Date.now())
+  return `${date.getDate()} ${AR_M[date.getMonth()]} ${date.getFullYear()}`
 })
-
-async function loadGift() {
-  const refValue = refCode.value
-  if (!refValue) {
-    error.value = 'لا يوجد رابط هدية صالح'
-    loading.value = false
-    return
-  }
-
-  try {
-    gift.value = await fetchGiftClaim(refValue)
-  } catch (e) {
-    error.value = 'تعذّر تحميل تفاصيل الهدية. تأكد من الرابط أو تواصل مع الدعم.'
-    gift.value = null
-  } finally {
-    loading.value = false
-  }
+function localizedName(name) {
+  if (!name) return ''
+  if (typeof name === 'string') return name
+  return language.lang === 'en'
+    ? name.en || name.ar || ''
+    : name.ar || name.en || ''
 }
 
-onMounted(() => {
-  loadGift()
-})
+const giftItems = computed(() => [...(gift.value?.services || []), ...(gift.value?.packages || [])]
+  .map(item => ({ id: `${item.id}-${localizedName(item.name)}`, name: localizedName(item.name) }))
+  .filter(item => item.name))
 
+async function loadGift() {
+  if (!refCode.value) { error.value = 'لا يوجد رابط هدية صالح'; loading.value = false; return }
+  try { gift.value = await fetchGiftClaim(refCode.value) }
+  catch { error.value = 'تعذّر تحميل تفاصيل الهدية. تأكد من الرابط أو تواصل مع الدعم.' }
+  finally { loading.value = false }
+}
+onMounted(loadGift)
 const I = {
-  user:  '<path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>',
-  send:  '<path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/>',
+  user: '<path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  send: '<path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/>',
   clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
-  share: '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/>',
-  home:  '<path d="M3 9l9-6 9 6v11a1 1 0 01-1 1H4a1 1 0 01-1-1z"/>',
+  gift: '<path d="M20 12v10H4V12M2 7h20v5H2zM12 22V7"/>',
 }
 </script>
 
 <template>
   <div class="gift-recipient-page">
-    <div v-if="loading" class="gift-recipient-state">
-      <p>جارٍ تحميل تفاصيل الهدية...</p>
-    </div>
-
-    <div v-else-if="error" class="gift-recipient-state error">
-      <h2>تعذّر فتح الهدية</h2>
-      <p>{{ error }}</p>
-      <button class="btn btn-gold" @click="$router.push('/gifts')">العودة إلى صفحة الهدايا</button>
-    </div>
-
-    <div v-else-if="gift" class="gift-recipient-card">
-      <h1>تفاصيل الهدية</h1>
-
-      <div class="gift-recipient-meta">
-        <div class="meta-row">
-          <span class="k"><SIcon :inner="I.user" :size="15" /> إلى</span>
-          <span class="v">{{ gift.recipient_name || gift.name || '—' }}</span>
-        </div>
-
-        <div class="meta-row">
-          <span class="k"><SIcon :inner="I.send" :size="15" /> طريقة الإرسال</span>
-          <span class="v">{{ sendName || gift.send_method || '—' }}</span>
-        </div>
-
-        <div class="meta-row">
-          <span class="k"><SIcon :inner="I.clock" :size="15" /> تاريخ الإرسال</span>
-          <span class="v">{{ sentAt }}</span>
-        </div>
-
-        <div class="meta-row">
-          <span class="k">رقم الهدية</span>
-          <span class="v" dir="ltr">{{ refCode }}</span>
-        </div>
-      </div>
-
-      <div class="gift-recipient-message">
-        <h3>{{ giftLabel }}</h3>
-        <p>{{ gift.message || gift.msg || 'رسالة خاصة معطرة بالاهتمام' }}</p>
-      </div>
-
-      <div class="gift-recipient-actions">
-        <button class="btn btn-gold" @click="$router.push('/gifts')">تصفح الهدايا</button>
-        <button class="btn btn-line" @click="$router.push('/')">العودة للرئيسية</button>
-      </div>
-    </div>
+    <div v-if="loading" class="gift-recipient-state"><p>جارٍ تحميل تفاصيل الهدية...</p></div>
+    <div v-else-if="error" class="gift-recipient-state error"><h2>تعذّر فتح الهدية</h2><p>{{ error }}</p><button class="btn btn-gold" @click="$router.push('/gifts')">العودة إلى صفحة الهدايا</button></div>
+    <article v-else-if="gift" class="gift-recipient-shell">
+      <header><small>هدية خاصة من عناية سامي</small><h1>هدية صُنعت لك بكل اهتمام</h1></header>
+      <GiftCard :design="gift.design" :recipient="gift.recipient_name" :sender="gift.sender_name" :message="gift.message" />
+      <section class="gift-recipient-meta">
+        <div class="meta-row"><span class="k"><SIcon :inner="I.user" :size="15" /> المهدى إليه</span><span class="v">{{ gift.recipient_name || '—' }}</span></div>
+        <div v-if="gift.sender_name" class="meta-row"><span class="k"><SIcon :inner="I.send" :size="15" /> من</span><span class="v">{{ gift.sender_name }}</span></div>
+        <div class="meta-row"><span class="k"><SIcon :inner="I.clock" :size="15" /> تاريخ الإرسال</span><span class="v">{{ sentAt }}</span></div>
+      </section>
+      <section v-if="giftItems.length" class="gift-recipient-items"><h2><SIcon :inner="I.gift" :size="17" /> تفاصيل الهدية</h2><ul><li v-for="item in giftItems" :key="item.id">{{ item.name }}</li></ul></section>
+      <p class="no-price-note">قيمة الهدية وبيانات الدفع خاصة بالمُهدي ولا تظهر للمستلم.</p>
+      <div class="gift-recipient-actions"><button class="btn btn-gold" @click="$router.push('/booking')">استخدام الهدية</button><button class="btn btn-line" @click="$router.push('/')">العودة للرئيسية</button></div>
+    </article>
   </div>
 </template>
 
 <style scoped>
-.gift-recipient-page{
-  min-height: 60vh;
-  display: grid;
-  place-items: center;
-  padding: 48px 20px;
-  background: linear-gradient(180deg, #f9f4ea 0%, #fff 100%);
-}
-
-.gift-recipient-card{
-  width: min(700px, 100%);
-  background: #fff;
-  border: 1px solid rgba(143,113,52,.2);
-  border-radius: 22px;
-  padding: 26px 22px;
-  box-shadow: 0 18px 40px -24px rgba(0,0,0,.25);
-}
-
-.gift-recipient-card h1{
-  font-family: var(--font-d, 'Lama Sans', sans-serif);
-  margin: 0 0 22px;
-  color: var(--ink, #0A0906);
-  text-align: center;
-}
-
-.gift-recipient-meta{
-  display: grid;
-  gap: 12px;
-}
-
-.meta-row{
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  padding: 12px 14px;
-  border: 1px solid rgba(143,113,52,.15);
-  border-radius: 12px;
-  background: #fffdf9;
-}
-
-.meta-row .k{
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--gold-deep);
-  font-weight: 700;
-}
-
-.meta-row .v{
-  color: var(--ink);
-  font-weight: 600;
-  text-align: left;
-}
-
-.gift-recipient-message{
-  margin-top: 22px;
-  padding: 18px 16px;
-  background: linear-gradient(135deg, rgba(232,190,108,.12), rgba(255,255,255,.8));
-  border: 1px dashed rgba(143,113,52,.2);
-  border-radius: 16px;
-}
-
-.gift-recipient-message h3{
-  margin: 0 0 10px;
-  color: var(--gold-deep);
-}
-
-.gift-recipient-message p{
-  margin: 0;
-  color: var(--mute);
-  line-height: 1.8;
-}
-
-.gift-recipient-actions{
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  margin-top: 24px;
-  flex-wrap: wrap;
-}
-
-.gift-recipient-state{
-  text-align: center;
-  padding: 48px 20px;
-}
-
-.gift-recipient-state.error{
-  color: #7a2f2f;
-}
-
-@media(max-width:640px){
-  .meta-row{
-    flex-direction: column;
-    align-items: flex-start;
-  }
-}
+.gift-recipient-page{min-height:70vh;display:grid;place-items:center;padding:48px 20px;background:linear-gradient(180deg,#f6efe3 0%,#fff 100%)}
+.gift-recipient-shell{width:min(760px,100%);display:grid;gap:18px}.gift-recipient-shell>header{text-align:center}.gift-recipient-shell>header small{color:var(--gold-deep);font-weight:800}.gift-recipient-shell>header h1{margin:7px 0 0;font-family:var(--font-d,'Lama Sans',sans-serif)}
+.gift-recipient-meta,.gift-recipient-items{display:grid;gap:10px;padding:18px;background:#fff;border:1px solid rgba(143,113,52,.18);border-radius:18px;box-shadow:0 18px 40px -30px rgba(0,0,0,.3)}
+.meta-row{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:11px 13px;border-radius:11px;background:#fffaf1}.meta-row .k{display:inline-flex;align-items:center;gap:8px;color:var(--gold-deep);font-weight:700}.meta-row .v{font-weight:700}.gift-recipient-items h2{display:flex;align-items:center;gap:8px;margin:0;font-size:17px}.gift-recipient-items ul{display:grid;gap:8px;margin:0;padding:0;list-style:none}.gift-recipient-items li{padding:10px 12px;border-radius:10px;background:#fffaf1;font-weight:600}.gift-recipient-items li::before{content:'✦';color:var(--gold-deep);margin-left:7px}.no-price-note{text-align:center;margin:0;color:#877b6d;font-size:12px}.gift-recipient-actions{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}.gift-recipient-state{text-align:center;padding:48px 20px}.gift-recipient-state.error{color:#7a2f2f}
+@media(max-width:640px){.gift-recipient-page{padding:24px 14px 40px}.gift-recipient-shell{gap:13px}.gift-recipient-shell>header h1{font-size:23px}.meta-row{align-items:flex-start}.gift-recipient-actions .btn{flex:1}}
 </style>

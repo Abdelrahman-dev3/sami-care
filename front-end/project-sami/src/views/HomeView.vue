@@ -21,6 +21,7 @@ const homeData = ref({
     products: [],
     packages: [],
     branches: [],
+    branch_banner: null,
     reviews: [],
     wheel_prizes: [],
 })
@@ -90,6 +91,7 @@ onMounted(() => {
 
                 <BranchesSection
                     :branches="homeData.branches"
+                    :banner="homeData.branch_banner"
                 />
 
                 <!-- Reviews -->

@@ -15,12 +15,20 @@ class GiftClaimController extends Controller
             'success' => true,
             'data' => [
                 'recipient_name' => $giftCard->recipient_name,
+                'sender_name' => $giftCard->sender_name,
+                'design' => $giftCard->design ?: 'lux-dark',
                 'message' => $giftCard->message,
                 'gift_status' => $giftCard->gift_status,
                 'send_channel' => $giftCard->send_channel,
                 'created_at' => optional($giftCard->created_at)->toIso8601String(),
-                'services' => $giftCard->services_list->map(fn ($service) => ['id' => $service->id, 'name' => $service->name])->values(),
-                'packages' => $giftCard->packages_list->map(fn ($package) => ['id' => $package->id, 'name' => $package->name])->values(),
+                'services' => $giftCard->services_list->map(fn ($service) => [
+                    'id' => $service->id,
+                    'name' => $service->getTranslations('name') ?: ['ar' => $service->name],
+                ])->values(),
+                'packages' => $giftCard->packages_list->map(fn ($package) => [
+                    'id' => $package->id,
+                    'name' => $package->getTranslations('name') ?: ['ar' => $package->name],
+                ])->values(),
             ],
         ]);
     }

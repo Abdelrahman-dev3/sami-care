@@ -121,7 +121,9 @@ export function useGifts() {
           recipient_name: state.name.trim(),
           recipient_mobile: state.phone.trim(),
           message: state.msg.trim() || undefined,
+          sender_name: state.sender.trim() || undefined,
         },
+        design: state.design,
         branch: branchId,
         send_channel: state.method || 'link',
       }

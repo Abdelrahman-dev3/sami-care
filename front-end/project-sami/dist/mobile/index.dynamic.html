@@ -1012,7 +1012,11 @@ footer{margin-top:0!important;padding:27px 15px calc(104px + env(safe-area-inset
 .cta-f img{filter:none;object-position:center;width:100%;height:100%}.cta-f::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(248,241,231,.2),transparent 47%);pointer-events:none}
 .cta-f .cin{position:absolute;z-index:2;inset-block:0;left:0;width:52%;max-width:none;padding:19px 15px;display:flex;flex-direction:column;justify-content:center;align-items:stretch;direction:rtl;text-align:right;color:#17130f}
 .cta-f h3{font-family:var(--fb);font-size:17px;font-weight:700;line-height:1.55;color:#17130f;white-space:nowrap}.cta-f p{font-family:var(--fb);font-size:8.7px;line-height:1.75;color:#4f463d;margin:6px 0 12px;white-space:nowrap}.cta-f .btn{width:138px;min-height:36px;padding:8px 13px;font-family:var(--fb);font-size:10px;font-weight:700;border-radius:12px;color:#21170a;background:linear-gradient(135deg,#d39a36,#efbd60);box-shadow:0 10px 20px -13px rgba(150,96,19,.85)}
-.sami-footer{margin-top:0!important;padding:28px 16px calc(112px + env(safe-area-inset-bottom))!important;background:radial-gradient(circle at 50% -8%,rgba(206,146,52,.12),transparent 31%),linear-gradient(180deg,#0b0c0d,#060708)!important;border-top:1px solid rgba(206,146,52,.24);color:#f4eee5;text-align:right}
+/* صفحة تواصل معنا داخل Mobile Layout */
+.mobile-contact{padding:18px 16px 26px;background:linear-gradient(180deg,#f7f1e8,#fffaf3)}
+.mobile-contact-head{text-align:center;margin-bottom:15px}.mobile-contact-head small{color:var(--org);font-weight:800;font-size:10px}.mobile-contact-head h1{font-family:var(--fd);font-size:25px;margin:5px 0;color:#211a13}.mobile-contact-head p{font-size:10.5px;line-height:1.8;color:var(--mute)}
+.mobile-contact-card{background:#fff;border:1px solid #eadfce;border-radius:19px;padding:15px;box-shadow:0 18px 38px -30px rgba(65,40,14,.55);margin-bottom:12px}.mobile-contact-card h2{font-family:var(--fd);font-size:17px;margin:0 0 12px;color:#2b2117}.mobile-contact-fields{display:grid;gap:10px}.mobile-contact-field{display:grid;gap:5px}.mobile-contact-field label{font-size:10px;font-weight:800;color:#554b40}.mobile-contact-field input,.mobile-contact-field textarea{width:100%;border:1px solid #e8dece;border-radius:12px;background:#fffdf9;padding:11px 12px;color:#231c15;font-family:var(--fb);font-size:11px;outline:0}.mobile-contact-field textarea{min-height:95px;resize:vertical}.mobile-contact-field input:focus,.mobile-contact-field textarea:focus{border-color:#c98b31;box-shadow:0 0 0 3px rgba(201,139,49,.1)}.mobile-contact-submit{width:100%;margin-top:12px;min-height:44px!important}
+.mobile-contact-info{display:grid;grid-template-columns:1fr 1fr;gap:9px}.mobile-contact-info article{border:1px solid #eadfce;border-radius:15px;padding:12px;background:#fff}.mobile-contact-info article:first-child{grid-column:1/-1}.mobile-contact-info i{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;background:#f8ead2;color:#b87516;font-style:normal;margin-bottom:8px}.mobile-contact-info h3{font-size:12px;margin:0 0 5px}.mobile-contact-info p,.mobile-contact-info a{font-size:9px;line-height:1.7;color:var(--mute)}.mobile-contact-info a{display:block;color:#a96912;font-weight:800}.mobile-contact-whatsapp{width:100%;margin-top:11px;background:#258b52!important;color:#fff!important}.sami-footer{margin-top:0!important;padding:28px 16px calc(112px + env(safe-area-inset-bottom))!important;background:radial-gradient(circle at 50% -8%,rgba(206,146,52,.12),transparent 31%),linear-gradient(180deg,#0b0c0d,#060708)!important;border-top:1px solid rgba(206,146,52,.24);color:#f4eee5;text-align:right}
 .sami-footer .footer-brand{text-align:center;padding-bottom:19px;border-bottom:1px solid rgba(206,146,52,.22)}.sami-footer .footer-brand>img{width:70px!important;height:82px!important;object-fit:contain!important;margin:0 auto 7px!important;border:0!important;border-radius:0!important;filter:grayscale(1) brightness(3.3) sepia(.2)}
 .sami-footer .footer-brand-name{display:block;font-family:var(--brand);font-size:24px;font-weight:400;line-height:1.2;color:#fff}.sami-footer .footer-brand p{font-size:10.5px!important;color:#c9c0b4;line-height:1.7!important;margin:5px auto 0!important}.sami-footer .footer-orn{display:block;width:48px;height:1px;margin:11px auto 0;background:linear-gradient(90deg,transparent,#d49b3b,transparent)}
 .sami-footer .footer-socials{display:flex;justify-content:center;gap:10px;margin-top:12px}.sami-footer .footer-socials a{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;color:#d7a64f;border:1px solid rgba(215,166,79,.4);background:rgba(255,255,255,.02)}
@@ -1024,9 +1028,10 @@ footer{margin-top:0!important;padding:27px 15px calc(104px + env(safe-area-inset
 .cta-f{height:103px;min-height:103px;margin:20px 16px 20px;border-radius:14px}.cta-f .cin{width:49%;padding:11px 13px}.cta-f h3{font-size:12.5px;line-height:1.5}.cta-f p{font-size:6.7px;line-height:1.65;margin:4px 0 8px}.cta-f .btn{width:91px;min-height:24px;padding:5px 8px;font-size:7.2px;border-radius:9px;gap:5px}.cta-f .btn svg{width:10px;height:10px}
 .sami-footer{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;align-items:start;padding:20px 9px calc(105px + env(safe-area-inset-bottom))!important;direction:ltr;text-align:right}
 .sami-footer .footer-brand{grid-column:1;grid-row:1;direction:rtl;padding:0 6px;border:0;border-right:1px solid rgba(206,146,52,.23)}.sami-footer .footer-brand>img{width:39px!important;height:48px!important;margin:0 auto 4px!important}.sami-footer .footer-brand-name{font-size:14px}.sami-footer .footer-brand p{font-size:6.8px!important;line-height:1.6!important;margin-top:3px!important}.sami-footer .footer-orn{width:31px;margin-top:7px}.sami-footer .footer-socials{gap:4px;margin-top:8px}.sami-footer .footer-socials a{width:19px;height:19px}.sami-footer .footer-socials svg{width:9px;height:9px}
-.sami-footer .footer-cols{display:contents}.sami-footer .footer-col{direction:rtl;padding:0 7px;border-left:1px solid rgba(206,146,52,.23);min-height:128px}.sami-footer .footer-col:nth-child(1){grid-column:4;grid-row:1}.sami-footer .footer-col:nth-child(2){grid-column:3;grid-row:1}.sami-footer .footer-branches{grid-column:2;grid-row:1;border-top:0;padding-top:0}.sami-footer .footer-col h4{font-size:8.5px!important;margin-bottom:7px!important;padding-bottom:5px}.sami-footer .footer-col h4::after{width:22px}.sami-footer .footer-list{gap:5px}.sami-footer .footer-list a,.sami-footer .footer-list span{gap:4px;font-size:6.8px;line-height:1.45}.sami-footer .footer-list svg{width:9px;height:9px}
-.sami-footer .branch-grid{grid-template-columns:1fr;gap:3px}.sami-footer .footer-branch{padding:3px 0;border:0;border-radius:0;background:none;gap:4px}.sami-footer .footer-branch svg{width:9px;height:9px}.sami-footer .footer-branch b{font-size:7px}.sami-footer .footer-branch small{font-size:5.7px;line-height:1.45;margin-top:1px}
-.sami-footer .footer-legal{grid-column:1/-1;grid-row:2;direction:rtl;gap:10px;margin-top:12px;padding-top:8px}.sami-footer .footer-legal a{font-size:6.2px}.sami-footer .footer-pay-title{grid-column:3/5;grid-row:3;direction:rtl;text-align:center;font-size:6.8px;margin:9px 0 5px}.sami-footer .footer-pay{grid-column:3/5;grid-row:4;direction:rtl;gap:3px}.sami-footer .footer-pay span{min-height:19px;border-radius:4px;font-size:5.7px}.sami-footer .footer-copy{grid-column:1/3;grid-row:4;align-self:center;direction:rtl;margin:0;font-size:6.6px;text-align:right;padding-left:6px}
+.sami-footer .footer-cols{display:contents}.sami-footer .footer-col{direction:rtl;padding:0 7px;border-left:1px solid rgba(206,146,52,.23);min-height:128px}.sami-footer .footer-col:nth-child(1){grid-column:4;grid-row:1}.sami-footer .footer-col:nth-child(2){grid-column:2/4;grid-row:1}.sami-footer .footer-branches{grid-column:1/-1;grid-row:3;border:0;border-top:1px solid rgba(206,146,52,.2);padding:13px 7px 0;margin-top:13px;min-height:0}.sami-footer .footer-col h4{font-size:8.5px!important;margin-bottom:7px!important;padding-bottom:5px}.sami-footer .footer-col h4::after{width:22px}.sami-footer .footer-list{gap:5px}.sami-footer .footer-list a,.sami-footer .footer-list span{gap:4px;font-size:6.8px;line-height:1.45}.sami-footer .footer-list svg{width:9px;height:9px}
+.sami-footer .branch-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.sami-footer .footer-branch{padding:8px;border:1px solid rgba(206,146,52,.17);border-radius:10px;background:rgba(255,255,255,.025);gap:5px}.sami-footer .footer-branch svg{width:10px;height:10px}.sami-footer .footer-branch b{font-size:8px}.sami-footer .footer-branch small{font-size:6.5px;line-height:1.55;margin-top:2px}.sami-footer .footer-branch a{display:block;color:#d7a64f;font-size:6.5px;direction:ltr;text-align:right;margin-top:2px}.sami-footer .footer-branch-admin,.sami-footer .footer-branch-home{grid-column:1/-1}
+.sami-footer .footer-important{grid-column:3/5;grid-row:2;margin-top:14px;min-height:0;border-left:0}.sami-footer .footer-explore{grid-column:1/3;grid-row:2;margin-top:14px;min-height:0}.sami-footer .footer-important .footer-list,.sami-footer .footer-explore .footer-list{grid-template-columns:1fr 1fr;column-gap:7px}
+.sami-footer .footer-legal{grid-column:1/-1;grid-row:4;direction:rtl;gap:10px;margin-top:12px;padding-top:8px}.sami-footer .footer-legal a{font-size:6.2px}.sami-footer .footer-pay-title{grid-column:1/-1;grid-row:5;direction:rtl;text-align:center;font-size:6.8px;margin:11px 0 5px}.sami-footer .footer-pay{grid-column:1/-1;grid-row:6;direction:rtl;justify-self:center;width:min(100%,280px);gap:3px}.sami-footer .footer-pay span{min-height:19px;border-radius:4px;font-size:5.7px}.sami-footer .footer-copy{grid-column:1/-1;grid-row:7;align-self:center;justify-self:center;direction:rtl;margin:8px 0 0;font-size:6.6px;text-align:center;padding:0}
 .cta-f.cta-reference{height:103px!important;min-height:103px!important;margin:20px 16px!important;border-radius:14px!important;overflow:hidden!important;isolation:isolate!important}
 .cta-f.cta-reference>img{z-index:0!important;object-position:center 54%!important}
 .cta-f.cta-reference::after{display:none!important}
@@ -1839,6 +1844,7 @@ function mapFullBranch(raw,slotId,fallback){
   realId:Number(raw.id)||null,
   name:localized(raw.name)||fallback?.name||'فرع',
   addr:raw.address_line_1||fallback?.addr||'',
+  phone:raw.contact_number||raw.mobile||fallback?.phone||'',
   img:raw.branch_image||fallback?.img,
   rate:Number(raw.rating_star)||fallback?.rate||4.7,
   visitors:raw.total_review?`+${raw.total_review} تقييم`:(fallback?.visitors||''),
@@ -2386,7 +2392,8 @@ async function attemptRealGiftSubmit(){
  const branch=gBranch();
  const payload={
   branch:branch?.realId||null,
-  location:{recipient_name:S.giftRecipient||'',recipient_mobile:S.giftPhone||'',message:S.giftMsg||''},
+  location:{recipient_name:S.giftRecipient||'',recipient_mobile:S.giftPhone||'',sender_name:S.giftSender||'',message:S.giftMsg||''},
+  design:S.giftDesign||'lux-dark',
  };
  if(S.giftType==='svc'){
   const svcIds=[...S.giftServices].map(id=>Number(id)).filter(id=>Number.isFinite(id)&&id>0);
@@ -2445,6 +2452,8 @@ const S={
  giftDate:'',
  giftPay:null,
  giftRef:null,
+ giftClaimToken:null,
+ giftClaimUrl:null,
 
  // Booking Wizard states
  bookWizard:false,
@@ -2519,6 +2528,7 @@ else if(INITIAL_VIEW==='gifts'){S.giftWizard=true;S.giftStep=1;}
 else if(INITIAL_VIEW==='packages'){
  S.giftWizard=true;S.giftType='pkg';S.giftBranch='bg';S.giftStep=3;
 }
+else if(INITIAL_VIEW==='contact'){S.tab='home';S.svPage=false;S.subPage='contact';}
 else if(INITIAL_VIEW==='account')S.tab='account';
 else if(INITIAL_VIEW==='services'){S.tab='home';S.svPage=false;S.subPage='services';}
 else if(INITIAL_VIEW==='terms'){S.tab='home';S.svPage=false;S.subPage='terms';}
@@ -2566,7 +2576,7 @@ const $=q=>document.querySelector(q);
 const $$=q=>[...document.querySelectorAll(q)];
 const rs=n=>n.toLocaleString('ar-EG-u-nu-latn');
 const svg=(p,w)=>`<svg width="${w||16}" height="${w||16}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">${p}</svg>`;
-const recipientURL=()=>new URL('gift-recipient/',location.href).href+'?ref='+encodeURIComponent(S.giftRef||'');
+const recipientURL=()=>S.giftClaimToken?new URL('/gift-recipient?token='+encodeURIComponent(S.giftClaimToken),location.origin).href:(S.giftClaimUrl||new URL('/gift-recipient',location.origin).href);
 function initials(n){const p=String(n||'').trim().split(/\s+/);return (p[0]?.[0]||'')+(p[1]?.[0]||'')}
 function toast(msg,ic){
  const t=$('#toast');
@@ -3169,11 +3179,16 @@ function homeHTML(){
    <section class="footer-col"><h4>الخدمات</h4><ul class="footer-list">
     <li><span>${svg('<circle cx="6" cy="6" r="2.4"/><circle cx="6" cy="18" r="2.4"/><path d="M20 4L8 16M14.5 14.5L20 20"/>',12)} الحلاقة</span></li><li><span>${svg('<path d="M8 20c0-5 2-8 4-12 2 4 4 7 4 12M5 20h14"/>',12)} المساج</span></li><li><span>${svg('<path d="M8 4c2 5 2 11 0 16M16 4c-2 5-2 11 0 16"/>',12)} البديكير</span></li><li><span>${svg('<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',12)} تنظيف البشرة</span></li><li><span>${svg('<path d="M4 19h16M6 16c1-5 3-8 6-12 3 4 5 7 6 12"/>',12)} الحمام المغربي</span></li><li><span>${svg('<path d="M4 8l8 4 8-4v8l-8-4-8 4z"/>',12)} تجهيز العرسان</span></li>
    </ul></section>
-   <section class="footer-col footer-branches"><h4>الفروع</h4><div class="branch-grid">
-    <div class="footer-branch">${svg('<path d="M21 10c0 7-9 12-9 12S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>',13)}<span><b>البغدادية</b><small>شارع حائل</small></span></div>
-    <div class="footer-branch">${svg('<path d="M21 10c0 7-9 12-9 12S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>',13)}<span><b>البوادي</b><small>شارع قريش</small></span></div>
-    <div class="footer-branch">${svg('<path d="M3 11l9-7 9 7v9H3zM9 20v-6h6v6"/>',13)}<span><b>الخدمة المنزلية</b><small>خدمتك أينما كنت</small></span></div>
-   </div></section>
+   <section class="footer-col footer-branches"><h4>عناوين الفروع</h4><div class="branch-grid">
+    <div class="footer-branch footer-branch-admin">${svg('<path d="M4 21V5l8-3 8 3v16M9 9h1M14 9h1M9 13h1M14 13h1M10 21v-4h4v4"/>',13)}<span><b>الإدارة</b><a href="tel:0569472722">0569472722</a></span></div>
+    ${B_BRANCHES.filter(branch=>!branch.home).map(branch=>`<div class="footer-branch">${svg('<path d="M21 10c0 7-9 12-9 12S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>',13)}<span><b>${escHtml(branch.name)}</b><small>${escHtml(branch.addr||'')}</small>${branch.phone?`<a href="tel:${escHtml(branch.phone)}">${escHtml(branch.phone)}</a>`:''}</span></div>`).join('')}
+    <div class="footer-branch footer-branch-home">${svg('<path d="M3 11l9-7 9 7v9H3zM9 20v-6h6v6"/>',13)}<span><b>خدمات منزلية</b><small>حلاقة شعر ولحية وماسكات طبيعية</small></span></div>
+   </div></section>   <section class="footer-col footer-important"><h4>روابط مهمة</h4><ul class="footer-list">
+    <li><a data-go="home">الرئيسية</a></li><li><a data-go="book">حجز موعد</a></li><li><a data-go="services">خدماتنا</a></li><li><a data-go="packages">الباقات</a></li><li><a data-go="giftspage">الهدايا</a></li>
+   </ul></section>
+   <section class="footer-col footer-explore"><h4>استكشف</h4><ul class="footer-list">
+    <li><a data-go="store">المتجر</a></li><li><a data-go="branches">فروعنا</a></li><li><a data-go="contact">تواصل معنا</a></li><li><a href="about.html">الصفحة التعريفية</a></li><li><a data-go="terms">الشروط والأحكام</a></li><li><a data-go="privacy">سياسة الخصوصية</a></li>
+   </ul></section>
   </div>
   <div class="footer-legal"><a data-go="terms">الشروط والأحكام</a><a data-go="privacy">سياسة الخصوصية</a><a href="branches.html">خريطة الموقع</a></div>
   <div class="footer-pay-title">طرق الدفع المتاحة</div><div class="footer-pay"><span>كاش</span><span class="tamara">تمارا</span><span class="tabby">tabby</span><span> Pay</span><span class="mada">مدى</span></div>
@@ -3197,6 +3212,24 @@ function subHero(o){
 }
 
 /* ===== صفحة الإهداء (هبوط) — نفس منطق شاشة البداية في الديسكتوب ===== */
+function contactPageHTML(){
+ return`${subHero({img:IMG.groom,crumb:'تواصل معنا',title:'نحن هنا<br>لخدمتك',sub:'يسعدنا استقبال استفساراتك ومساعدتك في كل ما تحتاجه.'})}
+ <main class="mobile-contact">
+  <header class="mobile-contact-head"><small>تواصل بسهولة</small><h1>أرسل لنا رسالتك</h1><p>اكتب بياناتك ورسالتك وسنفتحها لك مباشرة عبر واتساب.</p></header>
+  <section class="mobile-contact-card"><h2>بيانات التواصل</h2><div class="mobile-contact-fields">
+   <div class="mobile-contact-field"><label for="mobileContactName">الاسم بالكامل *</label><input id="mobileContactName" type="text" placeholder="أدخل اسمك بالكامل"></div>
+   <div class="mobile-contact-field"><label for="mobileContactPhone">رقم الهاتف *</label><input id="mobileContactPhone" type="tel" inputmode="tel" placeholder="05xxxxxxxx"></div>
+   <div class="mobile-contact-field"><label for="mobileContactEmail">البريد الإلكتروني</label><input id="mobileContactEmail" type="email" inputmode="email" placeholder="name@example.com"></div>
+   <div class="mobile-contact-field"><label for="mobileContactMessage">الرسالة *</label><textarea id="mobileContactMessage" placeholder="اكتب استفسارك أو رسالتك هنا..."></textarea></div>
+  </div><button class="btn btn-org mobile-contact-submit" id="mobileContactSubmit">إرسال الرسالة</button></section>
+  <section class="mobile-contact-info">
+   <article><i>◷</i><h3>مواعيد العمل</h3><p>يوميًا من 9:00 صباحًا إلى 1:00 صباحًا بعد منتصف الليل.</p></article>
+   <article><i>⌖</i><h3>الإدارة</h3><a href="tel:0569472722">0569472722</a></article>
+   <article><i>⌂</i><h3>خدمات منزلية</h3><p>حلاقة وعناية في منزلك داخل جدة.</p></article>
+  </section>
+  <a class="btn mobile-contact-whatsapp" href="https://wa.me/966569610958" target="_blank" rel="noopener noreferrer">تواصل سريع عبر واتساب</a>
+ </main>`;
+}
 function giftsPageHTML(){
  return subHero({img:'assets/gifts/hero.jpg',crumb:'الإهداء',title:'أهدِ تجربة<br>لا تُنسى',sub:'اختر خدمة أو باقة، خصّص رسالتك، ونحن نتكفّل بالباقي.'})+`
  <p class="gp-lead">اختر نوع الهدية وأكمل الحجز مباشرة</p>
@@ -4534,7 +4567,7 @@ function giftWizCustomizeHTML(){
  const design=gDesigns().find(d=>d.id===S.giftDesign)||gDesigns()[0];
  return`<div class="m-panel-title"><h1>خصص هديتك لتكون أجمل</h1><p>أضف لمستك الخاصة مع رسالة وتصميم بطاقة الإهداء</p></div>
  <div class="m-stack">
-  <div class="w-gift-preview"><div class="w-gift-preview-card ${design.c}"><b>${gLabel()}</b><small style="margin-top:10px;opacity:.85">إلى: ${S.giftRecipient||'صديقك المفضل'}</small><small style="opacity:.78;font-size:11px">${S.giftMsg||'رسالة الإهداء تظهر هنا'}</small></div><small style="color:var(--mute)">معاينة كرت الإهداء كما سيظهر للمستلم</small></div>
+  <div class="w-gift-preview"><div class="w-gift-preview-card ${design.c}"><b>${gLabel()}</b><small id="giftPreviewRecipient" style="margin-top:10px;opacity:.85">إلى: ${S.giftRecipient||'صديقك المفضل'}</small><small id="giftPreviewMessage" style="opacity:.78;font-size:11px">${S.giftMsg||'رسالة الإهداء تظهر هنا'}</small><small id="giftPreviewSender" style="opacity:.72;font-size:10px">من: ${S.giftSender||'شخص يحبك'}</small></div><small style="color:var(--mute)">معاينة كرت الإهداء كما سيظهر للمستلم</small></div>
   <div class="w-gift-design">${gDesigns().map(d=>`<button class="w-design-card ${d.c} ${S.giftDesign===d.id?'sel':''}" data-g-design="${d.id}"><span>${d.n}</span></button>`).join('')}</div>
   <div class="m-card m-detail"><h4>بيانات الإهداء</h4><label class="m-field"><small>اسمك (المرسل)</small><input id="gSender" value="${S.giftSender}" placeholder="أدخل اسمك"></label><label class="m-field"><small>اسم المستلم</small><input id="gRecipient" value="${S.giftRecipient}" placeholder="اسم صديقك"></label><label class="m-field"><small>رقم جوال المستلم</small><input id="gPhone" value="${S.giftPhone}" placeholder="05xxxxxxxx" inputmode="numeric"></label><label class="m-field"><small>رسالة الإهداء</small><textarea id="gMsg" rows="4" maxlength="200" placeholder="اكتب عبارة إهداء جميلة">${S.giftMsg}</textarea></label></div>
   <div class="m-card m-detail"><h4>طريقة ووقت الإرسال</h4><div class="m-periods"><button class="m-period ${S.giftMethod==='wa'?'sel':''}" data-g-method="wa">واتساب</button><button class="m-period ${S.giftMethod==='sms'?'sel':''}" data-g-method="sms">SMS</button><button class="m-period ${S.giftMethod==='mail'?'sel':''}" data-g-method="mail">بريد</button></div><div class="m-periods"><button class="m-period ${S.giftSchedule==='now'?'sel':''}" data-g-schedule="now">إرسال الآن</button><button class="m-period ${S.giftSchedule==='later'?'sel':''}" data-g-schedule="later">جدولة الإرسال</button></div>${S.giftSchedule==='later'?`<label class="m-field"><small>وقت الإرسال</small><input type="datetime-local" id="gDate" value="${S.giftDate}"></label>`:''}</div>
@@ -4593,7 +4626,7 @@ function render(){
  else if(S.giftWizard)html=giftWizardHTML();
  else if(S.bookWizard)html=serviceSheet?'<div class="booking-underlay" aria-hidden="true"></div>'+wizardHTML():wizardHTML();
  else if(S.bookLaunch)html='<div class="booking-underlay booking-launch-underlay" aria-hidden="true"></div>';
- else if(S.tab==='home')html=S.subPage==='services'?allServicesHTML():S.subPage==='pkg'?packagesHTML():S.subPage==='hsv'?homeSvcHTML():S.subPage==='gift'?giftsPageHTML():S.subPage==='terms'?termsPageHTML():S.subPage==='privacy'?privacyPageHTML():S.svPage?serviceHTML():homeHTML();
+ else if(S.tab==='home')html=S.subPage==='services'?allServicesHTML():S.subPage==='pkg'?packagesHTML():S.subPage==='hsv'?homeSvcHTML():S.subPage==='gift'?giftsPageHTML():S.subPage==='terms'?termsPageHTML():S.subPage==='privacy'?privacyPageHTML():S.subPage==='contact'?contactPageHTML():S.svPage?serviceHTML():homeHTML();
  else if(S.tab==='store')html=storeHTML();
  else if(S.tab==='cart')html=cartHTML();
  else if(S.tab==='bookings')html=bookingsHTML();
@@ -4647,7 +4680,10 @@ function bind(){
    const doneHome=$('#giftDoneHome');
    if(doneHome)doneHome.addEventListener('click',()=>{S.giftWizard=false;S.giftDone=false;S.giftStep=1;S.tab='home';render();scrollTo({top:0,behavior:'smooth'})});
    const openRecipient=$('#giftOpenRecipient');
-   if(openRecipient)openRecipient.addEventListener('click',()=>{location.href=recipientURL()});
+   if(openRecipient)openRecipient.addEventListener('click',()=>{
+    const url=recipientURL();
+    if(window.parent!==window){const target=new URL(url,location.origin);navigateParent(target.pathname+target.search)}else location.href=url;
+   });
    const shareRecipient=$('#giftShareRecipient');
    if(shareRecipient)shareRecipient.addEventListener('click',()=>{
     const txt='هدية من عناية سامي — '+recipientURL();
@@ -4657,7 +4693,7 @@ function bind(){
    const again=$('#giftAgain');
    if(again)again.addEventListener('click',()=>{
     S.giftDone=false;S.giftStep=1;S.giftType='pkg';S.giftBranch=null;S.giftPkg=null;S.giftServices.clear();
-    S.giftSender='';S.giftRecipient='';S.giftPhone='';S.giftMsg='';S.giftPay=null;S.giftTerms=false;S.giftCoupon=0;S.giftCouponCode='';
+    S.giftSender='';S.giftRecipient='';S.giftPhone='';S.giftMsg='';S.giftPay=null;S.giftTerms=false;S.giftCoupon=0;S.giftCouponCode='';S.giftClaimToken=null;S.giftClaimUrl=null;
     render();scrollTo({top:0,behavior:'smooth'});
    });
    
@@ -4670,6 +4706,8 @@ function bind(){
        try{
         const{created}=await attemptRealGiftSubmit();
         S.giftRef=created?.data?.gift_card_id?`#GIFT-${created.data.gift_card_id}`:'#GIFT-'+String(Math.floor(202600+Math.random()*9000));
+        S.giftClaimToken=created?.data?.claim_token||null;
+        S.giftClaimUrl=created?.data?.share_url||created?.data?.claim_url||null;
         S.giftDone=true;
         render();
         toast('تم إرسال بطاقة الإهداء والدفع بنجاح');
@@ -4703,6 +4741,8 @@ function bind(){
    const sender = $('#gSender');
    if (sender) sender.addEventListener('input', () => {
      S.giftSender = sender.value;
+     const previewSender=$('#giftPreviewSender');
+     if(previewSender)previewSender.textContent='من: '+(S.giftSender||'شخص يحبك');
      const nextBtn = $('#giftNextBtn');
      if (nextBtn) nextBtn.disabled = !canGiftWizNext();
    });
@@ -4710,6 +4750,8 @@ function bind(){
    const recipient = $('#gRecipient');
    if (recipient) recipient.addEventListener('input', () => {
      S.giftRecipient = recipient.value;
+     const previewRecipient=$('#giftPreviewRecipient');
+     if(previewRecipient)previewRecipient.textContent='إلى: '+(S.giftRecipient||'صديقك المفضل');
      const nextBtn = $('#giftNextBtn');
      if (nextBtn) nextBtn.disabled = !canGiftWizNext();
    });
@@ -4724,6 +4766,8 @@ function bind(){
    const msg = $('#gMsg');
    if (msg) msg.addEventListener('input', () => {
      S.giftMsg = msg.value;
+     const previewMessage=$('#giftPreviewMessage');
+     if(previewMessage)previewMessage.textContent=S.giftMsg||'رسالة الإهداء تظهر هنا';
    });
 
    const date = $('#gDate');
@@ -4937,6 +4981,7 @@ function bind(){
   else if(g==='sent-gifts'){S.tab='account';S.accSub='sent-gifts';render();scrollTo({top:0,behavior:'smooth'})}
   else if(g==='support'){S.tab='account';S.accSub='support';S.authError='';S.supportSent=false;render();scrollTo({top:0,behavior:'smooth'})}
   else if(g==='settings'){S.tab='account';S.accSub='settings';S.authError='';render();scrollTo({top:0,behavior:'smooth'})}
+  else if(g==='contact'){S.tab='home';S.svPage=false;S.subPage='contact';render();scrollTo({top:0,behavior:'smooth'})}
   else if(g==='terms'){S.tab='home';S.svPage=false;S.subPage='terms';render();scrollTo({top:0,behavior:'smooth'})}
   else if(g==='privacy'){S.tab='home';S.svPage=false;S.subPage='privacy';render();scrollTo({top:0,behavior:'smooth'})}
   else if(g==='logout'){
@@ -4948,7 +4993,14 @@ function bind(){
   }
   else go(g);
  }));
- $$('[data-go-url]').forEach(el=>el.addEventListener('click',()=>{location.href=el.dataset.goUrl}));
+ const mobileContactSubmit=$('#mobileContactSubmit');
+ if(mobileContactSubmit)mobileContactSubmit.addEventListener('click',()=>{
+  const name=$('#mobileContactName')?.value.trim()||'',phone=$('#mobileContactPhone')?.value.trim()||'',email=$('#mobileContactEmail')?.value.trim()||'',message=$('#mobileContactMessage')?.value.trim()||'';
+  if(!name||!phone||!message){toast('من فضلك أكمل الاسم ورقم الهاتف والرسالة');return}
+  const text=['رسالة جديدة من موقع عناية سامي','الاسم: '+name,'الهاتف: '+phone,email?'البريد: '+email:'','الرسالة: '+message].filter(Boolean).join('\n');
+  window.open('https://wa.me/966569610958?text='+encodeURIComponent(text),'_blank','noopener,noreferrer');
+ });
+ $[data-go-url].forEach(el=>el.addEventListener('click',()=>{location.href=el.dataset.goUrl}));
  $$('[data-store-cat]').forEach(el=>el.addEventListener('click',e=>{
   e.stopPropagation();
   S.storeCat=el.dataset.storeCat;
@@ -5255,13 +5307,13 @@ $('#headerCartBtn').addEventListener('click',()=>{go('cart');scrollAppTop()});
 /* نحافظ على التصميم والتفاعل الداخلي مع مزامنة رابط Vue الخارجي */
 const parentPathByGo={
  home:'/',services:'/services',book:'/booking',store:'/store',gift:'/gifts',
- packages:'/packages-gifts',branches:'/branches',account:'/contact'
+ packages:'/packages-gifts',branches:'/branches',contact:'/contact',account:'/contact'
 };
 const parentPathByTab={home:'/',store:'/store',bookings:'/booking',account:'/contact'};
 const parentPathByFile={
  'app.html':'/','index.html':'/','booking.html':'/booking','store.html':'/store',
  'packages-gifts.html':'/packages-gifts','gifts.html':'/gifts',
- 'branches.html':'/branches','contact.html':'/contact'
+ 'branches.html':'/branches','contact.html':'/contact','about.html':'/page-about'
 };
 function navigateParent(path){
  if(window.parent===window)return false;

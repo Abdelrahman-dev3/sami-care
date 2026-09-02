@@ -16,14 +16,14 @@ const navigating = ref(false)
 const cartDrawerOpen = ref(false)
 const { state: storeState } = useStore()
 const isMobile = ref(media.matches)
-const useMobileFrame = computed(() => isMobile.value && route.name !== 'about')
-const viewByRoute = { home:'home', services:'services', 'service-detail':'services', booking:'booking', store:'store', gifts:'gifts', 'packages-gifts':'packages', branches:'branches', contact:'account', 'gift-recipient':'gifts', terms:'terms', 'privacy-policy':'privacy' }
+const useMobileFrame = computed(() => isMobile.value && !['about', 'gift-recipient'].includes(route.name))
+const viewByRoute = { home:'home', services:'services', 'service-detail':'services', booking:'booking', store:'store', gifts:'gifts', 'packages-gifts':'packages', branches:'branches', contact:'contact', 'gift-recipient':'gifts', terms:'terms', 'privacy-policy':'privacy' }
 /*
   Ù…Ù‡Ù…: Ø£ÙŠ ØªØ¹Ø¯ÙŠÙ„ Ø¹Ù„Ù‰ public/mobile/index.html Ù„Ø§Ø²Ù… ÙŠØªØ¨Ø¹Ù‡ ØªØºÙŠÙŠØ± Ø§Ù„Ø±Ù‚Ù… Ø¯Ù‡ØŒ
   Ù„Ø£Ù†Ù‡ Ù‡Ùˆ Ø§Ù„Ù„ÙŠ Ø¨ÙŠÙƒØ³Ø± ÙƒØ§Ø´ Ø§Ù„Ù…ØªØµÙØ­ Ù„Ù„Ø¥Ø·Ø§Ø±. Ù…Ù† ØºÙŠØ±Ù‡ Ø§Ù„Ù…ØªØµÙØ­ Ø¨ÙŠÙØ¶Ù„ ÙŠØ¹Ø±Ø¶
   Ø§Ù„Ù†Ø³Ø®Ø© Ø§Ù„Ù‚Ø¯ÙŠÙ…Ø© Ù…Ù‡Ù…Ø§ Ø§ØªØºÙŠÙ‘Ø± Ø§Ù„Ù…Ù„Ù.
 */
-const mobileVersion = '20260826-i18n-static-v41'
+const mobileVersion = '20260901-gift-sharing-preview-v47'
 const initialMobileView = viewByRoute[route.name] || 'home'
 const mobileSrc = `/mobile/index.html?view=${initialMobileView}&v=${mobileVersion}`
 const syncMedia = event => { isMobile.value = event.matches }

@@ -112,6 +112,7 @@ function doGiftPay() {
           recipient_mobile: state.phone.trim(),
           message: state.msg.trim() || undefined,
         },
+        design: state.design,
         branch: state.siteBranch || null,
         send_channel: state.method || 'link',
       })

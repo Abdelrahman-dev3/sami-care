@@ -18,6 +18,8 @@ class GiftCard extends Model
     protected $fillable = [
         'recipient_name',
         'recipient_phone',
+        'sender_name',
+        'design',
         'message',
         'requested_services',
         'requested_packages',

@@ -19,6 +19,34 @@ html { scrollbar-gutter: stable }
 /* منع انهيار ارتفاع الصفحة في اللحظة الفاصلة بين خروج صفحة ودخول التانية */
 #app { min-height: 100vh }
 
+.site-header .brand::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    left: 85%;
+    background: linear-gradient(180deg, #e2ae52 0%, #c98625 100%);
+    -webkit-mask: url(/logo.png) center / contain no-repeat;
+    mask: url(/logo.png) center / contain no-repeat;
+}
+
+.f-brand .logo {
+  position: relative;
+}
+
+.f-brand .logo::before{
+   content: "";
+    position: absolute;
+    inset: 0;
+    left: 79%;
+    background: linear-gradient(180deg, #e2ae52 0%, #c98625 100%);
+    -webkit-mask: url(/logo.png) center / contain no-repeat;
+    mask: url(/logo.png) center / contain no-repeat;
+}
+
+.f-brand .logo .mark img {
+  visibility: hidden;
+}
+
 @media (min-width: 641px) {
   body { padding-top: var(--header-h) !important }
   html { scroll-padding-top: calc(var(--header-h) + 14px) }
