@@ -46,6 +46,8 @@ async function loadProducts() {
             image: p.image || p.feature_image || null,
             cat: cat.id,
             branchId: p.branch_id ?? null,
+            stockQty: Number(p.stock_qty ?? 0),
+            maxPurchaseQty: Number(p.max_purchase_qty ?? 0) || null,
             shape: 'jar',
             best: 0,
             ts: p.id,
@@ -147,10 +149,31 @@ export function useStore() {
       .filter(x => x.id)
   )
 
-  const addToCart = id => { state.cart[id] = (state.cart[id] || 0) + 1 }
+  /* حد أقصى مسموح للمنتج — الأقل بين stock_qty و max_purchase_qty (لو موجود) */
+  const getMaxQty = id => {
+    const p = pOf(id)
+    if (!p) return 0
+    const stock = p.stockQty ?? 0
+    const maxPurchase = p.maxPurchaseQty
+    return maxPurchase ? Math.min(stock, maxPurchase) : stock
+  }
+
+  const getStock = id => {
+    const p = pOf(id)
+    return p?.stockQty ?? 0
+  }
+
+  const addToCart = id => {
+    const current = state.cart[id] || 0
+    const max = getMaxQty(id)
+    if (max > 0 && current >= max) return false
+    state.cart[id] = current + 1
+    return true
+  }
   const setQty = (id, qty) => {
-    if (qty <= 0) delete state.cart[id]
-    else state.cart[id] = qty
+    if (qty <= 0) { delete state.cart[id]; return }
+    const max = getMaxQty(id)
+    state.cart[id] = (max > 0 && qty > max) ? max : qty
   }
   const removeFromCart = id => { delete state.cart[id] }
   const clearCart = () => { Object.keys(state.cart).forEach(k => delete state.cart[k]) }
@@ -287,6 +310,7 @@ export function useStore() {
     isFav, toggleFav,
     cartQty, cartTotal, cartItems,
     addToCart, setQty, removeFromCart, clearCart,
+    getMaxQty, getStock,
     visibleProducts,
     ckParts, ckCan, placeOrder,
   }

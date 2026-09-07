@@ -3,12 +3,12 @@ import { ref, computed } from 'vue'
 
 // كل جايزة: نص (ممكن سطرين) + لون القطاع
 const segments = [
-  { lines: ['هدية', 'مجانية'], color: '#171310' },
-  { lines: ['خصم', '20%'], color: '#caa565' },
-  { lines: ['جلسة', 'مجانية'], color: '#171310' },
-  { lines: ['200 نقطة', 'ولاء'], color: '#caa565' },
-  { lines: ['خصم', '15%'], color: '#171310' },
-  { lines: ['خصم', '10%'], color: '#caa565' },
+  { lines: ['هدية', 'مجانية'], color: '#504E4D' },
+  { lines: ['خصم', '20%'], color: '#B89743' },
+  { lines: ['جلسة', 'مجانية'], color: '#504E4D' },
+  { lines: ['200 نقطة', 'ولاء'], color: '#B89743' },
+  { lines: ['خصم', '15%'], color: '#504E4D' },
+  { lines: ['خصم', '10%'], color: '#B89743' },
 ]
 
 const segAngle = 360 / segments.length

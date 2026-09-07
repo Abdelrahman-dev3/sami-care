@@ -1,9 +1,11 @@
 <script setup>
 import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 import SectionTitle from '@/components/common/SectionTitle.vue'
 import AppImage from '@/components/common/AppImage.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import { useLanguage } from '@/composables/useLanguage'
+import { useServiceLocation } from '@/composables/useServiceLocation'
 
 const props = defineProps({
     branches: {
@@ -18,12 +20,12 @@ const props = defineProps({
 
 const displayBranches = computed(() => {
     const branches = props.branches || []
-    const hasHomeService = branches.some(branch => branch.home || branch.id === 'hm')
+    const hasHomeService = branches.some(branch => branch.home || branch.id === 'home-service')
 
     return hasHomeService
         ? branches
         : [...branches, {
-            id: 'hm',
+            id: 'home-service',
             home: true,
             name: 'خدمة منزلية',
             address: 'حلاقة وعناية ومساجات طبيعية — في منزلك',
@@ -32,9 +34,16 @@ const displayBranches = computed(() => {
 })
 
 const { state: lang } = useLanguage()
+const router = useRouter()
+const { setLocation } = useServiceLocation()
 
 function nameOf(branch) {
     return branch.name?.[lang.lang] || branch.name?.ar || branch.name?.en || branch.name
+}
+
+function bookBranch(branch) {
+    setLocation(branch.home ? 'home-service' : branch.id)
+    router.push('/booking')
 }
 </script>
 
@@ -51,7 +60,7 @@ function nameOf(branch) {
                 <AppImage :src="branch.image" :alt="nameOf(branch)" />
                 <h3>{{ nameOf(branch) }}</h3>
                 <p>{{ branch.address }}</p>
-                <BaseButton :label="branch.home ? 'احجز الخدمة المنزلية' : 'احجز الآن'" :href="`/booking?branch=${branch.home ? 'hm' : branch.id}`" />
+                <BaseButton :label="branch.home ? 'احجز الخدمة المنزلية' : 'احجز الآن'" href="#" @click.prevent="bookBranch(branch)" />
             </article>
         </div>
     </section>

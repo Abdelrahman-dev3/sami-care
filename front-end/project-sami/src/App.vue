@@ -6,6 +6,7 @@ import AuthModal from '@/components/common/AuthModal.vue'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import CartDrawer from '@/components/store/CartDrawer.vue'
+import FloatingActions from '@/components/common/FloatingActions.vue'
 import { useScrollReveal } from '@/composables/useScrollReveal'
 import { useStore } from '@/composables/useStore'
 
@@ -127,6 +128,8 @@ useScrollReveal()
     <AuthModal />
     <CartDrawer :open="cartDrawerOpen" @close="closeCart" @checkout="checkoutCart" />
   </template>
+  <!-- عائم على كل الأجهزة (موبايل + ديسكتوب) -->
+  <FloatingActions />
 </template>
 
 <style>

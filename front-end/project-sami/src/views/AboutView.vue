@@ -1,70 +1,43 @@
 <script setup>
-import SectionTitle from './SectionTitle.vue'
-import { stats } from '../data/site'
+import AppImage from '@/components/common/AppImage.vue'
+import { features } from '@/data/home'
 </script>
 
 <template>
-  <section class="about-page">
-    <SectionTitle title="نبذة عن المركز" />
+  <div class="about-page" dir="rtl">
+    <section class="about-section container">
+      <AppImage src="/images/generated/about-barber-hq.png" alt="حلاق محترف يقدم خدمة للعميل" />
 
-    <div class="card about reveal">
-      <p>
-        <b>مركز عناية سامي للرجال</b> — وجهتك المتكاملة للعناية الرجالية الفاخرة في جدة.
-        نقدم تجربة تجمع بين الأصالة والاحترافية...
-      </p>
+      <div class="about-copy">
+        <h2>من نحن</h2>
+        <h3>تجربة عناية متكاملة</h3>
+        <p>
+          في عناية سامي، نؤمن أن العناية الشخصية ليست رفاهية، بل أسلوب حياة.
+          لذلك نقدم مجموعة متكاملة من الخدمات العصرية للعناية بالشعر والبشرة في بيئة مريحة وأنيقة.
+        </p>
 
-      <div class="stats">
-        <div v-for="stat in stats" :key="stat.label">
-          <b>{{ stat.value }}</b>
-          <small>{{ stat.label }}</small>
+        <h3>نستخدم أحدث الأجهزة والتقنيات</h3>
+        <p>
+          نحرص على تحقيق أعلى معايير النظافة والسلامة، ويعمل فريقنا المحترف
+          ليمنحك تجربة استثنائية ونتائج تليق بك.
+        </p>
+
+        <div class="features">
+          <article v-for="item in features" :key="item.title">
+            <span>{{ item.icon }}</span>
+            <b>{{ item.title }}</b>
+            <small>{{ item.text }}</small>
+          </article>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
+  </div>
 </template>
 
 <style scoped>
 .about-page {
-  padding: 20px 16px 40px;
-  background: #f7f3ee;
   min-height: 100vh;
-}
-
-.card.about {
-  background: #fff;
-  border: 1px solid rgba(140, 110, 80, 0.16);
-  border-radius: 18px;
-  padding: 18px;
-  color: #4e4436;
-  line-height: 2;
-  font-size: 13px;
-}
-
-.card.about b {
-  color: #9c6b1f;
-}
-
-.stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  margin-top: 18px;
-  padding-top: 14px;
-  border-top: 1px dashed rgba(140, 110, 80, 0.16);
-}
-
-.stats div {
-  text-align: center;
-}
-
-.stats b {
-  display: block;
-  font-size: 20px;
-  color: #221f1f;
-}
-
-.stats small {
-  color: #8a7b6c;
-  font-size: 10px;
+  background: #f8f4ee;
+  padding: 60px 0 80px;
 }
 </style>

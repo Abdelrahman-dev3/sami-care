@@ -62,7 +62,7 @@ const promoCards = computed(() => {
 })
 
 function goHomeService() {
-  setLocation('hm')
+  setLocation('home-service')
   router.push('/booking')
 }
 </script>
