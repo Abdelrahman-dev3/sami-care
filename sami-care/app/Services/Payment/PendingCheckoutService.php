@@ -46,7 +46,10 @@ class PendingCheckoutService
         $productSubtotal = $this->productSubtotal($products);
         $giftSubtotal = (float) $gifts->sum(fn ($gift) => (float) ($gift->subtotal ?? 0));
 
-        $tax = $this->taxAmount($bookingSubtotal, $productSubtotal);
+        // Gift cards carry the same VAT as the services/packages they contain.
+        // Previously giftSubtotal was omitted here, so wallet payments for gifts
+        // were finalized and deducted without VAT even though the UI showed it.
+        $tax = $this->taxAmount($bookingSubtotal, $productSubtotal, $giftSubtotal);
         $subtotal = $bookingSubtotal + $productSubtotal + $giftSubtotal + $tax;
 
         $discount = 0.0;
@@ -111,12 +114,13 @@ class PendingCheckoutService
         });
     }
 
-    private function taxAmount(float $bookingSubtotal, float $productSubtotal): float
+    private function taxAmount(float $bookingSubtotal, float $productSubtotal, float $giftSubtotal): float
     {
         $bookingTax = (float) (getBookingTaxamount($bookingSubtotal, 0, null)['total_tax_amount'] ?? 0);
         $productTax = (float) (getTaxamount($productSubtotal)['total_tax_amount'] ?? 0);
+        $giftTax = (float) (getBookingTaxamount($giftSubtotal, 0, null)['total_tax_amount'] ?? 0);
 
-        return round($bookingTax + $productTax, 2);
+        return round($bookingTax + $productTax + $giftTax, 2);
     }
 
     private function couponDiscount(Coupon $coupon, float $subtotal): float

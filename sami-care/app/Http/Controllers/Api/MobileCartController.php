@@ -7,7 +7,9 @@ use App\Models\GiftCard;
 use App\Services\CartExpirationService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\DB;
+use App\Models\User;
 use Modules\Booking\Models\Booking;
 use Modules\Booking\Models\BookingService;
 use Modules\Package\Models\BookingPackages;
@@ -220,7 +222,7 @@ class MobileCartController extends Controller
             'services.*.subServices.*.date' => ['required', 'date_format:Y-m-d'],
             'services.*.subServices.*.time' => ['required', 'date_format:H:i'],
             'services.*.subServices.*.duration' => ['nullable', 'integer', 'min:1'],
-            'services.*.subServices.*.staffId' => ['nullable', 'integer'],
+            'services.*.subServices.*.staffId' => ['required', 'integer', 'exists:users,id'],
             'customerName' => ['nullable', 'string'],
             'mobileNo' => ['nullable', 'string'],
             'neighborhood' => ['nullable', 'string'],
@@ -230,13 +232,48 @@ class MobileCartController extends Controller
         $branchId = (int) $validated['branch'];
         $createdBookingIds = [];
 
+        // Expired unpaid carts must not keep otherwise available appointments blocked.
+        app(CartExpirationService::class)->clearExpired();
+
         DB::transaction(function () use ($validated, $user, $branchId, &$createdBookingIds) {
             foreach ($validated['services'] as $serviceGroup) {
                 foreach ($serviceGroup['subServices'] as $subService) {
-                    $startDateTime = \Carbon\Carbon::createFromFormat(
+                    $service = Service::query()->findOrFail($subService['id']);
+                    $staffId = (int) $subService['staffId'];
+                    $duration = max(1, (int) ($subService['duration'] ?? $service->duration_min ?? 30));
+                    $startDateTime = Carbon::createFromFormat(
                         'Y-m-d H:i',
                         $subService['date'] . ' ' . $subService['time']
                     );
+                    $endDateTime = $startDateTime->copy()->addMinutes($duration);
+
+                    /*
+                     * Serialise availability checks for this employee. This prevents
+                     * two simultaneous requests from both passing the conflict check.
+                     */
+                    User::query()->whereKey($staffId)->lockForUpdate()->firstOrFail();
+
+                    $hasConflict = BookingService::query()
+                        ->where('employee_id', $staffId)
+                        ->whereHas('booking', function ($query) {
+                            $query->whereIn('status', ['pending', 'confirmed', 'check_in']);
+                        })
+                        ->where('start_date_time', '<', $endDateTime)
+                        ->whereRaw(
+                            'DATE_ADD(start_date_time, INTERVAL GREATEST(COALESCE(duration_min, 0), 1) MINUTE) > ?',
+                            [$startDateTime->format('Y-m-d H:i:s')]
+                        )
+                        ->exists();
+
+                    if ($hasConflict) {
+                        throw new HttpResponseException(response()->json([
+                            'success' => false,
+                            'message' => 'الموعد المختار لم يعد متاحًا. يرجى اختيار موعد آخر.',
+                            'errors' => [
+                                'time' => ['الموعد المختار يتعارض مع حجز قائم لهذا الموظف.'],
+                            ],
+                        ], 409));
+                    }
 
                     $booking = new Booking();
 
@@ -261,10 +298,10 @@ class MobileCartController extends Controller
                     $bookingService = new BookingService();
                     $bookingService->booking_id = $booking->id;
                     $bookingService->service_id = $subService['id'];
-                    $bookingService->employee_id = $subService['staffId'] ?? null;
+                    $bookingService->employee_id = $staffId;
                     $bookingService->start_date_time = $startDateTime;
-                    $bookingService->service_price = Service::find($subService['id'])->default_price ?? 0;
-                    $bookingService->duration_min = $subService['duration'] ?? null;
+                    $bookingService->service_price = $service->default_price ?? 0;
+                    $bookingService->duration_min = $duration;
                     $bookingService->sequance = 1;
                     $bookingService->created_by = $user->id;
                     $bookingService->save();
