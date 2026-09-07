@@ -1,8 +1,6 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
-import AppHeader from '@/components/layout/AppHeader.vue'
-import AppFooter from '@/components/layout/AppFooter.vue'
 import PageSkeleton from '@/components/common/PageSkeleton.vue'
 import { fetchBlogs } from '@/services/blogApi'
 import { assetPath } from '@/utils/assetPath'
@@ -47,11 +45,11 @@ onMounted(() => loadBlogs())
 
 <template>
   <div class="home-page blog-page" dir="rtl">
-    <AppHeader />
-
     <main>
       <section class="blog-hero">
-        <div class="container">
+        <div class="blog-hero__bg"><img src="/images/generated/packages/complete-care-hq.png" alt="" /></div>
+        <svg class="blog-hero__ghost" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width=".8" aria-hidden="true"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M12 2v20M3 7l9 5 9-5M3 17l9-5 9 5"/></svg>
+        <div class="container blog-hero__in">
           <p class="blog-eyebrow">نصائح وأخبار عناية سامي</p>
           <h1>المدونة</h1>
           <p>
@@ -101,10 +99,13 @@ onMounted(() => loadBlogs())
 
 <style scoped>
 .blog-page{background:#f8f4ee}
-.blog-hero{background:linear-gradient(110deg,#070808 0%,#16100b 58%,#2f210f 100%);color:#fff;padding:58px 0 52px;text-align:center}
+.blog-hero{position:relative;width:min(1280px,94%);min-height:300px;margin:24px auto 0;border-radius:22px;overflow:hidden;display:flex;align-items:center;background:#0d0b07;color:#fff}
+.blog-hero__bg{position:absolute;inset:0}.blog-hero__bg img{width:100%;height:100%;object-fit:cover;object-position:75% center;filter:brightness(.85)}.blog-hero__bg::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(10,9,6,.92) 0%,rgba(10,9,6,.72) 42%,rgba(10,9,6,.1) 100%)}
+.blog-hero__ghost{position:absolute;left:5%;top:50%;transform:translateY(-50%);width:220px;opacity:.14;z-index:1;color:var(--gold)}
+.blog-hero__in{position:relative;z-index:2;width:100%;max-width:none;padding:52px;text-align:right}
 .blog-eyebrow{margin:0 0 8px;color:var(--gold);font-size:12px;font-weight:700}
 .blog-hero h1{margin:0 0 12px;font-size:42px;line-height:1.35}
-.blog-hero p:last-child{max-width:620px;margin:0 auto;color:#d7cabc;font-size:13px;line-height:2}
+.blog-hero p:last-child{max-width:44ch;margin:0;color:#d7cabc;font-size:13px;line-height:2}
 .blog-list{padding-block:38px 52px}
 .blog-state{min-height:220px;display:grid;place-items:center;text-align:center;color:var(--muted);background:#fff;border:1px solid var(--border);border-radius:8px}
 .blog-state--error{color:#9b2d20}
@@ -123,6 +124,6 @@ onMounted(() => loadBlogs())
 .blog-pager button{border:1px solid var(--gold);background:#fff;color:var(--gold);border-radius:22px;padding:8px 18px;cursor:pointer}
 .blog-pager button:disabled{opacity:.45;cursor:not-allowed}
 .blog-pager span{color:var(--muted);font-size:12px}
-@media(max-width:900px){.blog-grid{grid-template-columns:repeat(2,1fr)}.blog-hero h1{font-size:34px}}
+@media(max-width:900px){.blog-grid{grid-template-columns:repeat(2,1fr)}.blog-hero h1{font-size:34px}.blog-hero__in{padding:32px 24px}}
 @media(max-width:560px){.blog-grid{grid-template-columns:1fr}.blog-hero{padding:42px 0 36px}.blog-list{padding-block:26px 38px}}
 </style>

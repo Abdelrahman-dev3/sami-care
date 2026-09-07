@@ -28,7 +28,7 @@ import BookingSummary from '@/components/booking/BookingSummary.vue'
 const root = ref(null)
 const route = useRoute()
 const { current, locations, loadServiceLocations } = useServiceLocation()
-const { requireAuth } = useAuth()
+const { requireAuth, user } = useAuth()
 
 loadServiceLocations()
 const { state, selSvcs, priceParts, canProceed, nextLabel, reset, payableTotal, walletDiscount, loyaltyPointsUsed } = useBooking()
@@ -91,6 +91,10 @@ function toDateKey(d) {
 async function doPay() {
   payLoading.value = true
   try {
+    const accountName = [user.value?.first_name, user.value?.last_name].filter(Boolean).join(' ')
+    state.cust.name = state.cust.name || accountName || user.value?.username || ''
+    state.cust.phone = state.cust.phone || user.value?.mobile || ''
+    state.cust.mail = state.cust.mail || user.value?.email || ''
     const branchId = current.value?.home ? 0 : Number(current.value?.id)
     const services = selSvcs.value.map(s => ({
       subServices: [{
@@ -110,11 +114,7 @@ async function doPay() {
     })
 
     const rewards = state.rewards
-    const partialWalletAmount = Number(walletDiscount.value.toFixed(2))
-    const fullWalletAmount = state.pay === 'wallet'
-      ? Math.min(Number(state.walletBalance) || 0, payableTotal.value || priceParts.value.total)
-      : 0
-    const walletAmount = Math.max(partialWalletAmount, fullWalletAmount)
+    const walletAmount = Number(walletDiscount.value.toFixed(2))
     const loyaltyPoints = loyaltyPointsUsed.value
     const hasWallet = walletAmount > 0
     const hasLoyalty = loyaltyPoints > 0
@@ -122,9 +122,10 @@ async function doPay() {
 
     /* بوابة cod بتعامل الدفع كعربون محفظة مستقل؛ عند استخدام المحفظة/النقاط كخصومات جزئية
        نمرر الطلب لمسار البوابات العادي حتى تُخصم المكافآت أولًا ثم يُحصّل المتبقي. */
-    const gateway = hasWallet || hasLoyalty || state.pay === 'wallet'
+    const gateway = hasWallet || hasLoyalty
       ? 'card'
       : (state.pay || 'card')
+
     const payment = await initPayment(gateway, {
       wallet: hasWallet,
       walletAmount,
@@ -152,108 +153,161 @@ function goHome() { reset(); location.href = '/' }
 <template>
   <div ref="root">
     <div class="shell">
-    <BookingStepper v-if="!isReceiptMode" />
+      <BookingStepper v-if="!isReceiptMode" />
 
-    <div class="wrap">
-      <div class="stage" id="stage" :style="`grid-template-columns:${stageCols}`">
-        <main class="panel" id="panel">
-          <div v-if="isReceiptMode" class="success-wrap receipt-wrap">
-            <div class="suc-ic">
-              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg>
-            </div>
-            <h1>تفاصيل الحجز</h1>
-            <p class="sub">تم فتح تفاصيل الحجز من رمز QR</p>
-            <div class="suc-grid receipt-grid">
-              <div class="card suc-details">
-                <h4>بيانات الحجز</h4>
-                <div class="sd-row"><span class="k">رقم الفاتورة</span><span class="v receipt-code">{{ receipt.r || '—' }}</span></div>
-                <div class="sd-row"><span class="k">الفرع</span><span class="v">{{ receipt.b || '—' }}</span></div>
-                <div class="sd-row"><span class="k">التاريخ</span><span class="v">{{ receipt.d || '—' }}</span></div>
-                <div class="sd-row"><span class="k">مدة الجلسة</span><span class="v">{{ receipt.u || '—' }}</span></div>
-                <div class="sd-row"><span class="k">الفريق</span><span class="v">{{ receipt.e || '—' }}</span></div>
-                <div class="sd-row"><span class="k">المبلغ</span><span class="v" :style="AMT">{{ rs(Number(receipt.p) || 0) }} ر.س</span></div>
+      <div class="wrap">
+        <div class="stage" id="stage" :style="`grid-template-columns:${stageCols}`">
+          <main class="panel" id="panel">
+            <div v-if="isReceiptMode" class="success-wrap receipt-wrap">
+              <div class="suc-ic">
+                <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <path d="M20 6L9 17l-5-5" />
+                </svg>
               </div>
-              <div class="card suc-details receipt-services">
-                <h4>الخدمات</h4>
-                <div v-for="(svc, i) in receiptServices" :key="i" class="receipt-service">
-                  <b>{{ svc[0] }}</b>
-                  <small>{{ svc[1] || '—' }} · {{ svc[2] || receipt.e || '—' }}</small>
-                  <span>{{ rs(Number(svc[3]) || 0) }} ر.س</span>
+              <h1>تفاصيل الحجز</h1>
+              <p class="sub">تم فتح تفاصيل الحجز من رمز QR</p>
+              <div class="suc-grid receipt-grid">
+                <div class="card suc-details">
+                  <h4>بيانات الحجز</h4>
+                  <div class="sd-row"><span class="k">رقم الفاتورة</span><span class="v receipt-code">{{ receipt.r ||
+                      '—' }}</span></div>
+                  <div class="sd-row"><span class="k">الفرع</span><span class="v">{{ receipt.b || '—' }}</span></div>
+                  <div class="sd-row"><span class="k">التاريخ</span><span class="v">{{ receipt.d || '—' }}</span></div>
+                  <div class="sd-row"><span class="k">مدة الجلسة</span><span class="v">{{ receipt.u || '—' }}</span>
+                  </div>
+                  <div class="sd-row"><span class="k">الفريق</span><span class="v">{{ receipt.e || '—' }}</span></div>
+                  <div class="sd-row"><span class="k">المبلغ</span><span class="v" :style="AMT">{{ rs(Number(receipt.p)
+                      || 0) }} ر.س</span></div>
+                </div>
+                <div class="card suc-details receipt-services">
+                  <h4>الخدمات</h4>
+                  <div v-for="(svc, i) in receiptServices" :key="i" class="receipt-service">
+                    <b>{{ svc[0] }}</b>
+                    <small>{{ svc[1] || '—' }} · {{ svc[2] || receipt.e || '—' }}</small>
+                    <span>{{ rs(Number(svc[3]) || 0) }} ر.س</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-          <BookingSuccess v-else-if="state.done" @home="goHome" @calendar="toast('تمت إضافة الموعد إلى التقويم')" @share="toast('تم نسخ رابط الحجز للمشاركة')" />
-          <ServicesStep v-else-if="state.step === 0" />
-          <EmployeeStep v-else-if="state.step === 1" />
-          <TimeStep v-else-if="state.step === 2" />
-          <ConfirmStep v-else-if="state.step === 3" />
-          <PayStep v-else />
-        </main>
-        <aside class="summary booking-summary-compact" :class="{ show: showBookingSummary, 'booking-summary-time': state.step === 2 }" v-show="showBookingSummary"><BookingSummary /></aside>
+            <BookingSuccess v-else-if="state.done" @home="goHome" @calendar="toast('تمت إضافة الموعد إلى التقويم')"
+              @share="toast('تم نسخ رابط الحجز للمشاركة')" />
+            <ServicesStep v-else-if="state.step === 0" />
+            <EmployeeStep v-else-if="state.step === 1" />
+            <TimeStep v-else-if="state.step === 2" />
+            <ConfirmStep v-else-if="state.step === 3" />
+            <PayStep v-else />
+          </main>
+          <aside class="summary booking-summary-compact"
+            :class="{ show: showBookingSummary, 'booking-summary-time': state.step === 2 }" v-show="showBookingSummary">
+            <BookingSummary />
+          </aside>
+        </div>
       </div>
-    </div>
     </div>
 
-<footer>
-  <div class="wrap">
-    <div class="f-grid">
-      <div class="f-brand">
-        <RouterLink class="logo" to="/"><span class="mark"><img src="/logo.png" alt="عناية سامي" style="width:29px;height:29px;object-fit:contain" /></span><span class="name"><b>عناية سامي</b><span>SAMI CARE</span></span></RouterLink>
-        <p>مركز متخصص في العناية الرجالية المتكاملة بجدة، حيث تلتقي الفخامة بالاحترافية في كل تفصيلة.</p>
-        <div class="socials">
-          <a href="https://x.com/samicare_sa" aria-label="X"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-6.8 7.8L23.3 22h-6.3l-4.9-6.4L6.5 22H3.4l7.3-8.3L1 2h6.5l4.4 5.8L18.9 2zm-1.1 18h1.7L7.1 3.9H5.3L17.8 20z"/></svg></a>
-          <a href="https://www.instagram.com/samicare.sa/" aria-label="انستقرام"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg></a>
-          <a href="https://www.facebook.com/samicare.sa" aria-label="فيسبوك"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg></a>
+    <!-- فوتر صفحة الحجز مخفي مؤقتًا؛ غيّر الشرط إلى true لإعادته. -->
+    <footer v-if="false">
+      <div class="wrap">
+        <div class="f-grid">
+          <div class="f-brand">
+            <RouterLink class="logo" to="/"><span class="mark"><img src="/logo.png" alt="عناية سامي"
+                  style="width:29px;height:29px;object-fit:contain" /></span><span class="name"><b>عناية
+                  سامي</b><span>SAMI CARE</span></span></RouterLink>
+            <p>مركز متخصص في العناية الرجالية المتكاملة بجدة، حيث تلتقي الفخامة بالاحترافية في كل تفصيلة.</p>
+            <div class="socials">
+              <a href="https://x.com/samicare_sa" aria-label="X"><svg width="17" height="17" viewBox="0 0 24 24"
+                  fill="currentColor">
+                  <path
+                    d="M18.9 2H22l-6.8 7.8L23.3 22h-6.3l-4.9-6.4L6.5 22H3.4l7.3-8.3L1 2h6.5l4.4 5.8L18.9 2zm-1.1 18h1.7L7.1 3.9H5.3L17.8 20z" />
+                </svg></a>
+              <a href="https://www.instagram.com/samicare.sa/" aria-label="انستقرام"><svg width="17" height="17"
+                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <rect x="2" y="2" width="20" height="20" rx="5" />
+                  <circle cx="12" cy="12" r="4" />
+                  <circle cx="17.5" cy="6.5" r="1" fill="currentColor" />
+                </svg></a>
+              <a href="https://www.facebook.com/samicare.sa" aria-label="فيسبوك"><svg width="17" height="17"
+                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" />
+                </svg></a>
+            </div>
+          </div>
+          <div>
+            <h4>روابط مهمة</h4>
+            <ul class="f-links">
+              <li>
+                <RouterLink to="/">الرئيسية</RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/booking">حجز موعد</RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/#services">خدماتنا</RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/packages-gifts">الباقات</RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/gifts">الهدايا</RouterLink>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h4>استكشف</h4>
+            <ul class="f-links">
+              <li>
+                <RouterLink to="/store">المتجر</RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/branches">فروعنا</RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/contact">تواصل معنا</RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/terms">الشروط والأحكام</RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/privacy-policy">سياسة الخصوصية</RouterLink>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h4>عناوين الفروع</h4>
+            <div v-for="branch in locations" :key="branch.id" class="f-branch">
+              <b>{{ branch.name }}</b>
+              <small>{{ branch.address }}</small>
+              <a v-if="branch.contact_number" :href="`tel:${branch.contact_number}`">{{ branch.contact_number }}</a>
+            </div>
+          </div>
+        </div>
+        <div class="f-bottom">
+          <small>© 2026 عناية سامي — جميع الحقوق محفوظة</small>
+          <div class="pay" aria-label="بوابات الدفع"><span title="Visa">VISA</span><span
+              title="Mastercard">Mastercard</span><span title="مدى">mada</span><span title="Tabby">tabby</span><span
+              title="Apple Pay">Pay</span></div>
         </div>
       </div>
-      <div>
-        <h4>روابط مهمة</h4>
-        <ul class="f-links">
-          <li><RouterLink to="/">الرئيسية</RouterLink></li>
-          <li><RouterLink to="/booking">حجز موعد</RouterLink></li>
-          <li><RouterLink to="/#services">خدماتنا</RouterLink></li>
-          <li><RouterLink to="/packages-gifts">الباقات</RouterLink></li>
-          <li><RouterLink to="/gifts">الهدايا</RouterLink></li>
-        </ul>
-      </div>
-      <div>
-        <h4>استكشف</h4>
-        <ul class="f-links">
-          <li><RouterLink to="/store">المتجر</RouterLink></li>
-          <li><RouterLink to="/branches">فروعنا</RouterLink></li>
-          <li><RouterLink to="/contact">تواصل معنا</RouterLink></li>
-          <li><RouterLink to="/terms">الشروط والأحكام</RouterLink></li>
-          <li><RouterLink to="/privacy-policy">سياسة الخصوصية</RouterLink></li>
-        </ul>
-      </div>
-      <div>
-        <h4>عناوين الفروع</h4>
-        <div v-for="branch in locations" :key="branch.id" class="f-branch">
-          <b>{{ branch.name }}</b>
-          <small>{{ branch.address }}</small>
-          <a v-if="branch.contact_number" :href="`tel:${branch.contact_number}`">{{ branch.contact_number }}</a>
-        </div>
-      </div>
-    </div>
-    <div class="f-bottom">
-      <small>© 2026 عناية سامي — جميع الحقوق محفوظة</small>
-      <div class="pay" aria-label="بوابات الدفع"><span title="Visa">VISA</span><span title="Mastercard">Mastercard</span><span title="مدى">mada</span><span title="Tabby">tabby</span><span title="Apple Pay">Pay</span></div>
-    </div>
-  </div>
-</footer>
+    </footer>
 
     <div class="footbar" id="footbar" v-show="!state.done && !isReceiptMode">
       <div class="wrap in">
-        <button class="btn btn-back" id="btnBack" :style="{ visibility: state.step === 0 ? 'hidden' : 'visible' }" @click="goBack">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        <button class="btn btn-back" id="btnBack" :style="{ visibility: state.step === 0 ? 'hidden' : 'visible' }"
+          @click="goBack">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
           السابق
         </button>
         <div class="fb-mid" id="fbMid">
           <span>🔒 بياناتك محمية وآمنة</span>
           <span v-if="hasSvc" class="tot">المبلغ الإجمالي <b>{{ rs(Math.round(footerTotal)) }} ر.س</b></span>
         </div>
-        <button class="btn" :class="state.step === 4 ? 'btn-pay' : 'btn-gold'" id="btnNext" :disabled="!canProceed" @click="goNext">{{ nextLabel }} <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 12H5M11 18l-6-6 6-6"/></svg></button>
+        <button class="btn" :class="state.step === 4 ? 'btn-pay' : 'btn-gold'" id="btnNext" :disabled="!canProceed"
+          @click="goNext">{{ nextLabel }} <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.2">
+            <path d="M19 12H5M11 18l-6-6 6-6" />
+          </svg></button>
       </div>
     </div>
 

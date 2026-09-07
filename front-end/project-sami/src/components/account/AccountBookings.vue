@@ -8,7 +8,7 @@ const STATUS_AR = { pending: 'قيد الانتظار', confirmed: 'مؤكد', c
 const all = computed(() => [
   ...(props.profile?.current_bookings || []),
   ...(props.profile?.completed_bookings || []),
-])
+].sort((a, b) => Number(b.id || 0) - Number(a.id || 0)))
 
 function rs(n) {
   return Number(n || 0).toLocaleString('ar-EG-u-nu-latn')

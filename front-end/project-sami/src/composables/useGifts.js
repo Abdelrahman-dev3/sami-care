@@ -142,7 +142,10 @@ export function useGifts() {
          القيمة الحقيقية كاملة)؛ القيمة الحرفية للبوابة مش مهمة هنا لأنها بترجع 'sub_methods' طالما
          الرصيد كافي (canNext بيتأكد من كده قبل ما نوصل هنا) فمفيش استدعاء حقيقي لأي بوابة دفع. */
       const wallet = state.pay === 'wallet'
-      const payment = await initPayment(wallet ? 'card' : 'cod', { wallet })
+      const payment = await initPayment(wallet ? 'card' : 'cod', {
+        wallet,
+        walletAmount: wallet ? priceParts.value.total : undefined,
+      })
 
       state.ref = created?.data?.gift_card_id ? `#GIFT-${created.data.gift_card_id}` : '#GIFT'
       state.claimUrl = created?.data?.share_url || created?.data?.claim_url || null

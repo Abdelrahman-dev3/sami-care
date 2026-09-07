@@ -1,6 +1,5 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import AppFooter from '@/components/layout/AppFooter.vue'
 import HeroSection from '@/components/home/HeroSection.vue'
 import AboutSection from '@/components/home/AboutSection.vue'
 import ServicesSection from '@/components/home/ServicesSection.vue'
@@ -68,11 +67,6 @@ onMounted(() => {
                     :offers="homeData.offers"
                     :loading="loading"
                 />
-        <CafeStrip />
-        <GiftBanner />
-       <LuckyWheelCard
-                    :prizes="homeData.wheel_prizes"
-                />
        <div class="catalog container">
 
                     <!-- Packages -->
@@ -88,6 +82,11 @@ onMounted(() => {
                     />
 
                 </div>
+        <CafeStrip />
+        <GiftBanner />
+       <LuckyWheelCard
+                    :prizes="homeData.wheel_prizes"
+                />
 
                 <BranchesSection
                     :branches="homeData.branches"

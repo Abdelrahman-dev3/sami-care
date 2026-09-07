@@ -124,7 +124,12 @@ const state = reactive({
   siteBranch: readBranch(),
 
   /* رحلة حجز الباقة */
-  bk: { step: 0, pkg: null, branch: null, employee: null, dayIdx: null, period: 'all', time: null, notes: '', pay: null, done: false, ref: null },
+  bk: {
+    step: 0, pkg: null, branch: null, employee: null, dayIdx: null, period: 'all', time: null,
+    notes: '', pay: null, done: false, ref: null,
+    walletBalance: 0, loyaltyPoints: 0, pointValue: 0.5,
+    useWallet: false, walletAmount: 0, useLoyalty: false, loyaltyPointsUsed: 0,
+  },
 })
 
 export function usePackages() {

@@ -23,9 +23,10 @@ const viewByRoute = { home:'home', services:'services', 'service-detail':'servic
   Ù„Ø£Ù†Ù‡ Ù‡Ùˆ Ø§Ù„Ù„ÙŠ Ø¨ÙŠÙƒØ³Ø± ÙƒØ§Ø´ Ø§Ù„Ù…ØªØµÙØ­ Ù„Ù„Ø¥Ø·Ø§Ø±. Ù…Ù† ØºÙŠØ±Ù‡ Ø§Ù„Ù…ØªØµÙØ­ Ø¨ÙŠÙØ¶Ù„ ÙŠØ¹Ø±Ø¶
   Ø§Ù„Ù†Ø³Ø®Ø© Ø§Ù„Ù‚Ø¯ÙŠÙ…Ø© Ù…Ù‡Ù…Ø§ Ø§ØªØºÙŠÙ‘Ø± Ø§Ù„Ù…Ù„Ù.
 */
-const mobileVersion = '20260901-gift-sharing-preview-v47'
+const mobileVersion = '20260907-restore-lama-font-v73'
 const initialMobileView = viewByRoute[route.name] || 'home'
-const mobileSrc = `/mobile/index.html?view=${initialMobileView}&v=${mobileVersion}`
+const mobileApiBase = (import.meta.env.VITE_API_BASE_URL || `${window.location.origin}/api`).replace(/\/$/, '')
+const mobileSrc = `/mobile/index.html?view=${initialMobileView}&api=${encodeURIComponent(mobileApiBase)}&v=${mobileVersion}`
 const syncMedia = event => { isMobile.value = event.matches }
 const motionTargets = [
   '.hero-box','.hero-person','.about-section > *','.section-title','.home-section > *',
@@ -117,16 +118,19 @@ useScrollReveal()
     <RouterView v-slot="{ Component, route: current }">
       <component :is="Component" :key="current.path" />
     </RouterView>
-    <AppFooter class="global-site-footer" />
+    <AppFooter v-if="route.name !== 'booking'" class="global-site-footer" />
     <LocationPicker />
-    <AuthModal />
     <CartDrawer :open="cartDrawerOpen" @close="closeCart" @checkout="checkoutCart" />
   </template>
+  <AuthModal />
 </template>
 
 <style>
-.global-mobile-shell{width:100%;height:100dvh;background:#e8e1d6;overflow:hidden}.global-mobile-frame{display:block;width:100%;height:100%;border:0;background:#e8e1d6}
+.global-mobile-shell{position:fixed;inset:0;width:100%;height:100dvh;background:#e8e1d6;overflow:hidden}.global-mobile-frame{display:block;width:100%;height:100dvh;border:0;background:#e8e1d6;overflow:auto;-webkit-overflow-scrolling:touch}
 #app footer:not(.sami-unified-footer){display:none!important}
-@media(max-width:640px){html,body,#app{width:100%;height:100%;margin:0;overflow:hidden}}
+@media(max-width:640px){
+  html:has(.global-mobile-shell),body:has(.global-mobile-shell),#app:has(.global-mobile-shell){width:100%;height:100dvh;margin:0;overflow:hidden}
+  html:not(:has(.global-mobile-shell)),body:not(:has(.global-mobile-shell)),#app:not(:has(.global-mobile-shell)){height:auto;min-height:100%;overflow-x:hidden;overflow-y:auto}
+}
 </style>
 

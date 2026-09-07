@@ -1,20 +1,24 @@
 <script setup>
 import { ref, reactive, computed, watch, onMounted } from 'vue'
-import { useBooking, fmtTimeStr, fmtDur } from '@/composables/useBooking'
-import { fetchAvailableTimes } from '@/services/bookingApi'
+import { useBooking, fmtTimeStr, fmtDur, rs } from '@/composables/useBooking'
+import { fetchAvailableTimes, fetchLoyaltyPointValue } from '@/services/bookingApi'
 import { categoryAccent, categoryIconKey, categoryIconPath } from '@/utils/giftIcons'
 import Skeleton from '@/components/common/SkeletonLoader.vue'
 
 const AR_DAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت']
 const AR_MONTHS = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر']
 
-const { state, selSvcs, totalDur, setTime } = useBooking()
+const { state, selSvcs, totalDur, priceParts, setEmployee, setTime } = useBooking()
+const pointsPer100 = ref(5)
+const earnedLoyaltyPoints = computed(() => Math.floor(priceParts.value.total / 100) * pointsPer100.value)
 
 const TODAY = new Date()
 TODAY.setHours(0, 0, 0, 0)
 
 const calStart = ref(new Date(TODAY))
+const period = ref('all')
 const slotsByService = reactive({})
+const staffBySlot = reactive({})
 const loadingByService = reactive({})
 
 const days = computed(() =>
@@ -118,6 +122,9 @@ function buildSequentialSchedule(startTime, { apply = false } = {}) {
     rows.push({ service, start: selected, end: minutesToTime(end), expected: minutesToTime(cursor), shifted: start > cursor })
 
     if (apply) setTime(service.id, selected)
+    if (apply && state.mode === 'auto' && staffBySlot[service.id]?.[selected]) {
+      setEmployee(service.id, staffBySlot[service.id][selected])
+    }
     cursor = end
   }
 
@@ -173,9 +180,21 @@ async function loadSlots(service) {
   const dateKey = toDateKey(state.date)
   loadingByService[service.id] = true
   try {
-    const times = await fetchAvailableTimes({ date: dateKey, staffId: emp.id, durationMin: service.dur })
+    const candidates = state.mode === 'auto'
+      ? (state.staffOptions[service.id] || [])
+      : [emp]
+    const results = await Promise.all(candidates.filter(candidate => candidate?.id != null).map(async candidate => ({
+      candidate,
+      times: await fetchAvailableTimes({ date: dateKey, staffId: candidate.id, durationMin: service.dur }).catch(() => []),
+    })))
+    const slotMap = {}
+    results.forEach(({ candidate, times }) => {
+      normalizeSlots(times).forEach(time => { if (!slotMap[time]) slotMap[time] = candidate })
+    })
+    const times = Object.keys(slotMap)
     if (state.date && toDateKey(state.date) === dateKey && state.emp[service.id]?.id === emp.id) {
       slotsByService[service.id] = normalizeSlots(times)
+      staffBySlot[service.id] = slotMap
       syncSequentialTimes()
     }
   } catch {
@@ -186,9 +205,18 @@ async function loadSlots(service) {
   }
 }
 
-watch(() => state.date, () => selSvcs.value.forEach(loadSlots))
+watch(() => state.date, () => {
+  period.value = 'all'
+  selSvcs.value.forEach(loadSlots)
+})
 watch(() => selSvcs.value.map(s => `${s.id}:${state.emp[s.id]?.id}`), () => selSvcs.value.forEach(loadSlots))
-onMounted(() => selSvcs.value.forEach(loadSlots))
+onMounted(async () => {
+  selSvcs.value.forEach(loadSlots)
+  try {
+    const response = await fetchLoyaltyPointValue()
+    pointsPer100.value = Math.max(Number(response?.data?.points_per_100) || 5, 1)
+  } catch { /* keep the same backend fallback used while awarding points */ }
+})
 
 const dateTitle = computed(() => (
   state.date ? `${AR_DAYS[state.date.getDay()]} ${state.date.getDate()} ${AR_MONTHS[state.date.getMonth()]} ${state.date.getFullYear()}` : 'اختر تاريخًا من التقويم'
@@ -196,6 +224,12 @@ const dateTitle = computed(() => (
 
 const firstServiceLoading = computed(() => firstService.value && loadingByService[firstService.value.id])
 const initialSlots = computed(() => firstService.value ? normalizeSlots(slotsByService[firstService.value.id]) : [])
+const visibleInitialSlots = computed(() => initialSlots.value.filter(time => {
+  const minutes = timeToMinutes(time)
+  if (period.value === 'am') return minutes < 12 * 60
+  if (period.value === 'pm') return minutes >= 12 * 60
+  return true
+}))
 const allScheduleSlotsLoaded = computed(() =>
   !!state.date && orderedServices.value.every(service => Array.isArray(slotsByService[service.id]) && !loadingByService[service.id])
 )
@@ -290,11 +324,15 @@ const sessionEndTime = computed(() => {
     </div>
   </div>
 
+  <div class="loyalty-preview" aria-live="polite">
+    <h3><span aria-hidden="true">✨</span> مكافأة نقاط الولاء لهذه الجلسة</h3>
+    <p>ستحصل على <b>{{ rs(earnedLoyaltyPoints) }} نقطة ولاء</b> عند إتمام هذا الحجز.</p>
+    <strong>يمنحك نظام الولاء {{ rs(pointsPer100) }} نقطة مقابل كل 100 ر.س مدفوعة.</strong>
+  </div>
+
   <div class="card cal">
     <div class="cal-head">
-      <button class="cal-nav" :disabled="atToday" @click="shiftCal(-7)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
       <b>{{ rangeLabel }}</b>
-      <button class="cal-nav" @click="shiftCal(7)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg></button>
     </div>
     <div class="cal-cells">
       <button v-for="(dt, i) in days" :key="i" :disabled="isPast(dt)"
@@ -302,17 +340,19 @@ const sessionEndTime = computed(() => {
         <span class="dow">{{ AR_DAYS[dt.getDay()].slice(0, 3) }}</span><span class="dnum">{{ dt.getDate() }}</span>
       </button>
     </div>
+    <div class="cal-legend"><span><i style="background:var(--green)"></i> تتوفر مواعيد</span><span><i style="background:#D8D0BC"></i> غير متاح</span></div>
   </div>
 
   <div v-if="!state.date" class="empty-hint" style="margin-top:10px"><b>ابدأ باختيار التاريخ</b>اختر يومًا من التقويم لعرض الأوقات المتاحة</div>
 
   <template v-else>
-    <div class="date-line">التاريخ: {{ dateTitle }}</div>
+    <div class="date-line">📅 {{ dateTitle }}</div>
 
     <div class="card detail-card time-start-card" style="margin-top:14px">
       <h4>وقت بداية الجلسة <small style="font-weight:400;color:var(--mute)">سننسق باقي الأقسام بعده</small></h4>
 
-      <div v-if="firstGroup" class="time-start-service" :style="groupStyle(firstGroup)">
+      <!-- بطاقة الخدمة المختارة مخفية مؤقتًا من جزء وقت بداية الجلسة. -->
+      <div v-if="false && firstGroup" class="time-start-service" :style="groupStyle(firstGroup)">
         <span class="cat-ico"><svg viewBox="0 0 24 24" aria-hidden="true" v-html="categoryIconPath(firstGroup.icon)"></svg></span>
         <span class="time-start-copy">
           <b>{{ firstGroup.name }}</b>
@@ -320,12 +360,20 @@ const sessionEndTime = computed(() => {
         </span>
       </div>
 
+      <div class="periods booking-periods">
+        <button class="period" :class="{ sel: period === 'all' }" @click="period = 'all'">🗓️ كل اليوم</button>
+        <button class="period" :class="{ sel: period === 'am' }" @click="period = 'am'">☀️ صباحًا</button>
+        <button class="period" :class="{ sel: period === 'pm' }" @click="period = 'pm'">🌇 مساءً</button>
+      </div>
+      <div class="available-times-title">الأوقات المتاحة</div>
+
       <div v-if="firstServiceLoading || (firstService && !Array.isArray(slotsByService[firstService.id]))" class="empty-hint">
         <Skeleton height="44px" border-radius="8px" />
       </div>
       <div v-else-if="!initialSlots.length" class="empty-hint">لا توجد أوقات متاحة لهذا اليوم</div>
+      <div v-else-if="!visibleInitialSlots.length" class="empty-hint">لا توجد أوقات في هذه الفترة</div>
       <div v-else class="slots initial-slots">
-        <button v-for="t in initialSlots" :key="t" class="slot" :class="{ sel: firstServiceTime === t }" @click="chooseInitialTime(t)">
+        <button v-for="t in visibleInitialSlots" :key="t" class="slot" :class="{ sel: firstServiceTime === t }" @click="chooseInitialTime(t)">
           <span v-if="bestInitialSlot === t" class="tag">الأفضل</span>
           {{ fmtTimeStr(t) }}
         </button>

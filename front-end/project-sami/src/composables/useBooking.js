@@ -44,6 +44,7 @@ const state = reactive({
 
   mode: null,         // 'auto' | 'manual'
   emp: {},            // serviceId -> { id, name }
+  staffOptions: {},   // serviceId -> available employees; used by automatic assignment at time selection
 
   date: null,         // Date واحد مشترك لكل الخدمات المختارة
   time: {},           // serviceId -> "HH:mm"
@@ -144,12 +145,14 @@ export function useBooking() {
       case 2:
         return !!state.date && selSvcs.value.every(s => state.time[s.id])
       case 3:
-        return !!(state.cust.name.trim() && state.cust.phone.trim())
+        // بيانات العميل تُقرأ من الحساب عند الدفع؛ حقولها مخفية مؤقتًا في شاشة التأكيد.
+        return true
       case 4:
         if (payableTotal.value <= 0) {
           return !!(state.rewards.useWallet || state.rewards.useLoyalty || state.rewards.couponApplied || state.pay)
         }
-        return !!state.pay && (state.pay !== 'wallet' || (state.walletBalance ?? 0) >= payableTotal.value)
+        return !!state.pay
+        //return !!state.pay && (state.pay !== 'wallet' || (state.walletBalance ?? 0) >= payableTotal.value)
     }
     return false
   })
@@ -172,6 +175,7 @@ export function useBooking() {
     state.activeCat = null
     state.mode = null
     state.emp = {}
+    state.staffOptions = {}
     state.date = null
     state.time = {}
     state.notes = ''

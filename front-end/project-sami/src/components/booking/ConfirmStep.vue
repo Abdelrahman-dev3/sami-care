@@ -20,6 +20,35 @@ onMounted(() => {
 })
 
 const dateLabel = computed(() => (state.date ? fmtDate(state.date) : ''))
+const sessionCategories = computed(() => {
+  const groups = new Map()
+  selSvcs.value.forEach(service => {
+    const id = String(service.categoryId ?? service.categoryName ?? service.id)
+    if (!groups.has(id)) groups.set(id, {
+      id,
+      name: service.categoryName || service.name,
+      services: [],
+    })
+    groups.get(id).services.push(service)
+  })
+  const toMinutes = value => {
+    if (!value) return Number.MAX_SAFE_INTEGER
+    const [hours, minutes] = String(value).split(':').map(Number)
+    return Number.isFinite(hours) && Number.isFinite(minutes) ? hours * 60 + minutes : Number.MAX_SAFE_INTEGER
+  }
+  return [...groups.values()].map(group => {
+    const services = [...group.services].sort((a, b) => toMinutes(state.time[a.id]) - toMinutes(state.time[b.id]))
+    const employees = [...new Set(services.map(service => state.emp[service.id]?.name).filter(Boolean))]
+    return {
+      ...group,
+      services,
+      start: state.time[services[0]?.id] || '',
+      duration: services.reduce((total, service) => total + (Number(service.dur) || 0), 0),
+      price: services.reduce((total, service) => total + (Number(service.price) || 0), 0),
+      employees,
+    }
+  }).sort((a, b) => toMinutes(a.start) - toMinutes(b.start))
+})
 const suggestedProducts = computed(() => {
   const liveProducts = storeProducts.value.slice(0, 3)
   if (liveProducts.length) {
@@ -68,15 +97,14 @@ function toggleSuggestedProduct(product) {
   <div class="card detail-card">
     <h4><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg> تفاصيل الجلسة</h4>
     <div class="timeline-cards">
-      <div v-for="s in selSvcs" :key="s.id" class="tl">
+      <div v-for="group in sessionCategories" :key="group.id" class="tl">
         <div class="tl-main">
-          <b>{{ s.name }}</b>
-          <div class="with">{{ s.categoryName }}</div>
-          <div class="with">مع {{ state.emp[s.id]?.name || '—' }}</div>
+          <b>{{ group.name }}</b>
+          <div class="with">مع {{ group.employees.join('، ') || '—' }}</div>
         </div>
         <div class="tl-time">
-          <span class="tm">{{ fmtTimeStr(state.time[s.id]) }}</span>
-          <span class="dr">{{ s.dur }} دقيقة · {{ rs(s.price) }} ر.س</span>
+          <span class="tm">{{ fmtTimeStr(group.start) }}</span>
+          <span class="dr">{{ group.duration }} دقيقة · {{ rs(group.price) }} ر.س</span>
         </div>
       </div>
     </div>
@@ -95,7 +123,8 @@ function toggleSuggestedProduct(product) {
     </div>
   </div>
 
-  <div class="card detail-card">
+  <!-- بيانات العميل مخفية مؤقتًا؛ غيّر الشرط إلى true لإعادتها. -->
+  <div v-if="false" class="card detail-card">
     <h4><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> بيانات العميل</h4>
     <div class="cust-grid">
       <div class="fld"><small>👤 الاسم</small><input v-model="state.cust.name" /></div>

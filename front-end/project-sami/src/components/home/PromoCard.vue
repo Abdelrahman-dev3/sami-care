@@ -118,4 +118,8 @@ function goHomeService() {
 /* أيقونة البيت بدل شارة الخصم — نفس الدائرة الذهبية بلون داكن للأيقونة */
 .promo-card--home :deep(.promo-card__badge),
 .promo-card--home .promo-card__badge { color: #2a1f0c }
+@media (min-width: 951px) {
+  .promo-section .promo-card:not(.promo-card--home) { display: none }
+  .promo-section .promo-card--home { grid-column: 1 / -1; min-height: 230px }
+}
 </style>

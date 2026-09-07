@@ -47,13 +47,13 @@ const PAY_METHODS = computed(() => [
     logo: 'COD',
     enabled: !hasSubRewards.value,
   },
-  {
+  /*{
     id: 'wallet',
     n: 'المحفظة',
     d: state.walletBalance !== null ? `الرصيد الحالي ${rs(walletBalance.value)} ر.س` : 'ادفع من رصيد محفظتك',
     logo: 'W',
     enabled: walletBalance.value >= payableTotal.value && payableTotal.value > 0,
-  },
+  },*/
   { id: 'mada', n: 'مدى', d: 'قريبًا', logo: 'مدى', enabled: false },
   {
     id: 'card',
@@ -65,9 +65,9 @@ const PAY_METHODS = computed(() => [
   { id: 'tabby', n: 'تابي', d: 'قريبًا', logo: 'tabby', enabled: false },
 ])
 
-const walletInsufficient = computed(() =>
+/*const walletInsufficient = computed(() =>
   state.pay === 'wallet' && state.walletBalance !== null && state.walletBalance < payableTotal.value
-)
+)*/
 
 watch([hasSubRewards, payableTotal], () => {
   if (hasSubRewards.value && state.pay === 'cod') state.pay = payableTotal.value > 0 ? 'card' : null
@@ -197,7 +197,7 @@ watch(loyaltyMaxPoints, () => {
         <span><b>{{ m.n }}</b><small>{{ m.d }}</small></span>
         <span class="rad"><i></i></span>
       </div>
-      <p v-if="walletInsufficient" style="color:#b42318;font-size:12px;margin-top:8px">رصيد محفظتك لا يكفي لدفع القيمة كاملة، اختر وسيلة دفع أخرى.</p>
+      <!-- <p v-if="walletInsufficient" style="color:#b42318;font-size:12px;margin-top:8px">رصيد محفظتك لا يكفي لدفع القيمة كاملة، اختر وسيلة دفع أخرى.</p> -->
     </div>
     <div class="secure-line">🔒 جميع عمليات الدفع آمنة ومشفرة</div>
   </div>

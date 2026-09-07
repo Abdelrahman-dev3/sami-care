@@ -16,4 +16,6 @@
 
 .service-card--link{cursor:pointer;transition:transform .15s,box-shadow .15s}.service-card--link:active{transform:scale(.96)}.service-card--loading i,.service-card--loading small{display:block;height:9px;margin:8px auto 0;border-radius:999px;background:linear-gradient(90deg,#eee5d8,#faf7f2,#eee5d8);background-size:200% 100%;animation:serviceShimmer 1.2s linear infinite}.service-card--loading i{width:65%}.service-card--loading small{width:42%;height:7px}.services-message{margin:0 16px;padding:18px;border-radius:16px;background:#fff;color:var(--muted);text-align:center;font-size:12px}@keyframes serviceShimmer{to{background-position:-200% 0}}@media(max-width:430px){:scope{padding:0}.about-app-shell{box-shadow:none}}
 
+.service-card{height:auto;min-height:0}
+
 }

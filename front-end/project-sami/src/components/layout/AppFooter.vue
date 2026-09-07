@@ -13,6 +13,18 @@ const displayBranches = computed(() => {
     : [...list, { id: 'hm', home: true, name: 'خدمات منزلية', address: 'حلاقة شعر ولحية وماسكات طبيعية' }]
 })
 
+function phoneDigits(phone) {
+  const digits = String(phone || '').replace(/\D/g, '')
+  if (digits.startsWith('00966')) return digits.slice(2)
+  if (digits.startsWith('966')) return digits
+  if (digits.startsWith('0')) return `966${digits.slice(1)}`
+  return digits
+}
+
+const telHref = phone => `tel:+${phoneDigits(phone)}`
+const whatsappHref = phone => `https://wa.me/${phoneDigits(phone)}`
+const footerContactNumber = computed(() => displayBranches.value.find(branch => branch.contact_number)?.contact_number || '0569472722')
+
 onMounted(async () => {
   branches.value = await fetchBranches().catch(() => [])
 })
@@ -30,6 +42,7 @@ function branchName(branch) {
           <RouterLink class="logo" to="/"><span class="mark"><img src="/logo.png" alt="عناية سامي" /></span><span class="name"><b>عناية سامي</b><span>SAMI CARE</span></span></RouterLink>
           <p>مركز متخصص في العناية الرجالية المتكاملة بجدة، حيث تلتقي الفخامة بالاحترافية في كل تفصيلة.</p>
           <div class="socials">
+            <a :href="whatsappHref(footerContactNumber)" target="_blank" rel="noopener noreferrer" aria-label="واتساب">WA</a>
             <a href="https://x.com/samicare_sa" aria-label="X">X</a>
             <a href="https://www.instagram.com/samicare.sa/" aria-label="انستقرام">◎</a>
             <a href="https://www.facebook.com/samicare.sa" aria-label="فيسبوك">f</a>
@@ -48,12 +61,12 @@ function branchName(branch) {
            <div class="f-branch">
             <b>الادارة</b>
            
-            <a href="tel:0569472722">0569472722</a>
+            <a :href="telHref('0569472722')">0569472722</a>
           </div>
           <div v-for="branch in displayBranches" :key="branch.id" class="f-branch">
             <b>{{ branchName(branch) }}</b>
             <small>{{ branch.address || branch.address_line_1 }}</small>
-            <a v-if="branch.contact_number" :href="`tel:${branch.contact_number}`">{{ branch.contact_number }}</a>
+            <a v-if="branch.contact_number" :href="telHref(branch.contact_number)">{{ branch.contact_number }}</a>
           </div>
          
         </div>

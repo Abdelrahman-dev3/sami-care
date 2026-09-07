@@ -317,7 +317,11 @@ nav.links + .nav-actions{margin-inline-start:0}
 .time-grid{display:grid;grid-template-columns:minmax(300px,340px) minmax(0,1fr);gap:18px;align-items:start}
 .time-grid>*{min-width:0}
 .cal{padding:20px;box-shadow:0 18px 38px -30px rgba(80,60,20,.42)}
-.cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.loyalty-preview{margin:0 0 16px;padding:24px 28px;border:1.5px solid var(--gold);border-radius:20px;background:linear-gradient(135deg,#fffdf8,#fff8eb);text-align:center;box-shadow:0 16px 34px -30px rgba(143,89,15,.65)}
+.loyalty-preview h3{margin:0 0 16px;font-family:var(--font-d);font-size:22px;color:var(--gold-deep)}
+.loyalty-preview p{margin:0;color:var(--mute);font-size:14px;line-height:1.9}.loyalty-preview p b{color:var(--ink)}
+.loyalty-preview strong{display:block;color:var(--gold-deep);font-size:14px;line-height:1.8}
+.cal-head{display:flex;align-items:center;justify-content:center;margin-bottom:14px}
 .cal-head b{font-family:var(--font-d);font-size:16px;color:var(--ink)}
 .cal-nav{width:32px;height:32px;border-radius:9px;border:1px solid var(--line);display:grid;place-items:center;color:var(--gold-deep);transition:var(--dur)}
 .cal-nav:hover:not(:disabled){background:rgba(198,161,91,.1)}
@@ -336,6 +340,10 @@ nav.links + .nav-actions{margin-inline-start:0}
 .cal-legend{display:flex;gap:16px;margin-top:14px;padding-top:12px;border-top:1px dashed var(--line);font-size:11px;color:var(--mute)}
 .cal-legend span{display:flex;gap:6px;align-items:center}
 .cal-legend i{width:7px;height:7px;border-radius:50%}
+.date-line{display:flex;align-items:center;gap:10px;margin:22px 0 0;padding:18px 22px 0;border-top:1px dashed var(--line);font-family:var(--font-d);font-size:22px;color:var(--ink)}
+.booking-periods{margin:4px 0 16px}
+.booking-periods .period{min-height:54px;font-size:15px;background:#fff}
+.available-times-title{margin-bottom:12px;color:var(--mute);font-size:13px}
 .times-panel{padding:22px;box-shadow:0 18px 38px -30px rgba(80,60,20,.42)}
 .times-panel .date-line{display:flex;align-items:center;gap:10px;font-family:var(--font-d);font-size:18px;color:var(--ink);margin-bottom:16px}
 .notice{display:flex;gap:10px;align-items:center;background:rgba(198,161,91,.1);border:1px solid var(--line);
@@ -363,6 +371,7 @@ nav.links + .nav-actions{margin-inline-start:0}
 .time-start-service{display:flex;align-items:center;gap:12px;margin:0 0 16px;padding:12px 14px;border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,.94),rgba(252,248,238,.86));border:1px solid rgba(198,161,91,.22)}
 .time-start-service .cat-ico,.plan-icon{width:42px;height:42px;display:grid;place-items:center;flex:0 0 auto;border-radius:12px;color:var(--acc,var(--gold-deep));background:rgba(198,161,91,.1);border:1px solid rgba(198,161,91,.18)}
 .time-start-service .cat-ico svg,.plan-icon svg{width:24px;height:24px;stroke:currentColor}
+.session-plan .plan-icon{color:var(--gold-deep)!important;background:rgba(198,161,91,.12)!important;border-color:rgba(198,161,91,.28)!important}
 .time-start-copy{min-width:0;display:grid;gap:3px}.time-start-copy b{font-size:13.5px}.time-start-copy small{font-size:11px;color:var(--mute);line-height:1.6;white-space:normal}
 .initial-slots{min-height:0}
 .session-plan{margin-top:22px;padding:20px;border-radius:16px;background:#FCFAF4;border:1px solid var(--line)}
@@ -512,7 +521,7 @@ footer{background:radial-gradient(circle at 18% 0,rgba(232,190,108,.16),transpar
 .tl-time{display:flex;flex-direction:column;align-items:flex-end;flex:none}
 .tl b{font-size:13.5px;display:block;color:var(--ink);line-height:1.5}
 .tl .with{font-size:11px;color:var(--mute);margin-top:2px;line-height:1.65;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  text-overflow:ellipsis;white-space:nowrap}
 .tl .tm{font-size:12.5px;font-weight:800;display:block;text-align:end;white-space:nowrap;
   font-variant-numeric:tabular-nums}
 .tl .dr{font-size:10.5px;color:var(--mute);display:block;text-align:end;margin-top:3px;white-space:nowrap}

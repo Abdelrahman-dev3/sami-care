@@ -117,7 +117,12 @@ function doGiftPay() {
         send_channel: state.method || 'link',
       })
       const wallet = state.pay === 'wallet'
-      await initPayment(wallet ? 'card' : 'cod', { wallet })
+      const packageSubtotal = Math.max(Number(pkgOf(state.gpkg)?.price) || 0, 0)
+      const giftTotalWithVat = packageSubtotal + Math.round(packageSubtotal * 0.15)
+      await initPayment(wallet ? 'card' : 'cod', {
+        wallet,
+        walletAmount: wallet ? giftTotalWithVat : undefined,
+      })
       state.ref = created?.data?.gift_card_id ? `#GIFT-${created.data.gift_card_id}` : '#GIFT'
       state.claimUrl = created?.data?.share_url || created?.data?.claim_url || null
       state.claimToken = created?.data?.claim_token || null
@@ -156,8 +161,20 @@ function doBookPay() {
 
       /* gateway:'cod' بيتجاهل علم wallet تمامًا وبيخصم عربون نسبي ثابت مش القيمة الكاملة —
          راجع نفس الملاحظة فى useGifts.js. أي بوابة غير cod بتاخد المسار الصح لخصم الرصيد كامل. */
-      const isWallet = B.pay === 'wallet'
-      const payment = await initPayment(isWallet ? 'card' : 'cod', { wallet: isWallet })
+      const packageSubtotal = Math.max(Number(pkgOf(B.pkg)?.price) || 0, 0)
+      const packageTotalWithVat = packageSubtotal + Math.round(packageSubtotal * 0.15)
+      const walletAmount = B.useWallet
+        ? Math.min(Math.max(Number(B.walletAmount) || 0, 0), Number(B.walletBalance) || 0, packageTotalWithVat)
+        : 0
+      const loyaltyPoints = B.useLoyalty ? parseInt(B.loyaltyPointsUsed, 10) || 0 : 0
+      const hasRewards = walletAmount > 0 || loyaltyPoints > 0
+      const gateway = hasRewards ? 'card' : (B.pay === 'cash' ? 'cod' : 'card')
+      const payment = await initPayment(gateway, {
+        wallet: walletAmount > 0,
+        walletAmount,
+        loyalty: loyaltyPoints > 0,
+        loyaltyPoints,
+      })
       state.bk.ref = payment.invoice_id || null
       state.bk.done = true
       scrollTo({ top: 0, behavior: 'smooth' })
