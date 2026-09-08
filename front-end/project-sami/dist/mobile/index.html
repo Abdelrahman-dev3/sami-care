@@ -1559,7 +1559,8 @@ async function authPost(path,body){
    localized() تقدر تختار النسخة الصح من بيانات الـ API من أول تحميل. */
 const LANG_KEY='samiMobileLang';
 function getLang(){ try{ return localStorage.getItem(LANG_KEY)==='en'?'en':'ar' }catch(e){ return 'ar' } }
-function setLang(l){ try{ localStorage.setItem(LANG_KEY,l) }catch(e){} }
+function setLang(l){ try{ localStorage.setItem(LANG_KEY,l) }catch(e){} try{parent.postMessage({type:'sami:language',lang:l},location.origin)}catch(e){} }
+try{parent.postMessage({type:'sami:language',lang:getLang()},location.origin)}catch(e){}
 
 /* حقول الباك-إند أحيانًا نص عادي وأحيانًا كائن ترجمات {ar,en,...} (Spatie\Translatable) — نوحّدها لنص واحد
    حسب اللغة الحالية (مش عربي دايمًا). */

@@ -167,3 +167,74 @@
 }
 
 .home-page .offer-card.offer-card--dynamic{background:linear-gradient(90deg,color-mix(in srgb,var(--branch-banner-color,#f3eadf) 88%,transparent),var(--branch-banner-color,#f3eadf) 54%,transparent 76%),var(--branch-banner-image) center/cover no-repeat!important}.home-page .offer-card.offer-card--dynamic.offer-card--no-overlay{background:linear-gradient(90deg,color-mix(in srgb,var(--branch-banner-color,#f3eadf) 58%,transparent),transparent 66%),var(--branch-banner-image) center/cover no-repeat!important}.home-page .offer-card__description{position:relative;z-index:2;direction:rtl;align-self:flex-start;max-width:52%;margin:-2px 0 12px;color:#4d4034;font-size:10px;line-height:1.7;text-align:right}.home-page .offer-card--dynamic h3{margin-bottom:8px}@media(max-width:560px){.home-page .offer-card__description{max-width:62%}}
+
+.home-page .product-grid article .product-cart-link {
+    border: 0;
+    cursor: pointer;
+}
+
+.home-page .product-grid article .product-cart-link:disabled {
+    opacity: .55;
+    cursor: wait;
+}
+
+.home-page .product-cart-link small {
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    min-width: 17px;
+    height: 17px;
+    border-radius: 50%;
+    background: #fff;
+    color: #99641c;
+    font-size: 10px;
+    display: grid;
+    place-items: center;
+}
+
+.home-cart-message {
+    margin-top: 12px;
+    color: #99641c;
+    font-size: 13px;
+    text-align: center;
+}
+
+.home-qty-control {
+    position: absolute;
+    right: 0;
+    bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px;
+    border-radius: 18px;
+    background: #fff;
+    border: 1px solid #d8bd91;
+}
+
+.home-qty-control button {
+    width: 25px;
+    height: 25px;
+    border: 0;
+    border-radius: 50%;
+    background: #c98b31;
+    color: #fff;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.home-qty-control button:disabled {
+    opacity: .5;
+    cursor: wait;
+}
+
+.home-qty-control input {
+    width: 28px;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    text-align: center;
+    font-weight: 700;
+    color: #5e421d;
+}

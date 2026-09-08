@@ -4,7 +4,6 @@ import { useRouter } from 'vue-router'
 import BaseButton from '@/components/common/BaseButton.vue'
 import SectionTitle from '@/components/common/SectionTitle.vue'
 import Skeleton from '@/components/common/SkeletonLoader.vue'
-import { useServiceLocation } from '@/composables/useServiceLocation'
 
 const props = defineProps({
     offers: {
@@ -18,7 +17,6 @@ const props = defineProps({
 })
 
 const router = useRouter()
-const { setLocation } = useServiceLocation()
 
 const HOME_ICON = 'M3 9l9-6 9 6v11a1 1 0 01-1 1H4a1 1 0 01-1-1z'
 const HOME_ICON_DOOR = 'M9 21V12h6v9'
@@ -62,8 +60,7 @@ const promoCards = computed(() => {
 })
 
 function goHomeService() {
-  setLocation('hm')
-  router.push('/booking')
+  router.push({ path: '/booking', query: { branch: 'hm' } })
 }
 </script>
 

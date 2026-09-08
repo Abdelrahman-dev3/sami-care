@@ -6,6 +6,7 @@ import AuthModal from '@/components/common/AuthModal.vue'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import CartDrawer from '@/components/store/CartDrawer.vue'
+import FloatingContactActions from '@/components/common/FloatingContactActions.vue'
 import { useScrollReveal } from '@/composables/useScrollReveal'
 import { useStore } from '@/composables/useStore'
 
@@ -122,6 +123,7 @@ useScrollReveal()
     <LocationPicker />
     <CartDrawer :open="cartDrawerOpen" @close="closeCart" @checkout="checkoutCart" />
   </template>
+  <FloatingContactActions />
   <AuthModal />
 </template>
 

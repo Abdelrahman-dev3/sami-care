@@ -6,7 +6,7 @@
     ServicesStep → EmployeeStep → TimeStep → ConfirmStep → PayStep → BookingSuccess
   الملخص الجانبي يظهر عند اختيار خدمة واحدة على الأقل.
 */
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { usePageStyles } from '@/composables/usePageStyles'
 import { useInternalLinks } from '@/composables/useInternalLinks'
@@ -27,10 +27,27 @@ import BookingSummary from '@/components/booking/BookingSummary.vue'
 
 const root = ref(null)
 const route = useRoute()
-const { current, locations, loadServiceLocations } = useServiceLocation()
+const { current, locations, loadServiceLocations, setLocation } = useServiceLocation()
 const { requireAuth, user } = useAuth()
 
 loadServiceLocations()
+
+// When booking is opened from a branch card, prefer that branch over the
+// previously saved location. hm is the public URL alias for home service.
+watch(
+  [() => route.query.branch, locations],
+  ([requestedBranch, availableLocations]) => {
+    const branchParam = Array.isArray(requestedBranch) ? requestedBranch[0] : requestedBranch
+    if (!branchParam || !availableLocations.length) return
+
+    const requestedLocation = branchParam === 'hm' || branchParam === 'home-service'
+      ? availableLocations.find(location => location.home)
+      : availableLocations.find(location => String(location.id) === String(branchParam))
+
+    if (requestedLocation) setLocation(requestedLocation.id)
+  },
+  { immediate: true },
+)
 const { state, selSvcs, priceParts, canProceed, nextLabel, reset, payableTotal, walletDiscount, loyaltyPointsUsed } = useBooking()
 
 usePageStyles(pageCss, 'booking')
