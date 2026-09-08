@@ -120,12 +120,21 @@
         initDatatable({
             url: "{{ route('backend.reports.financial-report.index_data') }}",
             finalColumns,
-            advanceFilter: () => {
+            /*advanceFilter: () => {
                 return {
                     report_type: $('[name="report_type"]').val(),
                     date_range: $('[name="date_range"]').val().split(' to '),
                 }
-            }
+            }*/
+            
+            advanceFilter: () => {
+    const dateRange = $('[name="date_range"]').val();
+
+    return {
+        report_type: $('[name="report_type"]').val(),
+        date_range: dateRange ? dateRange.split(' to ') : [],
+    };
+}
         });
     })
 

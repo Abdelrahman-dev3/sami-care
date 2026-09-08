@@ -82,6 +82,17 @@ class CityController extends Controller
     public function index_data(Request $request)
     {
         $query = City::query();
+        
+        $locale = app()->getLocale();
+
+if (! in_array($locale, ['ar', 'en'], true)) {
+    $locale = 'ar';
+}
+
+$query->select('cities.*')
+    ->selectRaw(
+        "JSON_UNQUOTE(JSON_EXTRACT(name, '$.\"{$locale}\"')) as localized_name"
+    );
 
         $filter = $request->filter;
 
@@ -98,6 +109,7 @@ class CityController extends Controller
             ->addColumn('action', function ($data) {
                 return view('world::backend.city.action_column', compact('data'));
             })
+            
             ->editColumn('status', function ($data) {
                 // return $data->getStatusLabelAttribute();
                 $checked = '';
@@ -111,6 +123,9 @@ class CityController extends Controller
                                 </div>
                             ';
             })
+             ->editColumn('name', function ($data) {
+        return $data->localized_name ?: '-';
+    })
             ->editColumn('state_id', function ($data) {
                 return $data->city->name ?? '-';
 

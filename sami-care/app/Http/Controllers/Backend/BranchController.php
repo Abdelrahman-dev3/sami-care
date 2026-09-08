@@ -231,7 +231,32 @@ class BranchController extends Controller
                 return view('backend.branch.branch_id', compact('data', 'email'));
             })
             ->editColumn('address.city', function ($data) {
-                return optional(optional($data->address)->city_data)->name ?? '-';
+                //return optional(optional($data->address)->city_data)->name ?? '-';
+
+                $locale = app()->getLocale();
+
+    $cityName = optional(optional($data->address)->city_data)->name;
+
+    if (is_string($cityName)) {
+        $decodedName = json_decode($cityName, true);
+
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decodedName)) {
+            $cityName = $decodedName;
+        }
+    }
+
+    if (is_object($cityName)) {
+        $cityName = (array) $cityName;
+    }
+
+    if (is_array($cityName)) {
+        return $cityName[$locale]
+            ?? $cityName['ar']
+            ?? $cityName['en']
+            ?? '-';
+    }
+
+    return $cityName ?: '-';
             })
             ->editColumn('address.postal_code', function ($data) {
                 return optional($data->address)->postal_code ?? '-';

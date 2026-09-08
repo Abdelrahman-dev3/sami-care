@@ -395,7 +395,7 @@ Index Of Script
     }
   }
   /*-------------Sidebar Toggle-----------------*/
-  function updateSidebarType() {
+  /*function updateSidebarType() {
     if (typeof IQSetting !== typeof undefined) {
       const sidebarType = IQSetting.options.setting.sidebar_type.value
       const newTypes = sidebarType
@@ -407,8 +407,34 @@ Index Of Script
       }
       IQSetting.sidebar_type(newTypes)
     }
+  }*/
+  
+  function updateSidebarType() {
+  if (
+    typeof IQSetting === 'undefined' ||
+    !IQSetting.options ||
+    !IQSetting.options.setting ||
+    !IQSetting.options.setting.sidebar_type
+  ) {
+    return
   }
-  const sidebarToggle = (elem) => {
+
+  const sidebarType = IQSetting.options.setting.sidebar_type.value
+  const newTypes = Array.isArray(sidebarType)
+    ? [...sidebarType]
+    : [sidebarType]
+
+  const index = newTypes.indexOf('sidebar-mini')
+
+  if (index !== -1) {
+    newTypes.splice(index, 1)
+  } else {
+    newTypes.push('sidebar-mini')
+  }
+
+  IQSetting.sidebar_type(newTypes)
+}
+  /*const sidebarToggle = (elem) => {
     elem.addEventListener('click', (e) => {
       const sidebar = document.querySelector('.sidebar')
       if (sidebar.classList.contains('sidebar-mini')) {
@@ -419,7 +445,23 @@ Index Of Script
         updateSidebarType()
       }
     })
-  }
+  }*/
+  
+  const sidebarToggle = (elem) => {
+  if (!elem) return
+
+  elem.addEventListener('click', (e) => {
+    e.preventDefault()
+
+    const sidebar = document.querySelector('[data-toggle="main-sidebar"]')
+
+    // منع الخطأ إذا لم يكن الـ sidebar موجودًا في الصفحة
+    if (!sidebar) return
+
+    sidebar.classList.toggle('sidebar-mini')
+    updateSidebarType()
+  })
+}
   const sidebarToggleBtn = document.querySelectorAll('[data-toggle="sidebar"]')
   Array.from(sidebarToggleBtn, (sidebarBtn) => {
     sidebarToggle(sidebarBtn)
