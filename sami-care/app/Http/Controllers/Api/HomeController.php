@@ -10,6 +10,7 @@ use Modules\Product\Transformers\ProductResource;
 use Modules\Package\Models\Package;
 use App\Models\Branch;
 use App\Models\BookingReview;
+use App\Models\Ouroffersection;
 use App\Models\Wheel;
 
 class HomeController extends Controller
@@ -63,6 +64,14 @@ class HomeController extends Controller
             ->get()
             ->map(fn(Branch $branch) => $this->transformBranch($branch));
 
+        // Banner displayed beside the branches section.
+        $branchBanner = Ouroffersection::query()
+            ->active()
+            ->whereDate('start_date', '<=', now()->toDateString())
+            ->whereDate('end_date', '>=', now()->toDateString())
+            ->latest('id')
+            ->first();
+
 
         // 6. Customer Reviews
         $reviews = BookingReview::with(['user', 'booking.branch'])
@@ -95,6 +104,7 @@ class HomeController extends Controller
                 'products' => ProductResource::collection($products),
                 'packages' => $packages,
                 'branches' => $branches,
+                'branch_banner' => $branchBanner ? $this->transformBranchBanner($branchBanner) : null,
                 'reviews' => $reviews,
                 'wheel_prizes' => $wheel_prizes,
             ],
@@ -102,6 +112,20 @@ class HomeController extends Controller
         ]);
     }
 
+    private function transformBranchBanner(Ouroffersection $banner): array
+    {
+        return [
+            'id' => $banner->id,
+            'title' => $banner->title,
+            'description' => $banner->description,
+            'discount_type' => $banner->discount_type,
+            'discount_value' => (float) $banner->discount_value,
+            'color' => $banner->color,
+            'image' => $banner->image ? asset($banner->image) : null,
+            'link' => $banner->link,
+            'overlay' => (bool) $banner->overlay,
+        ];
+    }
     private function transformPackage(Package $package): array
     {
         return [

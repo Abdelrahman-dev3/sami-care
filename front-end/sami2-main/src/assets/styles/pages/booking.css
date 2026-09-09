@@ -475,8 +475,7 @@ footer{background:radial-gradient(circle at 18% 0,rgba(232,190,108,.16),transpar
 .tl-main{min-width:0}
 .tl-time{display:flex;flex-direction:column;align-items:flex-end;flex:none}
 .tl b{font-size:13.5px;display:block;color:var(--ink);line-height:1.5}
-.tl .with{font-size:11px;color:var(--mute);margin-top:2px;line-height:1.65;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tl .with{font-size:11px;color:var(--mute);margin-top:2px;line-height:1.65;text-overflow:ellipsis;white-space:nowrap}
 .tl .tm{font-size:12.5px;font-weight:800;display:block;text-align:end;white-space:nowrap;
   font-variant-numeric:tabular-nums}
 .tl .dr{font-size:10.5px;color:var(--mute);display:block;text-align:end;margin-top:3px;white-space:nowrap}

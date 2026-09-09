@@ -86,7 +86,10 @@ function doPay() {
 }
 
 function recipientURL() {
-  return new URL('gift-recipient/', location.href).href + '?ref=' + encodeURIComponent(state.ref || '')
+  if (state.claimToken) {
+    return new URL(`/gift-recipient?token=${encodeURIComponent(state.claimToken)}`, location.origin).href
+  }
+  return state.claimUrl || new URL('/gift-recipient', location.origin).href
 }
 
 const I = {

@@ -4,7 +4,6 @@ import { useRouter } from 'vue-router'
 import BaseButton from '@/components/common/BaseButton.vue'
 import SectionTitle from '@/components/common/SectionTitle.vue'
 import Skeleton from '@/components/common/SkeletonLoader.vue'
-import { useServiceLocation } from '@/composables/useServiceLocation'
 
 const props = defineProps({
     offers: {
@@ -18,7 +17,6 @@ const props = defineProps({
 })
 
 const router = useRouter()
-const { setLocation } = useServiceLocation()
 
 const HOME_ICON = 'M3 9l9-6 9 6v11a1 1 0 01-1 1H4a1 1 0 01-1-1z'
 const HOME_ICON_DOOR = 'M9 21V12h6v9'
@@ -57,13 +55,17 @@ const promoCards = computed(() => {
     },*/
 
     {id:1,type:'offer',title:'عرض الافتتاح',text:'خصم 25% على جميع الباقات هذا الأسبوع',badge:'25%',cta:'اكتشف العرض',href:'/packages-gifts'},
-  {id:2,type:'home',eyebrow:'✦ نصل إليك',title:'الخدمات المنزلية',text:'حلاقة وعناية وماسكات طبيعية في راحة منزلك داخل جدة',cta:'احجز الخدمة المنزلية',href:'/booking'}
+  {id:2,type:'home',eyebrow:'✦ نصل إليك',title:'الخدمات المنزلية',text:'حلاقة وعناية وماسكات طبيعية في راحة منزلك داخل جدة',cta:'احجز الخدمة المنزلية',href:'/booking?branch=hm'}
   ]
 })
 
 function goHomeService() {
+<<<<<<< HEAD
   setLocation('home-service')
   router.push('/booking')
+=======
+  router.push({ path: '/booking', query: { branch: 'hm' } })
+>>>>>>> d7635d7e750ffd15d04dcc6f43b7358a40378eb6
 }
 </script>
 
@@ -118,4 +120,8 @@ function goHomeService() {
 /* أيقونة البيت بدل شارة الخصم — نفس الدائرة الذهبية بلون داكن للأيقونة */
 .promo-card--home :deep(.promo-card__badge),
 .promo-card--home .promo-card__badge { color: #2a1f0c }
+@media (min-width: 951px) {
+  .promo-section .promo-card:not(.promo-card--home) { display: none }
+  .promo-section .promo-card--home { grid-column: 1 / -1; min-height: 230px }
+}
 </style>

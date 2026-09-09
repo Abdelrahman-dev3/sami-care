@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAuth } from '@/composables/useAuth'
 
 const HomeView = () => import('@/views/HomeView.vue')
 const BookingView = () => import('@/views/BookingView.vue')
@@ -30,7 +31,7 @@ const router = createRouter({
   routes: [
     { path: '/', name: 'home', component: HomeView },
     { path: '/index.html', redirect: '/' },
-    { path: '/booking', alias: '/booking.html', name: 'booking', component: BookingView },
+    { path: '/booking', alias: '/booking.html', name: 'booking', component: BookingView, meta: { requiresAuth: true } },
     { path: '/services', alias: '/services.html', name: 'services', component: ServicesView },
     { path: '/services/:id', name: 'service-detail', component: ServiceDetailView },
     { path: '/store', alias: '/store.html', name: 'store', component: StoreView },
@@ -42,11 +43,21 @@ const router = createRouter({
     { path: '/account', name: 'account', component: AccountView },
     { path: '/terms', alias: '/TermsAndConditions', name: 'terms', component: TermsView },
     { path: '/privacy-policy', name: 'privacy-policy', component: PrivacyPolicyView },
+    { path: '/page-about', alias: '/about.html', name: 'about', component: AboutView },
     { path: '/:pathMatch(.*)*', redirect: '/' },
     { path: '/blog', alias: '/blog.html', name: 'blog', component: BlogView },
     { path: '/blog/:slug', name: 'blog-detail', component: BlogDetailView },
-    { path: '/page-about', alias: '/about.html', name: 'about', component: AboutView },
+    
   ]
+})
+
+router.beforeEach(to => {
+  if (!to.meta.requiresAuth) return true
+  const { isAuthenticated, openAuthModal } = useAuth()
+  if (isAuthenticated.value) return true
+
+  openAuthModal(() => router.push(to.fullPath))
+  return { name: 'home' }
 })
 
 /*

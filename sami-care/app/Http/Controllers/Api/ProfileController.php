@@ -28,13 +28,15 @@ class ProfileController extends Controller
             ->whereHas('services')
             ->whereNull('deleted_by');
 
-        $allBookings = (clone $bookingsQuery)->get();
+        $allBookings = (clone $bookingsQuery)->latest('id')->get();
         $currentBookings = (clone $bookingsQuery)
             ->whereNotIn('status', ['completed', 'canceled', 'cancelled'])
+            ->latest('id')
             ->get();
         $completedBookings = (clone $bookingsQuery)
             ->paid()
             ->where('status', 'completed')
+            ->latest('id')
             ->get();
 
         $giftCards = GiftCard::query()

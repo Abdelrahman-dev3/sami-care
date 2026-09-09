@@ -92,7 +92,24 @@ class ReportsController extends Controller
         $filter = $request->filter ?? [];
         $reportType = $filter['report_type'] ?? 'daily';
 
-        [$startDate, $endDate] = $this->parseDateRange($filter['date_range'] ?? []);
+        $dateRange = $filter['date_range'] ?? [];
+        
+        if ($reportType === 'daily' && empty($dateRange)) {
+            $dateRange = [
+                now()->startOfDay()->format('d-m-Y'),
+                now()->endOfDay()->format('d-m-Y'),
+            ];
+        }
+        
+        if ($reportType === 'monthly' && empty($dateRange)) {
+            $dateRange = [
+                now()->startOfMonth()->format('d-m-Y'),
+                now()->endOfMonth()->format('d-m-Y'),
+            ];
+        }
+
+        //[$startDate, $endDate] = $this->parseDateRange($filter['date_range'] ?? []);
+        [$startDate, $endDate] = $this->parseDateRange($dateRange);
 
         $bookingQuery = BookingTransaction::with(['booking.services', 'booking.bookingPackages'])
             ->where('payment_status', 1);
@@ -440,8 +457,16 @@ class ReportsController extends Controller
 
     public function order_report_index_data(DataTables $datatable, Request $request)
     {
-        $bookings = Booking::with('booking_service.employee', 'booking_service.service', 'user', 'bookingTransaction');
-
+        //$bookings = Booking::with('booking_service.employee', 'booking_service.service', 'user', 'bookingTransaction');
+        
+        $bookings = Booking::with([
+    'booking_service.employee',
+    'booking_service.service',
+    'bookingPackages',
+    'bookingTransaction',
+    'user',
+    //'paidTransaction',
+]);
 
         $filter = $request->filter;
 
@@ -485,7 +510,56 @@ class ReportsController extends Controller
                 return customDate($data->created_at);
             })
             ->editColumn('items', function ($data) {
-                return $data->booking_service->pluck('service.name')->join(', ');
+                //return $data->booking_service->pluck('service.name')->join(', ');
+                $items = collect();
+
+    // الحجوزات العادية بالخدمات
+    foreach ($data->booking_service as $bookingService) {
+        $serviceName = optional($bookingService->service)->name;
+
+        if (is_array($serviceName)) {
+            $locale = app()->getLocale();
+            $serviceName = $serviceName[$locale]
+                ?? $serviceName['ar']
+                ?? $serviceName['en']
+                ?? null;
+        }
+
+        if ($serviceName) {
+            $items->push('خدمة: ' . $serviceName);
+        }
+    }
+
+    // الحجوزات التي تحتوي على باقات / إهداءات
+    foreach ($data->bookingPackages as $bookingPackage) {
+        $packageName = $bookingPackage->name;
+
+        if (is_string($packageName)) {
+            $decodedName = json_decode($packageName, true);
+
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decodedName)) {
+                $locale = app()->getLocale();
+                $packageName = $decodedName[$locale]
+                    ?? $decodedName['ar']
+                    ?? $decodedName['en']
+                    ?? null;
+            }
+        }
+
+        if (is_array($packageName)) {
+            $locale = app()->getLocale();
+            $packageName = $packageName[$locale]
+                ?? $packageName['ar']
+                ?? $packageName['en']
+                ?? null;
+        }
+
+        if ($packageName) {
+            $items->push('باقة / إهداء: ' . $packageName);
+        }
+    }
+
+    return $items->join('<br>');
             })
             ->editColumn('payment', function ($data) {
                 return $data->is_paid ? __('order_report.paid') : __('order_report.unpaid');
@@ -517,7 +591,7 @@ class ReportsController extends Controller
                 return $diff < 25 ? $data->updated_at->diffForHumans() : $data->updated_at->isoFormat('llll');
             })
             ->orderColumns(['id'], '-:column $1')
-            ->rawColumns(['phone', 'customer_name', 'payment', 'status'])
+            ->rawColumns(['phone', 'customer_name', 'payment', 'status','items'])
             ->toJson();
     }
 

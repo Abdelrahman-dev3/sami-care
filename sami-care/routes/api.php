@@ -33,6 +33,7 @@ use App\Http\Controllers\Api\MobileCartController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\WheelController;
 use App\Http\Controllers\Api\CafeController;
+use App\Http\Controllers\Api\GiftClaimController;
 use App\Http\Controllers\Backend\TermsAndConditionsController;
 
 /*
@@ -150,6 +151,7 @@ Route::prefix('services')->group(function () {
 
 Route::prefix('gift-cards')->group(function () {
     Route::controller(GiftCardController::class)->group(function () {
+        Route::get('/claim/{token}', [GiftClaimController::class, 'show']);
         Route::get('/', 'index')->name('gift.page');
         Route::post('/', 'store')->name('gift.create');
         Route::get('/payment-result', 'handlePaymentResult')->name('gift.payment_result');

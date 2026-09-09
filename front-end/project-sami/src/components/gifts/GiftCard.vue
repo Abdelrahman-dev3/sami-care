@@ -1,16 +1,12 @@
 <script setup>
-/*
-  بطاقة الإهداء (المعاينة) — مُرحَّلة حرفيًا من giftCardHTML()
-  مشتركة بين صفحة الإهداء وصفحة الباقات (الدالة متطابقة في الملفين).
-
-  يستقبل معرّف التصميم كخاصية بدل قراءته من حالة صفحة بعينها،
-  ليعمل مع أي من الصفحتين.
-*/
 import { computed } from 'vue'
 import { DESIGNS } from '@/data/gifts'
 
 const props = defineProps({
   design: { type: String, default: 'lux-dark' },
+  recipient: { type: String, default: '' },
+  sender: { type: String, default: '' },
+  message: { type: String, default: '' },
 })
 
 const d = computed(() => DESIGNS.find(x => x.id === props.design) || DESIGNS[0])
@@ -30,5 +26,18 @@ const d = computed(() => DESIGNS.find(x => x.id === props.design) || DESIGNS[0])
     <h3>{{ d.n }}</h3>
     <div class="tg">هدية فاخرة بتجربة عناية ملكية</div>
     <div class="hr" :style="`background:${d.fg}`"></div>
+    <div v-if="recipient || sender || message" class="gift-card-personal">
+      <b v-if="recipient">إلى: {{ recipient }}</b>
+      <p>{{ message || 'اكتب رسالتك الشخصية لتظهر هنا' }}</p>
+      <small v-if="sender">من: {{ sender }}</small>
+    </div>
   </div>
 </template>
+
+<style scoped>
+.gift-card-personal{position:relative;z-index:3;width:min(88%,420px);margin:12px auto 0;padding:12px 14px;border:1px solid currentColor;border-radius:13px;background:rgba(0,0,0,.14);backdrop-filter:blur(3px);text-align:center}
+.gift-card-personal b{display:block;font-size:13px;margin-bottom:6px}
+.gift-card-personal p{margin:0;white-space:pre-line;overflow-wrap:anywhere;font-size:12px;line-height:1.75;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.gift-card-personal small{display:block;margin-top:7px;color:inherit;font-size:10px;opacity:.88}
+@media(max-width:640px){.gift-card-personal{width:92%;padding:10px 11px}.gift-card-personal p{font-size:11px}}
+</style>

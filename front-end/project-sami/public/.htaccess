@@ -13,3 +13,12 @@
   # أي حاجة تانية ترجع لـ index.html عشان Vue Router يتولى التوجيه من المتصفح
   RewriteRule . /index.html [L]
 </IfModule>
+
+# منع تثبيت shell قديم يشير إلى نسخة قديمة من mobile/index.html.
+<IfModule mod_headers.c>
+  <FilesMatch "(?i)^(index|200)\.html$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+  </FilesMatch>
+</IfModule>

@@ -28,7 +28,7 @@ class GiftCardPaymentActivatorService
                 'gift_status' => GiftCard::STATUS_PAID,
             ]);
 
-            if ($giftCard->recipient_phone) {
+            if ($giftCard->send_channel === 'sms' && $giftCard->recipient_phone) {
                 Log::channel('gift_sms')->info('Gift card activated, SMS dispatch queued after commit', [
                     'gift_card_id' => $giftCard->id,
                     'user_id' => $userId,
@@ -57,11 +57,13 @@ class GiftCardPaymentActivatorService
                         'last_error' => $smsService->getLastError(),
                     ]);
                 });
-            } else {
+            } elseif ($giftCard->send_channel === 'sms') {
                 Log::channel('gift_sms')->warning('Gift card activated without recipient phone; SMS not sent', [
                     'gift_card_id' => $giftCard->id,
                     'user_id' => $userId,
                 ]);
+            } else {
+                $giftCard->forceFill(['send_status' => 'ready', 'send_error' => null])->save();
             }
         }
     }

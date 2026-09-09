@@ -18,6 +18,8 @@ class GiftCard extends Model
     protected $fillable = [
         'recipient_name',
         'recipient_phone',
+        'sender_name',
+        'design',
         'message',
         'requested_services',
         'requested_packages',
@@ -85,6 +87,15 @@ class GiftCard extends Model
         }
 
         return route('gift.claim', ['token' => $this->claim_token]);
+    }
+
+    public function getShareUrlAttribute(): ?string
+    {
+        if (blank($this->claim_token)) {
+            return null;
+        }
+
+        return rtrim(env('FRONTEND_URL'), '/') . '/gift-recipient?token=' . urlencode($this->claim_token);
     }
 
     public function ensureClaimToken(): string

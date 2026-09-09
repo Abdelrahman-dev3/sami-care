@@ -74,5 +74,12 @@ return [
         'sender' => env('TAQNYAT_SENDER_NAME', 'SamiCare'),
     ],
 
+    'arb' => [
+        'mode' => env('ARB_MODE', 'test'),
+        'tranportal_id' => env('ARB_TRANPORTAL_ID'),
+        'tranportal_password' => env('ARB_TRANPORTAL_PASSWORD'),
+        'resource_key' => env('ARB_RESOURCE_KEY'),
+        'currency_code' => env('ARB_CURRENCY_CODE', '682'),
+    ],
 
 ];

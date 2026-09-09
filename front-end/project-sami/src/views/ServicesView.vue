@@ -5,7 +5,6 @@ import { resolveApiImage } from '@/utils/assetPath'
 import { RouterLink, useRouter } from 'vue-router'
 import PageSkeleton from '@/components/common/PageSkeleton.vue'
 import LocationNotice from '@/components/common/LocationNotice.vue'
-import { useServiceLocation } from '@/composables/useServiceLocation'
 import { useLanguage } from '@/composables/useLanguage'
 import { serviceDetails } from '@/data/serviceDetails'
 import { getCategories } from '@/data/home'
@@ -128,10 +127,8 @@ const cards = computed(() =>
 
 const router = useRouter()
 
-const { requireLocation } = useServiceLocation()
-
 const go = path => {
-  requireLocation(() => router.push(path))
+  router.push(path)
 }
 
 /*
@@ -174,6 +171,8 @@ const perks = [
 
       <!-- Hero -->
       <section class="sv-hero">
+        <div class="sv-hero__bg"><img src="/images/generated/packages/complete-care-hq.png" alt="" /></div>
+        <svg class="sv-hero__ghost" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width=".8" aria-hidden="true"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M12 2v20M3 7l9 5 9-5M3 17l9-5 9 5"/></svg>
         <div class="container sv-hero__in">
 
           <p class="sv-eyebrow">
@@ -403,8 +402,6 @@ const perks = [
 
     </main>
 
-    <AppFooter />
-
   </div>
 </template>
 
@@ -417,15 +414,29 @@ const perks = [
 }
 
 .sv-hero {
-  background:
-    radial-gradient(circle at 22% 50%, #4b351b55, transparent 30%),
-    linear-gradient(110deg, #050606 48%, #17120d);
+  position: relative;
+  width: min(1280px, 94%);
+  min-height: 300px;
+  margin: 24px auto 0;
+  border-radius: 22px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  background: #0d0b07;
   color: #fff;
-  padding: 58px 0 54px;
 }
 
+.sv-hero__bg { position:absolute;inset:0 }
+.sv-hero__bg img { width:100%;height:100%;object-fit:cover;object-position:75% center;filter:brightness(.85) }
+.sv-hero__bg::after { content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(10,9,6,.92) 0%,rgba(10,9,6,.72) 42%,rgba(10,9,6,.1) 100%) }
+.sv-hero__ghost { position:absolute;left:5%;top:50%;transform:translateY(-50%);width:220px;opacity:.14;z-index:1;color:var(--gold) }
 .sv-hero__in {
-  text-align: center;
+  position:relative;
+  z-index:2;
+  width:100%;
+  max-width:none;
+  padding:52px;
+  text-align:right;
 }
 
 .sv-eyebrow {
@@ -445,7 +456,8 @@ const perks = [
   line-height: 2;
   color: #cfc7bb;
   max-width: 60ch;
-  margin: 0 auto;
+  margin: 0;
+  max-width: 44ch;
 }
 
 
@@ -720,6 +732,8 @@ const perks = [
 
 
 @media(max-width:900px) {
+
+  .sv-hero__in { padding:32px 24px }
 
   .sv-hero h1 {
     font-size: 34px;

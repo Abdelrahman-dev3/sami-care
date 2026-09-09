@@ -62,9 +62,10 @@ function groupStaff(group) {
   if (!lists.length || lists.some(list => !Array.isArray(list))) return []
 
   const [first, ...rest] = lists
-  return first.filter(employee =>
+  const shared = first.filter(employee =>
     rest.every(list => list.some(item => String(item.id) === String(employee.id)))
   )
+  return [...new Map(shared.map(employee => [String(employee.id), employee])).values()]
 }
 
 function isGroupLoading(group) {
@@ -108,9 +109,10 @@ function assignAutoStaff() {
     const list = groupStaff(group)
     if (!list.length) return
 
-    const selected = groupSelectedEmployee(group)
-    const stillAvailable = selected && list.some(employee => String(employee.id) === String(selected.id))
-    if (!stillAvailable) applyEmployeeToGroup(group, list[0])
+    group.services.forEach(service => {
+      state.staffOptions[service.id] = staffByService[service.id] || []
+      setEmployee(service.id, { id: null, name: 'اختيار تلقائي' })
+    })
   })
 }
 
@@ -119,7 +121,7 @@ function chooseMode(mode) {
   state.mode = mode
   if (modeChanged) {
     state.time = {}
-    if (mode === 'auto') state.emp = {}
+    state.emp = {}
   }
   assignAutoStaff()
 }
@@ -135,7 +137,9 @@ async function loadStaff(service) {
   try {
     const branchId = current.value?.home ? 0 : current.value?.id
     const rows = await fetchStaff({ branchId, serviceId: service.id })
-    staffByService[service.id] = (Array.isArray(rows) ? rows : []).map(u => ({ id: u.id, name: employeeName(u) }))
+    const mapped = (Array.isArray(rows) ? rows : []).map(u => ({ id: u.id, name: employeeName(u) }))
+    staffByService[service.id] = [...new Map(mapped.map(employee => [String(employee.id), employee])).values()]
+    state.staffOptions[service.id] = staffByService[service.id]
     assignAutoStaff()
   } catch {
     staffByService[service.id] = []

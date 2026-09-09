@@ -1,7 +1,6 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
-import AppFooter from '@/components/layout/AppFooter.vue'
 import PageSkeleton from '@/components/common/PageSkeleton.vue'
 import LocationNotice from '@/components/common/LocationNotice.vue'
 import SIcon from '@/components/common/SIcon.vue'
@@ -35,7 +34,9 @@ const goBooking = (service = null) => {
         dur: service.dur,
         price: service.price,
       })
-      bookingState.step = 1
+      // افتح خطوة اختيار الخدمات نفسها مع إبقاء الخدمة المختارة محددة.
+      bookingState.step = 0
+      bookingState.activeCat = category.value.id
     } else {
       bookingState.activeCat = category.value.id
     }
@@ -202,7 +203,6 @@ watch(id, loadCategories)
       </template>
 
     </main>
-    <AppFooter />
   </div>
 </template>
 

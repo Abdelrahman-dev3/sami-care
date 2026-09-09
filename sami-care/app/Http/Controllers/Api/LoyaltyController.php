@@ -13,6 +13,7 @@ class LoyaltyController extends Controller
             'status' => true,
             'data' => [
                 'point_value' => Setting::get('point_value'),
+                'points_per_100' => (int) (Setting::get('points_per_100') ?? 5),
             ],
         ]);
     }

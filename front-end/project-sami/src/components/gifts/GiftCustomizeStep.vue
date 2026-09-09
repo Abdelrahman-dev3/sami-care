@@ -30,12 +30,7 @@ const I = {
   <div class="custom-grid">
     <div class="preview-col">
       <h4><SIcon :inner="I.eye" :size="16" /> معاينة بطاقة الإهداء</h4>
-      <div id="cardPrev"><GiftCard :design="state.design" /></div>
-      <div class="gcard-msg"><span class="q q1">"</span><span class="q q2">"</span>
-        <b>إلى: <span id="pvName">{{ state.name || '—' }}</span></b>
-        <p id="pvMsg">{{ state.msg || 'اكتب رسالتك الخاصة لتظهر هنا' }}</p>
-        <small style="display:block;margin-top:8px;font-size:11px;color:var(--mute)">من: <span id="pvSender">{{ state.sender || 'مجهول جميل' }}</span></small>
-      </div>
+      <div id="cardPrev"><GiftCard :design="state.design" :recipient="state.name" :sender="state.sender" :message="state.msg" /></div>
     </div>
     <div class="form-col">
       <div class="card" style="margin-bottom:14px">

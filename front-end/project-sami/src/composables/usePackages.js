@@ -118,11 +118,18 @@ const state = reactive({
   saveCard: true,
   done: false,
   ref: null,
+  claimUrl: null,
+  claimToken: null,
 
   siteBranch: readBranch(),
 
   /* رحلة حجز الباقة */
-  bk: { step: 0, pkg: null, branch: null, employee: null, dayIdx: null, period: 'all', time: null, notes: '', pay: null, done: false, ref: null },
+  bk: {
+    step: 0, pkg: null, branch: null, employee: null, dayIdx: null, period: 'all', time: null,
+    notes: '', pay: null, done: false, ref: null,
+    walletBalance: 0, loyaltyPoints: 0, pointValue: 0.5,
+    useWallet: false, walletAmount: 0, useLoyalty: false, loyaltyPointsUsed: 0,
+  },
 })
 
 export function usePackages() {
@@ -200,6 +207,8 @@ export function usePackages() {
     state.gpkg = pkg
     state.done = false
     state.ref = null
+    state.claimUrl = null
+    state.claimToken = null
     scrollTo({ top: 0, behavior: 'smooth' })
   }
 

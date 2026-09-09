@@ -36,6 +36,7 @@ const state = reactive({
   done: false,
   ref: null,
   claimUrl: null,
+  claimToken: null,
   walletBalance: null,   // يتحمّل فى GiftPayStep.vue من /profile — لازم يكون معروف قبل السماح باختيار "المحفظة"
 })
 
@@ -120,8 +121,11 @@ export function useGifts() {
           recipient_name: state.name.trim(),
           recipient_mobile: state.phone.trim(),
           message: state.msg.trim() || undefined,
+          sender_name: state.sender.trim() || undefined,
         },
+        design: state.design,
         branch: branchId,
+        send_channel: state.method || 'link',
       }
 
       if (state.gtype === 'svc') {
@@ -138,10 +142,14 @@ export function useGifts() {
          القيمة الحقيقية كاملة)؛ القيمة الحرفية للبوابة مش مهمة هنا لأنها بترجع 'sub_methods' طالما
          الرصيد كافي (canNext بيتأكد من كده قبل ما نوصل هنا) فمفيش استدعاء حقيقي لأي بوابة دفع. */
       const wallet = state.pay === 'wallet'
-      const payment = await initPayment(wallet ? 'card' : 'cod', { wallet })
+      const payment = await initPayment(wallet ? 'card' : 'cod', {
+        wallet,
+        walletAmount: wallet ? priceParts.value.total : undefined,
+      })
 
       state.ref = created?.data?.gift_card_id ? `#GIFT-${created.data.gift_card_id}` : '#GIFT'
-      state.claimUrl = created?.data?.claim_url || null
+      state.claimUrl = created?.data?.share_url || created?.data?.claim_url || null
+      state.claimToken = created?.data?.claim_token || null
       state.done = true
       state.step = 4
 
