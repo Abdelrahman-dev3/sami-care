@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "02b07bde7ade9a0baab5a5df3bc96da8",
+    "content-hash": "3c4f12976982f9c72f5033c954ef3c97",
     "packages": [
         {
             "name": "barryvdh/laravel-dompdf",
@@ -867,6 +867,81 @@
                 }
             ],
             "time": "2025-03-06T22:45:56+00:00"
+        },
+        {
+            "name": "egyjs/arb",
+            "version": "1.0.6",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/egyjs/ARB-Payment-Gateway.git",
+                "reference": "a7753ebbf158bbfa08d2df54de77d8c4a642aebe"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/egyjs/ARB-Payment-Gateway/zipball/a7753ebbf158bbfa08d2df54de77d8c4a642aebe",
+                "reference": "a7753ebbf158bbfa08d2df54de77d8c4a642aebe",
+                "shasum": ""
+            },
+            "require": {
+                "ext-openssl": "*",
+                "illuminate/contracts": "^10.0||^11.0",
+                "php": "^8.0",
+                "spatie/laravel-package-tools": "^1.16"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.14",
+                "nunomaduro/collision": "^8.1.1||^7.10.0",
+                "orchestra/testbench": "^9.0.0||^8.22.0",
+                "pestphp/pest": "^2.34",
+                "pestphp/pest-plugin-arch": "^2.7",
+                "pestphp/pest-plugin-laravel": "^2.3"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "Arb": "Egyjs\\Arb\\Facades\\Arb"
+                    },
+                    "providers": [
+                        "Egyjs\\Arb\\ArbServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Egyjs\\Arb\\": "src/",
+                    "Egyjs\\Arb\\Database\\Factories\\": "database/factories/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "egyjs",
+                    "email": "el3zahaby@gmail.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Laravel API for Al Rajhi Bank's payment gateway (ARB)",
+            "homepage": "https://github.com/egyjs/arb",
+            "keywords": [
+                "arb",
+                "egyjs",
+                "laravel"
+            ],
+            "support": {
+                "issues": "https://github.com/egyjs/ARB-Payment-Gateway/issues",
+                "source": "https://github.com/egyjs/ARB-Payment-Gateway/tree/1.0.6"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/egyjs",
+                    "type": "github"
+                }
+            ],
+            "time": "2024-04-08T21:48:42+00:00"
         },
         {
             "name": "ezyang/htmlpurifier",

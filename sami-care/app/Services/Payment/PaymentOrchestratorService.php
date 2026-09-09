@@ -11,6 +11,7 @@ use Modules\Wallet\Models\Wallet;
 use Illuminate\Support\Facades\DB;
 use Modules\Wallet\Models\WalletHistory;
 use Modules\Booking\Models\BookingTransaction;
+use App\Services\Payment\Gateways\ArbGateway;
 use App\Services\Payment\Gateways\TabbyGateway;
 use App\Services\Payment\Gateways\TamaraGateway;
 use App\Services\Payment\Gateways\TapGateway;
@@ -30,7 +31,7 @@ class PaymentOrchestratorService
             return ['status' => 'error', 'message' => __('auth.unauthenticated')];
         }
 
-        if (! in_array($gateway, ['card', 'tabby', 'tamara', 'telr', 'cod'], true)) {
+        if (! in_array($gateway, ['card', 'tabby', 'tamara', 'telr', 'arb', 'cod'], true)) {
             return ['status' => 'error', 'message' => __('messages.invalid_payment_method')];
         }
 
@@ -274,6 +275,7 @@ class PaymentOrchestratorService
             'tabby' => app(TabbyGateway::class)->create($attempt, $customer, $urls),
             'tamara' => app(TamaraGateway::class)->create($attempt, $customer, $urls, $input['platform'] ?? 'web', (bool) ($input['is_mobile'] ?? false)),
             'telr' => app(TelrGateway::class)->create($attempt, $customer, $urls),
+            'arb' => app(ArbGateway::class)->create($attempt, $customer, $urls),
             default => throw new \RuntimeException('Unsupported gateway'),
         };
     }
@@ -285,6 +287,7 @@ class PaymentOrchestratorService
             'tabby' => app(TabbyGateway::class)->verify($attempt, $request),
             'tamara' => app(TamaraGateway::class)->verify($attempt, $request),
             'telr' => app(TelrGateway::class)->verify($attempt, $request),
+            'arb' => app(ArbGateway::class)->verify($attempt, $request),
             default => ['status' => 'failed'],
         };
     }
@@ -329,6 +332,7 @@ class PaymentOrchestratorService
             'tabby' => 'tabby',
             'tamara' => 'tamara',
             'telr' => 'telr',
+            'arb' => 'arb',
             default => $gateway,
         };
     }
