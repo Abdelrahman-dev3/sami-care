@@ -47,16 +47,7 @@ const PAY_METHODS = computed(() => [
     logo: 'COD',
     enabled: !hasSubRewards.value,
   },
-<<<<<<< HEAD
-=======
-  /*{
-    id: 'wallet',
-    n: 'المحفظة',
-    d: state.walletBalance !== null ? `الرصيد الحالي ${rs(walletBalance.value)} ر.س` : 'ادفع من رصيد محفظتك',
-    logo: 'W',
-    enabled: walletBalance.value >= payableTotal.value && payableTotal.value > 0,
-  },*/
->>>>>>> d7635d7e750ffd15d04dcc6f43b7358a40378eb6
+
   { id: 'mada', n: 'مدى', d: 'قريبًا', logo: 'مدى', enabled: false },
   {
     id: 'card',
@@ -65,16 +56,17 @@ const PAY_METHODS = computed(() => [
     logo: 'VISA',
     enabled: hasSubRewards.value && payableTotal.value > 0,
   },
+  {
+    id: 'urpay',
+    n: 'يورباي',
+    d: hasSubRewards.value ? 'ادفع المتبقي بعد الخصومات' : 'الدفع عبر يورباي',
+    logo: 'UrPay',
+    enabled: payableTotal.value > 0,
+  },
   { id: 'tabby', n: 'تابي', d: 'قريبًا', logo: 'tabby', enabled: false },
 ])
 
-<<<<<<< HEAD
-=======
-/*const walletInsufficient = computed(() =>
-  state.pay === 'wallet' && state.walletBalance !== null && state.walletBalance < payableTotal.value
-)*/
 
->>>>>>> d7635d7e750ffd15d04dcc6f43b7358a40378eb6
 watch([hasSubRewards, payableTotal], () => {
   if (hasSubRewards.value && state.pay === 'cod') state.pay = payableTotal.value > 0 ? 'card' : null
 })
@@ -202,10 +194,7 @@ watch(loyaltyMaxPoints, () => {
         <span><b>{{ m.n }}</b><small>{{ m.d }}</small></span>
         <span class="rad"><i></i></span>
       </div>
-<<<<<<< HEAD
-=======
-      <!-- <p v-if="walletInsufficient" style="color:#b42318;font-size:12px;margin-top:8px">رصيد محفظتك لا يكفي لدفع القيمة كاملة، اختر وسيلة دفع أخرى.</p> -->
->>>>>>> d7635d7e750ffd15d04dcc6f43b7358a40378eb6
+
     </div>
     <div class="secure-line">🔒 جميع عمليات الدفع آمنة ومشفرة</div>
   </div>

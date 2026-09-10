@@ -48,12 +48,11 @@ function localized(value, fallback = '') {
         : value
 }
 
-<<<<<<< HEAD
 function bookBranch(branch) {
     setLocation(branch.home ? 'home-service' : branch.id)
     router.push('/booking')
 }
-=======
+
 function nameOf(branch) {
     return localized(branch.name)
 }
@@ -92,7 +91,6 @@ const bannerStyle = computed(() => ({
     '--branch-banner-image': `url("${String(activeBanner.value.image).replace(/"/g, '\\"')}")`,
     '--branch-banner-color': activeBanner.value.color,
 }))
->>>>>>> d7635d7e750ffd15d04dcc6f43b7358a40378eb6
 </script>
 
 <template>

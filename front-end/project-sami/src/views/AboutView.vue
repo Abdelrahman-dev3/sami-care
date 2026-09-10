@@ -1,48 +1,5 @@
 <script setup>
-<<<<<<< HEAD
-import AppImage from '@/components/common/AppImage.vue'
-import { features } from '@/data/home'
-</script>
 
-<template>
-  <div class="about-page" dir="rtl">
-    <section class="about-section container">
-      <AppImage src="/images/generated/about-barber-hq.png" alt="حلاق محترف يقدم خدمة للعميل" />
-
-      <div class="about-copy">
-        <h2>من نحن</h2>
-        <h3>تجربة عناية متكاملة</h3>
-        <p>
-          في عناية سامي، نؤمن أن العناية الشخصية ليست رفاهية، بل أسلوب حياة.
-          لذلك نقدم مجموعة متكاملة من الخدمات العصرية للعناية بالشعر والبشرة في بيئة مريحة وأنيقة.
-        </p>
-
-        <h3>نستخدم أحدث الأجهزة والتقنيات</h3>
-        <p>
-          نحرص على تحقيق أعلى معايير النظافة والسلامة، ويعمل فريقنا المحترف
-          ليمنحك تجربة استثنائية ونتائج تليق بك.
-        </p>
-
-        <div class="features">
-          <article v-for="item in features" :key="item.title">
-            <span>{{ item.icon }}</span>
-            <b>{{ item.title }}</b>
-            <small>{{ item.text }}</small>
-          </article>
-        </div>
-      </div>
-    </section>
-  </div>
-</template>
-
-<style scoped>
-.about-page {
-  min-height: 100vh;
-  background: #f8f4ee;
-  padding: 60px 0 80px;
-}
-</style>
-=======
 import { onMounted, ref } from 'vue'
 import HeroSection from '@/components/about-page/HeroSection.vue'
 import QuickActions from '@/components/about-page/QuickActions.vue'
@@ -129,4 +86,3 @@ onMounted(loadServices)
 </style>
 
 
->>>>>>> d7635d7e750ffd15d04dcc6f43b7358a40378eb6

@@ -68,6 +68,7 @@ export const PAYS=[
  {id:'mada',n:'بطاقة مدى',d:'الدفع ببطاقة مدى',logo:'مدى mada'},
  {id:'apple',n:'Apple Pay',d:'دفع سريع وآمن',logo:' Pay'},
  {id:'card',n:'فيزا / ماستركارد',d:'بطاقات الائتمان',logo:'VISA ●●'},
+ {id:'urpay',n:'يورباي',d:'الدفع عبر يورباي',logo:'UrPay'},
  {id:'stc',n:'STC Pay',d:'المحفظة الرقمية',logo:'stc pay'},
  {id:'wallet',n:'المحفظة الرقمية',d:'رصيدك في سامي',logo:'👛'},
  {id:'points',n:'نقاط الولاء',d:'المتاح: 320 نقطة',logo:'✨'},
@@ -113,6 +114,7 @@ export const AR_MONTHS=['يناير','فبراير','مارس','أبريل','م�
 export const BK_PAYS=[
  {id:'mada',n:'مدى',logo:'مدى mada'},
  {id:'visa',n:'Visa',logo:'VISA'},
+ {id:'urpay',n:'يورباي',logo:'UrPay'},
  {id:'mc',n:'ماستركارد',logo:'●● MC'},
  {id:'apple',n:'أبل باي',logo:' Pay'},
  {id:'wallet',n:'المحفظة',logo:'👛'},

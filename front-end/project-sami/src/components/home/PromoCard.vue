@@ -60,12 +60,7 @@ const promoCards = computed(() => {
 })
 
 function goHomeService() {
-<<<<<<< HEAD
-  setLocation('home-service')
-  router.push('/booking')
-=======
   router.push({ path: '/booking', query: { branch: 'hm' } })
->>>>>>> d7635d7e750ffd15d04dcc6f43b7358a40378eb6
 }
 </script>
 

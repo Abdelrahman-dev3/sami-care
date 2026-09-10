@@ -1191,10 +1191,7 @@ footer{margin-top:0!important;padding:27px 15px calc(104px + env(safe-area-inset
 .booking-stage .m-session-plan{background:#fffdfa;border-color:rgba(206,146,52,.28)}.booking-stage .m-session-plan h4{display:flex;align-items:center;gap:7px}.booking-stage .m-plan-head-icon{width:26px;height:26px;border-radius:9px;display:grid;place-items:center;background:#fff5df;color:var(--org-d)}
 .booking-stage .time-start-mobile{display:flex;align-items:center;gap:10px;padding:10px 11px;border-radius:14px;border:1px solid rgba(206,146,52,.22);background:#fffdfa}.booking-stage .time-start-mobile .m-plan-icon{margin-bottom:0}.booking-stage .time-start-mobile>span:last-child{min-width:0;display:grid;gap:2px}.booking-stage .time-start-mobile b{font-size:12.5px}.booking-stage .time-start-mobile small{font-size:10.5px;color:var(--mute);line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .booking-stage .m-plan-icon{width:34px;height:34px;border-radius:12px;display:grid;place-items:center;color:var(--org-d);background:#fff8ea;border:1px solid rgba(206,146,52,.24);margin-bottom:6px}.booking-stage .m-plan-icon svg{width:22px;height:22px}.booking-stage .m-plan-item.pending{opacity:.68}.booking-stage .m-plan-gap{display:grid;place-items:center;text-align:center;gap:2px;padding:8px 10px;border-radius:999px;background:#fff8ea;border:1px dashed rgba(206,146,52,.38);color:var(--org-d);font-size:11px}.booking-stage .m-plan-gap span,.booking-stage .m-plan-gap small{font-size:10px;color:var(--mute)}.booking-stage .m-plan-note{font-size:11.5px;line-height:1.7;color:#128a50;background:#e9f8f0;border-radius:12px;padding:9px 10px}.booking-stage .m-plan-note.pending{color:var(--org-d);background:#fff8ea}.booking-stage .m-plan-note.warn{color:#9a4d16;background:#fff2dd}.booking-stage .m-best-start{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px dashed rgba(206,146,52,.45);background:#fffdfa;border-radius:14px;padding:9px 10px;font-size:11.5px;color:var(--org-d)}.booking-stage .m-best-start button{background:linear-gradient(135deg,#aa6810,#dda13e);color:#fff;border-radius:10px;padding:8px 12px;font-weight:800}
-<<<<<<< HEAD
-=======
 .booking-stage .m-session-plan .m-plan-icon{color:#b77717!important;background:#fff4dc!important;border-color:rgba(183,119,23,.32)!important}.booking-stage .m-session-plan .m-plan-icon svg{stroke:currentColor!important}
->>>>>>> d7635d7e750ffd15d04dcc6f43b7358a40378eb6
 .booking-stage .m-field input:focus,.booking-stage .m-field textarea:focus{outline:0;border-color:#c88922;box-shadow:0 0 0 3px rgba(200,137,34,.11);background:#fff}
 
 /* نافذة اختيار الفرع: الشعار أصغر وبجوار العنوان */
@@ -2159,13 +2156,7 @@ function autoAssignEmployees(){
  bServiceGroups().forEach(g=>{
   const list=bGroupStaff(g);
   if(!list.length)return;
-<<<<<<< HEAD
-  const selected=bGroupSelectedEmployee(g);
-  const stillAvailable=selected&&list.some(e=>String(e.id)===String(selected.id));
-  if(!stillAvailable)bApplyEmployeeToGroup(g,list[0],false);
-=======
   g.services.forEach(s=>{S.bookEmp[s.id]={id:'auto',name:'اختيار تلقائي'}});
->>>>>>> d7635d7e750ffd15d04dcc6f43b7358a40378eb6
  });
 }
 function ensureBookingEmployees(){
@@ -2185,11 +2176,7 @@ function ensureBookingEmployees(){
   });
  });
 }
-<<<<<<< HEAD
-function bookSlotsKey(serviceId,empId,dateKey){return serviceId+':'+empId+':'+dateKey}
-=======
 function bookSlotsKey(serviceId,empId,dateKey){return serviceId+':'+(S.bookMode==='auto'?'auto':empId)+':'+dateKey}
->>>>>>> d7635d7e750ffd15d04dcc6f43b7358a40378eb6
 function bookTimeToMin(hhmm){
  if(!hhmm||typeof hhmm!=='string')return null;
  const parts=hhmm.split(':').map(Number);
@@ -2282,14 +2269,10 @@ function bookBuildSequentialSchedule(time,opt={}){
   }
   const start=bookTimeToMin(selected),end=start+(Number(s.dur)||0);
   rows.push({service:s,start:selected,end:bookMinToTime(end),expected:bookMinToTime(cursor),shifted:start>cursor});
-<<<<<<< HEAD
-  if(apply)S.bookTime[s.id]=selected;
-=======
   if(apply){
    S.bookTime[s.id]=selected;
    if(S.bookMode==='auto'&&S.bookAutoStaffBySlot[s.id]?.[selected])S.bookEmp[s.id]=S.bookAutoStaffBySlot[s.id][selected];
   }
->>>>>>> d7635d7e750ffd15d04dcc6f43b7358a40378eb6
   cursor=end;
  }
  return{complete:true,rows,end:bookMinToTime(cursor)};
@@ -2381,17 +2364,12 @@ function ensureBookingSlots(){
   const key=bookSlotsKey(s.id,emp.id,dateKey);
   if(S.bookSlotsByService[key]||S.bookSlotsLoading[key])return;
   S.bookSlotsLoading[key]=true;
-<<<<<<< HEAD
-  fetchServiceSlotsReal(dateKey,emp.id,s.dur).then(rows=>{
-   S.bookSlotsByService[key]=bookNormalizeSlots(rows);
-=======
   const candidates=S.bookMode==='auto'?(S.bookStaffByService[s.id]||[]):[emp];
   Promise.all(candidates.filter(e=>e?.id&&e.id!=='auto').map(async employee=>({employee,rows:await fetchServiceSlotsReal(dateKey,employee.id,s.dur)}))).then(results=>{
    const slotMap={};
    results.forEach(({employee,rows})=>bookNormalizeSlots(rows).forEach(time=>{if(!slotMap[time])slotMap[time]=employee}));
    S.bookAutoStaffBySlot[s.id]=slotMap;
    S.bookSlotsByService[key]=bookNormalizeSlots(Object.keys(slotMap));
->>>>>>> d7635d7e750ffd15d04dcc6f43b7358a40378eb6
    S.bookSlotsLoading[key]=false;
    bookSyncSequentialTimes();
    render();
@@ -2550,10 +2528,7 @@ const S={
  bookUseLoyalty:false,
  bookLoyaltyPoints:0,
  bookPointValue:.5,
-<<<<<<< HEAD
-=======
  bookPointsPer100:5,
->>>>>>> d7635d7e750ffd15d04dcc6f43b7358a40378eb6
  bookCouponCode:'',
  bookCouponApplied:'',
  bookCouponDiscount:0,
@@ -4041,12 +4016,8 @@ function bGroupStaff(g){
  const lists=g.services.map(s=>S.bookStaffByService[s.id]);
  if(!lists.length||lists.some(list=>!Array.isArray(list)))return[];
  const first=lists[0]||[],rest=lists.slice(1);
-<<<<<<< HEAD
- return first.filter(e=>rest.every(list=>list.some(x=>String(x.id)===String(e.id))));
-=======
  const shared=first.filter(e=>rest.every(list=>list.some(x=>String(x.id)===String(e.id))));
  return[...new Map(shared.map(e=>[String(e.id),e])).values()];
->>>>>>> d7635d7e750ffd15d04dcc6f43b7358a40378eb6
 }
 function bGroupLoading(g){return g.services.some(s=>S.bookStaffLoading[s.id]||!Array.isArray(S.bookStaffByService[s.id]))}
 function bGroupSelectedEmployee(g){
@@ -4069,11 +4040,8 @@ function bSubTotal(){return bSelSvcs().reduce((a,s)=>a+s.price,0)}
 function bTotalDur(){return bSelSvcs().reduce((a,s)=>a+s.dur,0)}
 function bFmtDur(min){const h=Math.floor(min/60),m=min%60;if(!h)return m+' دقيقة';return (h===1?'ساعة':h===2?'ساعتان':h+' ساعات')+(m?' و '+m+' د':'')}
 function bPriceParts(){const sub=bSubTotal(),vat=Math.round(sub*.15);return{sub,vat,total:sub+vat}}
-<<<<<<< HEAD
-=======
 function bookEarnedLoyaltyPoints(){return Math.floor(bPriceParts().total/100)*Math.max(Number(S.bookPointsPer100)||5,1)}
 function bookLoyaltyPreviewHTML(){return`<div class="m-loyalty-preview"><h3>✨ مكافأة نقاط الولاء لهذه الجلسة</h3><p>ستحصل على <b>${rs(bookEarnedLoyaltyPoints())} نقطة ولاء</b> عند إتمام هذا الحجز.</p><strong>يمنحك نظام الولاء ${rs(Math.max(Number(S.bookPointsPer100)||5,1))} نقطة مقابل كل 100 ر.س مدفوعة.</strong></div>`}
->>>>>>> d7635d7e750ffd15d04dcc6f43b7358a40378eb6
 function bookWalletBalance(){return Math.max(Number(_accountData?.balances?.wallet)||0,0)}
 function bookLoyaltyBalance(){return Math.max(parseInt(_accountData?.balances?.loyalty_points,10)||0,0)}
 function bookPointValue(){return Math.max(Number(S.bookPointValue)||.5,.01)}
@@ -4250,11 +4218,7 @@ function wizDateTimeHTML(){
  const rangeLabel=days[0].getMonth()===days[6].getMonth()?`${days[0].getDate()} - ${days[6].getDate()} ${W_MONTHS[days[0].getMonth()]}`:`${days[0].getDate()} ${W_MONTHS[days[0].getMonth()]} - ${days[6].getDate()} ${W_MONTHS[days[6].getMonth()]}`;
  const cells=days.map(d=>{
   const past=d<today,sel=S.bookDate&&d.getTime()===S.bookDate.getTime();
-<<<<<<< HEAD
-  return`<button data-w-day="${toBackendDate(d)}" ${past?'disabled':''} class="${sel?'sel':''} ${!past?'avail':''}">${d.getDate()}</button>`;
-=======
   return`<button data-w-day="${toBackendDate(d)}" ${past?'disabled':''} class="${sel?'sel':''} ${!past?'avail':''}"><span>${W_DAYS[d.getDay()].slice(0,3)}</span><b>${d.getDate()}</b></button>`;
->>>>>>> d7635d7e750ffd15d04dcc6f43b7358a40378eb6
  }).join('');
  const dayNames=days.map(d=>`<span>${W_DAYS[d.getDay()].slice(0,3)}</span>`).join('');
  let body='';
@@ -4268,26 +4232,14 @@ function wizDateTimeHTML(){
     body='<div class="m-card m-detail" style="margin-top:10px"><h4>وقت بداية الجلسة</h4><div style="text-align:center;color:var(--mute);font-size:12px;padding:14px 0">حدد موظفًا مناسبًا أولًا في خطوة الموظف.</div></div>';
    }else{
     const key=bookSlotsKey(first.id,emp.id,dateKey),loading=S.bookSlotsLoading[key]||S.bookSlotsByService[key]===undefined;
-<<<<<<< HEAD
-    const list=S.bookSlotsByService[key],slots=bookInitialSlots(dateKey),best=bookBestInitialSlot(dateKey),selected=S.bookTime[first.id];
-    const intro=firstGroup?`<div class="time-start-mobile"><span class="m-plan-icon">${bookCatIcon(firstGroup.cat,24)}</span><span><b>${escHtml(firstGroup.name)}</b><small>${bGroupServicesLabel(firstGroup)} - ${escHtml(bGroupServiceNames(firstGroup))}</small></span></div>`:'';
-=======
     const list=S.bookSlotsByService[key],allSlots=bookInitialSlots(dateKey),slots=allSlots.filter(t=>{const minutes=bookTimeToMin(t);return S.bookPeriod==='am'?minutes<720:S.bookPeriod==='pm'?minutes>=720:true}),best=bookBestInitialSlot(dateKey),selected=S.bookTime[first.id];
     /* بطاقة الخدمة المختارة مخفية مؤقتًا من جزء وقت بداية الجلسة. */
     const intro='';
     const periodBar=`<div class="booking-time-picker"><div class="m-periods"><button class="m-period ${S.bookPeriod==='all'?'sel':''}" data-book-period="all">🗓️ كل اليوم</button><button class="m-period ${S.bookPeriod==='am'?'sel':''}" data-book-period="am">☀️ صباحًا</button><button class="m-period ${S.bookPeriod==='pm'?'sel':''}" data-book-period="pm">🌇 مساءً</button></div><small class="m-available-times-title">الأوقات المتاحة</small></div>`;
->>>>>>> d7635d7e750ffd15d04dcc6f43b7358a40378eb6
     const slotBody=loading
      ?'<div style="text-align:center;color:var(--mute);font-size:12px;padding:14px 0">جاري تحميل الأوقات المتاحة...</div>'
      :!list.length
      ?'<div style="text-align:center;color:var(--mute);font-size:12px;padding:14px 0">لا توجد أوقات متاحة لهذا اليوم</div>'
-<<<<<<< HEAD
-     :!slots.length
-     ?'<div style="text-align:center;color:var(--mute);font-size:12px;padding:14px 0">لا توجد بداية مناسبة لهذا اليوم</div>'
-     :`<div class="booking-time-picker"><div class="m-slots">${slots.map(t=>`<button class="m-slot ${selected===t?'sel':''}" data-w-slot-svc="${first.id}" data-w-slot-time="${t}"><span class="slot-badge ${best===t?'':'slot-badge-empty'}">${best===t?'الأفضل':''}</span><span>${fmtHHMM(t)}</span></button>`).join('')}</div></div>`;
-    const bestCta=best&&selected!==best?`<div class="m-best-start"><span>أفضل بداية متاحة اليوم: <b>${fmtHHMM(best)}</b></span><button data-w-slot-svc="${first.id}" data-w-slot-time="${best}">اختيار</button></div>`:'';
-    body=`<div class="m-card m-detail" style="margin-top:10px"><h4>وقت بداية الجلسة <small style="font-weight:400;color:var(--mute)">سننسق باقي الأقسام بعده</small></h4>${intro}${slotBody}${bestCta}</div>${selected?bookPlanHTML():''}`;
-=======
      :!allSlots.length
      ?'<div style="text-align:center;color:var(--mute);font-size:12px;padding:14px 0">لا توجد بداية مناسبة لهذا اليوم</div>'
      :!slots.length
@@ -4295,18 +4247,13 @@ function wizDateTimeHTML(){
      :`<div class="booking-time-picker"><div class="m-slots">${slots.map(t=>`<button class="m-slot ${selected===t?'sel':''}" data-w-slot-svc="${first.id}" data-w-slot-time="${t}"><span class="slot-badge ${best===t?'':'slot-badge-empty'}">${best===t?'الأفضل':''}</span><span>${fmtHHMM(t)}</span></button>`).join('')}</div></div>`;
     const bestCta=best&&selected!==best?`<div class="m-best-start"><span>أفضل بداية متاحة اليوم: <b>${fmtHHMM(best)}</b></span><button data-w-slot-svc="${first.id}" data-w-slot-time="${best}">اختيار</button></div>`:'';
     body=`<div class="m-card m-detail" style="margin-top:10px"><h4>📅 ${W_DAYS[S.bookDate.getDay()]} ${S.bookDate.getDate()} ${W_MONTHS[S.bookDate.getMonth()]} ${S.bookDate.getFullYear()}</h4>${intro}${!loading&&list?.length&&allSlots.length?periodBar:''}${slotBody}${bestCta}</div>${selected?bookPlanHTML():''}`;
->>>>>>> d7635d7e750ffd15d04dcc6f43b7358a40378eb6
    }
   }
  }
  return`<div class="m-panel-title"><h1>اختر الموعد</h1><p>اختر بداية الجلسة فقط، وسيتم ترتيب باقي الأقسام تلقائيًا حسب مدة كل قسم والأوقات المتاحة.</p></div>
  ${bMiniSummary()}
-<<<<<<< HEAD
- <div class="m-cal"><div class="m-cal-head"><button data-w-cal-nav="-7" ${atToday?'disabled':''}>${svg('<path d="M15 6l-6 6 6 6"/>',14)}</button><b>${rangeLabel}</b><button data-w-cal-nav="7">${svg('<path d="M9 6l6 6-6 6"/>',14)}</button></div><div class="m-days">${dayNames}</div><div class="m-cells">${cells}</div></div>
-=======
  ${bookLoyaltyPreviewHTML()}
  <div class="m-cal"><div class="m-cal-head"><b>${rangeLabel}</b></div><div class="m-cells">${cells}</div><div class="m-cal-legend"><span><i></i> تتوفر مواعيد</span><span><i></i> غير متاح</span></div></div>
->>>>>>> d7635d7e750ffd15d04dcc6f43b7358a40378eb6
  ${S.bookDate?body:`<div class="m-summary-mini" style="text-align:center"><b>ابدأ باختيار التاريخ</b><span>اختر يومًا من التقويم لعرض الأوقات المتاحة</span></div>`}`;
 }
 function wizSummaryHTML(){
@@ -4326,15 +4273,9 @@ function wizSummaryHTML(){
    <div class="m-detail-row"><span>📍 الفرع</span><b>${br?.name||''}</b></div><div class="m-detail-row"><span>📅 التاريخ</span><b>${S.bookDate?`${W_DAYS[S.bookDate.getDay()]} ${S.bookDate.getDate()} ${W_MONTHS[S.bookDate.getMonth()]} ${S.bookDate.getFullYear()}`:''}</b></div>
    <div class="m-detail-row"><span>⏱️ المدة الإجمالية</span><b>${bFmtDur(bTotalDur())}</b></div><div class="m-detail-row"><span>✂️ عدد الخدمات</span><b>${svcs.length}</b></div>
   </div>
-<<<<<<< HEAD
-  <div class="m-card m-detail"><h4>تفاصيل الجلسة</h4>${svcs.map(s=>`<div class="m-plan-item"><b>${s.name}</b><small>مع ${S.bookEmp[s.id]?.name||'—'}</small><span class="t">${fmtHHMM(S.bookTime[s.id])}</span><small>${s.dur} دقيقة · ${rs(s.price)} ر.س</small></div>`).join('')}</div>
-  <div class="m-card m-detail booking-upsell"><h4>منتجات مناسبة لجلستك</h4>${B_UPSELL.map(u=>{const cartId=bUpsellCartId(u),added=!!(cartId&&S.cart.has(cartId));return`<div class="m-up ${added?'added':''}"><img src="${u.img}" alt="${u.name}" loading="lazy"><span class="inf"><b>${u.name}</b><small>${u.desc}</small><span class="p">${rs(u.price)} ر.س</span></span><button data-w-up="${u.id}" ${cartId?'':'disabled'}>${added?'✓ أضيف':'إضافة'}</button></div>`}).join('')}</div>
-  <div class="m-card m-detail"><h4>بيانات العميل</h4><label class="m-field"><small>الاسم</small><input id="wbName" value="${S.bookCust.name}"></label><label class="m-field"><small>رقم الجوال</small><input id="wbPhone" dir="ltr" value="${S.bookCust.phone}"></label><label class="m-field"><small>البريد الإلكتروني</small><input id="wbMail" dir="ltr" value="${S.bookCust.mail}"></label><label class="m-field"><small>ملاحظات إضافية</small><textarea id="wbNotes" rows="3">${S.bookNotes}</textarea></label><div class="m-secure">🛡️ بالتأكيد على الحجز، فإنك توافق على الشروط والأحكام</div></div>
-=======
   <div class="m-card m-detail"><h4>تفاصيل الجلسة</h4>${sessionGroups.map(row=>{const g=row.group,emp=bookGroupEmployee(g),price=g.services.reduce((sum,s)=>sum+(Number(s.price)||0),0);return`<div class="m-plan-item"><b>${escHtml(g.name)}</b><small>مع ${escHtml(emp?.name||'—')}</small><span class="t">${row.pending?'بانتظار وقت متاح':fmtHHMM(row.start)}</span><small>${bFmtDur(row.duration)} · ${rs(price)} ر.س</small></div>`}).join('')}</div>
   <div class="m-card m-detail booking-upsell"><h4>منتجات مناسبة لجلستك</h4>${B_UPSELL.map(u=>{const cartId=bUpsellCartId(u),added=!!(cartId&&S.cart.has(cartId));return`<div class="m-up ${added?'added':''}"><img src="${u.img}" alt="${u.name}" loading="lazy"><span class="inf"><b>${u.name}</b><small>${u.desc}</small><span class="p">${rs(u.price)} ر.س</span></span><button data-w-up="${u.id}" ${cartId?'':'disabled'}>${added?'✓ أضيف':'إضافة'}</button></div>`}).join('')}</div>
   <!-- بيانات العميل مخفية مؤقتًا. الكارت محفوظ في سجل Git ويمكن إعادته عند الحاجة. -->
->>>>>>> d7635d7e750ffd15d04dcc6f43b7358a40378eb6
   <div class="m-summary-mini"><div class="row"><span>المبلغ قبل الضريبة</span><b>${rs(p.sub)} ر.س</b></div><div class="row"><span>الضريبة</span><b>${rs(p.vat)} ر.س</b></div><div class="row"><span>الإجمالي</span><b>${rs(p.total)} ر.س</b></div></div>
  </div>`;
 }
@@ -4362,20 +4303,11 @@ function wizPaymentHTML(){
   ${S.bookCouponMsg?`<div class="m-coupon-msg ${S.bookCouponStatus}">${escHtml(S.bookCouponMsg)}</div>`:''}
   <div class="m-reward-total"><span>المبلغ بعد المكافآت</span><b>${rs(Math.round(payable))} ر.س</b>${bookRewardsTotal()?`<small>تم خصم ${rs(Math.round(bookRewardsTotal()))} ر.س</small>`:''}</div>
  </div>
-<<<<<<< HEAD
- <div class="m-stack">${B_PAY_METHODS.map(m=>{
-  const en=m.id==='cash'?!subRewards:m.id==='wallet'?(walletBal>=payable&&payable>0):m.id==='card'?(subRewards&&payable>0):false;
-  const label=m.id==='wallet'?`الرصيد الحالي ${rs(walletBal)} ر.س`:m.id==='card'&&subRewards?'ادفع المتبقي بعد الخصومات':m.id==='cash'&&subRewards?'غير متاح مع المحفظة أو النقاط':(en?m.d:'قريبًا');
-  return`<button class="m-pay ${S.bookPay===m.id?'sel':''} ${en?'':'disabled'}" data-w-pay="${m.id}" ${en?'':'disabled'}><span class="logo">${m.logo}</span><span><b>${m.n}</b><small>${label}</small></span><span style="margin-inline-start:auto;color:var(--org)">${S.bookPay===m.id?'✓':''}</span></button>`;
- }).join('')}</div>
- ${S.bookPay==='wallet'&&walletBal<payable?'<p style="color:#b42318;font-size:12px;margin:8px 0 0">رصيد محفظتك لا يكفي لدفع القيمة المتبقية، اختر وسيلة دفع أخرى.</p>':''}
-=======
  <div class="m-stack">${B_PAY_METHODS.filter(m=>m.id!=='wallet').map(m=>{
   const en=m.id==='cash'?!subRewards:m.id==='card'?(subRewards&&payable>0):false;
   const label=m.id==='card'&&subRewards?'ادفع المتبقي بعد الخصومات':m.id==='cash'&&subRewards?'غير متاح مع المحفظة أو النقاط':(en?m.d:'قريبًا');
   return`<button class="m-pay ${S.bookPay===m.id?'sel':''} ${en?'':'disabled'}" data-w-pay="${m.id}" ${en?'':'disabled'}><span class="logo">${m.logo}</span><span><b>${m.n}</b><small>${label}</small></span><span style="margin-inline-start:auto;color:var(--org)">${S.bookPay===m.id?'✓':''}</span></button>`;
  }).join('')}</div>
->>>>>>> d7635d7e750ffd15d04dcc6f43b7358a40378eb6
  ${S.bookError?`<p style="color:#b42318;font-size:12.5px;margin:12px 0 0">${escHtml(S.bookError)}</p>`:''}
  <div class="m-summary-mini" style="margin-top:12px"><div class="row"><span>الخدمات</span><b>${rs(p.sub)} ر.س</b></div><div class="row"><span>الضريبة</span><b>${rs(p.vat)} ر.س</b></div>${bookCouponDiscount()?`<div class="row"><span>كوبون الخصم</span><b>- ${rs(Math.round(bookCouponDiscount()))} ر.س</b></div>`:''}${bookWalletApplied()?`<div class="row"><span>المحفظة</span><b>- ${rs(Math.round(bookWalletApplied()))} ر.س</b></div>`:''}${bookLoyaltyAppliedAmount()?`<div class="row"><span>نقاط الولاء</span><b>- ${rs(Math.round(bookLoyaltyAppliedAmount()))} ر.س</b></div>`:''}<div class="row"><span>المتبقي للدفع</span><b>${rs(Math.round(payable))} ر.س</b></div></div><div class="m-secure">🔒 جميع عمليات الدفع آمنة ومشفرة</div>`;
 }
@@ -4394,12 +4326,8 @@ function canWizNext(){
     بالتقدم فورًا من غير ما ينتظر التحميل أو يتأكد إن فيه موظف متاح أصلًا (راجع wizAutoEmployeeStatusHTML). */
  if(S.bookStep===3)return!!S.bookMode&&bSelSvcs().every(s=>S.bookEmp[s.id]);
  if(S.bookStep===4)return!!S.bookDate&&bSelSvcs().every(s=>S.bookTime[s.id]);
-<<<<<<< HEAD
- if(S.bookStep===5)return !!(S.bookCust.name.trim()&&S.bookCust.phone.trim());
-=======
  /* بيانات العميل تُقرأ تلقائيًا من الحساب عند الدفع؛ حقولها مخفية مؤقتًا في خطوة التأكيد. */
  if(S.bookStep===5)return true;
->>>>>>> d7635d7e750ffd15d04dcc6f43b7358a40378eb6
  const payable=bookPayableTotal(),subRewards=bookWalletApplied()>0||bookLoyaltyAppliedPoints()>0;
  if(payable<=0)return!S.bookSubmitting;
  if(S.bookPay==='wallet'&&bookWalletBalance()<payable)return false;
@@ -4961,11 +4889,7 @@ function bind(){
      transitionBooking(()=>{
       const nextMode=el.dataset.wMode,modeChanged=S.bookMode!==nextMode;
       S.bookMode=nextMode;
-<<<<<<< HEAD
-      if(modeChanged){S.bookTime={};if(S.bookMode==='auto')Object.keys(S.bookEmp).forEach(k=>delete S.bookEmp[k])}
-=======
       if(modeChanged){S.bookTime={};S.bookEmp={}}
->>>>>>> d7635d7e750ffd15d04dcc6f43b7358a40378eb6
       autoAssignEmployees();
      });
    }));
@@ -5212,11 +5136,7 @@ function bind(){
    const cat=el.currentTarget.dataset.detailBook;
    if(!S.detailSelections.size)return;
    const selectedCats=[...new Set([...S.detailSelections].map(id=>B_SERVICES.find(service=>service.id===id)?.cat).filter(Boolean))];
-<<<<<<< HEAD
-   bookingPageScrollY=window.scrollY;S.subPage=null;S.svPage=false;S.bookLaunch=false;S.bookWizard=true;S.bookDone=false;S.bookStep=3;S.bookBranch=S.currentBranch||'bg';S.currentBranch=S.bookBranch;S.bookServices=new Set(S.detailSelections);S.bookOpenCats=new Set(selectedCats.length?selectedCats:[cat]);S.bookMode=null;S.bookEmp={};S.bookStaffByService={};S.bookStaffLoading={};S.bookSlotsByService={};S.bookSlotsLoading={};S.bookDate=null;S.bookTime={};S.bookPay=null;resetBookRewards();syncBookingStepData();saveBookingSession();render();scrollTo({top:0,behavior:'smooth'});
-=======
    bookingPageScrollY=window.scrollY;S.subPage=null;S.svPage=false;S.bookLaunch=false;S.bookWizard=true;S.bookDone=false;S.bookStep=2;S.bookBranch=S.currentBranch||'bg';S.currentBranch=S.bookBranch;S.bookServices=new Set(S.detailSelections);S.bookOpenCats=new Set(selectedCats.length?selectedCats:[cat]);S.bookMode=null;S.bookEmp={};S.bookStaffByService={};S.bookStaffLoading={};S.bookSlotsByService={};S.bookSlotsLoading={};S.bookAutoStaffBySlot={};S.bookDate=null;S.bookTime={};S.bookPay=null;resetBookRewards();syncBookingStepData();saveBookingSession();render();scrollTo({top:0,behavior:'smooth'});
->>>>>>> d7635d7e750ffd15d04dcc6f43b7358a40378eb6
   });
  }
  if(S.tab==='home'&&S.subPage){

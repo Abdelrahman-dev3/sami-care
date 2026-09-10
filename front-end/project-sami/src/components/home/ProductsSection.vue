@@ -1,81 +1,3 @@
-<<<<<<< HEAD
-<script setup>
-import { ref } from 'vue'
-=======
-<!-- <script setup>
->>>>>>> d7635d7e750ffd15d04dcc6f43b7358a40378eb6
-import SectionTitle from '@/components/common/SectionTitle.vue'
-import AppImage from '@/components/common/AppImage.vue'
-import Skeleton from '@/components/common/SkeletonLoader.vue'
-import { useStore } from '@/composables/useStore'
-
-const props = defineProps({
-    products: {
-        type: Array,
-        default: () => [],
-    },
-    loading: {
-        type: Boolean,
-        default: false,
-    },
-})
-
-const { state, addToCart, setQty, removeFromCart, getMaxQty } = useStore()
-
-const formatPrice = value => `${value ?? 0} ريال`
-<<<<<<< HEAD
-
-const inCart = id => state.cart[id] || 0
-
-/* المخزون المتاح من بيانات الـ Home API (stock_qty) */
-const stockOf = item => Number(item.stock_qty ?? 0)
-
-/* هل وصل الحد الأقصى؟ بنتحقق من المخزون المحلي (Home API) + المخزون من الـ shop catalog (useStore) */
-const isMaxed = item => {
-    const qty = inCart(item.id)
-    if (qty <= 0) return false
-    const homeStock = stockOf(item)
-    const storeMax = getMaxQty(item.id)
-    const limit = storeMax > 0 ? Math.min(homeStock || storeMax, storeMax) : homeStock
-    return limit > 0 && qty >= limit
-}
-
-const isOutOfStock = item => stockOf(item) <= 0
-
-/* Toast لإعلام المستخدم */
-const toastMsg = ref('')
-const toastOn = ref(false)
-let toastTimer = null
-
-function showToast(msg) {
-    toastMsg.value = msg
-    toastOn.value = true
-    clearTimeout(toastTimer)
-    toastTimer = setTimeout(() => { toastOn.value = false }, 2200)
-}
-
-function increment(item) {
-    if (isMaxed(item)) {
-        showToast(`الحد الأقصى المتاح: ${stockOf(item)} قطعة`)
-        return
-    }
-    const added = addToCart(item.id)
-    if (!added) {
-        showToast('تم الوصول للحد الأقصى من هذا المنتج')
-    }
-}
-
-function decrement(id) {
-    const qty = inCart(id)
-    if (qty <= 1) {
-        removeFromCart(id)
-    } else {
-        setQty(id, qty - 1)
-    }
-}
-=======
-</script> -->
-
 <script setup>
 import { ref } from 'vue'
 import SectionTitle from '@/components/common/SectionTitle.vue'
@@ -150,7 +72,6 @@ async function changeHomeQty(product, delta) {
 
 const formatPrice = value => `${value ?? 0} ريال`
 
->>>>>>> d7635d7e750ffd15d04dcc6f43b7358a40378eb6
 </script>
 
 <template>
@@ -181,71 +102,6 @@ const formatPrice = value => `${value ?? 0} ريال`
                     {{ formatPrice(item.max_price) }}
                 </b>
 
-<<<<<<< HEAD
-                <!-- Out of Stock badge -->
-                <span v-if="isOutOfStock(item)" class="product-out-badge">
-                    نفد المخزون
-                </span>
-
-                <!-- Cart: Add Button -->
-                <button
-                    v-else-if="!inCart(item.id)"
-=======
-                <!--  <RouterLink
->>>>>>> d7635d7e750ffd15d04dcc6f43b7358a40378eb6
-                    class="product-cart-link"
-                    :aria-label="`إضافة ${item.name} إلى السلة`"
-                    @click.stop="addToCart(item.id)"
-                >
-<<<<<<< HEAD
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
-                        <line x1="3" y1="6" x2="21" y2="6"/>
-                        <path d="M16 10a4 4 0 01-8 0"/>
-                    </svg>
-                </button>
-
-                <!-- Cart: Quantity Controls -->
-                <div v-else class="product-qty-controls">
-                    <button
-                        class="qty-btn qty-btn--minus"
-                        :aria-label="inCart(item.id) <= 1 ? `حذف ${item.name} من السلة` : `تقليل كمية ${item.name}`"
-                        @click.stop="decrement(item.id)"
-                    >
-                        <svg v-if="inCart(item.id) <= 1" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="3 6 5 6 21 6"/>
-                            <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
-                        </svg>
-                        <svg v-else width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                            <line x1="5" y1="12" x2="19" y2="12"/>
-                        </svg>
-                    </button>
-
-                    <span class="qty-value">{{ inCart(item.id) }}</span>
-
-                    <button
-                        class="qty-btn qty-btn--plus"
-                        :class="{ 'qty-btn--disabled': isMaxed(item) }"
-                        :disabled="isMaxed(item)"
-                        :aria-label="`زيادة كمية ${item.name}`"
-                        @click.stop="increment(item)"
-                    >
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                            <line x1="12" y1="5" x2="12" y2="19"/>
-                            <line x1="5" y1="12" x2="19" y2="12"/>
-                        </svg>
-=======
-                    🛒
-                </RouterLink> -->
-                <!-- 
-                <button type="button" class="product-cart-link" :disabled="pendingProductId === item.id"
-                    :aria-label="`إضافة ${item.name} للسلة`" @click="addHomeProduct(item)">
-                    <span>🛒</span>
-                    <small v-if="currentQty(item.id)">
-                        {{ currentQty(item.id) }}
-                    </small>
-                </button> -->
-
                 <div v-if="currentQty(item.id) === 0">
                     <button type="button" class="product-cart-link" :disabled="pendingProductId === item.id"
                         @click="changeHomeQty(item, 1)">
@@ -263,7 +119,6 @@ const formatPrice = value => `${value ?? 0} ريال`
 
                     <button type="button" aria-label="إنقاص الكمية" @click="changeHomeQty(item, -1)">
                         −
->>>>>>> d7635d7e750ffd15d04dcc6f43b7358a40378eb6
                     </button>
                 </div>
 

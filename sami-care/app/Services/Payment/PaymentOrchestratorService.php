@@ -31,7 +31,7 @@ class PaymentOrchestratorService
             return ['status' => 'error', 'message' => __('auth.unauthenticated')];
         }
 
-        if (! in_array($gateway, ['card', 'tabby', 'tamara', 'telr', 'arb', 'cod'], true)) {
+        if (! in_array($gateway, ['card', 'tabby', 'tamara', 'telr', 'arb', 'urpay', 'cod'], true)) {
             return ['status' => 'error', 'message' => __('messages.invalid_payment_method')];
         }
 
@@ -276,6 +276,7 @@ class PaymentOrchestratorService
             'tamara' => app(TamaraGateway::class)->create($attempt, $customer, $urls, $input['platform'] ?? 'web', (bool) ($input['is_mobile'] ?? false)),
             'telr' => app(TelrGateway::class)->create($attempt, $customer, $urls),
             'arb' => app(ArbGateway::class)->create($attempt, $customer, $urls),
+            'urpay' => app(ArbGateway::class)->create($attempt, $customer, $urls),
             default => throw new \RuntimeException('Unsupported gateway'),
         };
     }
@@ -288,6 +289,7 @@ class PaymentOrchestratorService
             'tamara' => app(TamaraGateway::class)->verify($attempt, $request),
             'telr' => app(TelrGateway::class)->verify($attempt, $request),
             'arb' => app(ArbGateway::class)->verify($attempt, $request),
+            'urpay' => app(ArbGateway::class)->verify($attempt, $request),
             default => ['status' => 'failed'],
         };
     }
@@ -333,6 +335,7 @@ class PaymentOrchestratorService
             'tamara' => 'tamara',
             'telr' => 'telr',
             'arb' => 'arb',
+            'urpay' => 'urpay',
             default => $gateway,
         };
     }

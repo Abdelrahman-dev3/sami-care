@@ -23,7 +23,7 @@ const priceParts = computed(() => {
 })
 
 const PAYMENT_METHODS = computed(() => BK_PAYS.filter(method => method.id !== 'wallet'))
-const ENABLED_PAYS = ['cash', 'visa']
+const ENABLED_PAYS = ['cash', 'visa', 'urpay']
 onMounted(async () => {
   try {
     const res = await fetchProfile()

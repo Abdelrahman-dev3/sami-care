@@ -6,11 +6,7 @@ import AuthModal from '@/components/common/AuthModal.vue'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import CartDrawer from '@/components/store/CartDrawer.vue'
-<<<<<<< HEAD
 import FloatingActions from '@/components/common/FloatingActions.vue'
-=======
-import FloatingContactActions from '@/components/common/FloatingContactActions.vue'
->>>>>>> d7635d7e750ffd15d04dcc6f43b7358a40378eb6
 import { useScrollReveal } from '@/composables/useScrollReveal'
 import { useStore } from '@/composables/useStore'
 
@@ -127,13 +123,9 @@ useScrollReveal()
     <LocationPicker />
     <CartDrawer :open="cartDrawerOpen" @close="closeCart" @checkout="checkoutCart" />
   </template>
-<<<<<<< HEAD
   <!-- عائم على كل الأجهزة (موبايل + ديسكتوب) -->
   <FloatingActions />
-=======
-  <FloatingContactActions />
   <AuthModal />
->>>>>>> d7635d7e750ffd15d04dcc6f43b7358a40378eb6
 </template>
 
 <style>
