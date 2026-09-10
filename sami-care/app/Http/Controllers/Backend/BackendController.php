@@ -117,6 +117,12 @@ class BackendController extends Controller
                 $q->whereNull('deleted_at');
             })
             ->whereNotIn('status', ['completed', 'cancelled']) // Exclude both statuses
+            ->where(function ($q) {
+                $q->where('payment_type', '!=', 'cart')
+                    ->orWhereHas('transactions', function ($t) {
+                        $t->where('payment_status', 1);
+                    });
+            })
             ->branch()
             ->take(10)
             ->get();

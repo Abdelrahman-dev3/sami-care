@@ -38,14 +38,20 @@ const walletApplied = computed(() => Math.min(walletDiscount.value, walletMax.va
 const loyaltyRemaining = computed(() => Math.max(priceParts.value.total - couponDiscount.value - walletApplied.value, 0))
 const loyaltyMaxPoints = computed(() => Math.min(loyaltyBalance.value, Math.ceil(loyaltyRemaining.value / pointValue.value)))
 const hasSubRewards = computed(() => walletApplied.value > 0 || loyaltyPointsUsed.value > 0)
+const codRequiredDeposit = computed(() => Math.round(priceParts.value.total * 0.3))
+const hasCodDeposit = computed(() => walletBalance.value >= codRequiredDeposit.value)
 
 const PAY_METHODS = computed(() => [
   {
     id: 'cod',
     n: 'الدفع عند الوصول',
-    d: hasSubRewards.value ? 'غير متاح مع خصم المحفظة أو النقاط' : 'ادفع عند وصولك للفرع',
+    d: hasSubRewards.value
+      ? 'غير متاح مع خصم المحفظة أو النقاط'
+      : !hasCodDeposit.value
+        ? `يتطلب عربون 30% (${rs(codRequiredDeposit.value)} ر.س) في المحفظة — رصيدك: ${rs(walletBalance.value)} ر.س`
+        : `عربون 30% (${rs(codRequiredDeposit.value)} ر.س) يُخصم من المحفظة والباقي عند الوصول`,
     logo: 'COD',
-    enabled: !hasSubRewards.value,
+    enabled: !hasSubRewards.value && hasCodDeposit.value,
   },
 
   { id: 'mada', n: 'مدى', d: 'قريبًا', logo: 'مدى', enabled: false },
@@ -66,9 +72,12 @@ const PAY_METHODS = computed(() => [
   { id: 'tabby', n: 'تابي', d: 'قريبًا', logo: 'tabby', enabled: false },
 ])
 
-
-watch([hasSubRewards, payableTotal], () => {
-  if (hasSubRewards.value && state.pay === 'cod') state.pay = payableTotal.value > 0 ? 'card' : null
+watch([hasCodDeposit, hasSubRewards, payableTotal], () => {
+  if (hasSubRewards.value && state.pay === 'cod') {
+    state.pay = payableTotal.value > 0 ? 'card' : null
+  } else if (!hasCodDeposit.value && state.pay === 'cod') {
+    state.pay = null
+  }
 })
 
 const TRUST = [
@@ -196,6 +205,9 @@ watch(loyaltyMaxPoints, () => {
       </div>
 
     </div>
+    <div v-if="!hasCodDeposit && !hasSubRewards" class="cod-deposit-alert">
+      💡 <b>ملاحظة الدفع عند الوصول:</b> يتطلب توفر عربون بنسبة 30% ({{ rs(codRequiredDeposit) }} ر.س) في رصيد محفظتك لتأكيد الحجز. رصيدك الحالي: {{ rs(walletBalance) }} ر.س.
+    </div>
     <div class="secure-line">🔒 جميع عمليات الدفع آمنة ومشفرة</div>
   </div>
 
@@ -275,4 +287,14 @@ watch(loyaltyMaxPoints, () => {
 
 <style scoped>
 .pm.disabled { opacity: .45; cursor: not-allowed; }
+.cod-deposit-alert {
+  margin-top: 14px;
+  padding: 11px 15px;
+  background: #fff9ed;
+  border: 1px solid #f6deb4;
+  border-radius: 10px;
+  font-size: 12.5px;
+  color: #8c5b16;
+  line-height: 1.6;
+}
 </style>

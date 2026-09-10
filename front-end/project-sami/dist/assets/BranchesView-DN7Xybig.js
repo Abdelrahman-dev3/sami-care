@@ -1,4 +1,4 @@
-import{r as b,h as m,c as a,b as r,u as s,p as u,F as v,e as w,o as i,q as p,t,a as e,w as k}from"./index-CiLk9SU8.js";import{u as y,a as z}from"./useInternalLinks-IoTGl9uV.js";import{P as B}from"./PageSkeleton-CZUDusLl.js";import"./SkeletonLoader-DObrqQuB.js";const C=`\r
+import{r as b,h as m,c as a,b as r,u as s,p as u,F as v,e as w,o as i,q as p,t,a as e,w as k}from"./index-C_v4GyG2.js";import{u as y,a as z}from"./useInternalLinks-DqBxxCgd.js";import{P as B}from"./PageSkeleton-Cjc85j-0.js";import"./SkeletonLoader-BsDQpnjP.js";const C=`\r
 :root{\r
   --ink:#0A0906; --coal:#14110C;\r
   --gold:#CE9234; --gold-bright:#E8BE6C; --gold-deep:#9C6B1F;\r

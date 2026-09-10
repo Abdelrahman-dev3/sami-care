@@ -24,7 +24,7 @@ const I = {
 const thumb = shape => shapeParts(shape, 34)
 
 /* mada/apple/card لسه مش مفعّلة (زي طرق الدفع في باقي الموقع) — cod والمحفظة بس شغالين فعليًا بالباك إند */
-const ENABLED_PAYS = ['cod', 'wallet']
+const ENABLED_PAYS = ['cod', 'wallet', 'urpay']
 
 const error = ref('')
 

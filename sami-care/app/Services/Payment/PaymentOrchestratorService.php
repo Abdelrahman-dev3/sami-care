@@ -129,11 +129,13 @@ class PaymentOrchestratorService
         $resultHint = strtolower((string) $request->query('result'));
         if (in_array($resultHint, ['cancel', 'cancelled'], true)) {
             $attempt->update(['status' => PaymentAttempt::STATUS_CANCELLED]);
+            $this->cleanupFailedCartBookings($attempt);
             return ['status' => 'cancelled'];
         }
 
         if (in_array($resultHint, ['fail', 'failed', 'failure'], true)) {
             $attempt->update(['status' => PaymentAttempt::STATUS_FAILED]);
+            $this->cleanupFailedCartBookings($attempt);
             return ['status' => 'failed'];
         }
 
@@ -178,6 +180,8 @@ class PaymentOrchestratorService
                 'verify_response' => $verification['raw'] ?? null,
             ]),
         ]);
+
+        $this->cleanupFailedCartBookings($attempt);
 
         return ['status' => $status];
     }
@@ -257,6 +261,9 @@ class PaymentOrchestratorService
 
             return ['status' => 'paid', 'invoice_id' => $invoiceId];
         } catch (\Throwable $exception) {
+            if (!empty($checkout['cart_ids'])) {
+                \Modules\Booking\Models\Booking::whereIn('id', $checkout['cart_ids'])->where('status', 'pending')->unpaid()->delete();
+            }
             return ['status' => 'error', 'message' => $exception->getMessage()];
         }
     }
@@ -339,4 +346,17 @@ class PaymentOrchestratorService
             default => $gateway,
         };
     }
+
+    private function cleanupFailedCartBookings(PaymentAttempt $attempt): void
+    {
+        if (!empty($attempt->cart_ids)) {
+            $failedBookings = \Modules\Booking\Models\Booking::whereIn('id', $attempt->cart_ids)->unpaid()->get();
+            foreach ($failedBookings as $bk) {
+                $bk->bookingService()->delete();
+                $bk->packages()->delete();
+                $bk->delete();
+            }
+        }
+    }
+
 }

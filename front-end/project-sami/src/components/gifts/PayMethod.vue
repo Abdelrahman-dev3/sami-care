@@ -11,7 +11,7 @@ const props = defineProps({
 
 const { state } = useGifts()
 
-const ENABLED_PAYS = ['cash', 'wallet']
+const ENABLED_PAYS = ['cash', 'wallet', 'urpay']
 
 function select() {
   if (!ENABLED_PAYS.includes(props.m.id)) return

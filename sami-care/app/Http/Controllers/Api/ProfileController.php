@@ -26,7 +26,13 @@ class ProfileController extends Controller
             ->with(['branch', 'services.employee', 'services.service', 'bookingTransaction'])
             ->where('created_by', $user->id)
             ->whereHas('services')
-            ->whereNull('deleted_by');
+            ->whereNull('deleted_by')
+            ->where(function ($q) {
+                $q->where('payment_type', '!=', 'cart')
+                    ->orWhereHas('transactions', function ($t) {
+                        $t->where('payment_status', 1);
+                    });
+            });
 
         $allBookings = (clone $bookingsQuery)->latest('id')->get();
         $currentBookings = (clone $bookingsQuery)

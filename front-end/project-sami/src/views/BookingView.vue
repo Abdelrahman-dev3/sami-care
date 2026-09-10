@@ -65,6 +65,19 @@ function toast(msg) {
   toast._h = setTimeout(() => { toastOn.value = false }, 2600)
 }
 
+watch(
+  () => route.query.payment,
+  val => {
+    if (!val) return
+    if (val === 'failed') {
+      toast('فشلت عملية الدفع الإلكتروني، يرجى إعادة المحاولة.')
+    } else if (val === 'cancelled' || val === 'cancel') {
+      toast('تم إلغاء عملية الدفع.')
+    }
+  },
+  { immediate: true },
+)
+
 const hasSvc = computed(() => state.services.length > 0)
 const footerTotal = computed(() => state.step === 4 ? payableTotal.value : priceParts.value.total)
 function decodeReceipt(code) {
@@ -113,6 +126,15 @@ async function doPay() {
     state.cust.phone = state.cust.phone || user.value?.mobile || ''
     state.cust.mail = state.cust.mail || user.value?.email || ''
     const branchId = current.value?.home ? 0 : Number(current.value?.id)
+
+    if (state.pay === 'cod') {
+      const requiredDeposit = Math.round(priceParts.value.total * 0.3)
+      if ((Number(state.walletBalance) || 0) < requiredDeposit) {
+        toast(`عذرًا، الدفع عند الوصول يتطلب توفر عربون 30% (${rs(requiredDeposit)} ر.س) في محفظتك`)
+        return
+      }
+    }
+
     const services = selSvcs.value.map(s => ({
       subServices: [{
         id: s.id,
@@ -137,10 +159,10 @@ async function doPay() {
     const hasLoyalty = loyaltyPoints > 0
     const couponCode = rewards.couponApplied || ''
 
-    /* بوابة cod بتعامل الدفع كعربون محفظة مستقل؛ عند استخدام المحفظة/النقاط كخصومات جزئية
-       نمرر الطلب لمسار البوابات العادي حتى تُخصم المكافآت أولًا ثم يُحصّل المتبقي. */
-    const gateway = hasWallet || hasLoyalty
-      ? 'card'
+    /* عند اختيار cod يمر كعربون محفظة مستقل، أما عند اختيار أي بوابة أخرى (مثل urpay أو card)
+       فتُخصم المكافآت أولاً ويُحصّل المتبقي عبر البوابة المختارة نفسها */
+    const gateway = state.pay === 'cod'
+      ? 'cod'
       : (state.pay || 'card')
 
     const payment = await initPayment(gateway, {

@@ -167,8 +167,7 @@ function doBookPay() {
         ? Math.min(Math.max(Number(B.walletAmount) || 0, 0), Number(B.walletBalance) || 0, packageTotalWithVat)
         : 0
       const loyaltyPoints = B.useLoyalty ? parseInt(B.loyaltyPointsUsed, 10) || 0 : 0
-      const hasRewards = walletAmount > 0 || loyaltyPoints > 0
-      const gateway = hasRewards ? 'card' : (B.pay === 'cash' ? 'cod' : 'card')
+      const gateway = B.pay === 'cash' ? 'cod' : (B.pay === 'urpay' ? 'urpay' : 'card')
       const payment = await initPayment(gateway, {
         wallet: walletAmount > 0,
         walletAmount,

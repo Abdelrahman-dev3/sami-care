@@ -175,7 +175,13 @@ public function index_list(Request $request)
             if ($branchId > 0) {
                 $q->where('branch_id', $branchId);
             }
-            $q->where('status', '!=', 'cancelled');
+            $q->where('status', '!=', 'cancelled')
+                ->where(function ($sub) {
+                    $sub->where('payment_type', '!=', 'cart')
+                        ->orWhereHas('transactions', function ($t) {
+                            $t->where('payment_status', 1);
+                        });
+                });
         })
         ->when(! empty($selectedEmployeeIds), function ($q) use ($selectedEmployeeIds) {
             $q->whereIn('employee_id', $selectedEmployeeIds);
@@ -194,7 +200,13 @@ public function index_list(Request $request)
             if ($branchId > 0) {
                 $q->where('branch_id', $branchId);
             }
-            $q->where('status', '!=', 'cancelled');
+            $q->where('status', '!=', 'cancelled')
+                ->where(function ($sub) {
+                    $sub->where('payment_type', '!=', 'cart')
+                        ->orWhereHas('transactions', function ($t) {
+                            $t->where('payment_status', 1);
+                        });
+                });
         })
         ->when(! empty($selectedEmployeeIds), function ($q) use ($selectedEmployeeIds) {
             $q->whereIn('employee_id', $selectedEmployeeIds);
@@ -878,7 +890,13 @@ public function index_list(Request $request)
     {
         $module_name = $this->module_name;
 
-        $query = Booking::with('branch', 'user', 'services', 'mainServices', 'payment', 'bookingPackages', 'bookedPackageService', 'userPackageServices');
+        $query = Booking::with('branch', 'user', 'services', 'mainServices', 'payment', 'bookingPackages', 'bookedPackageService', 'userPackageServices')
+            ->where(function ($q) {
+                $q->where('payment_type', '!=', 'cart')
+                    ->orWhereHas('transactions', function ($t) {
+                        $t->where('payment_status', 1);
+                    });
+            });
 
         $filter = $request->filter;
 

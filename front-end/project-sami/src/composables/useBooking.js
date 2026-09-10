@@ -151,8 +151,11 @@ export function useBooking() {
         if (payableTotal.value <= 0) {
           return !!(state.rewards.useWallet || state.rewards.useLoyalty || state.rewards.couponApplied || state.pay)
         }
+        if (state.pay === 'cod') {
+          const codRequired = Math.round(priceParts.value.total * 0.3)
+          return (Number(state.walletBalance) || 0) >= codRequired
+        }
         return !!state.pay
-        //return !!state.pay && (state.pay !== 'wallet' || (state.walletBalance ?? 0) >= payableTotal.value)
     }
     return false
   })
