@@ -126,17 +126,21 @@ class PaymentOrchestratorService
             return ['status' => 'paid', 'invoice_id' => $attempt->invoice_id];
         }
 
-        $resultHint = strtolower((string) $request->query('result'));
-        if (in_array($resultHint, ['cancel', 'cancelled'], true)) {
-            $attempt->update(['status' => PaymentAttempt::STATUS_CANCELLED]);
-            $this->cleanupFailedCartBookings($attempt);
-            return ['status' => 'cancelled'];
-        }
+        if (! $request->has('trandata')) {
+            $resultHint = strtolower((string) ($request->query('result') ?: $request->input('result')));
+            $errorText = strtolower((string) ($request->query('ErrorText') ?: $request->input('ErrorText') ?: $request->input('errorText')));
 
-        if (in_array($resultHint, ['fail', 'failed', 'failure'], true)) {
-            $attempt->update(['status' => PaymentAttempt::STATUS_FAILED]);
-            $this->cleanupFailedCartBookings($attempt);
-            return ['status' => 'failed'];
+            if (in_array($resultHint, ['cancel', 'cancelled', 'canceled'], true) || str_contains($errorText, 'cancel')) {
+                $attempt->update(['status' => PaymentAttempt::STATUS_CANCELLED]);
+                $this->cleanupFailedCartBookings($attempt);
+                return ['status' => 'cancelled'];
+            }
+
+            if (in_array($resultHint, ['fail', 'failed', 'failure'], true) || (!empty($errorText) && !str_contains($errorText, 'cancel'))) {
+                $attempt->update(['status' => PaymentAttempt::STATUS_FAILED]);
+                $this->cleanupFailedCartBookings($attempt);
+                return ['status' => 'failed'];
+            }
         }
 
         $verification = $this->verifyGatewayPayment($attempt, $request);
@@ -322,6 +326,14 @@ class PaymentOrchestratorService
     {
         $base = route('payments.callback', ['gateway' => $attempt->gateway]);
         $token = $attempt->token;
+
+        if (in_array($attempt->gateway, ['arb', 'urpay'], true)) {
+            return [
+                'success' => $base . '?attempt=' . $token,
+                'fail' => $base . '?attempt=' . $token . '&result=fail',
+                'cancel' => $base . '?attempt=' . $token . '&result=cancel',
+            ];
+        }
 
         return [
             'success' => $base . '?attempt=' . $token . '&result=success',

@@ -15,7 +15,7 @@ protected $except = [
     'api/quick-booking/*',
     'api/cafe/*',
     'login',
-        'register',
-
+    'register',
+    'payments/callback/*',
 ];
 }

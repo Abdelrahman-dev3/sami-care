@@ -90,6 +90,8 @@ class ArbGateway
                 $result = strtoupper((string) ($first['result'] ?? ''));
                 $paymentId = $first['paymentid'] ?? $first['PaymentID'] ?? $first['tranid'] ?? null;
 
+                $errorText = strtolower((string) ($first['errorText'] ?? $first['ErrorText'] ?? ''));
+
                 if (in_array($result, ['CAPTURED', 'SUCCESS', 'APPROVED'], true)) {
                     return [
                         'status' => 'paid',
@@ -98,7 +100,10 @@ class ArbGateway
                     ];
                 }
 
-                if (in_array($result, ['CANCEL', 'CANCELLED', 'CANCELED'], true)) {
+                if (in_array($result, ['CANCEL', 'CANCELLED', 'CANCELED', 'USER CANCELLED'], true)
+                    || str_contains($errorText, 'cancel')
+                    || str_contains(strtolower($result), 'cancel')
+                ) {
                     return [
                         'status' => 'cancelled',
                         'external_id' => $paymentId ?: $attempt->external_id,
@@ -115,10 +120,19 @@ class ArbGateway
         }
 
         // Fallback for query params / direct result hints
+        $errorText = strtolower((string) ($request->get('ErrorText') ?? $request->get('errorText') ?? ''));
         $status = strtolower((string) ($request->get('status') ?? $request->get('Status') ?? ''));
         $paymentId = $request->get('paymentid') ?? $request->get('PaymentID') ?? $attempt->external_id;
-        $result = $request->get('result') ?? '';
-        $responseCode = $request->get('responsecode') ?? $request->get('ResponseCode') ?? '';
+        $result = strtolower((string) ($request->get('result') ?? ''));
+        $responseCode = (string) ($request->get('responsecode') ?? $request->get('ResponseCode') ?? '');
+
+        if (str_contains($errorText, 'cancel') || in_array($status, ['cancel', 'cancelled', 'canceled'], true) || in_array($result, ['cancel', 'cancelled', 'canceled'], true)) {
+            return [
+                'status' => 'cancelled',
+                'external_id' => $paymentId ?: $attempt->external_id,
+                'raw' => $raw,
+            ];
+        }
 
         return [
             'status' => $this->normalizeStatus($status, $result, $responseCode),
@@ -135,11 +149,11 @@ class ArbGateway
     private function normalizeStatus(string $status, string $result, string $responseCode): string
     {
         if ($status === 'success' || $status === 'captured') return 'paid';
-        if ($status === 'cancelled' || $status === 'cancel') return 'cancelled';
+        if (in_array($status, ['cancelled', 'cancel', 'canceled'], true)) return 'cancelled';
 
         $resultLower = strtolower($result);
-        if (in_array($resultLower, ['captured', 'success', 'approved'], true)) return 'paid';
-        if (in_array($resultLower, ['cancel', 'cancelled'], true)) return 'cancelled';
+        if (in_array($resultLower, ['captured', 'approved'], true)) return 'paid';
+        if (in_array($resultLower, ['cancel', 'cancelled', 'canceled'], true)) return 'cancelled';
 
         if ($responseCode === '00') return 'paid';
 

@@ -170,7 +170,7 @@ Route::controller(PaymentController::class)->group(function () {
     Route::post('/payment-chanal', 'payment')->name('payment-chanal');
 });
 Route::controller(PaymentCallbackController::class)->group(function () {
-    Route::get('/payments/callback/{gateway}', 'handle')->name('payments.callback');
+    Route::match(['get', 'post'], '/payments/callback/{gateway}', 'handle')->name('payments.callback');
 });
 
 Route::controller(EmployeesController::class)->group(function () {

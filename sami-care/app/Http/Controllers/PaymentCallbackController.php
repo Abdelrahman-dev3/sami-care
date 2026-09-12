@@ -10,7 +10,29 @@ class PaymentCallbackController extends Controller
 {
     public function handle(string $gateway, Request $request)
     {
-        $token = $request->query('attempt');
+        $token = $request->query('attempt') ?: $request->input('attempt');
+
+        if (! $token && $request->filled('trandata')) {
+            try {
+                $trandata = (string) $request->input('trandata');
+                $key = config('arb.resource_key') ?? config('services.arb.resource_key') ?? env('ARB_RESOURCE_KEY');
+                $string = hex2bin(trim($trandata));
+                if ($string !== false && $key) {
+                    $code = unpack('C*', $string);
+                    $chars = array_map('chr', $code);
+                    $code = base64_encode(implode($chars));
+                    $decrypted = openssl_decrypt($code, 'AES-256-CBC', $key, OPENSSL_ZERO_PADDING, 'PGKEYENCDECIVSPC');
+                    if ($decrypted !== false) {
+                        $pad = ord($decrypted[strlen($decrypted) - 1]);
+                        $raw = urldecode(substr($decrypted, 0, -1 * $pad));
+                        $dataArr = json_decode($raw, true);
+                        $token = $dataArr[0]['udf1'] ?? null;
+                    }
+                }
+            } catch (\Throwable) {
+                // Fallback attempt extraction failed
+            }
+        }
 
         if (!$token) {
             return redirect('/app')->with('error', __('messages.payment_failed'));
