@@ -192,7 +192,13 @@ Route::post('/gift-cards/claim/{token}/schedule', $dashboardRedirect)->name('gif
 Route::controller(WheelController::class)->group(function () {
     Route::post('/wheel/spin', 'spin')->name('wheel.spin');
 });
-
+Route::get(
+    '/app/page-qr',
+    [\App\Http\Controllers\Backend\PageQrController::class, 'index']
+)->middleware([
+    'auth',
+    'permission:menu_builder_sidebar',
+])->name('backend.page-qr.index');
 Route::middleware('auth')->group(function () use ($dashboardRedirect) {
     Route::get('/giffte', $dashboardRedirect)->name('gift.page');
     Route::get('/cart', $dashboardRedirect)->name('cart.page');

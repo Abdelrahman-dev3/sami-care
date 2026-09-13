@@ -48,7 +48,16 @@
 @endphp
 
 @include(config('laravel-menu.views.bootstrap-items'), ['items' => $filteredItems])
-
+                
+                <li class="nav-item">
+    <a
+        href="{{ route('backend.page-qr.index') }}"
+        class="nav-link {{ request()->routeIs('backend.page-qr.*') ? 'active' : '' }}"
+    >
+        <i class="fa fa-qrcode"></i>
+        <span class="item-name">{{app()->getLocale()=='ar' ? 'QR صفحات الموقع' : 'website pages qr code'}}</span>
+    </a>
+</li>
 
                 @hasPermission('view_gift')
                 <li class="nav-item {{ request()->routeIs('app.gift') ? 'active' : '' }}">
