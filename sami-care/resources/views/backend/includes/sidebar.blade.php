@@ -59,6 +59,18 @@
     </a>
 </li>
 
+<li class="nav-item">
+    <a
+        href="{{ route('backend.dynamic-qr.index') }}"
+        class="nav-link {{ request()->routeIs('backend.dynamic-qr.*') ? 'active' : '' }}"
+    >
+        <i class="fa fa-qrcode"></i>
+        <span class="item-name">
+            {{app()->getLocale()=='ar' ? ' إدارة QR' : 'manage qr'}}
+           </span>
+    </a>
+</li>
+
                 @hasPermission('view_gift')
                 <li class="nav-item {{ request()->routeIs('app.gift') ? 'active' : '' }}">
                     <a href="{{ route('app.gift') }}" class="nav-link {{ request()->routeIs('app.gift') ? 'active' : '' }}">

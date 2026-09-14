@@ -199,6 +199,52 @@ Route::get(
     'auth',
     'permission:menu_builder_sidebar',
 ])->name('backend.page-qr.index');
+
+Route::middleware([
+    'auth',
+    'permission:menu_builder_sidebar',
+])->prefix('app/dynamic-qr')
+  ->name('backend.dynamic-qr.')
+  ->group(function () {
+      Route::get('/', [
+          \App\Http\Controllers\Backend\DynamicQrController::class,
+          'index',
+      ])->name('index');
+
+      Route::post('/', [
+          \App\Http\Controllers\Backend\DynamicQrController::class,
+          'store',
+      ])->name('store');
+
+      Route::put('/{dynamicQr}', [
+          \App\Http\Controllers\Backend\DynamicQrController::class,
+          'update',
+      ])->name('update');
+  });
+
+// رابط عام يفتحه أي شخص يمسح QR، بدون تسجيل دخول.
+Route::get('/q/{token}', function (string $token) {
+    $code = \App\Models\DynamicQr::where('token', $token)->firstOrFail();
+
+    $headers = [
+        'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+        'Pragma' => 'no-cache',
+        'Expires' => '0',
+        'X-Robots-Tag' => 'noindex, nofollow',
+    ];
+
+    if ($code->type === 'url') {
+        return redirect()->away($code->content, 302, $headers);
+    }
+
+    return response()->view(
+        'dynamic-qr.show',
+        compact('code'),
+        200,
+        $headers
+    );
+})->name('dynamic-qr.open');
+
 Route::middleware('auth')->group(function () use ($dashboardRedirect) {
     Route::get('/giffte', $dashboardRedirect)->name('gift.page');
     Route::get('/cart', $dashboardRedirect)->name('cart.page');
