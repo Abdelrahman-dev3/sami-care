@@ -71,6 +71,18 @@
     </a>
 </li>
 
+<li class="nav-item">
+    <a
+        href="{{ route('backend.wifi-qr.index') }}"
+        class="nav-link {{ request()->routeIs('backend.wifi-qr.*') ? 'active' : '' }}"
+    >
+        <i class="fa fa-wifi"></i>
+        <span class="item-name">
+        {{app()->getLocale()=='ar' ? ' الواي فاي QR' : 'wifi qr'}}
+         </span>
+    </a>
+</li>
+
                 @hasPermission('view_gift')
                 <li class="nav-item {{ request()->routeIs('app.gift') ? 'active' : '' }}">
                     <a href="{{ route('app.gift') }}" class="nav-link {{ request()->routeIs('app.gift') ? 'active' : '' }}">

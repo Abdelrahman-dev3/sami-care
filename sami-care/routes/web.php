@@ -161,6 +161,13 @@ Route::controller(TaqnyatSmsController::class)->group(function () {
     Route::post('/send-test', 'sendTestMessage')->name('send-test');
 });
 
+Route::view('/app/wifi-qr', 'backend.wifi-qr.index')
+    ->middleware([
+        'auth',
+        'permission:menu_builder_sidebar',
+    ])
+    ->name('backend.wifi-qr.index');
+
 Route::get('/salonService', $dashboardRedirect)->name('salon.create');
 
 Route::get('/details/{id}', $dashboardRedirect)->name('home.details');
