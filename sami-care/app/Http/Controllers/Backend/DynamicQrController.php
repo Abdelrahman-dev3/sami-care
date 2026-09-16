@@ -40,7 +40,7 @@ class DynamicQrController extends Controller
         );
     }
 
-    private function validatedData(Request $request): array
+    /* private function validatedData(Request $request): array
     {
         $data = $request->validate([
             'title' => ['required', 'string', 'max:150'],
@@ -66,5 +66,98 @@ class DynamicQrController extends Controller
         }
 
         return $data;
+    } */
+
+    private function validatedData(Request $request): array
+{
+    $data = $request->validate([
+        'title' => ['required', 'string', 'max:150'],
+        'type' => ['required', 'in:url,text,wifi'],
+
+        'content' => [
+            'exclude_if:type,wifi',
+            'required',
+            'string',
+            'max:10000',
+        ],
+
+        'ssid' => [
+            'exclude_unless:type,wifi',
+            'required',
+            'string',
+            'max:32',
+        ],
+
+        'security' => [
+            'exclude_unless:type,wifi',
+            'required',
+            'in:WPA,WEP,nopass',
+        ],
+
+        'password' => [
+            'exclude_unless:type,wifi',
+            'nullable',
+            'string',
+            'max:255',
+        ],
+
+        'hidden' => [
+            'exclude_unless:type,wifi',
+            'sometimes',
+            'boolean',
+        ],
+    ]);
+
+    if ($data['type'] === 'wifi') {
+        if (strlen($data['ssid']) > 32) {
+            throw ValidationException::withMessages([
+                'ssid' => 'اسم الشبكة يجب ألا يتجاوز 32 بايت.',
+            ]);
+        }
+
+        $password = (string) ($data['password'] ?? '');
+
+        if ($data['security'] !== 'nopass' && $password === '') {
+            throw ValidationException::withMessages([
+                'password' => 'أدخل كلمة مرور الشبكة.',
+            ]);
+        }
+
+        return [
+            'title' => $data['title'],
+            'type' => 'wifi',
+            'content' => json_encode([
+                'ssid' => $data['ssid'],
+                'security' => $data['security'],
+                'password' => $data['security'] === 'nopass'
+                    ? ''
+                    : $password,
+                'hidden' => $request->boolean('hidden'),
+            ], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
+        ];
     }
+
+    if ($data['type'] === 'url') {
+        $data['content'] = trim($data['content']);
+
+        $scheme = strtolower(
+            (string) parse_url($data['content'], PHP_URL_SCHEME)
+        );
+
+        if (
+            !filter_var($data['content'], FILTER_VALIDATE_URL)
+            || !in_array($scheme, ['http', 'https'], true)
+        ) {
+            throw ValidationException::withMessages([
+                'content' => 'أدخل رابطًا صحيحًا يبدأ بـ https:// أو http://',
+            ]);
+        }
+    }
+
+    return [
+        'title' => $data['title'],
+        'type' => $data['type'],
+        'content' => $data['content'],
+    ];
+}
 }

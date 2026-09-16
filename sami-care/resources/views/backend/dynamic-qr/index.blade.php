@@ -32,7 +32,7 @@
             >
                 @csrf
 
-                <label class="form-label" for="new-title">العنوان</label>
+               {{--  <label class="form-label" for="new-title">العنوان</label>
                 <input
                     id="new-title"
                     name="title"
@@ -62,7 +62,9 @@
                     maxlength="10000"
                     dir="auto"
                     required
-                ></textarea>
+                ></textarea> --}}
+
+                @include('backend.dynamic-qr.fields', ['code' => null])
 
                 <button class="btn btn-primary" type="submit">
                     إنشاء QR
@@ -111,8 +113,8 @@
                         >
                             @csrf
                             @method('PUT')
-
-                            <label class="form-label">العنوان</label>
+                            @include('backend.dynamic-qr.fields', ['code' => $code])
+                            {{-- <label class="form-label">العنوان</label>
                             <input
                                 name="title"
                                 value="{{ $code->title }}"
@@ -142,7 +144,7 @@
                                 maxlength="10000"
                                 dir="auto"
                                 required
-                            >{{ $code->content }}</textarea>
+                            >{{ $code->content }}</textarea> --}}
 
                             <button class="btn btn-success" type="submit">
                                 حفظ التعديل
@@ -220,4 +222,44 @@
     });
 })();
 </script>
+<script>
+(function () {
+    document.querySelectorAll('.qr-fields').forEach(function (group) {
+        const type = group.querySelector('.qr-type');
+        const normalFields = group.querySelector('.normal-fields');
+        const content = normalFields.querySelector('[name="content"]');
+        const wifiFields = group.querySelector('.wifi-fields');
+        const security = group.querySelector('.wifi-security');
+        const password = group.querySelector('.wifi-password');
+
+        function syncFields() {
+            const isWifi = type.value === 'wifi';
+
+            normalFields.hidden = isWifi;
+            content.disabled = isWifi;
+            content.required = !isWifi;
+
+            wifiFields.hidden = !isWifi;
+
+            wifiFields.querySelectorAll('input, select').forEach(function (field) {
+                field.disabled = !isWifi;
+                field.required =
+                    isWifi && field.hasAttribute('data-wifi-required');
+            });
+
+            const needsPassword = isWifi && security.value !== 'nopass';
+
+            password.disabled = !needsPassword;
+            password.required = needsPassword;
+        }
+
+        type.addEventListener('change', syncFields);
+        security.addEventListener('change', syncFields);
+
+        syncFields();
+    });
+})();
+</script>
+
 @endpush
+

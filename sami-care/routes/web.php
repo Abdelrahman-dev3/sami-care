@@ -244,6 +244,45 @@ Route::get('/q/{token}', function (string $token) {
         return redirect()->away($code->content, 302, $headers);
     }
 
+    if ($code->type === 'wifi') {
+        $wifi = json_decode($code->content, true);
+
+        abort_unless(
+            is_array($wifi)
+            && isset($wifi['ssid'], $wifi['security'])
+            && in_array($wifi['security'], ['WPA', 'WEP', 'nopass'], true),
+            500,
+            'بيانات الشبكة غير صالحة.'
+        );
+
+        $escape = static function (string $value): string {
+            return strtr($value, [
+                '\\' => '\\\\',
+                ';' => '\\;',
+                ',' => '\\,',
+                ':' => '\\:',
+                '"' => '\\"',
+            ]);
+        };
+
+        $payload = 'WIFI:T:' . $wifi['security']
+            . ';S:' . $escape($wifi['ssid']) . ';';
+
+        if ($wifi['security'] !== 'nopass') {
+            $payload .= 'P:'
+                . $escape((string) ($wifi['password'] ?? '')) . ';';
+        }
+
+        $payload .= 'H:'
+            . (!empty($wifi['hidden']) ? 'true' : 'false') . ';;';
+
+        return response()->view('dynamic-qr.wifi', [
+            'code' => $code,
+            'ssid' => $wifi['ssid'],
+            'payload' => $payload,
+        ], 200, $headers);
+    }
+
     return response()->view(
         'dynamic-qr.show',
         compact('code'),
