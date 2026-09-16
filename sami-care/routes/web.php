@@ -146,7 +146,7 @@ Route::controller(SignController::class)->group(function () {
 
 $dashboardRedirect = fn() => redirect('/app');
 
-Route::get('/sami-care-info', $dashboardRedirect)->name('center.info');
+Route::get('/sami-care-info', CenterInfoPageController::class)->name('center.info');
 
 $cafeApp = function () {
     return response()->file(public_path('cafe-app/index.html'));
