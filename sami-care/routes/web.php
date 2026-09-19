@@ -227,6 +227,10 @@ Route::middleware([
           \App\Http\Controllers\Backend\DynamicQrController::class,
           'update',
       ])->name('update');
+      Route::delete('/{dynamicQr}', [
+        \App\Http\Controllers\Backend\DynamicQrController::class,
+        'destroy',
+    ])->name('destroy');
   });
 
 // رابط عام يفتحه أي شخص يمسح QR، بدون تسجيل دخول.

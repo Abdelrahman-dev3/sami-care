@@ -89,14 +89,25 @@
 
         <label class="form-label">كلمة المرور</label>
 
-        <input
-            name="password"
-            type="password"
-            class="form-control mb-3 wifi-password"
-            value="{{ $wifi['password'] ?? '' }}"
-            autocomplete="new-password"
-            dir="auto"
-        >
+        <div class="input-group mb-3">
+    <input
+        name="password"
+        type="password"
+        class="form-control wifi-password"
+        value="{{ $wifi['password'] ?? '' }}"
+        autocomplete="new-password"
+        dir="auto"
+    >
+
+    <button
+        type="button"
+        class="btn btn-outline-secondary toggle-wifi-password"
+        aria-label="إظهار كلمة المرور"
+        aria-pressed="false"
+    >
+        إظهار
+    </button>
+</div>
 
         <label class="d-block mb-3">
             <input

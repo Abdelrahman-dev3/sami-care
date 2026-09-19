@@ -160,4 +160,13 @@ class DynamicQrController extends Controller
         'content' => $data['content'],
     ];
 }
+
+public function destroy(DynamicQr $dynamicQr)
+{
+    $dynamicQr->delete();
+
+    return redirect()
+        ->route('backend.dynamic-qr.index')
+        ->with('success', 'تم حذف QR بنجاح.');
+}
 }

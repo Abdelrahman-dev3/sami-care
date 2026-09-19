@@ -80,11 +80,65 @@
                     <div class="card-body">
                         <h5 class="text-center">{{ $code->title }}</h5>
 
-                        <div
-                            class="dynamic-qr text-center my-3"
-                            data-url="{{ route('dynamic-qr.open', ['token' => $code->token]) }}"
-                            data-filename="qr-{{ $code->token }}.png"
-                        ></div>
+                        @php
+    $qrPayload = route('dynamic-qr.open', [
+        'token' => $code->token,
+    ]);
+
+    if ($code->type === 'wifi') {
+        $wifiData = json_decode($code->content, true);
+
+        $validWifi = is_array($wifiData)
+            && isset($wifiData['ssid'], $wifiData['security'])
+            && is_string($wifiData['ssid'])
+            && $wifiData['ssid'] !== ''
+            && in_array(
+                $wifiData['security'],
+                ['WPA', 'WEP', 'nopass'],
+                true
+            );
+
+        $qrPayload = '';
+
+        if ($validWifi) {
+            $escapeWifi = static function (string $value): string {
+                return strtr($value, [
+                    '\\' => '\\\\',
+                    ';' => '\\;',
+                    ',' => '\\,',
+                    ':' => '\\:',
+                    '"' => '\\"',
+                ]);
+            };
+
+            $qrPayload = 'WIFI:T:' . $wifiData['security']
+                . ';S:' . $escapeWifi($wifiData['ssid']) . ';';
+
+            if ($wifiData['security'] !== 'nopass') {
+                $qrPayload .= 'P:'
+                    . $escapeWifi((string) ($wifiData['password'] ?? ''))
+                    . ';';
+            }
+
+            $qrPayload .= 'H:'
+                . (!empty($wifiData['hidden']) ? 'true' : 'false')
+                . ';;';
+        }
+    }
+@endphp
+
+<div
+    class="dynamic-qr text-center my-3"
+    data-payload="{{ $qrPayload }}"
+    data-filename="qr-{{ $code->token }}.png"
+></div>
+
+@if ($code->type === 'wifi')
+    <p class="text-muted text-center small">
+        هذا الكود يحتوي بيانات الاتصال بالشبكة مباشرة.
+        بعد تعديل البيانات وحفظها، حمّل الصورة الجديدة.
+    </p>
+@endif
 
                         <div class="text-center mb-3">
                             <button
@@ -150,6 +204,20 @@
                                 حفظ التعديل
                             </button>
                         </form>
+
+                        <form
+    method="POST"
+    action="{{ route('backend.dynamic-qr.destroy', $code) }}"
+    class="mt-3"
+    onsubmit="return confirm('هل تريد حذف هذا الكود؟ رابط عرضه سيتوقف عن العمل.');"
+>
+    @csrf
+    @method('DELETE')
+
+    <button type="submit" class="btn btn-outline-danger">
+        حذف QR
+    </button>
+</form>
                     </div>
                 </div>
             </div>
@@ -169,10 +237,13 @@
         const button = card.querySelector('.download-qr');
 
         try {
+            if (!element.dataset.payload) {
+    throw new Error('Invalid QR content');
+}
             const source = document.createElement('div');
 
             new QRCode(source, {
-                text: element.dataset.url,
+               text: element.dataset.payload,
                 width: 512,
                 height: 512,
                 colorDark: '#000000',
@@ -217,7 +288,7 @@
             });
         } catch (error) {
             card.querySelector('.qr-error').textContent =
-                'تعذر إنشاء الصورة. تأكد من وجود مكتبة QR.';
+    'تعذر إنشاء الصورة. تأكد من بيانات الكود وتحميل مكتبة QR.';
         }
     });
 })();
@@ -231,6 +302,23 @@
         const wifiFields = group.querySelector('.wifi-fields');
         const security = group.querySelector('.wifi-security');
         const password = group.querySelector('.wifi-password');
+        const togglePassword = group.querySelector('.toggle-wifi-password');
+
+togglePassword.addEventListener('click', function () {
+    if (password.disabled) return;
+
+    const showPassword = password.type === 'password';
+
+    password.type = showPassword ? 'text' : 'password';
+    togglePassword.textContent = showPassword ? 'إخفاء' : 'إظهار';
+
+    togglePassword.setAttribute(
+        'aria-label',
+        showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'
+    );
+
+    togglePassword.setAttribute('aria-pressed', String(showPassword));
+});
 
         function syncFields() {
             const isWifi = type.value === 'wifi';
@@ -251,6 +339,13 @@
 
             password.disabled = !needsPassword;
             password.required = needsPassword;
+            togglePassword.disabled = !needsPassword;
+
+password.type = 'password';
+togglePassword.textContent = 'إظهار';
+togglePassword.setAttribute('aria-label', 'إظهار كلمة المرور');
+togglePassword.setAttribute('aria-pressed', 'false');
+            
         }
 
         type.addEventListener('change', syncFields);
