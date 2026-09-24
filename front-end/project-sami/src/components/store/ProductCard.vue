@@ -1,4 +1,5 @@
 <script setup>
+import ProductStock from '@/components/common/ProductStock.vue'
 /*
   بطاقة المنتج — مُرحَّلة حرفيًا من الدالة card(p,i) في src/legacy/store.html
 
@@ -43,6 +44,7 @@ const shape = computed(() => shapeParts(props.p.shape, size.value))
     </div>
     <div class="pbody">
       <b>{{ p.n }}</b><small>{{ p.d }}</small>
+      <ProductStock :quantity="p.stockQty" />
       <div class="prow">
         <!-- قبل الإضافة: زر عادي. بعد الإضافة: عدّاد − / + شغّال -->
         <button v-if="!qty" class="addbtn" :data-add="p.id" @click="$emit('add', p.id, $event)">
@@ -72,3 +74,8 @@ const shape = computed(() => shapeParts(props.p.shape, size.value))
     </div>
   </article>
 </template>
+
+<style scoped>
+.fav2{width:40px;height:40px}
+.fav2 svg{width:24px;height:24px}
+</style>

@@ -1,4 +1,8 @@
 <script setup>
+import { useLanguage } from '@/composables/useLanguage'
+import { localizeRecord } from '@/utils/i18nField'
+const { state: language } = useLanguage()
+const field = (item, key) => localizeRecord(item, key, language.lang)
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import BaseButton from '@/components/common/BaseButton.vue'
@@ -25,11 +29,11 @@ const promoCards = computed(() => {
   const apiOffers = (props.offers || []).map((offer, index) => ({
     id: offer.id || `offer-${index}`,
     type: 'offer',
-    badge: offer.badge || 'خصم',
-    eyebrow: offer.eyebrow || '✦ عرض خاص',
-    title: offer.name || offer.title || 'عرض مميز',
-    text: offer.description || offer.text || 'استمتع بالعروض المميزة من عناية سامي',
-    cta: offer.cta || 'اكتشف العرض',
+    badge: field(offer, 'badge') || 'خصم',
+    eyebrow: field(offer, 'eyebrow') || '✦ عرض خاص',
+    title: field(offer, 'name') || field(offer, 'title') || 'عرض مميز',
+    text: field(offer, 'description') || field(offer, 'text') || 'استمتع بالعروض المميزة من عناية سامي',
+    cta: field(offer, 'cta') || 'اكتشف العرض',
     href: offer.href || '/packages-gifts',
   }))
 
@@ -103,8 +107,12 @@ function goHomeService() {
         <h3>{{ promo.title }}</h3>
         <p>{{ promo.text }}</p>
       </div>
-      <BaseButton v-if="promo.type === 'home'" class="promo-card__cta" :label="promo.cta"
-                  href="#" @click.prevent="goHomeService" />
+      <div v-if="promo.type === 'home'" class="promo-card__actions">
+        <BaseButton class="promo-card__cta" :label="promo.cta"
+                    href="/booking?branch=hm" @click.prevent="goHomeService" />
+        <BaseButton class="promo-card__cta" label="تفاصيل الخدمة المنزلية"
+                    href="/home-service" @click.prevent="router.push('/home-service')" />
+      </div>
       <BaseButton v-else class="promo-card__cta" :label="promo.cta" :href="promo.href" />
     </article>
     </template>
@@ -112,6 +120,8 @@ function goHomeService() {
 </template>
 
 <style scoped>
+.promo-card__actions { position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: 10px; align-self: start; }
+.promo-card__actions .promo-card__cta { white-space: normal; text-align: center; }
 /* أيقونة البيت بدل شارة الخصم — نفس الدائرة الذهبية بلون داكن للأيقونة */
 .promo-card--home :deep(.promo-card__badge),
 .promo-card--home .promo-card__badge { color: #2a1f0c }

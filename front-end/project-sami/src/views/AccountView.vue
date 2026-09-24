@@ -1,5 +1,8 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import BookingQr from '@/components/common/BookingQr.vue'
+import { returnedReceiptUrl } from '@/utils/bookingReceipt'
 import { useAuth } from '@/composables/useAuth'
 import { fetchProfile } from '@/services/accountApi'
 import AccountOverview from '@/components/account/AccountOverview.vue'
@@ -12,6 +15,9 @@ import AccountSettings from '@/components/account/AccountSettings.vue'
 import PageSkeleton from '@/components/common/PageSkeleton.vue'
 
 const { isAuthenticated, openAuthModal } = useAuth()
+const route = useRoute()
+const receiptUrl = computed(() => route.query.payment === 'success'
+  ? returnedReceiptUrl(route.query.invoice, route.query.attempt_id) : '')
 
 const TABS = [
   { id: 'overview', label: 'نظرة عامة' },
@@ -77,6 +83,11 @@ watch(isAuthenticated, (v) => { if (v) loadProfile() })
         >{{ t.label }}</button>
       </div>
 
+      <section v-if="receiptUrl" class="payment-receipt">
+        <h2>بيانات الحجز</h2>
+        <BookingQr :url="receiptUrl" />
+      </section>
+
       <PageSkeleton v-if="loading" variant="account" />
       <div v-else-if="error" class="account-state error">{{ error }}</div>
       <template v-else>
@@ -104,6 +115,7 @@ watch(isAuthenticated, (v) => { if (v) loadProfile() })
   font-size: 14px; font-weight: 700;
 }
 .account-head { margin-bottom: 18px; }
+.payment-receipt{margin-bottom:24px;padding:20px;border:1px solid #e9e0d3;border-radius:18px;background:#fff;text-align:center}
 .account-head h1 { font-size: 26px; margin: 0 0 4px; }
 .account-head p { color: #8b8379; font-size: 13px; margin: 0; }
 .account-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; border-bottom: 1px solid #e9e0d3; padding-bottom: 12px; }

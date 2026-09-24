@@ -69,7 +69,6 @@ const ROW = 'border:none;padding:4px 0'
       <div v-if="current" class="gs-row"><span class="k">📍 الفرع المختار</span><span class="v">{{ current.name }}</span></div>
 
       <template v-if="state.step >= 2">
-        <div class="gs-row"><span class="k">🎨 تصميم البطاقة</span><span class="v">{{ d.n }}</span></div>
         <div class="gs-row"><span class="k">💬 الرسالة</span><span class="v">{{ state.msg ? 'مخصصة' : '—' }}</span></div>
         <div class="gs-row"><span class="k">📤 طريقة الإرسال</span><span class="v">{{ sendName }}</span></div>
         <div class="gs-row"><span class="k">👤 المهدى إليه</span><span class="v">{{ state.name || '—' }}</span></div>

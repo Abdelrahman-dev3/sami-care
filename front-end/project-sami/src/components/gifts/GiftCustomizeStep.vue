@@ -52,7 +52,7 @@ const I = {
         <div class="designs">
           <div v-for="x in DESIGNS" :key="x.id" class="design" :class="{ sel: state.design === x.id }" :data-d="x.id" @click="state.design = x.id">
             <div class="sw" :style="`background:${x.bg};color:${x.fg}`"><span class="dchk"><SIcon :inner="I.check" :size="10" /></span>SAMI</div>
-            <small>{{ x.n }}</small>
+            <small style="visibility:hidden" aria-hidden="true">{{ x.n }}</small>
           </div>
         </div>
       </div>

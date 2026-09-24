@@ -139,3 +139,30 @@ window.parent.postMessage({ type: 'sami:navigate', path }, '*')
 - لا مكتبة UI ولا إطار CSS — كل الأنماط يدوية
 - كل النصوص عربية مع `dir="rtl"`
 - الصور في `public/images/` — استخدم مسارات تبدأ بـ `/images/`
+
+## تطبيق الموبايل PWA
+
+تدعم نسخة الإنتاج التثبيت كتطبيق مستقل من نفس نطاق الواجهة. يبدأ التطبيق من `/?source=pwa` ويحافظ على عرض الموبايل عند تدوير الهاتف. في Android يظهر زر التثبيت عندما يتيح المتصفح ذلك. في iPhone توجد إرشادات الإضافة إلى الشاشة الرئيسية من قائمة المشاركة في Safari.
+
+- شغّل `npm run build` وانشر **كل محتويات `dist/`** في جذر نطاق الواجهة، بما فيها `.htaccess` و`sw.js` و`pwa.js` و`manifest.webmanifest` ومجلد `pwa/`.
+- يلزم HTTPS في الإنتاج. يمكن الاختبار محليًا على `localhost` أو `127.0.0.1` باستخدام `npm run preview`. فتح عنوان IP عبر HTTP من الهاتف لا يفعّل Service Worker.
+- التسجيل معطّل في `npm run dev` لتجنب بقاء كاش أثناء التطوير. استعمل البناء والمعاينة لاختبار PWA.
+- على Apache يضبط `.htaccess` نوع ملف manifest وإعادة التحقق من ملفات PWA. على Nginx أو CDN قدّم manifest بنوع `application/manifest+json` و`sw.js` كـ JavaScript، مع `Cache-Control: no-cache, must-revalidate` لملفات `sw.js` و`pwa.js` و`manifest.webmanifest`. لا تُعد كتابة طلبات هذه الملفات إلى `index.html`.
+- دون اتصال، تظهر صفحة عربية/إنجليزية بها زر إعادة المحاولة. الخدمات الحالية والحجز والدفع تحتاج اتصالًا. لا يُخزّن Service Worker صفحات الحساب أو نتائج API أو عمليات الدفع، ولا يعيد إرسال عمليات الحجز تلقائيًا.
+- يُولّد البناء إصدار الكاش من محتوى ملفات PWA. ينتظر العامل الجديد إغلاق النوافذ القديمة؛ لا توجد إعادة تحميل تلقائية قد تقطع الحجز أو الدفع. التنظيف يقتصر على كاش `sami-pwa-*`.
+- ملفات المصدر: `public/manifest.webmanifest` و`public/pwa.js` و`public/sw.js` و`public/pwa/`. أيقونات التطبيق مشتقة من شعار `public/logo.png`، مع نسخة maskable منفصلة.
+
+اختبارات سياسة التخزين وملفات التثبيت:
+
+```bash
+node --test tests/pwa.test.cjs
+```
+
+اختبارات Chromium تبدأ خادمًا محليًا مؤقتًا من `dist/` وتفحص قابلية التثبيت، انقطاع الشبكة، زر التثبيت، وإرشادات iPhone. تحتاج Playwright ومتصفح Chromium؛ يمكن تعيين `PLAYWRIGHT_MODULE` لمسار حزمة Playwright المثبتة خارج المشروع. تُتخطى اختبارات المتصفح عند غياب الحزمة.
+
+```bash
+npm run build
+node --test tests/pwa.test.cjs tests/pwa.browser.test.cjs
+```
+
+مرجع متطلبات التثبيت: [MDN — Making PWAs installable](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Making_PWAs_installable).

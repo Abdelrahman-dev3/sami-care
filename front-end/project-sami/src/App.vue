@@ -8,27 +8,31 @@ import AppFooter from '@/components/layout/AppFooter.vue'
 import CartDrawer from '@/components/store/CartDrawer.vue'
 import FloatingActions from '@/components/common/FloatingActions.vue'
 import { useScrollReveal } from '@/composables/useScrollReveal'
+import { useSeo } from '@/composables/useSeo'
 import { useStore } from '@/composables/useStore'
 
+useSeo()
 const route = useRoute()
 const router = useRouter()
 const media = window.matchMedia('(max-width: 640px)')
+const standalone = window.matchMedia('(display-mode: standalone)')
+const mobileLayout = () => media.matches || standalone.matches || window.navigator.standalone === true
 const navigating = ref(false)
 const cartDrawerOpen = ref(false)
 const { state: storeState } = useStore()
-const isMobile = ref(media.matches)
-const useMobileFrame = computed(() => isMobile.value && !['about', 'gift-recipient'].includes(route.name))
-const viewByRoute = { home:'home', services:'services', 'service-detail':'services', booking:'booking', store:'store', gifts:'gifts', 'packages-gifts':'packages', branches:'branches', contact:'contact', 'gift-recipient':'gifts', terms:'terms', 'privacy-policy':'privacy' }
+const isMobile = ref(mobileLayout())
+const useMobileFrame = computed(() => isMobile.value && !['about', 'gift-recipient', 'booking-receipt'].includes(route.name))
+const viewByRoute = { home:'home', services:'services', 'service-detail':'services', booking:'booking', store:'store', gifts:'gifts', 'packages-gifts':'packages', branches:'branches', contact:'contact', 'gift-recipient':'gifts', terms:'terms', 'home-service':'home-service', cafe:'cafe', 'privacy-policy':'privacy' }
 /*
   Ù…Ù‡Ù…: Ø£ÙŠ ØªØ¹Ø¯ÙŠÙ„ Ø¹Ù„Ù‰ public/mobile/index.html Ù„Ø§Ø²Ù… ÙŠØªØ¨Ø¹Ù‡ ØªØºÙŠÙŠØ± Ø§Ù„Ø±Ù‚Ù… Ø¯Ù‡ØŒ
   Ù„Ø£Ù†Ù‡ Ù‡Ùˆ Ø§Ù„Ù„ÙŠ Ø¨ÙŠÙƒØ³Ø± ÙƒØ§Ø´ Ø§Ù„Ù…ØªØµÙØ­ Ù„Ù„Ø¥Ø·Ø§Ø±. Ù…Ù† ØºÙŠØ±Ù‡ Ø§Ù„Ù…ØªØµÙØ­ Ø¨ÙŠÙØ¶Ù„ ÙŠØ¹Ø±Ø¶
   Ø§Ù„Ù†Ø³Ø®Ø© Ø§Ù„Ù‚Ø¯ÙŠÙ…Ø© Ù…Ù‡Ù…Ø§ Ø§ØªØºÙŠÙ‘Ø± Ø§Ù„Ù…Ù„Ù.
 */
-const mobileVersion = '20260907-restore-lama-font-v73'
+const mobileVersion = '20260924-seo-v90'
 const initialMobileView = viewByRoute[route.name] || 'home'
 const mobileApiBase = (import.meta.env.VITE_API_BASE_URL || `${window.location.origin}/api`).replace(/\/$/, '')
-const mobileSrc = `/mobile/index.html?view=${initialMobileView}&api=${encodeURIComponent(mobileApiBase)}&v=${mobileVersion}`
-const syncMedia = event => { isMobile.value = event.matches }
+const mobileSrc = `/mobile/index.html?view=${initialMobileView}&page=${encodeURIComponent(route.path)}&api=${encodeURIComponent(mobileApiBase)}&v=${mobileVersion}`
+const syncMedia = () => { isMobile.value = mobileLayout() }
 const motionTargets = [
   '.hero-box','.hero-person','.about-section > *','.section-title','.home-section > *',
   '.services-grid > *','.package-grid > *','.product-grid > *','.branches-grid > *',
@@ -74,6 +78,7 @@ const stopAfter = router.afterEach(() => { navTimer = setTimeout(() => { navigat
 
 onMounted(() => {
   media.addEventListener('change', syncMedia)
+  standalone.addEventListener('change', syncMedia)
   window.addEventListener('message', handleMobileNavigation)
   if (!isMobile.value && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     document.documentElement.classList.add('desktop-motion-ready')
@@ -98,6 +103,7 @@ onBeforeUnmount(() => {
   stopBefore()
   stopAfter()
   media.removeEventListener('change', syncMedia)
+  standalone.removeEventListener('change', syncMedia)
   window.removeEventListener('message', handleMobileNavigation)
   revealObserver?.disconnect()
   motionMutationObserver?.disconnect()
@@ -119,7 +125,7 @@ useScrollReveal()
     <RouterView v-slot="{ Component, route: current }">
       <component :is="Component" :key="current.path" />
     </RouterView>
-    <AppFooter v-if="route.name !== 'booking'" class="global-site-footer" />
+    <AppFooter v-if="!['booking', 'packages-gifts', 'gifts'].includes(route.name)" class="global-site-footer" />
     <LocationPicker />
     <CartDrawer :open="cartDrawerOpen" @close="closeCart" @checkout="checkoutCart" />
   </template>

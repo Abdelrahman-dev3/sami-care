@@ -1,7 +1,9 @@
 //import { reactive, computed } from 'vue'
 //import { PRODUCTS } from '@/data/store'
 
-import { reactive, computed, ref } from 'vue'
+import { reactive, computed, ref, watch } from 'vue'
+import { useLanguage } from '@/composables/useLanguage'
+import { localizeField, translationSource } from '@/utils/i18nField'
 import { fetchShopCatalog } from '@/services/shopApi'
 import {
   fetchProductDetail, fetchLogisticZones,
@@ -23,16 +25,22 @@ import {
   مع الحفاظ على نفس الدلالات تمامًا.
 */
 
-const products = ref([])
-const categories = ref([])
+const { state: language } = useLanguage()
+const rawProducts = ref([])
+const rawCategoryItems = ref([])
+const products = computed(() => rawProducts.value.map(p => ({ ...p, n: localizeField(p.n, language.lang), d: localizeField(p.d, language.lang) })))
+const categories = computed(() => rawCategoryItems.value.map(c => ({ ...c, n: localizeField(c.n, language.lang) })))
+let catalogRequest = 0
 let productsLoaded = false
 
-async function loadProducts() {
-  if (productsLoaded) return
+async function loadProducts(force = false) {
+  if (productsLoaded && !force) return
+  const request = ++catalogRequest
   productsLoaded = true
 
   try {
     const { categories: rawCategories = [] } = await fetchShopCatalog()
+    if (request !== catalogRequest) return
     const byId = new Map()
 
     rawCategories.forEach(cat => {
@@ -40,8 +48,8 @@ async function loadProducts() {
         if (!byId.has(p.id)) {
           byId.set(p.id, {
             id: p.id,
-            n: p.name,
-            d: p.short_description || '',
+            n: translationSource(p, 'name'),
+            d: translationSource(p, 'short_description') || translationSource(p, 'description') || '',
             pr: Number(p.min_price ?? p.max_price ?? 0),
             image: p.image || p.feature_image || null,
             cat: cat.id,
@@ -56,22 +64,26 @@ async function loadProducts() {
       })
     })
 
-    products.value = Array.from(byId.values())
-    categories.value = [
+    rawProducts.value = Array.from(byId.values())
+    rawCategoryItems.value = [
       { id: 'all', n: 'كل المنتجات', shape: 'kit' },
       ...rawCategories.map((c, i) => ({
         id: c.id,
-        n: c.name,
+        n: translationSource(c, 'name'),
         shape: ['pump', 'spray', 'dropper', 'jar', 'perfume', 'kit'][i % 6],
       })),
     ]
   } catch (err) {
-    products.value = []
-    categories.value = [{ id: 'all', n: 'كل المنتجات', shape: 'kit' }]
+    if (request !== catalogRequest) return
+    productsLoaded = false
+    if (rawProducts.value.length) return
+    rawProducts.value = []
+    rawCategoryItems.value = [{ id: 'all', n: 'كل المنتجات', shape: 'kit' }]
   }
 }
 
 loadProducts()
+watch(() => language.lang, () => loadProducts(true))
 
 /* منطقة الشحن — الموقع بيخدم منطقة واحدة حاليًا، فبنجيبها مرة واحدة ونستخدمها في كل مكان */
 const logisticZone = ref(null)

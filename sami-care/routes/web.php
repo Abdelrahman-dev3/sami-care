@@ -613,7 +613,30 @@ Route::group(['prefix' => 'app', 'middleware' => 'auth'], function () {
     });
 });
 
+Route::middleware(['auth', 'permission:view_terms_and_conditions'])
+    ->prefix('app/home-service-page')->name('backend.home-service-page.')
+    ->controller(\App\Http\Controllers\Backend\HomeServicePageController::class)
+    ->group(function () {
+        Route::get('/', 'edit')->name('edit');
+        Route::put('/', 'update')->name('update');
+    });
+
+Route::middleware(['auth', 'permission:view_terms_and_conditions'])
+    ->prefix('app/cafe-page')->name('backend.cafe-page.')
+    ->controller(\App\Http\Controllers\Backend\CafePageController::class)
+    ->group(function () {
+        Route::get('/', 'edit')->name('edit');
+        Route::put('/', 'update')->name('update');
+    });
+
 Route::get('/my-bookings', $dashboardRedirect)->name('profile.my_bookings');
+Route::middleware(['auth', 'permission:view_terms_and_conditions'])
+    ->prefix('app/about-page')->name('backend.about-page.')
+    ->controller(\App\Http\Controllers\Backend\AboutPageController::class)
+    ->group(function () {
+        Route::get('/', 'edit')->name('edit');
+        Route::put('/', 'update')->name('update');
+    });
 Route::get('/coupon', $dashboardRedirect)->name('profile.coupon');
 Route::post('/booking/cancel/{id}', [ProfileController::class, 'destroy_myBooking'])->name('myBooking.destroy');
 Route::get('/complate-bookings', $dashboardRedirect)->name('profile.complateBokkings');
@@ -704,3 +727,11 @@ Route::controller(PackageDetailsController::class)->group(function () {
     Route::get('/qu/cart', 'getUserCart');
     Route::delete('/qu/cart/remove/{id}', 'remove');
 });
+
+Route::middleware(['auth', 'permission:view_terms_and_conditions'])
+    ->prefix('app/frontend-seo')->name('backend.frontend-seo.')
+    ->controller(\App\Http\Controllers\Backend\FrontendSeoController::class)
+    ->group(function () {
+        Route::get('/', 'edit')->name('edit');
+        Route::put('/', 'update')->name('update');
+    });

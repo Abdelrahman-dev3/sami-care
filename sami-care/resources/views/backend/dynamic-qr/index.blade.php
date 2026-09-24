@@ -85,46 +85,6 @@
         'token' => $code->token,
     ]);
 
-    if ($code->type === 'wifi') {
-        $wifiData = json_decode($code->content, true);
-
-        $validWifi = is_array($wifiData)
-            && isset($wifiData['ssid'], $wifiData['security'])
-            && is_string($wifiData['ssid'])
-            && $wifiData['ssid'] !== ''
-            && in_array(
-                $wifiData['security'],
-                ['WPA', 'WEP', 'nopass'],
-                true
-            );
-
-        $qrPayload = '';
-
-        if ($validWifi) {
-            $escapeWifi = static function (string $value): string {
-                return strtr($value, [
-                    '\\' => '\\\\',
-                    ';' => '\\;',
-                    ',' => '\\,',
-                    ':' => '\\:',
-                    '"' => '\\"',
-                ]);
-            };
-
-            $qrPayload = 'WIFI:T:' . $wifiData['security']
-                . ';S:' . $escapeWifi($wifiData['ssid']) . ';';
-
-            if ($wifiData['security'] !== 'nopass') {
-                $qrPayload .= 'P:'
-                    . $escapeWifi((string) ($wifiData['password'] ?? ''))
-                    . ';';
-            }
-
-            $qrPayload .= 'H:'
-                . (!empty($wifiData['hidden']) ? 'true' : 'false')
-                . ';;';
-        }
-    }
 @endphp
 
 <div
@@ -135,8 +95,8 @@
 
 @if ($code->type === 'wifi')
     <p class="text-muted text-center small">
-        هذا الكود يحتوي بيانات الاتصال بالشبكة مباشرة.
-        بعد تعديل البيانات وحفظها، حمّل الصورة الجديدة.
+        صورة هذا الكود ثابتة، وتفتح صفحة الواي فاي بأحدث بيانات الشبكة.
+        يمكنك تعديل البيانات دون إعادة طباعة الكود. فتح الصفحة يحتاج اتصالًا بالإنترنت.
     </p>
 @endif
 

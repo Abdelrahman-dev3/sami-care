@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { useLanguage } from '@/composables/useLanguage'
 
 const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
 
@@ -7,6 +8,11 @@ const api = axios.create({
     headers: {
         Accept: 'application/json',
     },
+})
+
+api.interceptors.request.use(config => {
+  config.headers['frezka-localization'] = useLanguage().state.lang
+  return config
 })
 
 export default api

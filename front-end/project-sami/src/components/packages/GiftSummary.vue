@@ -66,7 +66,6 @@ const EMPTY_B = 'display:block;font-family:var(--font-d);color:var(--ink);margin
       <template v-if="state.gstep >= 2">
         <div class="gs-row"><span class="k">👤 المهدى إليه</span><span class="v">{{ state.name || '—' }}</span></div>
         <div class="gs-row"><span class="k">📱 رقم الجوال</span><span class="v" dir="ltr">{{ state.phone || '—' }}</span></div>
-        <div class="gs-row"><span class="k">🎨 تصميم البطاقة</span><span class="v">{{ d.n }}</span></div>
         <div class="gs-row"><span class="k">💬 الرسالة</span><span class="v">{{ state.msg ? 'تمت إضافة رسالة مخصصة' : '—' }}</span></div>
         <div class="gs-row"><span class="k">📤 طريقة الإرسال</span><span class="v">{{ sendName }}</span></div>
         <div class="gs-row"><span class="k">🕐 وقت الإرسال</span><span class="v"><span class="chip">{{ state.when === 'now' ? 'فوري' : 'مجدول' }}</span></span></div>

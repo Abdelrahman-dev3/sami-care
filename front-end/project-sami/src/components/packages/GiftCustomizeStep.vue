@@ -46,7 +46,7 @@ const I = {
         <div class="designs">
           <div v-for="d in DESIGNS" :key="d.id" class="design" :class="{ sel: state.design === d.id }" :data-d="d.id" @click="state.design = d.id">
             <div class="sw" :style="`background:${d.bg};color:${d.fg}`"><span class="dchk"><SIcon :inner="I.check" :size="10" /></span>SAMI</div>
-            <small>{{ d.n }}</small>
+            <small style="visibility:hidden" aria-hidden="true">{{ d.n }}</small>
           </div>
         </div>
       </div>

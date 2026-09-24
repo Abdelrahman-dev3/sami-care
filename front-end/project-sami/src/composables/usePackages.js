@@ -1,8 +1,9 @@
+import { paymentPolicy } from '@/utils/paymentPolicy'
 import { reactive, computed, ref } from 'vue'
 import { BRANCHES, AR_DAYS, AR_MONTHS } from '@/data/packages'
 import { fetchPackages } from '@/services/packagesApi'
 import { useLanguage } from '@/composables/useLanguage'
-import { localizeField } from '@/utils/i18nField'
+import { localizeField, translationSource } from '@/utils/i18nField'
 
 /* ===== منسّقات الوقت والتاريخ ===== */
 /* "HH:mm" -> "05:30 م" — الوقت الحقيقي راجع من الـ API كنص جاهز، مش رقم دقائق */
@@ -11,10 +12,11 @@ export function fmtTime(hhmm) {
   let [h, m] = hhmm.split(':').map(Number)
   const pm = h >= 12
   h = h % 12 || 12
-  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')} ${pm ? 'م' : 'ص'}`
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')} ${useLanguage().state.lang === 'en' ? (pm ? 'PM' : 'AM') : (pm ? 'م' : 'ص')}`
 }
 
 export function fmtDate(d) {
+  if (useLanguage().state.lang === 'en') return new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(d)
   return `${AR_DAYS[d.getDay()]} ${d.getDate()} ${AR_MONTHS[d.getMonth()]} ${d.getFullYear()}`
 }
 
@@ -52,8 +54,7 @@ const STYLE_ROTATION = [
 ]
 
 function asTranslations(text, translations) {
-  if (translations && typeof translations === 'object') return translations
-  return { ar: text, en: text }
+  return translationSource({ text, text_translations: translations }, 'text')
 }
 
 async function loadPackages() {
@@ -139,17 +140,17 @@ export function usePackages() {
   /* الباقات مترجَمة للغة الحالية — بتتحدّث فورًا لما المستخدم يبدّل اللغة */
   const packages = computed(() => rawPackages.value.map(p => ({
     id: p.id,
-    name: pick(p.nameT),
+    get name() { return pick(p.nameT) },
     cat: p.cat,
     dur: p.dur,
     price: p.price,
     branchId: p.branchId,
-    branchName: pick(p.branchNameT),
+    get branchName() { return pick(p.branchNameT) },
     color: p.color,
     hex: p.hex,
     hot: p.hot,
-    desc: pick(p.descT),
-    inc: p.incT.map(pick).filter(Boolean),
+    get desc() { return pick(p.descT) },
+    get inc() { return p.incT.map(pick).filter(Boolean) },
     ico: p.ico,
     img: p.img,
   })))
@@ -167,7 +168,7 @@ export function usePackages() {
       case 0: return !!state.gtype
       case 1: return !!state.gpkg
       case 2: return state.name.trim().length > 1 && state.phone.trim().length >= 9 && (state.when === 'now' || state.schedDate)
-      case 3: return !!state.pay
+      case 3: { const subtotal = Math.max(Number(pkgOf(state.gpkg)?.price) || 0, 0); return paymentPolicy.canPay(state, subtotal + Math.round(subtotal * 0.15)) }
     }
     return false
   })
@@ -201,6 +202,11 @@ export function usePackages() {
 
   /* ===== بدء الرحلات ===== */
   function startGift(type, pkg) {
+    state.pay = null
+    state.useWallet = false
+    state.walletAmount = 0
+    state.useLoyalty = false
+    state.loyaltyPointsUsed = 0
     state.page = 'gift'
     state.gstep = type ? 1 : 0
     state.gtype = type

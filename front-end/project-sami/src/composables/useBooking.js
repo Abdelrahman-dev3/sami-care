@@ -1,4 +1,6 @@
+import { useLanguage } from '@/composables/useLanguage'
 import { reactive, computed } from 'vue'
+import { paymentPolicy } from '@/utils/paymentPolicy'
 
 /*
   حالة صفحة الحجز — مبنية على بيانات حقيقية من الباك إند (خدمات حقيقية،
@@ -21,17 +23,19 @@ export function fmtTimeStr(hhmm) {
   let [h, m] = hhmm.split(':').map(Number)
   const pm = h >= 12
   h = h % 12 || 12
-  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')} ${pm ? 'م' : 'ص'}`
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')} ${useLanguage().state.lang === 'en' ? (pm ? 'PM' : 'AM') : (pm ? 'م' : 'ص')}`
 }
 
 export function fmtDur(min) {
   const h = Math.floor(min / 60)
   const m = min % 60
+  if (useLanguage().state.lang === 'en') return [h ? `${h} h` : '', m || !h ? `${m} min` : ''].filter(Boolean).join(' ')
   if (!h) return `${m} د`
   return m ? `${h} س ${m} د` : `${h} س`
 }
 
 export function fmtDate(d) {
+  if (useLanguage().state.lang === 'en') return new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(d)
   const AR_DAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت']
   const AR_MONTHS = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر']
   return `${AR_DAYS[d.getDay()]} ${d.getDate()} ${AR_MONTHS[d.getMonth()]} ${d.getFullYear()}`
@@ -151,11 +155,9 @@ export function useBooking() {
         if (payableTotal.value <= 0) {
           return !!(state.rewards.useWallet || state.rewards.useLoyalty || state.rewards.couponApplied || state.pay)
         }
-        if (state.pay === 'cod') {
-          const codRequired = Math.round(priceParts.value.total * 0.3)
-          return (Number(state.walletBalance) || 0) >= codRequired
-        }
-        return !!state.pay
+        return paymentPolicy.methods({ total: priceParts.value.total, walletBalance: state.walletBalance,
+          payable: payableTotal.value, hasRewards: walletDiscount.value > 0 || loyaltyPointsUsed.value > 0,
+        }).some(method => method.id === state.pay && method.enabled)
     }
     return false
   })

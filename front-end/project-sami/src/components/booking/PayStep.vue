@@ -1,5 +1,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
+import { paymentPolicy } from '@/utils/paymentPolicy'
+import PaymentMethodList from '@/components/common/PaymentMethodList.vue'
 import { useBooking, rs } from '@/composables/useBooking'
 import { fetchProfile } from '@/services/accountApi'
 import { fetchLoyaltyPointValue, validateInvoiceCoupon } from '@/services/bookingApi'
@@ -41,36 +43,11 @@ const hasSubRewards = computed(() => walletApplied.value > 0 || loyaltyPointsUse
 const codRequiredDeposit = computed(() => Math.round(priceParts.value.total * 0.3))
 const hasCodDeposit = computed(() => walletBalance.value >= codRequiredDeposit.value)
 
-const PAY_METHODS = computed(() => [
-  {
-    id: 'cod',
-    n: 'الدفع عند الوصول',
-    d: hasSubRewards.value
-      ? 'غير متاح مع خصم المحفظة أو النقاط'
-      : !hasCodDeposit.value
-        ? `يتطلب عربون 30% (${rs(codRequiredDeposit.value)} ر.س) في المحفظة — رصيدك: ${rs(walletBalance.value)} ر.س`
-        : `عربون 30% (${rs(codRequiredDeposit.value)} ر.س) يُخصم من المحفظة والباقي عند الوصول`,
-    logo: 'COD',
-    enabled: !hasSubRewards.value && hasCodDeposit.value,
-  },
+const PAY_METHODS = computed(() => paymentPolicy.methods({ total: priceParts.value.total, walletBalance: walletBalance.value, payable: payableTotal.value, hasRewards: hasSubRewards.value }))
 
-  { id: 'mada', n: 'مدى', d: 'قريبًا', logo: 'مدى', enabled: false },
-  {
-    id: 'card',
-    n: 'بطاقات الائتمان والخصم',
-    d: hasSubRewards.value ? 'ادفع المتبقي بعد الخصومات' : 'قريبًا — Visa / Mastercard',
-    logo: 'VISA',
-    enabled: hasSubRewards.value && payableTotal.value > 0,
-  },
-  {
-    id: 'urpay',
-    n: 'يورباي',
-    d: hasSubRewards.value ? 'ادفع المتبقي بعد الخصومات' : 'الدفع عبر يورباي',
-    logo: 'UrPay',
-    enabled: payableTotal.value > 0,
-  },
-  { id: 'tabby', n: 'تابي', d: 'قريبًا', logo: 'tabby', enabled: false },
-])
+watch(PAY_METHODS, methods => {
+  if (state.pay && !methods.some(method => method.id === state.pay && method.enabled)) state.pay = null
+}, { immediate: true })
 
 watch([hasCodDeposit, hasSubRewards, payableTotal], () => {
   if (hasSubRewards.value && state.pay === 'cod') {
@@ -197,14 +174,7 @@ watch(loyaltyMaxPoints, () => {
 
   <div class="card detail-card">
     <h4>اختر طريقة الدفع</h4>
-    <div class="pay-methods">
-      <div v-for="m in PAY_METHODS" :key="m.id" class="pm" :class="{ sel: state.pay === m.id, disabled: !m.enabled }" @click="selectMethod(m)">
-        <span class="pmi">{{ m.logo }}</span>
-        <span><b>{{ m.n }}</b><small>{{ m.d }}</small></span>
-        <span class="rad"><i></i></span>
-      </div>
-
-    </div>
+    <PaymentMethodList v-model="state.pay" :methods="PAY_METHODS" />
     <div v-if="!hasCodDeposit && !hasSubRewards" class="cod-deposit-alert">
       💡 <b>ملاحظة الدفع عند الوصول:</b> يتطلب توفر عربون بنسبة 30% ({{ rs(codRequiredDeposit) }} ر.س) في رصيد محفظتك لتأكيد الحجز. رصيدك الحالي: {{ rs(walletBalance) }} ر.س.
     </div>

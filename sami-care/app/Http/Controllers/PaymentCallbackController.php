@@ -46,7 +46,7 @@ class PaymentCallbackController extends Controller
 
         if (($result['status'] ?? '') === 'paid') {
             if ($isApi) {
-                return redirect($frontendUrl . '/account?payment=success&invoice=' . ($result['invoice_id'] ?? ''));
+                return redirect($frontendUrl . '/account?payment=success&invoice=' . ($result['invoice_id'] ?? '') . '&attempt_id=' . ($attempt?->id ?? ''));
             }
             return redirect('/app/invoice')->with('success', __('messages.payment_success'));
         }

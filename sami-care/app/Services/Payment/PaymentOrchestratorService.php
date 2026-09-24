@@ -110,6 +110,7 @@ class PaymentOrchestratorService
             'status' => 'redirect',
             'payment_url' => $attempt->payment_url,
             'attempt_token' => $attempt->token,
+            'attempt_id' => $attempt->id,
             'amount' => $attempt->amount,
         ];
     }

@@ -1,4 +1,5 @@
 <script setup>
+import { localizeRecord } from '@/utils/i18nField'
 import { computed } from 'vue'
 import SectionTitle from '@/components/common/SectionTitle.vue'
 import AppImage from '@/components/common/AppImage.vue'
@@ -24,7 +25,7 @@ const { requireLocation } = useServiceLocation()
 const { state: lang } = useLanguage()
 
 function nameOf(category) {
-    return category.name?.[lang.lang] || category.name?.ar || category.name?.en || category.name
+    return localizeRecord(category, 'name', lang.lang)
 }
 
 const services = computed(() => {

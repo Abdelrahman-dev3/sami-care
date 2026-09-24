@@ -9,7 +9,7 @@ import { useLanguage } from '@/composables/useLanguage'
 import { useBooking } from '@/composables/useBooking'
 import { getCategories } from '@/data/home'
 import { resolveApiImage } from '@/utils/assetPath'
-import { localizeField } from '@/utils/i18nField'
+import { localizeField, localizeRecord } from '@/utils/i18nField'
 
 const route = useRoute()
 const router = useRouter()
@@ -54,20 +54,25 @@ const categories = ref([])
 const loading = ref(true)
 const error = ref(null)
 
+let categoryRequest = 0
+watch(() => lang.lang, () => loadCategories())
 const loadCategories = async () => {
+  const request = ++categoryRequest
   try {
     loading.value = true
     error.value = null
 
     const response = await getCategories()
+    if (request !== categoryRequest) return
 
     categories.value = response?.status ? (response.data || []) : []
   } catch (err) {
+    if (request !== categoryRequest) return
     console.error('Categories API Error:', err)
     error.value = 'حدث خطأ أثناء تحميل الخدمة'
     categories.value = []
   } finally {
-    loading.value = false
+    if (request === categoryRequest) loading.value = false
   }
 }
 
@@ -79,16 +84,16 @@ const heroImage = computed(() =>
   resolveApiImage(category.value?.image) || category.value?.feature_image || null
 )
 
-const categoryName = computed(() => pick(category.value?.name))
+const categoryName = computed(() => localizeRecord(category.value, 'name', lang.lang))
 
 const tagline = computed(() =>
-  pick(category.value?.summary) || pick(category.value?.description) || ''
+  localizeRecord(category.value, 'summary', lang.lang) || localizeRecord(category.value, 'description', lang.lang) || ''
 )
 
 const services = computed(() =>
   (category.value?.services || []).map(s => ({
     id: s.id,
-    name: pick(s.name),
+    name: localizeRecord(s, 'name', lang.lang),
     dur: s.duration_min,
     price: s.default_price,
     image: s.feature_image || resolveApiImage(s.image),
@@ -115,7 +120,7 @@ watch(id, loadCategories)
 </script>
 
 <template>
-  <div class="home-page sd" dir="rtl">
+  <div class="home-page sd" :dir="lang.lang === 'en' ? 'ltr' : 'rtl'">
     <main>
 
       <!-- Loading -->
@@ -222,7 +227,7 @@ watch(id, loadCategories)
 .sd-hero__media::after{content:"";position:absolute;inset:0;
   background:linear-gradient(270deg,#080706 4%,rgba(8,7,6,.78) 46%,rgba(8,7,6,.12) 100%)}
 .sd-hero__inner{position:relative;z-index:2;width:min(1180px,calc(100% - 48px));margin-inline:auto;
-  color:#fff;text-align:right;padding:46px 0}
+  color:#fff;text-align:start;padding:46px 0}
 .sd-crumb{font-size:11px;color:#9d9488;margin-bottom:16px;display:flex;gap:7px;justify-content:flex-start}
 .sd-crumb a{color:#9d9488}
 .sd-crumb a:hover{color:var(--gold)}
@@ -275,7 +280,7 @@ watch(id, loadCategories)
 .sd-why__card{display:flex;align-items:center;gap:12px;background:#f6f0e6;border:1px solid var(--border);
   border-radius:var(--sd-radius);padding:18px 16px;transition:border-color .3s ease,background .3s ease}
 .sd-why__card:hover{border-color:rgba(201,139,49,.45);background:#fbf6ec}
-.sd-why__txt{flex:1;text-align:right}
+.sd-why__txt{flex:1;text-align:start}
 .sd-why__txt b{display:block;font-size:12.5px;margin-bottom:5px;color:#241f1b}
 .sd-why__txt small{font-size:10.5px;color:var(--muted);line-height:1.75}
 .sd-why__ic{flex:none;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { categoryIconPath } from '@/utils/giftIcons'
 import { resolveApiImage } from '@/utils/assetPath'
 import { RouterLink, useRouter } from 'vue-router'
@@ -8,7 +8,7 @@ import LocationNotice from '@/components/common/LocationNotice.vue'
 import { useLanguage } from '@/composables/useLanguage'
 import { serviceDetails } from '@/data/serviceDetails'
 import { getCategories } from '@/data/home'
-import { localizeField } from '@/utils/i18nField'
+import { localizeField, localizeRecord } from '@/utils/i18nField'
 
 const { state: lang } = useLanguage()
 const pick = t => localizeField(t, lang.lang)
@@ -47,12 +47,16 @@ const error = ref(null)
 |--------------------------------------------------------------------------
 */
 
+let categoryRequest = 0
+watch(() => lang.lang, () => loadCategories())
 const loadCategories = async () => {
+  const request = ++categoryRequest
   try {
     loading.value = true
     error.value = null
 
     const response = await getCategories()
+    if (request !== categoryRequest) return
 
     console.log('Categories API Response:', response)
 
@@ -63,13 +67,14 @@ const loadCategories = async () => {
     }
 
   } catch (err) {
+    if (request !== categoryRequest) return
     console.error('Categories API Error:', err)
 
     error.value = 'حدث خطأ أثناء تحميل الخدمات'
     categories.value = []
 
   } finally {
-    loading.value = false
+    if (request === categoryRequest) loading.value = false
   }
 }
 
@@ -95,7 +100,7 @@ const cards = computed(() =>
     return {
       id: category.id,
 
-      name: pick(category.name) || detail?.name,
+      name: localizeRecord(category, 'name', lang.lang) || detail?.name,
 
       image:
         resolveApiImage(category.image) ||
@@ -104,7 +109,7 @@ const cards = computed(() =>
         null,
 
       tagline:
-        pick(category.description) ||
+        localizeRecord(category, 'description', lang.lang) ||
         detail?.tagline ||
         '',
 
@@ -165,7 +170,7 @@ const perks = [
 </script>
 
 <template>
-  <div class="home-page services-page" dir="rtl">
+  <div class="home-page services-page" :dir="lang.lang === 'en' ? 'ltr' : 'rtl'">
 
     <main>
 
@@ -436,7 +441,7 @@ const perks = [
   width:100%;
   max-width:none;
   padding:52px;
-  text-align:right;
+  text-align:start;
 }
 
 .sv-eyebrow {

@@ -6,6 +6,11 @@ import AppFooter from '@/components/layout/AppFooter.vue'
 import PageSkeleton from '@/components/common/PageSkeleton.vue'
 import { fetchBlog } from '@/services/blogApi'
 import { assetPath } from '@/utils/assetPath'
+import { useLanguage } from '@/composables/useLanguage'
+const { state: language } = useLanguage()
+import { localizeRecord } from '@/utils/i18nField'
+const field = (item, key) => localizeRecord(item, key, language.lang)
+let blogRequest = 0
 import '@/assets/styles/home.css'
 
 const route = useRoute()
@@ -18,7 +23,7 @@ const fallbackImage = assetPath('/logo.png')
 const formattedDate = computed(() => {
   if (!blog.value?.published_at) return ''
 
-  return new Intl.DateTimeFormat('ar-SA', {
+  return new Intl.DateTimeFormat(language.lang === 'en' ? 'en-GB' : 'ar-SA', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -26,16 +31,19 @@ const formattedDate = computed(() => {
 })
 
 async function loadBlog(slug) {
+  const request = ++blogRequest
   loading.value = true
   error.value = ''
 
   try {
-    blog.value = await fetchBlog(slug)
+    const result = await fetchBlog(slug)
+    if (request === blogRequest) blog.value = result
   } catch (err) {
+    if (request !== blogRequest) return
     blog.value = null
     error.value = 'المدونة غير متاحة حاليا.'
   } finally {
-    loading.value = false
+    if (request === blogRequest) loading.value = false
   }
 }
 
@@ -46,6 +54,7 @@ function goBack() {
 
 onMounted(() => loadBlog(route.params.slug))
 watch(() => route.params.slug, slug => loadBlog(slug))
+watch(() => language.lang, () => loadBlog(route.params.slug))
 </script>
 
 <template>
@@ -71,17 +80,17 @@ watch(() => route.params.slug, slug => loadBlog(slug))
               <RouterLink to="/blog">المدونة</RouterLink>
             </nav>
             <time v-if="blog.published_at" :datetime="blog.published_at">{{ formattedDate }}</time>
-            <h1>{{ blog.title }}</h1>
-            <p v-if="blog.excerpt">{{ blog.excerpt }}</p>
+            <h1>{{ field(blog, 'title') }}</h1>
+            <p v-if="blog.excerpt">{{ field(blog, 'excerpt') }}</p>
           </div>
         </header>
 
         <div class="container blog-detail__layout">
           <figure class="blog-detail__image">
-            <img :src="blog.image_url || fallbackImage" :alt="blog.title" />
+            <img :src="blog.image_url || fallbackImage" :alt="field(blog, 'title')" />
           </figure>
 
-          <div class="blog-detail__content" v-html="blog.content"></div>
+          <div class="blog-detail__content" v-html="field(blog, 'content')"></div>
 
           <button class="blog-detail__back" type="button" @click="goBack">العودة</button>
         </div>

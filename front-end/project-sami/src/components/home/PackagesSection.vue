@@ -1,4 +1,5 @@
 <script setup>
+import { localizeRecord } from '@/utils/i18nField'
 import SectionTitle from '@/components/common/SectionTitle.vue'
 import AppImage from '@/components/common/AppImage.vue'
 import { useRouter } from 'vue-router'
@@ -23,7 +24,7 @@ const { requireLocation } = useServiceLocation()
 const { state: lang } = useLanguage()
 
 function nameOf(item) {
-    return item.name?.[lang.lang] || item.name?.ar || item.name?.en || item.name
+    return localizeRecord(item, 'name', lang.lang)
 }
 
 const go = path => {
@@ -65,7 +66,7 @@ const go = path => {
                 <h3>{{ nameOf(item) }}</h3>
 
                 <p v-if="item.description">
-                    {{ item.description }}
+                    {{ localizeRecord(item, 'description', lang.lang) }}
                 </p>
 
                 <a

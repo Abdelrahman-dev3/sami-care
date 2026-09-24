@@ -1,4 +1,9 @@
 <script setup>
+import { useLanguage } from '@/composables/useLanguage'
+import { localizeRecord } from '@/utils/i18nField'
+const { state: language } = useLanguage()
+const nameOf = item => localizeRecord(item, 'name', language.lang)
+import ProductStock from '@/components/common/ProductStock.vue'
 import { ref } from 'vue'
 import SectionTitle from '@/components/common/SectionTitle.vue'
 import AppImage from '@/components/common/AppImage.vue'
@@ -92,9 +97,9 @@ const formatPrice = value => `${value ?? 0} ريال`
             <article v-for="item in products" :key="item.id" data-reveal>
                 <RouterLink to="/store">
 
-                    <AppImage :src="item.product_image" :alt="item.name" />
+                    <AppImage :src="item.product_image" :alt="nameOf(item)" />
 
-                    <h3>{{ item.name }}</h3>
+                    <h3>{{ nameOf(item) }}</h3>
 
                 </RouterLink>
 
@@ -102,6 +107,7 @@ const formatPrice = value => `${value ?? 0} ريال`
                     {{ formatPrice(item.max_price) }}
                 </b>
 
+                <ProductStock :quantity="item.stock_qty" />
                 <div v-if="currentQty(item.id) === 0">
                     <button type="button" class="product-cart-link" :disabled="pendingProductId === item.id"
                         @click="changeHomeQty(item, 1)">

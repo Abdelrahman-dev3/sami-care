@@ -12,7 +12,8 @@ import { usePageStyles } from '@/composables/usePageStyles'
 import { useInternalLinks } from '@/composables/useInternalLinks'
 import { useServiceLocation } from '@/composables/useServiceLocation'
 import { useAuth } from '@/composables/useAuth'
-import { useBooking, rs } from '@/composables/useBooking'
+import { useBooking, rs, fmtDate, fmtDur, fmtTimeStr } from '@/composables/useBooking'
+import { savePendingReceipt } from '@/utils/bookingReceipt'
 import { createBooking, initPayment } from '@/services/bookingApi'
 import pageCss from '@/assets/styles/pages/booking.css?raw'
 
@@ -48,7 +49,7 @@ watch(
   },
   { immediate: true },
 )
-const { state, selSvcs, priceParts, canProceed, nextLabel, reset, payableTotal, walletDiscount, loyaltyPointsUsed } = useBooking()
+const { state, selSvcs, totalDur, priceParts, canProceed, nextLabel, reset, payableTotal, walletDiscount, loyaltyPointsUsed } = useBooking()
 
 usePageStyles(pageCss, 'booking')
 useInternalLinks(root)
@@ -95,8 +96,8 @@ const receipt = computed(() => decodeReceipt(route.query.receipt))
 const isReceiptMode = computed(() => !!receipt.value)
 const receiptServices = computed(() => Array.isArray(receipt.value?.s) ? receipt.value.s : [])
 
-/* الملخص الجانبي يبدأ من اختيار الموظف ويستمر حتى الدفع، بما فيها اختيار الوقت */
-const showBookingSummary = computed(() => !isReceiptMode.value && !state.done && hasSvc.value && state.step >= 1)
+/* يظهر الملخص بمجرد اختيار أول خدمة ويستمر حتى الدفع. */
+const showBookingSummary = computed(() => !isReceiptMode.value && !state.done && hasSvc.value)
 const stageCols = computed(() => (showBookingSummary.value ? 'minmax(0,1fr) minmax(285px,315px)' : '1fr'))
 
 function goBack() {
@@ -119,6 +120,7 @@ function toDateKey(d) {
 
 /* إنشاء الحجز فعليًا في الباك إند ثم الدفع */
 async function doPay() {
+  if (payLoading.value || !canProceed.value) return
   payLoading.value = true
   try {
     const accountName = [user.value?.first_name, user.value?.last_name].filter(Boolean).join(' ')
@@ -161,7 +163,7 @@ async function doPay() {
 
     /* عند اختيار cod يمر كعربون محفظة مستقل، أما عند اختيار أي بوابة أخرى (مثل urpay أو card)
        فتُخصم المكافآت أولاً ويُحصّل المتبقي عبر البوابة المختارة نفسها */
-    const gateway = state.pay === 'cod'
+    const gateway = payableTotal.value <= 0 ? 'card' : state.pay === 'cod'
       ? 'cod'
       : (state.pay || 'card')
 
@@ -173,6 +175,12 @@ async function doPay() {
       couponCode,
     })
     if (payment.payment_url) {
+      savePendingReceipt({
+        b: current.value?.name || '', d: fmtDate(state.date), u: fmtDur(totalDur.value),
+        e: [...new Set(selSvcs.value.map(s => state.emp[s.id]?.name).filter(Boolean))].join('، '),
+        p: priceParts.value.total,
+        s: selSvcs.value.map(s => [s.name, fmtTimeStr(state.time[s.id]), state.emp[s.id]?.name || '', s.price]),
+      }, payment.attempt_id)
       window.location.href = payment.payment_url
       return
     }
@@ -195,7 +203,7 @@ function goHome() { reset(); location.href = '/' }
       <BookingStepper v-if="!isReceiptMode" />
 
       <div class="wrap">
-        <div class="stage" id="stage" :style="`grid-template-columns:${stageCols}`">
+        <div class="stage" id="stage" :class="{ 'stage-services-summary': state.step === 0 && showBookingSummary }" :style="`grid-template-columns:${stageCols}`">
           <main class="panel" id="panel">
             <div v-if="isReceiptMode" class="success-wrap receipt-wrap">
               <div class="suc-ic">

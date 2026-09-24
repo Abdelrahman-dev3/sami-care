@@ -155,6 +155,24 @@
                 @endhasPermission
 
                 @hasPermission('view_terms_and_conditions')
+                <li class="nav-item {{ request()->routeIs('backend.frontend-seo.*') ? 'active' : '' }}">
+                    <a href="{{ route('backend.frontend-seo.edit') }}" class="nav-link"><i class="fas fa-search"></i><span class="item-name">إعدادات SEO</span></a>
+                </li>
+                <li class="nav-item {{ request()->routeIs('backend.about-page.*') ? 'active' : '' }}">
+                    <a href="{{ route('backend.about-page.edit') }}" class="nav-link"><i class="fas fa-info-circle"></i><span class="item-name">الصفحة التعريفية</span></a>
+                </li>
+                <li class="nav-item {{ request()->routeIs('backend.home-service-page.*') ? 'active' : '' }}">
+                    <a href="{{ route('backend.home-service-page.edit') }}" class="nav-link {{ request()->routeIs('backend.home-service-page.*') ? 'active' : '' }}">
+                        <i class="fas fa-home"></i>
+                        <span class="item-name">صفحة الخدمة المنزلية</span>
+                    </a>
+                </li>
+                <li class="nav-item {{ request()->routeIs('backend.cafe-page.*') ? 'active' : '' }}">
+                    <a href="{{ route('backend.cafe-page.edit') }}" class="nav-link {{ request()->routeIs('backend.cafe-page.*') ? 'active' : '' }}">
+                        <i class="fas fa-home"></i>
+                        <span class="item-name">صفحة المقهى التعريفية</span>
+                    </a>
+                </li>
                 <li class="nav-item {{ request()->routeIs('app.TermsAndConditions') ? 'active' : '' }}">
                     <a href="{{ route('app.TermsAndConditions') }}" class="nav-link {{ request()->routeIs('app.TermsAndConditions') ? 'active' : '' }}">
                         <i class="fas fa-file-contract"></i>

@@ -22,3 +22,13 @@
     Header set Expires "0"
   </FilesMatch>
 </IfModule>
+
+# PWA metadata and worker updates must be checked with the server.
+<IfModule mod_mime.c>
+  AddType application/manifest+json .webmanifest
+</IfModule>
+<IfModule mod_headers.c>
+  <FilesMatch "^(sw\.js|pwa\.js|manifest\.webmanifest)$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+</IfModule>

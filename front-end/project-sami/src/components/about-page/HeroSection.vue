@@ -1,4 +1,6 @@
 <script setup>
+import { useAboutContent } from '@/composables/useAboutContent'
+const { page } = useAboutContent()
 defineProps({ logo: { type: String, required: true } })
 </script>
 
@@ -9,9 +11,9 @@ defineProps({ logo: { type: String, required: true } })
     <span class="hero__particle p3">✧</span><span class="hero__particle p4">✦</span>
     <div class="hero__glow" /><div class="hero__ring" />
     <img class="hero__logo" :src="logo" alt="شعار عناية سامي" />
-    <h1>عناية سامي</h1>
-    <p class="hero__en">SAMI CARE — FOR MEN</p>
-    <p class="hero__tagline">الجمال. الثقة. <b>العناية الفاخرة</b></p>
-    <span class="hero__verified"><i /> مركز معتمد — جدة، المملكة العربية السعودية</span>
+    <h1>{{ page.title }}</h1>
+    <p class="hero__en">{{ page.english_title }}</p>
+    <p class="hero__tagline">{{ page.tagline }}</p>
+    <span v-if="page.location_text" class="hero__verified"><i /> {{ page.location_text }}</span>
   </header>
 </template>

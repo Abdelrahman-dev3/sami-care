@@ -239,6 +239,9 @@ Route::controller(SettingController::class)->group(function () {
 
 
 Route::get('/terms', [TermsAndConditionsController::class, 'terms_api']);
+Route::get('/home-service-page', [\App\Http\Controllers\Backend\HomeServicePageController::class, 'show']);
+Route::get('/cafe-page', [\App\Http\Controllers\Backend\CafePageController::class, 'show']);
+Route::get('/about-page', [\App\Http\Controllers\Backend\AboutPageController::class, 'show']);
 
 
 
@@ -329,3 +332,5 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 
 });
 Route::post('app-configuration', [SettingController::class, 'appConfiguraton']);
+
+Route::get('/seo', [\App\Http\Controllers\Backend\FrontendSeoController::class, 'show']);

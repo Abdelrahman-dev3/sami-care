@@ -1,4 +1,5 @@
 <script setup>
+import { localizeField, localizeRecord } from '@/utils/i18nField'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import SectionTitle from '@/components/common/SectionTitle.vue'
@@ -43,9 +44,7 @@ const { setLocation } = useServiceLocation()
 
 function localized(value, fallback = '') {
     if (!value) return fallback
-    return typeof value === 'object'
-        ? value[lang.lang] || value.ar || value.en || fallback
-        : value
+    return localizeField(value, lang.lang) || fallback
 }
 
 function bookBranch(branch) {
@@ -54,7 +53,7 @@ function bookBranch(branch) {
 }
 
 function nameOf(branch) {
-    return localized(branch.name)
+    return localizeRecord(branch, 'name', lang.lang)
 }
 
 const activeBanner = computed(() => {
@@ -76,8 +75,8 @@ const activeBanner = computed(() => {
     const formattedValue = Number.isInteger(value) ? value : value.toFixed(2)
 
     return {
-        title: localized(banner.title, 'عرض مميز'),
-        description: localized(banner.description),
+        title: localizeRecord(banner, 'title', lang.lang) || 'عرض مميز',
+        description: localizeRecord(banner, 'description', lang.lang),
         discount: banner.discount_type === 'fixed' ? `${formattedValue} ر.س` : `${formattedValue}%`,
         image: banner.image || '/images/generated/branches/offer-person-hq.png',
         color: banner.color || '#f3eadf',
@@ -110,7 +109,7 @@ const bannerStyle = computed(() => ({
             <article v-for="branch in displayBranches" :key="branch.id">
                 <AppImage :src="branch.image" :alt="nameOf(branch)" />
                 <h3>{{ nameOf(branch) }}</h3>
-                <p>{{ branch.address }}</p>
+                <p>{{ localizeRecord(branch, 'address', lang.lang) }}</p>
                 <BaseButton :label="branch.home ? 'احجز الخدمة المنزلية' : 'احجز الآن'" href="#" @click.prevent="bookBranch(branch)" />
             </article>
         </div>

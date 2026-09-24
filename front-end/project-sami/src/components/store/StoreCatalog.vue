@@ -90,22 +90,22 @@ function setView(v) { state.view = v }
     <div class="hero-scene" id="heroScene">
       <div class="glow"></div><div class="ring2"></div>
       <div class="hp-card hp-c1" data-depth="16">
-        <img src="https://sami-care.sa//storage/uploads/406/uGGoLhrbcMofuyS2kedJ44ejvBqYnz1M0mA0zTMP.jpg" alt="زيت اللحية الذهبي" loading="eager"
+        <img src="/mobile/assets/products/beard-oil.webp" alt="زيت اللحية الذهبي" loading="eager"
              onerror="this.style.display='none';this.nextElementSibling.style.display='grid'" />
         <div class="fb"><svg class="prod" width="90" height="90" :viewBox="shapeParts('dropper',90).viewBox" v-html="shapeParts('dropper',90).inner"></svg></div>
         <span class="tag2">زيت اللحية الذهبي</span>
       </div>
       <div class="hp-card hp-c2" data-depth="26">
-        <img src="https://sami-care.sa//storage/uploads/403/HyxbPuOgHBgbg0pgpMZr9bcFv2OryQtxjRMLnhxb.jpg" alt="كريم الترطيب"
+        <img src="/mobile/assets/products/featured-moisturizer.webp" alt="مجموعة الترطيب والعناية"
              onerror="this.style.display='none';this.nextElementSibling.style.display='grid'" />
         <div class="fb"><svg class="prod" width="70" height="70" :viewBox="shapeParts('jar',70).viewBox" v-html="shapeParts('jar',70).inner"></svg></div>
-        <span class="tag2">كريم الترطيب</span>
+        <span class="tag2">مجموعة الترطيب والعناية</span>
       </div>
       <div class="hp-card hp-c3" data-depth="24">
-        <img src="https://sami-care.sa//storage/uploads/405/L2sxjQjZgTztP0swgRTlXV0jVjCLuS5GJyypCJmT.jpg" alt="غسول البشرة"
+        <img src="/mobile/assets/products/face-serum.webp" alt="سيروم العناية بالبشرة"
              onerror="this.style.display='none';this.nextElementSibling.style.display='grid'" />
         <div class="fb"><svg class="prod" width="70" height="70" :viewBox="shapeParts('pump',70).viewBox" v-html="shapeParts('pump',70).inner"></svg></div>
-        <span class="tag2">غسول البشرة</span>
+        <span class="tag2">سيروم العناية بالبشرة</span>
       </div>
       <div class="hp-badge hp-b1" data-depth="34">
         <span class="bi2"><SIcon :inner="ICON.star" :size="16"/></span>

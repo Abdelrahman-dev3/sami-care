@@ -45,7 +45,11 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
 </script>
 
 <template>
-  <header class="site-header" :class="{ 'is-scrolled': scrolled }">
+  <header :dir="lang.lang === 'en' ? 'ltr' : 'rtl'" class="site-header"  :class="{
+    'is-scrolled': scrolled,
+    'is-english': lang.lang === 'en',
+    'is-arabic': lang.lang === 'ar'
+  }">
     <RouterLink class="brand" to="/"><img src="/logo.png" alt="عناية سامي" /></RouterLink>
     <button class="menu-toggle" @click="open=!open" :aria-expanded="open">☰</button>
     <nav :class="{open}">
@@ -115,4 +119,10 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
   border-radius:999px;padding:9px 18px;font-size:13px;white-space:nowrap;transition:.25s}
 .nav-book:hover{background:rgba(198,161,91,.15)}
 @media(max-width:1100px){.site-loc span{display:none}.site-loc{padding:9px 11px}}
+ .site-header.is-english .brand::before {
+   
+    right: 85%;
+    left: 0;
+  
+}
 </style>
