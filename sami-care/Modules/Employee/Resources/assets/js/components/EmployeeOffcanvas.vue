@@ -435,7 +435,7 @@ const setFormData = (data) => {
       first_name: data.first_name,
       last_name: data.last_name,
       email: data.email,
-      mobile: data.mobile,
+      mobile: data.mobile || '',
       password: data.password,
       confirm_password: data.confirm_password,
       gender: data.gender,
