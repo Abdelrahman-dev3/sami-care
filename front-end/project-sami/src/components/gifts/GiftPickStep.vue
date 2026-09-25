@@ -11,7 +11,7 @@ import { resolveApiImage } from '@/utils/assetPath'
 import { useLanguage } from '@/composables/useLanguage'
 import { useGifts } from '@/composables/useGifts'
 import { usePackages, rs as rsPkg } from '@/composables/usePackages'
-import { localizeField } from '@/utils/i18nField'
+import { localizeField, localizeRecord, translationSource } from '@/utils/i18nField'
 import SIcon from '@/components/common/SIcon.vue'
 import Skeleton from '@/components/common/SkeletonLoader.vue'
 
@@ -50,20 +50,21 @@ onMounted(async () => {
 
 const cats = computed(() => categories.value.map(c => ({
   id: c.id,
-  name: pick(c.name),
+  name: localizeRecord(c, 'name', lang.lang),
   image: resolveApiImage(c.image) || c.feature_image || null,
 })))
 
 const activeCategory = computed(() => categories.value.find(c => c.id === state.activeCat) || null)
-const activeCategoryName = computed(() => pick(activeCategory.value?.name))
+const activeCategoryName = computed(() => localizeRecord(activeCategory.value, 'name', lang.lang))
 
 const activeList = computed(() =>
   (activeCategory.value?.services || []).map(s => ({
     id: s.id,
     categoryId: activeCategory.value.id,
-    categoryName: activeCategoryName.value,
-    name: pick(s.name),
-    desc: pick(s.description) || '',
+    categoryNameT: translationSource(activeCategory.value, 'name'),
+    get categoryName() { return pick(this.categoryNameT) },
+    get name() { return localizeRecord(s, 'name', lang.lang) },
+    get desc() { return localizeRecord(s, 'description', lang.lang) },
     dur: s.duration_min,
     price: s.default_price,
   }))

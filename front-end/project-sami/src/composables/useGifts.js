@@ -1,3 +1,4 @@
+import { paymentPolicy } from '@/utils/paymentPolicy'
 import { reactive, computed } from 'vue'
 import { DESIGNS } from '@/data/gifts'
 import { useAuth } from '@/composables/useAuth'
@@ -82,9 +83,7 @@ export function useGifts() {
       case 0: return !!state.gtype
       case 1: return state.gtype === 'svc' ? state.svcs.length > 0 : !!state.pkg
       case 2: return state.name.trim().length > 1 && state.phone.trim().length >= 9
-      /* لو اختار "المحفظة" لازم الرصيد يغطي القيمة كاملة — مفيش دعم لدفع جزء من المحفظة وباقي
-         المبلغ ببوابة تانية فى الواجهة الحالية (راجع تعليق placeGift). */
-      case 3: return !!state.pay && state.terms && (state.pay !== 'wallet' || (state.walletBalance ?? 0) >= priceParts.value.total)
+      case 3: return paymentPolicy.canPay(state, priceParts.value.total) && state.terms && !state.placing
     }
     return false
   })
@@ -106,6 +105,10 @@ export function useGifts() {
     state.claimUrl = null
     state.pay = null
     state.terms = false
+    state.useWallet = false
+    state.walletAmount = 0
+    state.useLoyalty = false
+    state.loyaltyPointsUsed = 0
   }
 
   /* إرسال الهدية فعليًا للباك إند — خدمة أو باقة واحدة بس لكل هدية */
@@ -135,17 +138,9 @@ export function useGifts() {
       }
 
       const created = await createGiftCard(payload)
-      /* مهم جدًا: gateway:'cod' فى الباك إند (PaymentOrchestratorService::handleCod) بيتجاهل
-         علم wallet تمامًا وبيخصم نسبة عربون ثابتة (cod_deposit_percent، افتراضيًا 30%) مش القيمة
-         الكاملة — ده كان سبب خصم قيمة غلط لما اليوزر يختار "المحفظة". المسار الصحيح لخصم المبلغ
-         الكامل من المحفظة هو أي gateway غير cod (بيدخل PaymentSubMethodsService اللي بيخصم
-         القيمة الحقيقية كاملة)؛ القيمة الحرفية للبوابة مش مهمة هنا لأنها بترجع 'sub_methods' طالما
-         الرصيد كافي (canNext بيتأكد من كده قبل ما نوصل هنا) فمفيش استدعاء حقيقي لأي بوابة دفع. */
-      const wallet = state.pay === 'wallet'
-      const payment = await initPayment(wallet ? 'card' : 'cod', {
-        wallet,
-        walletAmount: wallet ? priceParts.value.total : undefined,
-      })
+      const { gateway, ...options } = paymentPolicy.payment(state, priceParts.value.total)
+      const payment = await initPayment(gateway, options)
+      if (payment.payment_url) { window.location.href = payment.payment_url; return { created, payment } }
 
       state.ref = created?.data?.gift_card_id ? `#GIFT-${created.data.gift_card_id}` : '#GIFT'
       state.claimUrl = created?.data?.share_url || created?.data?.claim_url || null

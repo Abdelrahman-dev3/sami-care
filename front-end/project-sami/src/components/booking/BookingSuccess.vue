@@ -1,5 +1,7 @@
 <script setup>
 import { computed } from 'vue'
+import BookingQr from '@/components/common/BookingQr.vue'
+import { bookingReceiptUrl } from '@/utils/bookingReceipt'
 import { useServiceLocation } from '@/composables/useServiceLocation'
 import { useBooking, fmtTimeStr, fmtDur, fmtDate, rs } from '@/composables/useBooking'
 
@@ -19,12 +21,7 @@ const receiptPayload = computed(() => ({
   p: p.value.total,
   s: selSvcs.value.map(s => [s.name, fmtTimeStr(state.time[s.id]), state.emp[s.id]?.name || '', s.price]),
 }))
-const receiptCode = computed(() => {
-  const json = JSON.stringify(receiptPayload.value)
-  return btoa(unescape(encodeURIComponent(json))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
-})
-const receiptUrl = computed(() => `${window.location.origin}/booking?receipt=${receiptCode.value}`)
-const qrUrl = computed(() => `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=12&data=${encodeURIComponent(receiptUrl.value)}`)
+const receiptUrl = computed(() => bookingReceiptUrl(receiptPayload.value))
 
 const I = {
   pin: '<path d="M21 10c0 7-9 12-9 12S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>',
@@ -68,11 +65,7 @@ const PERKS = [
       <div class="card qr-card">
         <h4 style="font-family:var(--font-d);font-size:16px;color:var(--ink)">رقم الفاتورة</h4>
         <div class="code">{{ state.bookRef || '—' }}</div>
-        <div class="qr-box">
-          <img :src="qrUrl" alt="QR تفاصيل الحجز" loading="lazy" />
-        </div>
-        <a class="receipt-link" :href="receiptUrl" target="_blank" rel="noopener">فتح تفاصيل الحجز</a>
-        <small>امسح الرمز بالكاميرا لعرض تفاصيل الحجز</small>
+        <BookingQr :url="receiptUrl" />
       </div>
     </div>
 

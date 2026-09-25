@@ -1,4 +1,5 @@
 <script setup>
+import { paymentPolicy } from '@/utils/paymentPolicy'
 /*
   صفحة الباقات — مُرحَّلة بالكامل من src/legacy/packages-gifts.html إلى مكوّنات Vue.
 
@@ -12,7 +13,8 @@ import { usePageStyles } from '@/composables/usePageStyles'
 import { useInternalLinks } from '@/composables/useInternalLinks'
 import { useServiceLocation } from '@/composables/useServiceLocation'
 import { useAuth } from '@/composables/useAuth'
-import { usePackages, rs } from '@/composables/usePackages'
+import { usePackages, rs, fmtDate, fmtTime } from '@/composables/usePackages'
+import { savePendingReceipt } from '@/utils/bookingReceipt'
 import { createPackageBooking, initPayment } from '@/services/bookingApi'
 import { createGiftCard } from '@/services/giftsApi'
 import pageCss from '@/assets/styles/pages/packages-gifts.css?raw'
@@ -102,6 +104,8 @@ function goNext() {
 
 /* ===== إتمام الدفع — نفس تأخير الأصل ===== */
 function doGiftPay() {
+  const subtotal = Math.max(Number(pkgOf(state.gpkg)?.price) || 0, 0)
+  if (payLoading.value || !paymentPolicy.canPay(state, subtotal + Math.round(subtotal * 0.15))) return
   requireAuth(async () => {
     payLoading.value = true
     try {
@@ -116,13 +120,11 @@ function doGiftPay() {
         branch: state.siteBranch || null,
         send_channel: state.method || 'link',
       })
-      const wallet = state.pay === 'wallet'
       const packageSubtotal = Math.max(Number(pkgOf(state.gpkg)?.price) || 0, 0)
       const giftTotalWithVat = packageSubtotal + Math.round(packageSubtotal * 0.15)
-      await initPayment(wallet ? 'card' : 'cod', {
-        wallet,
-        walletAmount: wallet ? giftTotalWithVat : undefined,
-      })
+      const { gateway, ...options } = paymentPolicy.payment(state, giftTotalWithVat)
+      const payment = await initPayment(gateway, options)
+      if (payment.payment_url) { window.location.href = payment.payment_url; return }
       state.ref = created?.data?.gift_card_id ? `#GIFT-${created.data.gift_card_id}` : '#GIFT'
       state.claimUrl = created?.data?.share_url || created?.data?.claim_url || null
       state.claimToken = created?.data?.claim_token || null
@@ -144,6 +146,8 @@ function toDateKey(d) {
 
 /* ===== إنشاء حجز الباقة فعليًا في الباك إند ثم الدفع ===== */
 function doBookPay() {
+  const subtotal = Math.max(Number(pkgOf(state.bk.pkg)?.price) || 0, 0)
+  if (payLoading.value || !paymentPolicy.canPay(state.bk, subtotal + Math.round(subtotal * 0.15))) return
   requireAuth(async () => {
     payLoading.value = true
     try {
@@ -163,17 +167,17 @@ function doBookPay() {
          راجع نفس الملاحظة فى useGifts.js. أي بوابة غير cod بتاخد المسار الصح لخصم الرصيد كامل. */
       const packageSubtotal = Math.max(Number(pkgOf(B.pkg)?.price) || 0, 0)
       const packageTotalWithVat = packageSubtotal + Math.round(packageSubtotal * 0.15)
-      const walletAmount = B.useWallet
-        ? Math.min(Math.max(Number(B.walletAmount) || 0, 0), Number(B.walletBalance) || 0, packageTotalWithVat)
-        : 0
-      const loyaltyPoints = B.useLoyalty ? parseInt(B.loyaltyPointsUsed, 10) || 0 : 0
-      const gateway = B.pay === 'cash' ? 'cod' : (B.pay === 'urpay' ? 'urpay' : 'card')
-      const payment = await initPayment(gateway, {
-        wallet: walletAmount > 0,
-        walletAmount,
-        loyalty: loyaltyPoints > 0,
-        loyaltyPoints,
-      })
+      const { gateway, ...options } = paymentPolicy.payment(B, packageTotalWithVat)
+      const payment = await initPayment(gateway, options)
+      if (payment.payment_url) {
+        const pkg = pkgOf(B.pkg)
+        savePendingReceipt({ b: pkg.branchName, d: fmtDate(day), u: `${pkg.dur} دقيقة`,
+          e: B.employee?.name || '', p: packageTotalWithVat,
+          s: [[pkg.name, fmtTime(B.time), B.employee?.name || '', pkg.price]],
+        }, payment.attempt_id)
+        window.location.href = payment.payment_url
+        return
+      }
       state.bk.ref = payment.invoice_id || null
       state.bk.done = true
       scrollTo({ top: 0, behavior: 'smooth' })

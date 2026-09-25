@@ -29,7 +29,7 @@ const SECTIONS = [
 
 <template>
   <div ref="root">
-    <div class="shell">
+    <div class="shell legal-page">
       <div class="wrap">
         <div class="page-head">
           <h1>الشروط والأحكام</h1>

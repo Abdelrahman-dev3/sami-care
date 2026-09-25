@@ -6,7 +6,7 @@ import { resolveApiImage } from '@/utils/assetPath'
 import { useServiceLocation } from '@/composables/useServiceLocation'
 import { useLanguage } from '@/composables/useLanguage'
 import { useBooking, rs } from '@/composables/useBooking'
-import { localizeField } from '@/utils/i18nField'
+import { localizeField, localizeRecord, translationSource } from '@/utils/i18nField'
 import Skeleton from '@/components/common/SkeletonLoader.vue'
 
 const { state, hasSvc, toggleSvc } = useBooking()
@@ -30,22 +30,23 @@ onMounted(async () => {
 
 const cats = computed(() => categories.value.map(c => ({
   id: c.id,
-  name: pick(c.name),
+  name: localizeRecord(c, 'name', lang.lang),
   image: resolveApiImage(c.image) || c.feature_image || null,
 })))
 
 const activeCategory = computed(() => categories.value.find(c => c.id === state.activeCat) || null)
-const activeCategoryName = computed(() => pick(activeCategory.value?.name))
+const activeCategoryName = computed(() => localizeRecord(activeCategory.value, 'name', lang.lang))
 const activeCategoryIcon = computed(() => categoryIconKey(activeCategory.value))
 
 const list = computed(() =>
   (activeCategory.value?.services || []).map(s => ({
     id: s.id,
     categoryId: activeCategory.value.id,
-    categoryName: activeCategoryName.value,
+    categoryNameT: translationSource(activeCategory.value, 'name'),
+    get categoryName() { return pick(this.categoryNameT) },
     icon: activeCategoryIcon.value,
-    name: pick(s.name),
-    desc: pick(s.description) || '',
+    get name() { return localizeRecord(s, 'name', lang.lang) },
+    get desc() { return localizeRecord(s, 'description', lang.lang) },
     dur: s.duration_min,
     price: s.default_price,
   }))

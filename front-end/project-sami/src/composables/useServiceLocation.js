@@ -1,4 +1,5 @@
 import { ref, computed } from 'vue'
+import { localizeRecord } from '@/utils/i18nField'
 import { useLanguage } from '@/composables/useLanguage'
 import { resolveBackendUrl } from '@/utils/assetPath'
 
@@ -182,16 +183,9 @@ export function useServiceLocation() {
     هنا بنحوّلها لنص واحد حسب اللغة الحالية عشان كل الاستخدامات
     (الهيدر، الـ modal، صفحة الحجز...) تفضل تقرأ .name كنص عادي.
   */
-  function resolveField(value) {
-    return value && typeof value === 'object' ? (value[lang.lang] || value.ar || value.en || '') : value
-  }
-
   function withResolvedName(branch) {
     if (!branch) return branch
-    if (typeof branch.name === 'object' || typeof branch.address === 'object') {
-      return { ...branch, name: resolveField(branch.name), address: resolveField(branch.address) }
-    }
-    return branch
+    return { ...branch, name: localizeRecord(branch, 'name', lang.lang), address: localizeRecord(branch, 'address', lang.lang) }
   }
 
   const locations = computed(() => serviceLocations.value.map(withResolvedName))

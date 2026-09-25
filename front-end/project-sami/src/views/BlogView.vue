@@ -1,9 +1,14 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import PageSkeleton from '@/components/common/PageSkeleton.vue'
 import { fetchBlogs } from '@/services/blogApi'
 import { assetPath } from '@/utils/assetPath'
+import { useLanguage } from '@/composables/useLanguage'
+const { state: language } = useLanguage()
+import { localizeRecord } from '@/utils/i18nField'
+const field = (item, key) => localizeRecord(item, key, language.lang)
+let blogRequest = 0
 import '@/assets/styles/home.css'
 
 const blogs = ref([])
@@ -17,7 +22,7 @@ const fallbackImage = assetPath('/logo.png')
 function formatDate(value) {
   if (!value) return ''
 
-  return new Intl.DateTimeFormat('ar-SA', {
+  return new Intl.DateTimeFormat(language.lang === 'en' ? 'en-GB' : 'ar-SA', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -25,22 +30,26 @@ function formatDate(value) {
 }
 
 async function loadBlogs(nextPage = 1) {
+  const request = ++blogRequest
   loading.value = true
   error.value = ''
 
   try {
     const result = await fetchBlogs(nextPage)
+    if (request !== blogRequest) return
     blogs.value = result.blogs
     pagination.value = result.pagination
     page.value = result.pagination?.current_page || nextPage
   } catch (err) {
+    if (request !== blogRequest) return
     error.value = 'تعذر تحميل المدونات الآن. حاول مرة أخرى لاحقا.'
   } finally {
-    loading.value = false
+    if (request === blogRequest) loading.value = false
   }
 }
 
 onMounted(() => loadBlogs())
+watch(() => language.lang, () => loadBlogs(page.value))
 </script>
 
 <template>
@@ -68,7 +77,7 @@ onMounted(() => loadBlogs())
           <div class="blog-grid">
             <article v-for="blog in blogs" :key="blog.id" class="blog-card">
               <RouterLink class="blog-card__image" :to="`/blog/${blog.slug}`">
-                <img :src="blog.image_url || fallbackImage" :alt="blog.title" loading="lazy" />
+                <img :src="blog.image_url || fallbackImage" :alt="field(blog, 'title')" loading="lazy" />
               </RouterLink>
 
               <div class="blog-card__body">
@@ -76,9 +85,9 @@ onMounted(() => loadBlogs())
                   {{ formatDate(blog.published_at) }}
                 </time>
                 <h2>
-                  <RouterLink :to="`/blog/${blog.slug}`">{{ blog.title }}</RouterLink>
+                  <RouterLink :to="`/blog/${blog.slug}`">{{ field(blog, 'title') }}</RouterLink>
                 </h2>
-                <p>{{ blog.excerpt }}</p>
+                <p>{{ field(blog, 'excerpt') }}</p>
                 <RouterLink class="blog-read" :to="`/blog/${blog.slug}`">اقرأ المزيد</RouterLink>
               </div>
             </article>

@@ -1,4 +1,5 @@
 ﻿<script setup>
+import { localizeRecord } from '@/utils/i18nField'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import AppIcon from './AppIcon.vue'
@@ -15,7 +16,7 @@ const router = useRouter()
 const { state: language } = useLanguage()
 
 function nameOf(category) {
-  return category.name?.[language.lang] || category.name?.ar || category.name?.en || category.name || 'خدمة'
+  return localizeRecord(category, 'name', language.lang)
 }
 
 function iconOf(category) {

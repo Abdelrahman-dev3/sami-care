@@ -146,7 +146,7 @@ Route::controller(SignController::class)->group(function () {
 
 $dashboardRedirect = fn() => redirect('/app');
 
-Route::get('/sami-care-info', $dashboardRedirect)->name('center.info');
+Route::get('/sami-care-info', CenterInfoPageController::class)->name('center.info');
 
 $cafeApp = function () {
     return response()->file(public_path('cafe-app/index.html'));
@@ -160,6 +160,13 @@ Route::controller(TaqnyatSmsController::class)->group(function () {
     Route::post('/store', 'store')->name('store');
     Route::post('/send-test', 'sendTestMessage')->name('send-test');
 });
+
+Route::view('/app/wifi-qr', 'backend.wifi-qr.index')
+    ->middleware([
+        'auth',
+        'permission:menu_builder_sidebar',
+    ])
+    ->name('backend.wifi-qr.index');
 
 Route::get('/salonService', $dashboardRedirect)->name('salon.create');
 
@@ -192,6 +199,101 @@ Route::post('/gift-cards/claim/{token}/schedule', $dashboardRedirect)->name('gif
 Route::controller(WheelController::class)->group(function () {
     Route::post('/wheel/spin', 'spin')->name('wheel.spin');
 });
+Route::get(
+    '/app/page-qr',
+    [\App\Http\Controllers\Backend\PageQrController::class, 'index']
+)->middleware([
+    'auth',
+    'permission:menu_builder_sidebar',
+])->name('backend.page-qr.index');
+
+Route::middleware([
+    'auth',
+    'permission:menu_builder_sidebar',
+])->prefix('app/dynamic-qr')
+  ->name('backend.dynamic-qr.')
+  ->group(function () {
+      Route::get('/', [
+          \App\Http\Controllers\Backend\DynamicQrController::class,
+          'index',
+      ])->name('index');
+
+      Route::post('/', [
+          \App\Http\Controllers\Backend\DynamicQrController::class,
+          'store',
+      ])->name('store');
+
+      Route::put('/{dynamicQr}', [
+          \App\Http\Controllers\Backend\DynamicQrController::class,
+          'update',
+      ])->name('update');
+      Route::delete('/{dynamicQr}', [
+        \App\Http\Controllers\Backend\DynamicQrController::class,
+        'destroy',
+    ])->name('destroy');
+  });
+
+// رابط عام يفتحه أي شخص يمسح QR، بدون تسجيل دخول.
+Route::get('/q/{token}', function (string $token) {
+    $code = \App\Models\DynamicQr::where('token', $token)->firstOrFail();
+
+    $headers = [
+        'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+        'Pragma' => 'no-cache',
+        'Expires' => '0',
+        'X-Robots-Tag' => 'noindex, nofollow',
+    ];
+
+    if ($code->type === 'url') {
+        return redirect()->away($code->content, 302, $headers);
+    }
+
+    if ($code->type === 'wifi') {
+        $wifi = json_decode($code->content, true);
+
+        abort_unless(
+            is_array($wifi)
+            && isset($wifi['ssid'], $wifi['security'])
+            && in_array($wifi['security'], ['WPA', 'WEP', 'nopass'], true),
+            500,
+            'بيانات الشبكة غير صالحة.'
+        );
+
+        $escape = static function (string $value): string {
+            return strtr($value, [
+                '\\' => '\\\\',
+                ';' => '\\;',
+                ',' => '\\,',
+                ':' => '\\:',
+                '"' => '\\"',
+            ]);
+        };
+
+        $payload = 'WIFI:T:' . $wifi['security']
+            . ';S:' . $escape($wifi['ssid']) . ';';
+
+        if ($wifi['security'] !== 'nopass') {
+            $payload .= 'P:'
+                . $escape((string) ($wifi['password'] ?? '')) . ';';
+        }
+
+        $payload .= 'H:'
+            . (!empty($wifi['hidden']) ? 'true' : 'false') . ';;';
+
+        return response()->view('dynamic-qr.wifi', [
+            'code' => $code,
+            'ssid' => $wifi['ssid'],
+            'payload' => $payload,
+        ], 200, $headers);
+    }
+
+    return response()->view(
+        'dynamic-qr.show',
+        compact('code'),
+        200,
+        $headers
+    );
+})->name('dynamic-qr.open');
 
 Route::middleware('auth')->group(function () use ($dashboardRedirect) {
     Route::get('/giffte', $dashboardRedirect)->name('gift.page');
@@ -511,7 +613,30 @@ Route::group(['prefix' => 'app', 'middleware' => 'auth'], function () {
     });
 });
 
+Route::middleware(['auth', 'permission:view_terms_and_conditions'])
+    ->prefix('app/home-service-page')->name('backend.home-service-page.')
+    ->controller(\App\Http\Controllers\Backend\HomeServicePageController::class)
+    ->group(function () {
+        Route::get('/', 'edit')->name('edit');
+        Route::put('/', 'update')->name('update');
+    });
+
+Route::middleware(['auth', 'permission:view_terms_and_conditions'])
+    ->prefix('app/cafe-page')->name('backend.cafe-page.')
+    ->controller(\App\Http\Controllers\Backend\CafePageController::class)
+    ->group(function () {
+        Route::get('/', 'edit')->name('edit');
+        Route::put('/', 'update')->name('update');
+    });
+
 Route::get('/my-bookings', $dashboardRedirect)->name('profile.my_bookings');
+Route::middleware(['auth', 'permission:view_terms_and_conditions'])
+    ->prefix('app/about-page')->name('backend.about-page.')
+    ->controller(\App\Http\Controllers\Backend\AboutPageController::class)
+    ->group(function () {
+        Route::get('/', 'edit')->name('edit');
+        Route::put('/', 'update')->name('update');
+    });
 Route::get('/coupon', $dashboardRedirect)->name('profile.coupon');
 Route::post('/booking/cancel/{id}', [ProfileController::class, 'destroy_myBooking'])->name('myBooking.destroy');
 Route::get('/complate-bookings', $dashboardRedirect)->name('profile.complateBokkings');
@@ -602,3 +727,11 @@ Route::controller(PackageDetailsController::class)->group(function () {
     Route::get('/qu/cart', 'getUserCart');
     Route::delete('/qu/cart/remove/{id}', 'remove');
 });
+
+Route::middleware(['auth', 'permission:view_terms_and_conditions'])
+    ->prefix('app/frontend-seo')->name('backend.frontend-seo.')
+    ->controller(\App\Http\Controllers\Backend\FrontendSeoController::class)
+    ->group(function () {
+        Route::get('/', 'edit')->name('edit');
+        Route::put('/', 'update')->name('update');
+    });

@@ -164,16 +164,16 @@ watch(() => state.mode, assignAutoStaff)
   </div>
 
   <div class="mode-grid">
-    <div class="mode dark" :class="{ sel: state.mode === 'auto' }" @click="chooseMode('auto')">
+    <div class="mode dark" role="button" tabindex="0" :aria-pressed="state.mode === 'auto'" :class="{ sel: state.mode === 'auto' }" @click="chooseMode('auto')" @keydown.enter="chooseMode('auto')" @keydown.space.prevent="chooseMode('auto')">
       <span class="chk"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>
-      <span class="mi"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M5 21c0-4 3-6 7-6s7 2 7 6"/></svg></span>
+      <span class="mi"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m13 2-9 12h7l-1 8 10-13h-7l0-7Z"/></svg></span>
       <h3>اختيار تلقائي</h3><div class="sub-t">سنختار لك أفضل فريق متاح</div>
       <span class="flag">★ موصى به</span>
       <ul>
         <li v-for="(x, i) in AUTO_LIST" :key="i"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6L9 17l-5-5"/></svg> {{ x }}</li>
       </ul>
     </div>
-    <div class="mode" :class="{ sel: state.mode === 'manual' }" @click="chooseMode('manual')">
+    <div class="mode" role="button" tabindex="0" :aria-pressed="state.mode === 'manual'" :class="{ sel: state.mode === 'manual' }" @click="chooseMode('manual')" @keydown.enter="chooseMode('manual')" @keydown.space.prevent="chooseMode('manual')">
       <span class="chk"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>
       <span class="mi"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
       <h3>اختيار موظف محدد</h3><div class="sub-t">اختر موظفًا لكل قسم</div>

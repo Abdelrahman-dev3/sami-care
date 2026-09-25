@@ -70,7 +70,7 @@ html { scrollbar-gutter: stable }
     z-index: 1200 !important;
     background: #080a0b !important;
     color: #fff !important;
-    direction: rtl;
+    direction: inherit;
     display: flex !important;
     flex-flow: row nowrap !important;
     align-items: center !important;

@@ -46,7 +46,7 @@ class ArbGateway
         $endpoint = $this->getEndpoint();
 
         $response = Http::withBody($body, 'application/json')
-            ->withOptions(['verify' => false, 'timeout' => 15])
+            ->withOptions(['verify' => false, 'connect_timeout' => 60,'timeout' => 60])
             ->post($endpoint);
 
         $json = $response->json('0');

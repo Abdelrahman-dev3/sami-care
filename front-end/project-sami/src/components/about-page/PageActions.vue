@@ -1,14 +1,16 @@
 <script setup>
 import AppIcon from './AppIcon.vue'
-import { contact } from '@/data/aboutSite'
+import { useAboutContent } from '@/composables/useAboutContent'
+const { contact, branches, page } = useAboutContent()
+const vEscape = value => String(value || '').replace(/\\/g, '\\\\').replace(/\r?\n/g, '\\n').replace(/;/g, '\\;').replace(/,/g, '\\,')
 
 const emit = defineEmits(['notify'])
 
 function saveContact() {
-  const vCard = ['BEGIN:VCARD', 'VERSION:3.0', 'FN:عناية سامي — SAMI CARE', 'ORG:SAMI CARE FOR MEN',
-    'TEL;TYPE=WORK,VOICE:+966920018844', 'TEL;TYPE=CELL:+966550046462', `EMAIL:${contact.email}`, `URL:${contact.website}`,
-    'ADR;TYPE=WORK:;;شارع حائل — البغدادية الغربية;جدة;;;السعودية',
-    'NOTE:مركز عناية سامي للرجال — حلاقة، مساج، حمام مغربي، تنظيف بشرة، بديكير', 'END:VCARD'].join('\n')
+  const vCard = ['BEGIN:VCARD', 'VERSION:3.0', `FN:${vEscape(page.value.title)}`, `ORG:${vEscape(page.value.english_title)}`,
+    ...branches.value.filter(b => b.phone).map(b => `TEL;TYPE=WORK,VOICE:${b.phone}`),
+    ...(contact.value.email ? [`EMAIL:${vEscape(contact.value.email)}`] : []), `URL:${location.origin}/page-about`,
+    `NOTE:${vEscape(page.value.description)}`, 'END:VCARD'].join('\r\n')
   const link = document.createElement('a')
   link.href = `data:text/vcard;charset=utf-8,${encodeURIComponent(vCard)}`
   link.download = 'SamiCare.vcf'
@@ -17,7 +19,7 @@ function saveContact() {
 }
 
 async function sharePage() {
-  const data = { title: 'عناية سامي | SAMI CARE', text: 'مركز عناية سامي للرجال — جدة. كل خدمات العناية الفاخرة في مكان واحد.', url: location.href }
+  const data = { title: page.value.title, text: page.value.tagline, url: location.href }
   try {
     if (navigator.share) return await navigator.share(data)
     await navigator.clipboard.writeText(data.url)

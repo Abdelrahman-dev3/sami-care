@@ -1,5 +1,8 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
+import { useLanguage } from '@/composables/useLanguage'
+const { state: language } = useLanguage()
+let homeRequest = 0
 import HeroSection from '@/components/home/HeroSection.vue'
 import AboutSection from '@/components/home/AboutSection.vue'
 import ServicesSection from '@/components/home/ServicesSection.vue'
@@ -29,19 +32,23 @@ const loading = ref(true)
 const error = ref(null)
 
 const loadHomeData = async () => {
+    const request = ++homeRequest
     try {
         loading.value = true
         error.value = null
 
-        homeData.value = await getHomeContent()
+        const result = await getHomeContent()
+        if (request !== homeRequest) return
+        homeData.value = result
 
         console.log('Home API:', homeData.value)
     } catch (err) {
+        if (request !== homeRequest) return
         console.error('Home API Error:', err)
 
         error.value = 'حدث خطأ أثناء تحميل بيانات الصفحة الرئيسية'
     } finally {
-        loading.value = false
+        if (request === homeRequest) loading.value = false
     }
 }
 
@@ -49,10 +56,11 @@ onMounted(() => {
     loadHomeData()
 })
 
+watch(() => language.lang, loadHomeData)
 </script>
 
 <template>
-  <div class="home-page desktop-home" dir="rtl">
+  <div class="home-page desktop-home" :dir="language.lang === 'en' ? 'ltr' : 'rtl'">
     <main>
       <HeroSection />
       <div class="home-light">

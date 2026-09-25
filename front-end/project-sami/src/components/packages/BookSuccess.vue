@@ -3,6 +3,8 @@
   نجاح الحجز — مُرحَّل حرفيًا من bkView4() في src/legacy/packages-gifts.html
 */
 import { computed } from 'vue'
+import BookingQr from '@/components/common/BookingQr.vue'
+import { bookingReceiptUrl } from '@/utils/bookingReceipt'
 import { usePackages, fmtTime, fmtDate, rs } from '@/composables/usePackages'
 import SIcon from '@/components/common/SIcon.vue'
 
@@ -12,6 +14,11 @@ const emit = defineEmits(['home', 'calendar', 'share'])
 const B = state.bk
 const p = computed(() => pkgOf(B.pkg))
 const d = computed(() => bkDays()[B.dayIdx])
+const receiptUrl = computed(() => bookingReceiptUrl({
+  r: B.ref || '', b: p.value.branchName, d: fmtDate(d.value), u: `${p.value.dur} دقيقة`,
+  e: B.employee?.name || '', p: Number(p.value.price) + Math.round(Number(p.value.price) * 0.15),
+  s: [[p.value.name, fmtTime(B.time), B.employee?.name || '', p.value.price]],
+}))
 
 const I = {
   box:   '<path d="M20 12v10H4V12M2 7h20v5H2z"/>',
@@ -52,8 +59,7 @@ const WBTN = 'flex:1;padding:11px;font-size:12px'
       </div>
       <div class="card gsuc-details" style="text-align:center">
         <h4 style="text-align:right">رمز الوصول السريع</h4>
-        <div class="qr-box"><canvas id="bkQr"></canvas></div>
-        <small :style="HINT">📱 امسح الرمز عند الوصول لتسجيل الحضور</small>
+        <BookingQr :url="receiptUrl" />
         <div :style="WALLETS">
           <button class="btn btn-dark" :style="WBTN">🍎 Apple Wallet</button>
           <button class="btn btn-dark" :style="WBTN">📲 Google Wallet</button>

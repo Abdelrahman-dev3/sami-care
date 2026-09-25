@@ -1,4 +1,5 @@
 <script setup>
+import WheelResultDialog from '@/components/common/WheelResultDialog.vue'
 import { ref, computed, onMounted } from 'vue'
 import { fetchWheelInfo, spinWheel } from '@/services/wheelApi'
 
@@ -179,12 +180,7 @@ async function spin() {
           <span>{{ spinning ? 'جاري التدوير...' : (!wheelEnabled ? 'العجلة غير متاحة حاليًا' : (!canSpin ? 'لقد استخدمت العجلة من قبل' : 'دوّس العجلة الآن')) }}</span>
           <i>←</i>
         </button>
-        <Transition name="fade">
-          <p v-if="result" class="lucky-wheel-card__result">🎉 {{ result }}</p>
-        </Transition>
-        <Transition name="fade">
-          <p v-if="errorMessage && !result" class="lucky-wheel-card__error">{{ errorMessage }}</p>
-        </Transition>
+        <WheelResultDialog :message="result || errorMessage" :error="!!errorMessage && !result" @close="result = null; errorMessage = ''" />
       </div>
     </div>
   </section>

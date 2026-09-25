@@ -3,14 +3,12 @@
   شريط صغير لسامي كافي في الصفحة الرئيسية — لمحة عن المكان
   من غير ما ياخد مساحة قسم كامل.
 */
-import { resolveBackendUrl } from '@/utils/assetPath'
-
-const cafeUrl = resolveBackendUrl('/cafe')
+import { RouterLink } from 'vue-router'
 </script>
 
 <template>
   <section data-reveal class="home-section container cafe-strip" aria-label="سامي كافي">
-    <a :href="cafeUrl" class="cafe-strip__link">
+    <RouterLink to="/cafe" class="cafe-strip__link">
       <div class="cafe-strip__img">
         <img src="/images/cafe-interior-clean.webp" alt="سامي كافي داخل الفرع" loading="lazy" />
       </div>
@@ -23,9 +21,9 @@ const cafeUrl = resolveBackendUrl('/cafe')
           <li>ركن هادئ</li>
           <li>واي فاي مجاني</li>
         </ul>
-        <span class="cafe-strip__cta">اطلب من الكافيه الآن ←</span>
+        <span class="cafe-strip__cta">تعرف على المقهى ←</span>
       </div>
-    </a>
+    </RouterLink>
   </section>
 </template>
 

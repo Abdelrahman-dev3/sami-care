@@ -23,7 +23,7 @@ const d = computed(() => DESIGNS.find(x => x.id === props.design) || DESIGNS[0])
     </div>
     <div class="royal-seal">{{ d.icon || '✦' }}</div>
     <div class="lg"><img src="/logo.png" style="height:24px;vertical-align:middle" alt="" /> SAMI <small>عناية سامي</small></div>
-    <h3>{{ d.n }}</h3>
+    <h3 style="visibility:hidden" aria-hidden="true">{{ d.n }}</h3>
     <div class="tg">هدية فاخرة بتجربة عناية ملكية</div>
     <div class="hr" :style="`background:${d.fg}`"></div>
     <div v-if="recipient || sender || message" class="gift-card-personal">

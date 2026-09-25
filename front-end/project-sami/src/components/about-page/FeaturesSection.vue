@@ -1,7 +1,10 @@
 <script setup>
 import AppIcon from './AppIcon.vue'
 import SectionTitle from './SectionTitle.vue'
-import { features } from '@/data/aboutSite'
+import { computed } from 'vue'
+import { useAboutContent } from '@/composables/useAboutContent'
+const { page } = useAboutContent()
+const features = computed(() => page.value.features || [])
 </script>
 
 <template>

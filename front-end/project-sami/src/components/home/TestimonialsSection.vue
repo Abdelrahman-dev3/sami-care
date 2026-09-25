@@ -1,4 +1,5 @@
 <script setup>
+import { computed, onMounted, onBeforeUnmount, ref, watch } from 'vue'
 import SectionTitle from '@/components/common/SectionTitle.vue'
 import Skeleton from '@/components/common/SkeletonLoader.vue'
 const props = defineProps({
@@ -11,6 +12,37 @@ const props = defineProps({
         default: false,
     },
     })
+const page = ref(0)
+const perPage = ref(3)
+const paused = ref(false)
+const pageCount = computed(() => Math.ceil(props.reviews.length / perPage.value))
+const visibleReviews = computed(() => props.reviews.slice(page.value * perPage.value, (page.value + 1) * perPage.value))
+let timer
+let media
+let touchStart = null
+function goToPage(index) {
+  if (pageCount.value) page.value = (index + pageCount.value) % pageCount.value
+}
+function syncSize() { perPage.value = media.matches ? 1 : 3; page.value = 0 }
+function swipeEnd(event) {
+  if (touchStart === null) return
+  const distance = event.changedTouches[0].clientX - touchStart
+  if (Math.abs(distance) > 50) {
+    const rtl = document.documentElement.dir !== 'ltr'
+    goToPage(page.value + (distance > 0 ? (rtl ? 1 : -1) : (rtl ? -1 : 1)))
+  }
+  touchStart = null
+}
+watch(() => props.reviews, () => { page.value = 0 })
+onMounted(() => {
+  media = window.matchMedia('(max-width: 1000px)')
+  syncSize()
+  media.addEventListener('change', syncSize)
+  timer = window.setInterval(() => {
+    if (!paused.value && !props.loading && !document.hidden && pageCount.value > 1 && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) goToPage(page.value + 1)
+  }, 6000)
+})
+onBeforeUnmount(() => { window.clearInterval(timer); media?.removeEventListener('change', syncSize) })
 </script>
 
 <template>
@@ -69,8 +101,10 @@ const props = defineProps({
       </div>
     </div>
 
-    <div class="reviews__grid">
-      <article v-for="t in reviews" :key="t.id" class="rcard">
+    <div class="reviews__slider" @mouseenter="paused = true" @mouseleave="paused = false" @focusin="paused = true" @focusout="paused = $event.currentTarget.contains($event.relatedTarget)" @touchstart.passive="touchStart = $event.touches[0].clientX" @touchend.passive="swipeEnd">
+    <Transition name="review-slide" mode="out-in">
+    <div :key="page" class="reviews__grid" role="group" :aria-label="'مجموعة آراء ' + (page + 1) + ' من ' + pageCount">
+      <article v-for="t in visibleReviews" :key="t.id" class="rcard">
         <div class="rcard__photo">
           <img src="/images/reviews/spa-room-exact.webp" alt="غرفة عناية سامي" loading="lazy" />
         </div>
@@ -102,11 +136,33 @@ const props = defineProps({
         </div>
       </article>
     </div>
+    </Transition>
+    <div v-if="pageCount > 1" class="reviews__controls">
+      <button type="button" aria-label="الآراء السابقة" @click="goToPage(page - 1)">السابق</button>
+      <div class="reviews__dots">
+        <button v-for="n in pageCount" :key="n" type="button" :class="{ active: page === n - 1 }" :aria-label="'عرض مجموعة الآراء ' + n" :aria-current="page === n - 1 ? 'true' : undefined" @click="goToPage(n - 1)"></button>
+      </div>
+      <button type="button" aria-label="الآراء التالية" @click="goToPage(page + 1)">التالي</button>
+    </div>
+    </div>
     </template>
   </section>
 </template>
 
 <style scoped>
+.reviews__slider{touch-action:pan-y}
+.reviews__controls{display:flex;justify-content:center;align-items:center;gap:18px;margin-top:22px}
+.reviews__controls>button{border:1px solid var(--gold);border-radius:22px;background:transparent;color:var(--ink,#17130d);padding:8px 18px;font:inherit;cursor:pointer}
+.reviews__controls>button:hover{background:var(--gold);color:#fff}
+.reviews__dots{display:flex;justify-content:center;flex-wrap:wrap;gap:4px}
+.reviews__dots button{display:grid;place-items:center;width:24px;height:28px;border:0;background:transparent;cursor:pointer;padding:0}
+.reviews__dots button::after{content:'';width:8px;height:8px;border-radius:50%;background:#d7cabb}
+.reviews__dots button.active::after{width:18px;border-radius:8px;background:var(--gold)}
+.review-slide-enter-active,.review-slide-leave-active{transition:opacity .2s ease,transform .2s ease}
+.review-slide-enter-from{opacity:0;transform:translateX(16px)}
+.review-slide-leave-to{opacity:0;transform:translateX(-16px)}
+@media(prefers-reduced-motion:reduce){.review-slide-enter-active,.review-slide-leave-active{transition:none}}
+
 .reviews__sub{text-align:center;font-size:12.5px;color:var(--muted);margin:-4px 0 22px;line-height:1.9}
 
 /* ===== شريط الإحصاءات ===== */
