@@ -42,11 +42,21 @@ class ServicesImportSeeder extends Seeder
             $duration = (int) str_replace([' Min', ' '], '', trim($durationStr));
             $status = (strtolower(trim($statusStr)) === 'active') ? 1 : 0;
 
-            // Find category
+            // Find or Create category
             $categoryId = null;
             if (!empty($categoryName)) {
                 $category = Category::where('name', 'like', "%{$categoryName}%")->first();
-                $categoryId = $category ? $category->id : null;
+                
+                if (!$category) {
+                    $category = Category::create([
+                        'name' => ['ar' => $categoryName, 'en' => $categoryName],
+                        'slug' => Str::slug($categoryName) . '-' . uniqid(),
+                        'status' => 1,
+                        'is_visible' => 1,
+                    ]);
+                }
+                
+                $categoryId = $category->id;
             }
 
             // Create Service
