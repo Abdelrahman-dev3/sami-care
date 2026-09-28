@@ -6,6 +6,7 @@ const { modalOpen, closeAuthModal, register, confirmRegister, login, confirmLogi
 
 const tab = ref('login') // 'login' | 'register'
 const stage = ref('form') // 'form' | 'otp'
+const referralCode = ref('')
 const username = ref('')
 const mobile = ref('')
 const otp = ref('')
@@ -14,6 +15,7 @@ const error = ref('')
 
 function reset() {
   stage.value = 'form'
+  referralCode.value = ''
   username.value = ''
   mobile.value = ''
   otp.value = ''
@@ -39,7 +41,7 @@ async function submitForm() {
   loading.value = true
   try {
     if (tab.value === 'register') {
-      await register(username.value.trim(), mobile.value.trim())
+      await register(username.value.trim(), mobile.value.trim(), referralCode.value.trim())
     } else {
       await login(mobile.value.trim())
     }
@@ -97,6 +99,7 @@ async function submitOtp() {
           <form v-if="stage === 'form'" class="auth-form" @submit.prevent="submitForm">
             <input v-if="tab === 'register'" v-model="username" type="text" placeholder="الاسم" autocomplete="name" />
             <input v-model="mobile" type="tel" dir="ltr" placeholder="رقم الجوال" autocomplete="tel" />
+            <input v-if="tab === 'register' && stage === 'form'" v-model="referralCode" name="referral_code" type="text" dir="ltr" maxlength="20" placeholder="كود الإحالة (اختياري)" aria-label="كود الإحالة (اختياري)" autocomplete="off" />
             <p v-if="error" class="auth-error">{{ error }}</p>
             <button type="submit" class="auth-submit" :disabled="loading">{{ loading ? 'جارٍ الإرسال...' : 'إرسال رمز التحقق' }}</button>
           </form>

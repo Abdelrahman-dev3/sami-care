@@ -28,7 +28,7 @@ async function request(path, body) {
   return payload.data
 }
 
-export const sendRegisterOtp = (username, mobile) => request('/register', { username, mobile })
+export const sendRegisterOtp = (username, mobile, referral_code = '') => request('/register', { username, mobile, referral_code })
 export const verifyRegisterOtp = (mobile, otp) => request('/verify-register-otp', { mobile, otp })
 
 export const sendLoginOtp = mobile => request('/login', { mobile })

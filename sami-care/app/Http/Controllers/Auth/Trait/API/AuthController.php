@@ -62,7 +62,8 @@ class AuthController extends Controller
             return $this->sendError(__('messagess.sms_daily_limit_reached'), [], 429);
         }
 
-        $otp = '1111';
+        //$otp = '1111';
+        $otp = (string) random_int(1000, 9999);
 
         Cache::put('login_otp_' . $phone, [
             'otp' => $otp,
@@ -172,6 +173,7 @@ class AuthController extends Controller
     public function sendRegisterOtp(Request $request)
     {
         $validator = Validator::make($request->all(), [
+            'referral_code' => ['nullable', 'string', 'max:20'],
             'username' => ['required', 'string', 'max:191', 'unique:users,username'],
             'mobile' => ['required', 'string', 'max:20', 'unique:users,mobile'],
         ]);
@@ -185,6 +187,9 @@ class AuthController extends Controller
         }
 
         $validated = $validator->validated();
+        $referrals = app(\App\Services\ReferralService::class);
+        $referralCode = $referrals->normalize($validated['referral_code'] ?? null);
+        $referrals->owner($referralCode);
         $smsService = new TaqnyatSmsService();
         $phone = $smsService->validatePhoneNumber($validated['mobile']);
     
@@ -198,11 +203,13 @@ class AuthController extends Controller
         if ($dailyCount >= 3) {
             return $this->sendError(__('messagess.sms_daily_limit_reached'), [], 429);
         }
-    
-        $otp = '1111';
+
+        //$otp = '1111';
+        $otp = (string) random_int(1000, 9999);
     
         Cache::put('register_otp_'.$phone, [
             'username' => $validated['username'],
+            'referral_code' => $referralCode,
             'otp' => $otp,
         ], now()->addMinutes(5));
         Cache::put($dailyKey, $dailyCount + 1, now()->endOfDay());
@@ -251,33 +258,28 @@ class AuthController extends Controller
         if ($attempts >= 5) {
             Cache::forget('register_otp_'.$phone);
             Cache::forget($attemptKey);
-    
-            return $this->sendError(__('auth.throttle', ['seconds' => 300, 'minutes' => 5]), [], 429);
+            return $this->sendError(__('auth.throttle', ['seconds'=>300, 'minutes'=>5]), [], 429);
         }
-    
         if ((string) $cached['otp'] !== (string) $validated['otp']) {
             Cache::put($attemptKey, $attempts + 1, now()->addMinutes(5));
-    
             return $this->sendError('Invalid OTP code.', [], 422);
         }
-    
+        $user = Cache::lock('register_account_'.$phone, 30)->block(5, function () use ($phone, $cached) {
+            return \Illuminate\Support\Facades\DB::transaction(function () use ($phone, $cached) {
+                if (User::withTrashed()->where('mobile', $phone)->exists() || User::withTrashed()->where('username', $cached['username'])->exists()) {
+                    throw \Illuminate\Validation\ValidationException::withMessages(['mobile'=>__('validation.unique', ['attribute'=>'mobile/username'])]);
+                }
+                $user = User::create([
+                    'first_name'=>$cached['username'], 'last_name'=>'', 'username'=>$cached['username'],
+                    'mobile'=>$phone, 'email_verified_at'=>now(), 'status'=>1,
+                ]);
+                $user->assignRole('user');
+                app(\App\Services\ReferralService::class)->award($user, $cached['referral_code'] ?? null);
+                return $user;
+            });
+        });
         Cache::forget('register_otp_'.$phone);
         Cache::forget($attemptKey);
-    
-        if (User::where('mobile', $phone)->exists() || User::where('username', $cached['username'])->exists()) {
-            return $this->sendError(__('validation.unique', ['attribute' => 'mobile/username']), [], 422);
-        }
-    
-        $user = User::create([
-            'first_name' => $cached['username'],
-            'last_name' => '',
-            'username' => $cached['username'],
-            'mobile' => $phone,
-            'email_verified_at' => now(),
-            'status' => 1,
-        ]);
-    
-        $user->assignRole('user');
 
         $linkedSpin = app(WheelSpinService::class)->linkIpToUser($user, $request->ip());
         if ($linkedSpin) {

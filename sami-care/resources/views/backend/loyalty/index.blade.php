@@ -207,6 +207,7 @@
                     <label>{{ __('messages.point_value') }}</label>
                     <input type="number" name="point_value" value="{{ $point_value ?? '' }}" step="0.01" placeholder="{{ __('messages.example_value') }}">
                 </div>
+                <div class="input-group"><label for="referral_points">نقاط الولاء لصاحب كود الإحالة عند تسجيل عضو جديد</label><input id="referral_points" type="number" name="referral_points" min="0" max="1000000" step="1" required value="{{ old('referral_points', $referral_points ?? 0) }}"><small>تُضاف بعد تأكيد رقم الجوال وإنشاء الحساب. القيمة صفر توقف منح المكافأة.</small></div>
                 @hasPermission('store_loyalty')
                     <button class="save-btn">
                         <i class="fas fa-save"></i> {{ __('messages.save_settings') }}

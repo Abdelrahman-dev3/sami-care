@@ -58,8 +58,8 @@ export function useAuth() {
     return true
   }
 
-  async function register(username, mobile) {
-    const data = await sendRegisterOtp(username, mobile)
+  async function register(username, mobile, referralCode = '') {
+    const data = await sendRegisterOtp(username, mobile, referralCode)
     pendingMobile.value = data.mobile
   }
 

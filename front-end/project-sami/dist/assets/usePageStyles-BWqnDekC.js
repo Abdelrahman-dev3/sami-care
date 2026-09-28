@@ -1,0 +1,1 @@
+import{q as o,C as a}from"./index-BQDvvEmI.js";function d(t,n="page"){let e=null;o(()=>{e=document.createElement("style"),e.setAttribute("data-page-styles",n),e.textContent=t,document.head.appendChild(e)}),a(()=>{e&&e.parentNode&&e.parentNode.removeChild(e),e=null})}export{d as u};

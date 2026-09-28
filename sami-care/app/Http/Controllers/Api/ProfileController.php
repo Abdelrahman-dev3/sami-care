@@ -82,6 +82,7 @@ class ProfileController extends Controller
             'data' => [
                 'user' => [
                     'id' => $user->id,
+                    'referral_code' => $user->referral_code,
                     'first_name' => $user->first_name,
                     'last_name' => $user->last_name,
                     'full_name' => trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? '')),

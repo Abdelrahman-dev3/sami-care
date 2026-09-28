@@ -1360,3 +1360,5 @@ Object.assign(globalThis.SamiDictionary, {
 });
 })(globalThis);
 
+
+Object.assign(globalThis.SamiDictionary, {"كود الإحالة (اختياري)":"Referral code (optional)","كود الإحالة الخاص بك":"Your referral code","شارك الكود مع أصدقائك واكسب نقاط ولاء عند تسجيلهم.":"Share your code with friends and earn loyalty points when they sign up."});

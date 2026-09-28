@@ -9,6 +9,7 @@ function rs(n) {
 
 <template>
   <div class="overview">
+    <div v-if="profile?.user?.referral_code" class="stat-card" style="margin-bottom:20px"><h3>كود الإحالة الخاص بك</h3><p>شارك الكود مع أصدقائك واكسب نقاط ولاء عند تسجيلهم.</p><input :value="profile.user.referral_code" readonly dir="ltr" aria-label="كود الإحالة الخاص بك" @click="$event.target.select()" style="text-align:center;font-size:20px;padding:10px;border:1px solid #e9e0d3;border-radius:8px;max-width:100%" /></div>
     <div class="stat-grid">
       <div class="stat-card">
         <b>{{ rs(profile?.balances?.wallet) }} ر.س</b>

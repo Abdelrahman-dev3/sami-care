@@ -42,6 +42,15 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
     use SoftDeletes;
     use UserPresenter;
 
+    protected static function booted(): void
+    {
+        static::creating(function (User $user) {
+            do { $code = 'SC'.strtoupper(bin2hex(random_bytes(6))); }
+            while (static::withTrashed()->where('referral_code', $code)->exists());
+            $user->referral_code = $code;
+        });
+    }
+
     const CUSTOM_FIELD_MODEL = 'App\Models\User';
 
     protected $fillable = [
