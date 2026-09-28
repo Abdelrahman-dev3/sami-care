@@ -54,7 +54,8 @@ class BranchResource extends JsonResource
             'total_review' => EmployeeRating::whereIn('employee_id', $employeeIds)->count(),
             'branch_image' => $this->media->pluck('original_url')->first(),
             'working_days' => $workingDays,
-
+            'description_en' => $this->description_en,
+            'description' => $this->description,
         ];
     }
 }

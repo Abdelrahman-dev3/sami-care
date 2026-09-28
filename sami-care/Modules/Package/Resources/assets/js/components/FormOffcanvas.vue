@@ -38,7 +38,19 @@
                 :error-message="nameEnError"
                 :error-messages="errorMessages['name'] && errorMessages['name']['en']"
               />
-              <InputField class="" type="textarea" :textareaRows="5" :label="$t('package.lbl_description')" placeholder="Enter Description" v-model="description"></InputField>
+              <InputField
+  type="textarea"
+  :textareaRows="5"
+  :label="$t('package.lbl_description') + ' ' + $t('settings.translate.ar')"
+  v-model="descriptionAr"
+/>
+
+<InputField
+  type="textarea"
+  :textareaRows="5"
+  :label="$t('package.lbl_description') + ' ' + $t('settings.translate.en')"
+  v-model="descriptionEn"
+/>
             </div>
           </div>
 
@@ -336,7 +348,10 @@ const defaultData = () => {
     service_name: [],
     service: [],
     qty: 1,
-    description: null,
+    description: {
+  ar: '',
+  en: '',
+},
     package_image: null,
   }
 }
@@ -360,10 +375,20 @@ const setFormData = (data) => {
   } catch (e) {
     console.warn('Invalid JSON name field:', data.name)
   }
+  const descriptionTranslations = data.description_translations
+  || (data.description && typeof data.description === 'object'
+    ? data.description
+    : {
+        ar: data.description || '',
+        en: data.description || '',
+      })
   resetForm({
     values: {
       name: parsedName,
-      description: data.description,
+      description: {
+  ar: descriptionTranslations.ar || '',
+  en: descriptionTranslations.en || '',
+},
       start_date: data.start_date,
       end_date: data.end_date,
       type: data.type || 'package',
@@ -463,6 +488,10 @@ const { handleSubmit, errors, resetForm } = useForm({
       ar: '',
       en: ''
     },
+    description: {
+      ar: '',
+      en: ''
+    },
     type: 'package'
     // services: selectedServices.value // Initial value for services from selectedServices
   } })
@@ -478,7 +507,8 @@ const { value: start_date } = useField('start_date')
 const { value: end_date } = useField('end_date')
 const { value: service_id } = useField('service_id')
 const { value: service_name } = useField('service_name')
-const {value: description} = useField('description')
+const { value: descriptionAr } = useField('description.ar')
+const { value: descriptionEn } = useField('description.en')
 const { value: package_validity } = useField('package_validity')
 const { value: package_image } = useField('package_image')
 
@@ -518,6 +548,7 @@ const formSubmit = handleSubmit((values) => {
   }
    IS_SUBMITED.value = true
    values.name = JSON.stringify(values.name); 
+   values.description = JSON.stringify(values.description);
    values.services=JSON.stringify(services.value)
   // values.services = JSON.stringify(selectedServices.value)
   if (currentId.value > 0) {

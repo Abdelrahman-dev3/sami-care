@@ -155,6 +155,7 @@
                 @endhasPermission
 
                 @hasPermission('view_terms_and_conditions')
+                <li class="nav-item"><a href="{{ route('backend.home-page-content.edit') }}" class="nav-link"><i class="fas fa-home"></i><span class="item-name">محتوى الرئيسية</span></a></li>
                 <li class="nav-item {{ request()->routeIs('backend.frontend-seo.*') ? 'active' : '' }}">
                     <a href="{{ route('backend.frontend-seo.edit') }}" class="nav-link"><i class="fas fa-search"></i><span class="item-name">إعدادات SEO</span></a>
                 </li>

@@ -11,6 +11,10 @@ import { getCategories } from '@/data/home'
 import { resolveApiImage } from '@/utils/assetPath'
 import { localizeField, localizeRecord } from '@/utils/i18nField'
 
+import '../../public/service-page-defaults.js'
+import '../../public/service-page-content.js'
+import '../../public/service-page-content.css'
+const serviceContent = computed(() => category.value ? globalThis.SamiServiceContent.render(category.value, lang.lang, heroImage.value) : '')
 const route = useRoute()
 const router = useRouter()
 const id = computed(() => Number(route.params.id))
@@ -193,17 +197,7 @@ watch(id, loadCategories)
           </div>
         </section>
 
-        <!-- ===== لماذا تختارنا ===== -->
-        <section class="sd-sec container">
-          <div class="sd-title"><i></i><h2>لماذا تختار عناية سامي؟</h2><i></i></div>
-
-          <div class="sd-why">
-            <div v-for="(w, i) in whyUs" :key="i" class="sd-why__card">
-              <div class="sd-why__txt"><b>{{ w.title }}</b><small>{{ w.text }}</small></div>
-              <span class="sd-why__ic" v-html="svg(w.icon, 22)"></span>
-            </div>
-          </div>
-        </section>
+        <div v-html="serviceContent" @click="event => { if (event.target.closest('[data-category-book]')) goBooking() }"></div>
 
       </template>
 

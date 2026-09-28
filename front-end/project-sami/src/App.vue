@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import LocationPicker from '@/components/common/LocationPicker.vue'
 import AuthModal from '@/components/common/AuthModal.vue'
@@ -21,17 +21,22 @@ const navigating = ref(false)
 const cartDrawerOpen = ref(false)
 const { state: storeState } = useStore()
 const isMobile = ref(mobileLayout())
-const useMobileFrame = computed(() => isMobile.value && !['about', 'gift-recipient', 'booking-receipt'].includes(route.name))
-const viewByRoute = { home:'home', services:'services', 'service-detail':'services', booking:'booking', store:'store', gifts:'gifts', 'packages-gifts':'packages', branches:'branches', contact:'contact', 'gift-recipient':'gifts', terms:'terms', 'home-service':'home-service', cafe:'cafe', 'privacy-policy':'privacy' }
+const useMobileFrame = computed(() => isMobile.value && Object.hasOwn(viewByRoute, route.name))
+const viewByRoute = { account:'account', home:'home', services:'services', 'service-detail':'services', booking:'booking', store:'store', gifts:'gifts', 'packages-gifts':'packages', branches:'branches', contact:'contact', 'gift-recipient':'gifts', terms:'terms', 'home-service':'home-service', cafe:'cafe', 'privacy-policy':'privacy' }
 /*
   Ù…Ù‡Ù…: Ø£ÙŠ ØªØ¹Ø¯ÙŠÙ„ Ø¹Ù„Ù‰ public/mobile/index.html Ù„Ø§Ø²Ù… ÙŠØªØ¨Ø¹Ù‡ ØªØºÙŠÙŠØ± Ø§Ù„Ø±Ù‚Ù… Ø¯Ù‡ØŒ
   Ù„Ø£Ù†Ù‡ Ù‡Ùˆ Ø§Ù„Ù„ÙŠ Ø¨ÙŠÙƒØ³Ø± ÙƒØ§Ø´ Ø§Ù„Ù…ØªØµÙØ­ Ù„Ù„Ø¥Ø·Ø§Ø±. Ù…Ù† ØºÙŠØ±Ù‡ Ø§Ù„Ù…ØªØµÙØ­ Ø¨ÙŠÙØ¶Ù„ ÙŠØ¹Ø±Ø¶
   Ø§Ù„Ù†Ø³Ø®Ø© Ø§Ù„Ù‚Ø¯ÙŠÙ…Ø© Ù…Ù‡Ù…Ø§ Ø§ØªØºÙŠÙ‘Ø± Ø§Ù„Ù…Ù„Ù.
 */
-const mobileVersion = '20260924-seo-v90'
-const initialMobileView = viewByRoute[route.name] || 'home'
+const mobileVersion = '20260927-service-content-v92'
+let mobileNavigationPath = null
 const mobileApiBase = (import.meta.env.VITE_API_BASE_URL || `${window.location.origin}/api`).replace(/\/$/, '')
-const mobileSrc = `/mobile/index.html?view=${initialMobileView}&page=${encodeURIComponent(route.path)}&api=${encodeURIComponent(mobileApiBase)}&v=${mobileVersion}`
+const mobileSrc = ref('')
+watch(() => route.fullPath, path => {
+  if (mobileNavigationPath === path) { mobileNavigationPath = null; return }
+  mobileNavigationPath = null
+  mobileSrc.value = '/mobile/index.html?' + new URLSearchParams({ view: viewByRoute[route.name] || 'home', page: route.path, api: mobileApiBase, v: mobileVersion })
+}, { immediate: true })
 const syncMedia = () => { isMobile.value = mobileLayout() }
 const motionTargets = [
   '.hero-box','.hero-person','.about-section > *','.section-title','.home-section > *',
@@ -68,9 +73,13 @@ const registerMotionTargets = root => {
   })
 }
 const handleMobileNavigation = event => {
+  const frame = document.querySelector('iframe.global-mobile-frame')
+  if (event.origin !== location.origin || event.source !== frame?.contentWindow) return
   if (event.data?.type !== 'sami:navigate' || typeof event.data.path !== 'string') return
   if (event.data.path === route.fullPath || (event.data.path === '/' && route.path === '/')) return
-  router.push(event.data.path)
+  if (!event.data.path.startsWith('/') || event.data.path.startsWith('//')) return
+  mobileNavigationPath = event.data.path
+  router.push(event.data.path).finally(() => { mobileNavigationPath = null })
 }
 let navTimer
 const stopBefore = router.beforeEach(() => { clearTimeout(navTimer); navigating.value = true })

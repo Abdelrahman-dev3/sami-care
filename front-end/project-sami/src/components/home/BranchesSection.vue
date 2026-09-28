@@ -33,7 +33,8 @@ const displayBranches = computed(() => {
             id: 'home-service',
             home: true,
             name: 'خدمة منزلية',
-            address: 'حلاقة وعناية ومساجات طبيعية — في منزلك',
+            description: 'حلاقة وعناية ومساجات طبيعية — في منزلك',
+            description_en: 'Haircut, beauty, and natural massages — at home',
             image: '/images/generated/branches/home-service-hq.png',
         }]
 })
@@ -54,6 +55,10 @@ function bookBranch(branch) {
 
 function nameOf(branch) {
     return localizeRecord(branch, 'name', lang.lang)
+}
+
+function descriptionOf(branch) {
+    return lang.lang === 'en' ? branch.description_en || branch.description : branch.description
 }
 
 const activeBanner = computed(() => {
@@ -109,7 +114,7 @@ const bannerStyle = computed(() => ({
             <article v-for="branch in displayBranches" :key="branch.id">
                 <AppImage :src="branch.image" :alt="nameOf(branch)" />
                 <h3>{{ nameOf(branch) }}</h3>
-                <p>{{ localizeRecord(branch, 'address', lang.lang) }}</p>
+                <p>{{ descriptionOf(branch) }}<!-- {{ localizeRecord(branch, 'address', lang.lang) }} --></p>
                 <BaseButton :label="branch.home ? 'احجز الخدمة المنزلية' : 'احجز الآن'" href="#" @click.prevent="bookBranch(branch)" />
             </article>
         </div>

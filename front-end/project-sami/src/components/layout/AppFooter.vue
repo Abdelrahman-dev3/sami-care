@@ -11,7 +11,7 @@ const displayBranches = computed(() => {
   const list = branches.value
   return list.some(branch => branch.home || branch.id === 'hm')
     ? list
-    : [...list, { id: 'hm', home: true, name: 'خدمات منزلية', address: 'حلاقة شعر ولحية وماسكات طبيعية' }]
+    : [...list, { id: 'hm', home: true, name: 'خدمات منزلية', description: 'حلاقة شعر ولحية وماسكات طبيعية',description_en: 'Haircut, beard, and natural masks', image: '/images/generated/branches/home-service-hq.png' }]
 })
 
 function phoneDigits(phone) {
@@ -32,6 +32,9 @@ onMounted(async () => {
 
 function branchName(branch) {
   return localizeRecord(branch, 'name', lang.lang)
+}
+function branchDescription(branch) {
+   return lang.lang === 'en' ? branch.description_en || branch.description : branch.description
 }
 </script>
 
@@ -66,7 +69,9 @@ function branchName(branch) {
           </div>
           <div v-for="branch in displayBranches" :key="branch.id" class="f-branch">
             <b>{{ branchName(branch) }}</b>
-            <small>{{ localizeRecord(branch, 'address', lang.lang) || localizeRecord(branch, 'address_line_1', lang.lang) }}</small>
+            <small><!-- {{ localizeRecord(branch, 'address', lang.lang) || localizeRecord(branch, 'address_line_1', lang.lang) }} --></small>
+            <small>{{ branchDescription(branch) }}</small>
+            
             <a v-if="branch.contact_number" :href="telHref(branch.contact_number)">{{ branch.contact_number }}</a>
           </div>
          

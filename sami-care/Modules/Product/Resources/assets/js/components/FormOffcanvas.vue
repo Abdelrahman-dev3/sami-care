@@ -19,16 +19,56 @@
             </div>
 
             <div class="col-md-8">
-              <InputField class="" type="text" :is-required="true" :label="$t('product.name')" placeholder="" v-model="name" :error-message="errors['name']"></InputField>
-              <InputField class="" type="textarea" :textareaRows="5" :label="$t('product.description')" placeholder="" v-model="short_description"></InputField>
+              <InputField
+  class=""
+  type="text"
+  :is-required="true"
+  :label="$t('product.name') + ' (عربي)'"
+  v-model="name_ar"
+  :error-message="errors.name_ar"
+/>
+<InputField
+  class=""
+  type="text"
+  :is-required="true"
+  :label="$t('product.name') + ' (English)'"
+  v-model="name_en"
+  :error-message="errors.name_en"
+/>
+
+              <!-- تم استبدال InputField بـ QuillEditor للوصف العربي والإنجليزي -->
+            <div class="col-md-12">
+              <div class="form-group mb-3">
+                <label class="form-label">{{ $t('product.description') }} (عربي) <span class="text-danger">*</span></label>
+                <QuillEditor 
+                  theme="snow" 
+                  v-model:content="description_ar" 
+                  contentType="html" 
+                />
+                <span class="text-danger">{{ errors.description_ar }}</span>
+              </div>
+
+              <div class="form-group mb-3">
+                <label class="form-label">{{ $t('product.description') }} (English) <span class="text-danger">*</span></label>
+                <QuillEditor 
+                  theme="snow" 
+                  v-model:content="description_en" 
+                  contentType="html" 
+                />
+                <span class="text-danger">{{ errors.description_en }}</span>
+              </div>
             </div>
 
-            <div class="col-md-12 form-group editor-container">
+         
+              
+            </div>
+
+             <!-- تم عمل comment لحقل description الحالي -->
+            <!-- <div class="col-md-12 form-group editor-container">
               <label class="form-label" for="description">{{ $t('product.long_description') }}</label>
-              <!-- Add Quill editor here -->
               <QuillEditor theme="snow" v-model:content="description" contentType="html"/>
               <span class="text-danger">{{ errors.description }}</span>
-            </div>
+            </div> -->
 
             <div class="form-group col-md-6">
               <label class="form-label">{{ $t('product.brand') }} <span class="text-danger">*</span></label>
@@ -281,11 +321,13 @@ const defaultData = () => {
   errorMessages.value = {}
 
   return {
-    name: '',
+    name_ar: '',
+    name_en: '',
     slug: '',
     status: 1,
-    short_description: '',
-    description: ' ',
+    //short_description: '',
+    description_ar: ' ',
+    description_en: ' ',
     branch_id: null,
     category_ids: [],
     tags: [],
@@ -311,10 +353,14 @@ const setFormData = (data) => {
   ImageViewer.value = data.feature_image
   resetForm({
     values: {
-      name: data.name,
+      name_ar: data.name_translations?.ar || data.name_ar || '',
+      name_en: data.name_translations?.en || data.name_en || '',
       slug: data.slug,
       short_description: data.short_description || '',
-      description: data.description || '',
+      description_ar: data.description_translations?.ar || data.description_ar || '',
+      description_en: data.description_translations?.en || data.description_en || '',
+      //description: data.description || '',
+      // description_en: data.description || '',
       branch_id: data.branch_id || null,
       category_ids: data.category_ids || [],
       tags: data.tags || [],
@@ -354,7 +400,8 @@ const reset_datatable_close_offcanvas = (res) => {
 
 // Validations
 const validationSchema = yup.object({
-  name: yup.string().required(' Product Name is a required field').max(190, 'Product Name must be at most 190 characters'),
+  name_ar: yup.string().required('Arabic Product Name is required').max(190),
+name_en: yup.string().required('English Product Name is required').max(190),
   brand_id: yup.string().required(' Brand is a required field'),
 
   category_ids: yup.array().test('category_ids', 'Category is a required field', function (value) {
@@ -402,11 +449,14 @@ const { handleSubmit, errors, resetForm } = useForm({
   validationSchema
 })
 
-const { value: name } = useField('name')
+const { value: name_ar } = useField('name_ar')
+const { value: name_en } = useField('name_en')
 const { value: status } = useField('status')
 const { value: is_featured } = useField('is_featured')
 const { value: short_description } = useField('short_description')
 const { value: description } = useField('description')
+const { value: description_ar } = useField('description_ar')
+const { value: description_en } = useField('description_en')
 const { value: branch_id } = useField('branch_id')
 const { value: category_ids } = useField('category_ids')
 const { value: brand_id } = useField('brand_id')

@@ -1,2 +1,8 @@
-<script setup>import AppImage from '@/components/common/AppImage.vue';import{features}from '@/data/home'</script>
-<template><section data-reveal id="about" class="about-section container"><AppImage src="/images/generated/about-barber-hq.png" alt="حلاق محترف يقدم خدمة للعميل"/><div class="about-copy"><h2>من نحن</h2><h3>تجربة عناية متكاملة</h3><p>في عناية سامي، نؤمن أن العناية الشخصية ليست رفاهية، بل أسلوب حياة. لذلك نقدم مجموعة متكاملة من الخدمات العصرية للعناية بالشعر والبشرة في بيئة مريحة وأنيقة.</p><h3>نستخدم أحدث الأجهزة والتقنيات</h3><p>نحرص على تحقيق أعلى معايير النظافة والسلامة، ويعمل فريقنا المحترف ليمنحك تجربة استثنائية ونتائج تليق بك.</p><div class="features"><article v-for="item in features" :key="item.title"><span>{{item.icon}}</span><b>{{item.title}}</b><small>{{item.text}}</small></article></div></div></section></template>
+<script setup>
+import AppImage from '@/components/common/AppImage.vue'
+import { useHomeContent } from '@/composables/useHomeContent'
+const props = defineProps({ content: Object })
+const { content, text } = useHomeContent(props)
+const icons = ['♙','♔','✿','♕']
+</script>
+<template><section data-reveal id="about" class="about-section container" data-no-i18n><AppImage :src="content.about_image" :alt="text('about_title')"/><div class="about-copy"><h2>{{ text('about_title') }}</h2><h3>{{ text('about_heading') }}</h3><p>{{ text('about_text') }}</p><h3>{{ text('about_heading_2') }}</h3><p>{{ text('about_text_2') }}</p><div class="features"><article v-for="(icon,i) in icons" :key="i"><span>{{ icon }}</span><b>{{ text('feature_'+i+'_title') }}</b><small>{{ text('feature_'+i+'_text') }}</small></article></div></div></section></template>

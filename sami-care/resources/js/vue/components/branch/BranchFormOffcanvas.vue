@@ -139,6 +139,17 @@
               <span class="text-danger">{{ errors.description }}</span>
             </div>
 
+            <div class="form-group col-md-12">
+              <label class="form-label" for="description_en">{{$t('branch.lbl_description')}}</label>
+              <textarea class="form-control" v-model="description_en" :placeholder="$t('branch.enter_decription')" id="description_en"></textarea>
+              <span v-if="errorMessages['description_en']">
+                <ul class="text-danger">
+                  <li v-for="err in errorMessages['description_en']" :key="err">{{ err }}</li>
+                </ul>
+              </span>
+              <span class="text-danger">{{ errors.description_en }}</span>
+            </div>
+
             <div v-for="field in customefield" :key="field.id">
               <FormElement v-model="custom_fields_data" :name="field.name" :label="field.label" :type="field.type" :required="field.required" :options="field.value"  :field_id="field.id"  ></FormElement>            </div>
 
@@ -322,6 +333,7 @@ const { value: contact_email } = useField('contact_email')
 const { value: contact_number } = useField('contact_number')
 const { value: feature_image } = useField('feature_image')
 const { value: description } = useField('description')
+const { value: description_en } = useField('description_en')
 const { value: custom_fields_data } = useField('custom_fields_data')
 
 const updateManagerDetail = (e) => {
@@ -399,6 +411,7 @@ const defaultData = () => {
       address_line_2: ''
     },
     description:'',
+    description_en:'',
     manager_id: null,
     status: true,
     branch_for: 'both',
@@ -444,6 +457,7 @@ const setFormData = (data) => {
       },
       status: data.status,
       description: data.description,
+      description_en: data.description_en,
       branch_for: data.branch_for,
       manager_id: data.manager_id,
       service_id: data.service_id,

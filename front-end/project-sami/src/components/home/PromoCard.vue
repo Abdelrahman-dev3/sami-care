@@ -10,6 +10,7 @@ import SectionTitle from '@/components/common/SectionTitle.vue'
 import Skeleton from '@/components/common/SkeletonLoader.vue'
 
 const props = defineProps({
+    homeImage: String,
     offers: {
         type: Array,
         default: () => [],
@@ -90,7 +91,8 @@ function goHomeService() {
     <!-- Real Content -->
     <template v-else>
     <article v-for="promo in promoCards" :key="promo.id" class="promo-card"
-             :class="{ 'promo-card--home': promo.type === 'home' }">
+             :class="{ 'promo-card--home': promo.type === 'home', 'has-home-image': promo.type === 'home' && homeImage }">
+      <img v-if="promo.type === 'home' && homeImage" class="home-promo-image" :src="homeImage" alt="" loading="lazy" decoding="async" />
       <div class="promo-card__badge" aria-hidden="true">
         <template v-if="promo.type === 'home'">
           <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
@@ -120,6 +122,9 @@ function goHomeService() {
 </template>
 
 <style scoped>
+.has-home-image { position:relative; isolation:isolate; background-image:none!important; overflow:hidden }
+.has-home-image::before,.has-home-image::after { background-image:none!important }
+.home-promo-image { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:-1 }
 .promo-card__actions { position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: 10px; align-self: start; }
 .promo-card__actions .promo-card__cta { white-space: normal; text-align: center; }
 /* أيقونة البيت بدل شارة الخصم — نفس الدائرة الذهبية بلون داكن للأيقونة */

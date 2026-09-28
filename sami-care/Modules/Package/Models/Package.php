@@ -17,13 +17,14 @@ class Package extends BaseModel
 
     protected $table = 'packages';
 
-    public $translatable = ['name'];
+    public $translatable = ['name', 'description'];
 
     public const TYPE_PACKAGE = 'package';
     public const TYPE_OFFER = 'offer';
     
     protected $casts = [
         'name' => 'array',
+        'description' => 'array',
         'package_price' => 'double',
     ];
 

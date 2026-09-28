@@ -62,9 +62,9 @@ watch(() => language.lang, loadHomeData)
 <template>
   <div class="home-page desktop-home" :dir="language.lang === 'en' ? 'ltr' : 'rtl'">
     <main>
-      <HeroSection />
+      <HeroSection :content="homeData.home_content" />
       <div class="home-light">
-        <AboutSection />
+        <AboutSection :content="homeData.home_content" />
           <ServicesSection
                     :categories="homeData.categories"
                     :loading="loading"
@@ -72,6 +72,7 @@ watch(() => language.lang, loadHomeData)
 
                 <!-- Offers -->
                 <PromoCard
+                    :home-image="homeData.home_content?.home_service_image"
                     :offers="homeData.offers"
                     :loading="loading"
                 />

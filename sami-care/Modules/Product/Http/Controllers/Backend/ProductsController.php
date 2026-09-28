@@ -315,14 +315,23 @@ class ProductsController extends Controller
         }
 
         $product = new Product;
-        $product->name = $request->name;
-        $product->slug = Str::slug($request->name, '-').'-'.strtolower(Str::random(5));
+        $product->name = [
+            'ar' => $request->name_ar,
+            'en' => $request->name_en,
+        ];
+        
+        $product->slug = Str::slug($request->name_en ?: $request->name_ar, '-')
+    .'-'.strtolower(Str::random(5));
         $product->brand_id = $request->brand_id;
         $product->branch_id = $request->branch_id ?: null;
         $product->unit_id = $request->unit_id;
         $product->sell_target = $request->sell_target ?? 0;
 
-        $product->description = $request->description;
+        //$product->description = $request->description;
+        $product->description = [
+            'ar' => $request->description_ar,
+            'en' => $request->description_en,
+        ];
         $product->short_description = $request->short_description;
 
         if ($request->has('has_variation') && $request->has('combinations') && $request->has_variation && $request->combinations != 'undefined') {
@@ -452,6 +461,8 @@ class ProductsController extends Controller
     public function edit($id)
     {
         $data = Product::findOrFail($id);
+        $data['name_translations'] = $data->getTranslations('name');
+        $data['description_translations'] = $data->getTranslations('description');
         $data->category_ids = $data->categories->pluck('id')->toArray();
         $data->tags = $data->tags_data->pluck('name')->toArray();
         $data->date_range = date('Y-m-d', $data->discount_start_date).' to '.date('Y-m-d', $data->discount_end_date);
@@ -526,9 +537,18 @@ class ProductsController extends Controller
         $product = Product::findOrFail($id);
 
         $oldProduct = clone $product;
-        $product->name = $request->name;
-        $product->slug = (! is_null($request->slug)) ? Str::slug($request->slug, '-') : Str::slug($request->name, '-').'-'.strtolower(Str::random(5));
-        $product->description = $request->description;
+        $product->name = [
+            'ar' => $request->name_ar,
+            'en' => $request->name_en,
+        ];
+        $product->slug = ! is_null($request->slug)
+    ? Str::slug($request->slug, '-')
+    : Str::slug($request->name_en ?: $request->name_ar, '-').'-'.strtolower(Str::random(5));
+        //$product->description = $request->description;
+        $product->description = [
+            'ar' => $request->description_ar,
+            'en' => $request->description_en,
+        ];
         $product->sell_target = $request->sell_target;
         $product->brand_id = $request->brand_id;
         $product->branch_id = $request->branch_id ?: null;

@@ -479,6 +479,9 @@ footer{background:radial-gradient(circle at 18% 0,rgba(232,190,108,.16),transpar
 }
 
 html{--content-direction:rtl}html[dir="ltr"]{--content-direction:ltr}
+
+.booking-summary-sheet{position:fixed;inset:auto 0 0;margin:0 auto;width:min(100%,640px);max-width:100%;max-height:82dvh;overflow:auto;border:0;border-radius:24px 24px 0 0;padding:20px 18px calc(24px + env(safe-area-inset-bottom));background:var(--bg,#faf7f1);color:var(--ink,#221f1f);direction:inherit}
+.booking-summary-sheet::backdrop{background:#0008}.booking-summary-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:14px}.booking-summary-head h2{font-size:18px}.booking-summary-head button{font:inherit;font-size:28px;border:0;background:none;color:inherit;padding:4px 12px}.m-footer button.total,.m-footer button.summary-bag{border:0;background:none;color:inherit;font:inherit;cursor:pointer}body:has(.booking-summary-sheet[open]){overflow:hidden}
 </style>
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="/pwa/apple-touch-icon.png">
@@ -489,6 +492,11 @@ html{--content-direction:rtl}html[dir="ltr"]{--content-direction:ltr}
 <script src="/pwa.js" defer></script>
 <meta name="theme-color" content="#0A0906">
 <script src="/site-seo.js"></script>
+<link rel="stylesheet" href="/service-page-content.css">
+<script src="/service-page-defaults.js"></script>
+<script src="/service-page-content.js"></script>
+<script src="../home-page-content.js"></script>
+<style>.mobile-home-about{padding:20px 16px;line-height:1.8}.mobile-home-about>img{width:100%;height:220px;object-fit:cover;border-radius:16px}.mobile-home-about h2,.mobile-home-about h3{margin-block:12px 6px}.mobile-home-features{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}.mobile-home-features small{display:block}.home-svc .row{background-image:none!important}.home-svc .row>.dynamic-home-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.hin h1{white-space:pre-line}</style>
 </head>
 <body>
 <div class="app">
@@ -1407,6 +1415,23 @@ body.booking-service-sheet-open{overflow:hidden;overscroll-behavior:none}
 .booking-stage .employee-mode .mode-check{top:9px;left:9px;bottom:auto;width:21px;height:21px;background:#fff;font-style:normal}
 .booking-stage .employee-mode.sel .mode-check{background:linear-gradient(135deg,#e9cf8e,#c6a15b);border-color:transparent;color:#302719}
 .booking-stage .employee-mode:focus-visible{outline:3px solid #8f7134;outline-offset:4px}
+
+.booking-shell:not(.gift-shell) .m-book{min-height:100dvh;max-height:none;height:auto;overflow:visible;border-radius:0;padding-bottom:calc(110px + env(safe-area-inset-bottom))}
+.booking-shell:not(.gift-shell) .m-cat-row{display:flex;width:100%;max-width:100%;justify-content:flex-start;gap:10px;overflow-x:auto;padding:14px 2px;scroll-snap-type:x proximity}
+.booking-shell:not(.gift-shell) .m-cat{flex:0 0 108px;width:108px;height:auto;min-height:138px;padding:8px;display:flex;flex-direction:column;justify-content:flex-start;gap:8px;border-radius:14px;scroll-snap-align:start}
+.booking-shell:not(.gift-shell) .m-cat .cat-service-image{width:88px;height:82px;min-width:88px;min-height:82px;border-radius:10px;flex-shrink:0}
+.booking-shell:not(.gift-shell) .m-cat span:last-child{font-size:12px;line-height:1.5;min-height:36px;padding:0;white-space:normal;overflow-wrap:anywhere}
+.booking-summary-sheet[open]{animation:summarySlideIn .42s cubic-bezier(.22,1,.36,1) both;box-shadow:0 -20px 60px #0003}
+.booking-summary-sheet[open]::backdrop{animation:summaryFadeIn .35s ease both}
+.booking-summary-sheet.closing{animation:summarySlideOut .28s ease-in both}
+.booking-summary-sheet.closing::backdrop{animation:summaryFadeOut .28s ease both}
+@keyframes summarySlideIn{from{transform:translateY(100%);opacity:.5}to{transform:translateY(0);opacity:1}}
+@keyframes summarySlideOut{from{transform:translateY(0);opacity:1}to{transform:translateY(100%);opacity:0}}
+@keyframes summaryFadeIn{from{background:#0000}to{background:#0008}}
+@keyframes summaryFadeOut{from{background:#0008}to{background:#0000}}
+@media(prefers-reduced-motion:reduce){.booking-summary-sheet[open],.booking-summary-sheet[open]::backdrop{animation:none}}
+
+.bs-ov.booking-branch-backdrop{background:rgba(30,24,18,.18);backdrop-filter:blur(1.5px);-webkit-backdrop-filter:blur(1.5px)}
 </style>
 <script>
 (function(){
@@ -1429,6 +1454,8 @@ const IMG={
  p3:'/images/products/moisturizer-2.png',
  p4:'/images/products/moisturizer-3.png',
 };
+let HOME_CONTENT={};
+function homeText(key){return escHtml(HOME_CONTENT[key]?.[getLang()]??globalThis.SamiHomeContent[key]?.[getLang()]??'')}
 const HERO=[
  {tag:'عرض الصيف',t:'انتعاش<br>لا مثيل له',p:'باقة متكاملة تمنحك الراحة والانتعاش',d:'خصم يصل إلى <b>30%</b>',img:IMG.hero2},
  {tag:'الأكثر طلبًا',t:'إطلالة<br>تليق بك',p:'حلاقة وعناية متكاملة بأيدي خبراء',d:'ابتداءً من <b>59 ر.س</b>',img:IMG.hero1},
@@ -1822,6 +1849,8 @@ function mapBranchSimple(raw){
   id:'b'+raw.id,
   n:name,
   a:localizedField(raw,'address')||'',
+  desc:localizedField(raw,'description')||'',
+  desc_en:localizedField(raw,'description_en')||'',
   img:raw.image||IMG.br1,
   map:'https://maps.google.com/?q='+encodeURIComponent(name),
  };
@@ -1835,6 +1864,8 @@ function mapFullBranch(raw,slotId,fallback){
   realId:Number(raw.id)||null,
   name:localizedField(raw,'name')||fallback?.name||'فرع',
   addr:localizedField(raw,'address_line_1')||localizedField(raw,'address')||fallback?.addr||'',
+  desc:localizedField(raw,'description')||fallback?.desc||'',
+  desc_en:localizedField(raw,'description_en')||fallback?.desc_en||'',
   phone:raw.contact_number||raw.mobile||fallback?.phone||'',
   workingDays:Array.isArray(raw.working_days)?raw.working_days:[],
   img:raw.branch_image||fallback?.img,
@@ -1933,6 +1964,7 @@ function applyDynamicData(){
 
  /* الفروع: شريط الرئيسية BRANCHES + آراء العملاء TSTS — كلاهما من /Home/all */
  if(homeAll.status==='fulfilled'){
+ HOME_CONTENT=homeAll.value.data?.home_content||{};
  try{
    const list=homeAll.value.data?.branches||[];
    if(list.length){BRANCHES.length=0;BRANCHES.push(...list.map(mapBranchSimple))}
@@ -1985,7 +2017,7 @@ function applyDynamicData(){
      const slot=matched||`cat-${live.id}`;
      const style=STYLE_CAT[matched]||Object.values(STYLE_CAT)[index%Object.keys(STYLE_CAT).length];
      const fallback=staticCats[slot]||{id:slot,name:'قسم',hex:style.hex,emoji:style.emoji,img:style.img};
-     const cat={id:slot,apiId:Number(live.id)||live.id,name:localizedField(live,'name')||fallback.name,hex:style.hex,emoji:style.emoji,img:live.feature_image||live.image||fallback.img};
+     const cat={id:slot,apiId:Number(live.id)||live.id,page_content:live.page_content,name:localizedField(live,'name')||fallback.name,hex:style.hex,emoji:style.emoji,img:live.feature_image||live.image||fallback.img};
      newCats.push(cat);
      (live.services||[]).forEach(s=>{
       if(Number(s.status)===0)return;
@@ -2012,11 +2044,16 @@ function applyDynamicData(){
        group={id:`api-${cat.apiId}`,key:cat.id,name:cat.name,tag:'خدمات عناية متخصصة',desc:'اختر الخدمة المناسبة لك وتعرّف على مدتها وسعرها قبل إتمام الحجز.',img:cat.img,icon:cat.emoji,features:['خدمة احترافية','جودة وخصوصية','حجز سهل'],benefits:[['عناية متخصصة','خدمة مقدمة وفق أعلى معايير الجودة'],['تجربة مريحة','خيارات واضحة تناسب احتياجك'],['حجز مرن','اختر الموعد والموظف المناسبين'],['نتائج مميزة','اهتمام كامل بالتفاصيل']],variants:[]};
        MOBILE_SERVICES.push(group);
       }
-      group.apiId=cat.apiId;group.name=cat.name;group.img=cat.img||group.img;group.icon=cat.emoji||group.icon;
+      group.apiId=cat.apiId;group.page_content=cat.page_content;group.name=cat.name;group.img=cat.img||group.img;group.icon=cat.emoji||group.icon;
       const live=B_SERVICES.filter(s=>s.cat===group.key&&!String(s.id).startsWith('d'+group.id+'-'))
        .map(s=>{const v=[s.name,s.dur,s.price,s.desc,s.img];v.id=s.id;return v});
       group.variants=live;
      });
+    const directService=new URLSearchParams(location.search).get('page')?.match(/^\/services\/(\d+)$/);
+    if(directService&&!S.directServiceResolved){
+      const group=MOBILE_SERVICES.find(g=>String(g.apiId)===directService[1]);
+      if(group){S.serviceDetailId=group.id;S.svPage=true;S.subPage=null;S.directServiceResolved=true}
+    }
     syncMobileServiceVariants();
    }
   }catch(e){console.warn('sami: تعذر تجهيز التصنيفات والخدمات',e)}
@@ -2607,7 +2644,7 @@ let bookingSheetStable=false;
 let bookingTransitionBusy=false;
 let bookingPageScrollY=0;
 const reduceBookingMotion=()=>window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-function isBookingServiceSheet(){return S.bookWizard&&!S.bookDone&&S.bookStep===2}
+function isBookingServiceSheet(){return false}
 function restoreBookingScroll(pageY,sheetY){
  /* استعادة الموضع قبل أول paint تمنع القفزة المرئية بعد كل اختيار. */
  window.scrollTo({top:pageY,left:0,behavior:'auto'});
@@ -2926,6 +2963,7 @@ function ensureBottomSheet(){
  }
  clearTimeout(sheet._closeTimer);
  sheet.classList.remove('booking-launch','service-detail-sheet');
+ ov.classList.remove('booking-branch-backdrop');
  return {ov,sheet,body:$('#bsBody')};
 }
 function branchLabel(id){
@@ -2933,6 +2971,12 @@ function branchLabel(id){
  if(!b)return'جدة';
  if(b.home)return'منزلي';
  return b.id==='qr'?'جدة قريش':'جدة البغدادية';
+}
+
+function branchDesc(b) {
+  if (!b) return '';
+  const desc = getLang() === 'en' ? (b.desc_en || b.description_en) : (b.desc || b.description);
+  return desc || b.addr || b.a || '';
 }
 function syncBranchHeader(){
  const el=$('#locLabel');
@@ -2944,7 +2988,7 @@ function pickBranch(id,ctx){
  if(ctx==='gift'){
   /* الإهداء: الفرع بيتاخد من شاشة منبثقة، وبعدها نروح لاختيار المحتوى مباشرة */
   S.giftBranch=id;S.giftStep=3;
-  syncBranchHeader();closeBottomSheet();render();
+  syncBranchHeader();closeBottomSheet();render();scrollAppTop();
   toast('تم اختيار '+branchLabel(id)+' — اختر محتوى الهدية');
   return;
  }
@@ -3066,12 +3110,13 @@ function openBookingLaunchSheet(){
  const ui=ensureBottomSheet();
  const order=['bg','qr','hm'].map(id=>B_BRANCHES.find(b=>b.id===id)).filter(Boolean);
  ui.sheet.classList.add('booking-launch');
+ ui.ov.classList.add('booking-branch-backdrop');
  ui.body.innerHTML=`<span class="booking-launch-dome" aria-hidden="true"></span>
   <span class="booking-launch-logo"><img src="logo.png" alt="عناية سامي"></span>
   <span class="booking-launch-grab" aria-hidden="true"></span>
   <div class="booking-launch-head"><h2>اختر الفرع</h2><p>اختر الفرع الأقرب لك لبدء الحجز</p></div>
   <div class="booking-launch-list">${order.map(b=>`<button class="booking-launch-branch ${S.bookBranch===b.id?'sel':''}" data-booking-launch-branch="${b.id}">
-   <i class="booking-launch-arrow">${svg('<path d="M15 6l-6 6 6 6"/>',18)}</i><span class="bl-info"><b>${svg('<path d="M21 10c0 7-9 12-9 12S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>',14)} ${b.id==='bg'?'البغدادية الغربية':b.id==='qr'?'البوادي':'خدمة منزلية'}</b><small>${b.id==='bg'?'شارع حائل، حي البغدادية الغربية<br>جدة':b.id==='qr'?'شارع قريش، حي البوادي<br>جدة':'نصل إليك أينما كنت<br>جدة'}</small><em class="bl-open">متاح الآن</em></span><img src="${b.img}" alt="${b.name}">
+   <i class="booking-launch-arrow">${svg('<path d="M15 6l-6 6 6 6"/>',18)}</i><span class="bl-info"><b>${svg('<path d="M21 10c0 7-9 12-9 12S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>',14)} ${b.id==='bg'?'البغدادية الغربية':b.id==='qr'?'البوادي':'خدمة منزلية'}</b><small>${branchDesc(b)}</small><em class="bl-open">متاح الآن</em></span><img src="${b.img}" alt="${b.name}">
   </button>`).join('')}</div>`;
  document.body.classList.add('booking-dock-open');
  // Commit the starting position before opening the branch sheet.
@@ -3079,7 +3124,7 @@ function openBookingLaunchSheet(){
  ui.ov.classList.add('on');ui.sheet.classList.add('on');
  $('#bookingLaunchClose')?.addEventListener('click',()=>{closeBottomSheet();S.bookWizard=false;S.bookStep=1;S.bookLaunch=false;S.tab='home';render();navigateParent('/')});
  $$('[data-booking-launch-branch]').forEach(el=>el.addEventListener('click',()=>{
- S.currentBranch=el.dataset.bookingLaunchBranch;S.bookBranch=el.dataset.bookingLaunchBranch;S.bookWizard=true;S.bookLaunch=false;S.bookOpenCats=new Set();S.bookMode=null;S.bookEmp={};S.bookStaffByService={};S.bookStaffLoading={};S.bookSlotsByService={};S.bookSlotsLoading={};S.bookDate=null;S.bookTime={};S.bookPay=null;resetBookRewards();
+ S.currentBranch=el.dataset.bookingLaunchBranch;S.bookBranch=el.dataset.bookingLaunchBranch;S.bookWizard=true;S.bookLaunch=false;S.bookOpenCats=new Set(S.preferredBookCategory?[S.preferredBookCategory]:[]);S.preferredBookCategory=null;S.bookMode=null;S.bookEmp={};S.bookStaffByService={};S.bookStaffLoading={};S.bookSlotsByService={};S.bookSlotsLoading={};S.bookDate=null;S.bookTime={};S.bookPay=null;resetBookRewards();
   const _pk=S.bookPkg?DPKGS.find(x=>x.id===S.bookPkg):null;
   if(_pk){
    /* الباقة خدماتها محددة مسبقًا — من الفرع نروح لتحديد الوقت مباشرة */
@@ -3147,15 +3192,16 @@ function homeHTML(){
  <!-- الشاشة 1 -->
  <div class="hero-sl">
   <div class="hero-track" id="heroTrack">
-   ${HERO.map(h=>`<div class="hslide"><img src="${h.img}" alt="" loading="eager">
-    <div class="hin"><div class="tagline">${h.tag}</div><h1>${h.t}</h1><p>${h.p}</p><div class="disc">${h.d}</div>
+   ${HERO.map((h,i)=>`<div class="hslide"><img src="${h.img}" alt="" loading="${i===0?'eager':'lazy'}" fetchpriority="${i===0?'high':'auto'}">
+    <div class="hin" data-no-i18n><div class="tagline">${homeText("slide_"+i+"_tag")}</div><h1>${homeText("slide_"+i+"_title")}</h1><p>${homeText("slide_"+i+"_text")}</p><div class="disc">${homeText("slide_"+i+"_detail")}</div>
      <div class="hbtns">
-      <button class="btn btn-org" data-go="book">${svg('<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M9 16l2 2 4-4"/>',15)} احجز الآن</button>
-      <button class="btn btn-line" data-go="services" aria-label="استكشف الخدمات">استكشف الخدمات</button>
+      <button class="btn btn-org" data-go="book">${svg('<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M9 16l2 2 4-4"/>',15)} ${homeText("hero_cta")}</button>
+      <button class="btn btn-line" data-go="services" aria-label="${homeText("hero_explore")}">${homeText("hero_explore")}</button>
      </div></div></div>`).join('')}
   </div>
   <div class="dots hero-dots" id="heroDots">${HERO.map((_,i)=>`<i class="${i===0?'on':''}"></i>`).join('')}</div>
  </div>
+<!-- <section class="mobile-home-about" data-no-i18n><img src="${escHtml(HOME_CONTENT.about_image||globalThis.SamiHomeContent.about_image)}" alt="${homeText('about_title')}" loading="lazy" decoding="async" width="600" height="400"><h2>${homeText('about_title')}</h2><h3>${homeText('about_heading')}</h3><p>${homeText('about_text')}</p><h3>${homeText('about_heading_2')}</h3><p>${homeText('about_text_2')}</p><div class="mobile-home-features">${[0,1,2,3].map(i=>`<article><b>${homeText('feature_'+i+'_title')}</b><small>${homeText('feature_'+i+'_text')}</small></article>`).join('')}</div></section> -->
  <section class="sec">
   <div class="sec-h"><h2><span class="hi">${svg('<path d="M12 2l2.2 4.9 5.3.6-4 3.7 1.1 5.3L12 13.9 7.4 16.5l1.1-5.3-4-3.7 5.3-.6z"/>',15)}</span> خدماتنا</h2><button class="share-btn" data-share="خدماتنا">${svg('<path d="M18 8a3 3 0 10-2.8-4H15L8.9 9.6M18 16a3 3 0 10-2.9-3.7L9 8.9M6 15a3 3 0 100-6 3 3 0 000 6z"/>',13)} شارك</button><a data-go="services">${svg('<path d="M15 6l-6 6 6 6"/>',12)} عرض الكل</a></div>
  </section>
@@ -3188,7 +3234,7 @@ function homeHTML(){
  <section class="sec home-svc-heading">
   <div class="sec-h"><h2><span class="hi">${svg('<path d="M3 9l9-6 9 6v11a1 1 0 01-1 1H4a1 1 0 01-1-1z"/>',11)}</span> الخدمات المنزلية</h2><a data-go="homesvc">عرض الكل</a><button class="share-btn" data-share="الخدمات المنزلية">${svg('<path d="M18 8a3 3 0 10-2.8-4H15L8.9 9.6M18 16a3 3 0 10-2.9-3.7L9 8.9M6 15a3 3 0 100-6 3 3 0 000 6z"/>',13)} شارك</button></div>
  </section>
- <div class="home-svc"><div class="row">
+ <div class="home-svc"><div class="row"><img class="dynamic-home-image" src="${escHtml(HOME_CONTENT.home_service_image||'assets/extracted/home-service-continuous.webp')}" alt="" loading="lazy" decoding="async" width="700" height="328">
   <div class="txt">
    <h3>خدماتنا تصل إليك في منزلك</h3>
    <p>راحة تامة بخدمة احترافية أينما كنت</p>
@@ -3271,7 +3317,8 @@ function homeHTML(){
  <div class="hscroll">
   ${BRANCHES.map(b=>`<div class="br-m">
    <div class="bim"><img src="${b.img}" alt="" loading="lazy"><span class="pin">${svg('<path d="M21 10c0 7-9 12-9 12S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>',15)}</span></div>
-   <div class="bb"><b>${b.n}</b><small>${b.a}</small>
+   <div class="bb"><b>${b.n}</b><small>${branchDesc(b)}</small>
+
     <a class="btn btn-line map" href="${b.map}" target="_blank" rel="noopener">${svg('<path d="M21 10c0 7-9 12-9 12S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>',13)} عرض على الخريطة</a></div>
   </div>`).join('')}
  </div>
@@ -3303,7 +3350,7 @@ function homeHTML(){
    </ul></section>
    <section class="footer-col footer-branches"><h4>عناوين الفروع</h4><div class="branch-grid">
     <div class="footer-branch footer-branch-admin">${svg('<path d="M4 21V5l8-3 8 3v16M9 9h1M14 9h1M9 13h1M14 13h1M10 21v-4h4v4"/>',13)}<span><b>الإدارة</b><a href="${telHref('0569472722')}">0569472722</a></span></div>
-    ${B_BRANCHES.filter(branch=>!branch.home).map(branch=>`<div class="footer-branch">${svg('<path d="M21 10c0 7-9 12-9 12S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>',13)}<span><b>${escHtml(branch.name)}</b><small>${escHtml(branch.addr||'')}</small>${branch.phone?`<a href="${telHref(branch.phone)}">${escHtml(branch.phone)}</a>`:''}</span></div>`).join('')}
+    ${B_BRANCHES.filter(branch=>!branch.home).map(branch=>`<div class="footer-branch">${svg('<path d="M21 10c0 7-9 12-9 12S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>',13)}<span><b>${escHtml(branch.name)}</b><small>${escHtml(branchDesc(branch)||'')}</small>${branch.phone?`<a href="${telHref(branch.phone)}">${escHtml(branch.phone)}</a>`:''}</span></div>`).join('')}
     <div class="footer-branch footer-branch-home">${svg('<path d="M3 11l9-7 9 7v9H3zM9 20v-6h6v6"/>',13)}<span><b>خدمات منزلية</b><small>حلاقة شعر ولحية وماسكات طبيعية</small></span></div>
    </div></section>   <section class="footer-col footer-important"><h4>روابط مهمة</h4><ul class="footer-list">
     <li><a data-go="home">الرئيسية</a></li><li><a data-go="book">حجز موعد</a></li><li><a data-go="services">خدماتنا</a></li><li><a data-go="packages">الباقات</a></li><li><a data-go="giftspage">الهدايا</a></li>
@@ -3348,7 +3395,7 @@ function contactPageHTML(){
    <div class="mobile-contact-field"><label for="mobileContactMessage">الرسالة *</label><textarea id="mobileContactMessage" placeholder="اكتب استفسارك أو رسالتك هنا..."></textarea></div>
   </div><button class="btn btn-org mobile-contact-submit" id="mobileContactSubmit">إرسال الرسالة</button></section>
   <section class="mobile-contact-info">
-   ${contactBranches.map(branch=>`<article><i>⌖</i><h3>${escHtml(branch.name)}</h3>${branch.addr?`<p>${escHtml(branch.addr)}</p>`:''}${branchHours(branch)?`<p>${branchHours(branch)}</p>`:''}${branch.phone?`<a href="tel:${escHtml(branch.phone)}">${escHtml(branch.phone)}</a>`:''}</article>`).join('')}
+   ${contactBranches.map(branch=>`<article><i>⌖</i><h3>${escHtml(branch.name)}</h3>${branchDesc(branch)?`<p>${escHtml(branchDesc(branch))}</p>`:''}${branchHours(branch)?`<p>${branchHours(branch)}</p>`:''}${branch.phone?`<a href="tel:${escHtml(branch.phone)}">${escHtml(branch.phone)}</a>`:''}</article>`).join('')}
    <article><i>⌖</i><h3>الإدارة</h3><a href="tel:0569472722">0569472722</a></article>
    <article><i>⌂</i><h3>خدمات منزلية</h3><p>حلاقة وعناية في منزلك داخل جدة.</p></article>
   </section>
@@ -3523,7 +3570,7 @@ function mobileServiceDetailHTML(){
   <section class="mobile-sd-hero"><img src="${s.img}" alt="${s.name}"><div class="mobile-sd-top"><button id="svBack">${svg('<path d="M9 6l6 6-6 6"/>',16)}</button><b>تفاصيل الخدمة</b><button class="share-btn" data-share="${s.name}">${svg('<path d="M18 8a3 3 0 10-2.8-4H15L8.9 9.6M18 16a3 3 0 10-2.9-3.7L9 8.9M6 15a3 3 0 100-6 3 3 0 000 6z"/>',15)}</button></div><div class="mobile-sd-caption"><small>${s.icon} ${s.tag}</small><h1>${s.name}</h1><p>${s.desc}</p></div></section>
   <div class="mobile-sd-summary">${s.features.map((f,i)=>`<span><b>${['✓','✦','♛'][i]}</b>${f}</span>`).join('')}</div>
   <section class="mobile-sd-section"><div class="mobile-sd-title"><small>اختر تجربتك</small><h2>أنواع ${s.name}</h2></div><div class="mobile-sd-variants">${s.variants.map(v=>`<button type="button" class="mobile-sd-var ${S.detailSelections.has(v.id)?'is-selected':''}" data-detail-variant="${v.id}"><img src="${v[4]||s.img}" alt="${v[0]}" loading="lazy"><span><h3>${v[0]}</h3><p>${v[3]}</p><span class="row"><span>◷ ${v[1]} دقيقة</span><b>${v[2]} ر.س</b></span></span></button>`).join('')}</div></section>
-  <section class="mobile-sd-section"><div class="mobile-sd-title"><small>لماذا تختارها؟</small><h2>فوائد ${s.name}</h2></div><div class="mobile-sd-benefits">${s.benefits.map((b,i)=>`<article class="mobile-sd-benefit"><i>${['✦','✓','♡','⌁'][i]}</i><b>${b[0]}</b><small>${b[1]}</small></article>`).join('')}</div></section>
+  ${globalThis.SamiServiceContent.render({...s,id:s.apiId||s.id},getLang(),s.img)}
   <div class="mobile-sd-cta"><div class="selection-total"><small>${selected.length?selected.length+' خدمة مختارة':'اختر خدمة أولًا'}</small><b>${total} ر.س</b></div><button class="btn btn-org book-selected" data-detail-book="${s.key}" ${selected.length?'':'disabled'}>متابعة الحجز ${svg('<path d="M15 6l-6 6 6 6"/>',14)}</button></div>
  </div>`;
 }
@@ -3910,7 +3957,7 @@ function wizBranchHTML() {
       <span class="w-br-ic">${svg('<path d="M21 10c0 7-9 12-9 12S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>', 20)}</span>
       <div class="w-br-info">
         <b>${b.n}</b>
-        <small>${b.a}</small>
+        <small>${branchDesc(b)}</small>
       </div>
       ${S.bookBranch === b.id ? '<span style="color:var(--org)">✓</span>' : ''}
     </div>
@@ -4268,12 +4315,40 @@ function wizServiceHTML(){
  const active=[...S.bookOpenCats][0]||null;
  const list=active?B_SERVICES.filter(s=>s.cat===active):[];
  return`<div class="m-cat-row">${B_CATS.map(c=>`<button type="button" class="m-cat ${active===c.id?'sel':''}" data-w-cat="${c.id}"><span class="cat-service-image"><img src="${escHtml(c.img||IMG.s1)}" alt="${escHtml(c.name)}"></span><span>${c.name}</span></button>`).join('')}</div>
- ${wizServiceSummaryHTML()}
+
  ${active?`<div class="booking-services">${list.map(s=>`<button type="button" class="m-service ${S.bookServices.has(s.id)?'sel':''}" data-w-svc="${s.id}">
   ${s.hot?'<span class="service-hot">الأكثر طلبًا</span>':''}<span class="svc-thumb"><img src="${s.img||bCat(s.cat).img}" alt="${s.name}"></span>
   <span class="service-info"><b>${s.name}</b><small>${s.desc}</small><span class="service-meta"><small>◷ ${s.dur} دقيقة</small><span class="price">${rs(s.price)} ر.س</span></span></span>
   <span class="pick-mark">${S.bookServices.has(s.id)?'✓':'+'}</span></button>`).join('')}</div>`:`<div class="booking-empty"><img src="assets/booking/empty-chair.webp" alt="كرسي الحلاقة"><h2>اختر القسم المناسب لك</h2><p>ستظهر الخدمات المتاحة هنا</p><span class="empty-dots"><i></i><i></i><i></i></span></div>`}`;
 }
+function closeBookingSummary(dialog){
+ if(!dialog.open||dialog.classList.contains('closing'))return;
+ if(reduceBookingMotion()){dialog.close();return}
+ dialog.classList.add('closing');
+ dialog._closeTimer=setTimeout(()=>{dialog.close();dialog.classList.remove('closing')},280);
+}
+function refreshBookingSummary(){
+ const dialog=document.getElementById('bookingSummarySheet');
+ if(!dialog?.open)return;
+ if(!S.bookWizard||S.bookDone){dialog.close();return}
+ dialog.querySelector('.booking-summary-content').innerHTML=bMiniSummary()+wizServiceSummaryHTML();
+ translateStaticText(dialog);
+}
+document.addEventListener('click',event=>{
+ if(!event.target.closest('[data-booking-summary]'))return;
+ let dialog=document.getElementById('bookingSummarySheet');
+ if(!dialog){
+  dialog=document.createElement('dialog');dialog.id='bookingSummarySheet';dialog.className='booking-summary-sheet';dialog.setAttribute('aria-labelledby','booking-summary-title');
+  dialog.innerHTML='<div class="booking-summary-head"><h2 id="booking-summary-title">ملخص الحجز</h2><button type="button" aria-label="إغلاق" data-summary-close>×</button></div><div class="booking-summary-content"></div>';
+  document.body.append(dialog);
+  dialog.addEventListener('cancel',e=>{e.preventDefault();closeBookingSummary(dialog)});
+  dialog.addEventListener('close',()=>{clearTimeout(dialog._closeTimer);dialog.classList.remove('closing')});
+  dialog.querySelector('[data-summary-close]').addEventListener('click',()=>closeBookingSummary(dialog));
+  dialog.addEventListener('click',e=>{if(e.target===dialog){const b=dialog.getBoundingClientRect();if(e.clientY<b.top||e.clientX<b.left||e.clientX>b.right)closeBookingSummary(dialog)}});
+ }
+ if(dialog.open)return;
+ dialog.classList.remove('closing');dialog.showModal();refreshBookingSummary();
+});
 function wizServiceSummaryHTML(){
  const services=bSelSvcs();
  if(!services.length)return '';
@@ -4353,7 +4428,7 @@ function wizDateTimeHTML(){
   }).join('');
  }
  return`<div class="m-panel-title"><h1>اختر الموعد</h1><p>سيتم عرض الأوقات المتاحة فعليًا حسب توفر كل موظف — اختر وقتًا لكل خدمة.</p></div>
- ${bMiniSummary()}
+
  <div class="m-cal"><div class="m-cal-head"><button data-w-cal-nav="-7" ${atToday?'disabled':''}>${svg('<path d="M15 6l-6 6 6 6"/>',14)}</button><b>${rangeLabel}</b><button data-w-cal-nav="7">${svg('<path d="M9 6l6 6-6 6"/>',14)}</button></div><div class="m-days">${dayNames}</div><div class="m-cells">${cells}</div></div>
  ${S.bookDate?body:`<div class="m-summary-mini" style="text-align:center"><b>ابدأ باختيار التاريخ</b><span>اختر يومًا من التقويم لعرض الأوقات المتاحة</span></div>`}`;
 }
@@ -4398,7 +4473,7 @@ function wizDateTimeHTML(){
   }
  }
  return`<div class="m-panel-title"><h1>اختر الموعد</h1><p>اختر بداية الجلسة فقط، وسيتم ترتيب باقي الأقسام تلقائيًا حسب مدة كل قسم والأوقات المتاحة.</p></div>
- ${bMiniSummary()}
+
  ${bookLoyaltyPreviewHTML()}
  <div class="m-cal"><div class="m-cal-head"><b>${rangeLabel}</b></div><div class="m-cells">${cells}</div><div class="m-cal-legend"><span><i></i> تتوفر مواعيد</span><span><i></i> غير متاح</span></div></div>
  ${S.bookDate?body:`<div class="m-summary-mini" style="text-align:center"><b>ابدأ باختيار التاريخ</b><span>اختر يومًا من التقويم لعرض الأوقات المتاحة</span></div>`}`;
@@ -4487,15 +4562,15 @@ function wizardHTML(){
  const views=[wizBranchHTML,wizServiceHTML,wizEmployeeHTML,wizDateTimeHTML,wizSummaryHTML,wizPaymentHTML];
  const p=bPriceParts(),count=S.bookServices.size,footTotal=S.bookStep===6?bookPayableTotal():(S.bookStep<=3?bSubTotal():p.total),br=bBranch();
  const location=br?br.name.replace(/^فرع\s+/,''):'البغدادية';
- const dockService=S.bookStep===2;
- const emptyService=dockService&&S.bookOpenCats.size===0;
+ const dockService=false;
+ const emptyService=S.bookStep===2&&S.bookOpenCats.size===0;
  const backId=S.bookStep>1?'wizPrevBtn':'wizCancelBtn';
  const nextLabel=S.bookStep===6?(S.bookSubmitting?'جارٍ التأكيد...':'إتمام الدفع'):S.bookStep===2?'متابعة الحجز':'متابعة';
  const bag=svg('<path d="M6 8h12l1 13H5z"/><path d="M9 8V6a3 3 0 016 0v2"/>',27);
  const bookContent=`<div class="m-book ${dockService?'booking-service-step booking-service-sheet':''} ${emptyService?'booking-empty-step':''}"><div class="m-book-head">
   ${dockService?'<span class="booking-sheet-grab" aria-hidden="true"><i></i></span>':''}<div class="m-book-nav"><span class="m-book-bag">${bag}<i class="bag-count">${count}</i></span><button class="m-book-brand-branch" id="wizChangeBranchBtn" aria-label="تغيير الفرع"><span class="m-book-brand-logo"><img src="logo.png" alt="عناية سامي"></span><span class="m-book-branch-copy"><small>تغيير الفرع</small><b>${location}</b></span><i class="m-book-branch-chev">⌄</i></button><button class="m-book-back" id="${backId}" aria-label="الرجوع">${svg('<path d="M4 12h16M14 6l6 6-6 6"/>',25)}</button></div>
   <div class="m-book-title-row"><h1 class="m-book-title">${titles[S.bookStep-1]}</h1><span class="m-book-step-chip">${S.bookStep} / 6</span></div>${bStepHTML()}</div><div class="booking-stage">${views[S.bookStep-1]()}</div></div>
-  <div class="m-footer"><button class="btn btn-org next" id="wizNextBtn" ${!canWizNext()?'disabled':''}>${nextLabel} ${svg('<path d="M15 5l-7 7 7 7"/>',17)}</button><div class="total"><small>${count?count+' خدمات مختارة':'لم يتم اختيار خدمات بعد'}</small><b>${rs(footTotal)} ر.س</b></div><span class="summary-bag">${bag}<i class="bag-count">${count}</i></span></div>`;
+  <div class="m-footer"><button class="btn btn-org next" id="wizNextBtn" ${!canWizNext()?'disabled':''}>${nextLabel} ${svg('<path d="M15 5l-7 7 7 7"/>',17)}</button><button type="button" class="total" data-booking-summary aria-label="ملخص الحجز" aria-haspopup="dialog"><small>${count?count+' خدمات مختارة':'لم يتم اختيار خدمات بعد'}</small><b>${rs(footTotal)} ر.س</b></button><button type="button" class="summary-bag" data-booking-summary aria-label="ملخص الحجز" aria-haspopup="dialog">${bag}<i class="bag-count">${count}</i></button></div>`;
  if(!dockService)return bookContent;
  return`<div class="booking-sheet-overlay ${bookingSheetStable?'stable':''}" id="bookingServiceOverlay" role="dialog" aria-modal="true" aria-label="اختيار الخدمات"><button class="booking-sheet-scrim" id="bookingServiceScrim" aria-label="إغلاق نافذة اختيار الخدمات"></button>${bookContent}</div>`;
 }
@@ -4825,6 +4900,7 @@ function syncMobileSeo(){
 }
 
 function render(){
+ refreshBookingSummary();
  syncMobileSeo();
  document.documentElement.classList.toggle('booking-active',!!(S.bookWizard||S.bookLaunch));
  const bdg=document.querySelector('.bdg');
@@ -4835,7 +4911,7 @@ function render(){
  let html='';
  if(S.giftWizard)html=giftWizardHTML();
  else if(S.bookWizard)html=serviceSheet?'<div class="booking-underlay" aria-hidden="true"></div>'+wizardHTML():wizardHTML();
- else if(S.bookLaunch)html='<div class="booking-underlay booking-launch-underlay" aria-hidden="true"></div>';
+
  else if(S.tab==='home')html=S.subPage==='services'?allServicesHTML():S.subPage==='pkg'?packagesHTML():S.subPage==='hsv'?homeSvcHTML():S.subPage==='gift'?giftsPageHTML():S.subPage==='cafe'?cafePageHTML():S.subPage==='home-service'?homeServicePageHTML():S.subPage==='terms'?termsPageHTML():S.subPage==='privacy'?privacyPageHTML():S.subPage==='contact'?contactPageHTML():S.svPage?serviceHTML():homeHTML();
  else if(S.tab==='store')html=storeHTML();
  else if(S.tab==='cart')html=cartHTML();
@@ -4859,6 +4935,8 @@ function render(){
  }
  document.body.classList.toggle('booking-service-sheet-open',serviceSheet);
  document.querySelector('.hd')?.classList.toggle('scrolled',window.scrollY>36);
+ // Set native lazy-loading before insertion so offscreen images do not fetch eagerly.
+ html=html.replace(/<img\b[^>]*>/gi,tag=> /\bloading\s*=/.test(tag)?tag:tag.replace('<img','<img loading="lazy" decoding="async"'));
  scr.innerHTML=`<div class="screen on">${html}</div>`;
  translateStaticText(scr);
  /* الشريط اللاصق */
@@ -4883,6 +4961,10 @@ function render(){
 }
 function go(tab){S.tab=tab;S.svPage=false;S.subPage=null;S.accSub=null;render();scrollTo({top:0,behavior:'smooth'});if(tab==='account'&&getAuth()&&!_accountData)loadAccountData();if(tab==='bookings'&&getAuth()&&!_accountData)loadAccountData()}
 function bind(){
+ document.querySelectorAll('[data-category-book]').forEach(button=>button.addEventListener('click',()=>{
+  const group=MOBILE_SERVICES.find(g=>String(g.apiId||g.id)===button.dataset.categoryBook);
+  S.preferredBookCategory=group?.key||null;S.bookPkg=null;S.bookWizard=false;openBookingLaunchSheet();
+ }));
  /* تنقل عام للخطوات الحرة */
  if (S.giftWizard) {
    const cancel = $('#giftCancelBtn');
@@ -5035,7 +5117,7 @@ function bind(){
       S.bookWizard=false;S.bookStep=1;S.bookLaunch=true;S.tab='home';render();
       requestAnimationFrame(()=>window.scrollTo({top:bookingPageScrollY,left:0,behavior:'auto'}));
       setTimeout(openBookingLaunchSheet,40);
-     },reduceBookingMotion()?0:320);
+     },0);
     }else transitionBooking(()=>S.bookStep--,{direction:'back',resetTop:true});
    });
    
@@ -5322,7 +5404,7 @@ function bind(){
   });
  }
  if(S.tab==='home'&&S.svPage){
-  $('#svBack').addEventListener('click',()=>{S.svPage=false;S.subPage='services';render();scrollTo({top:0})});
+  $('#svBack').addEventListener('click',()=>{S.svPage=false;S.subPage='services';render();navigateParent('/services');scrollTo({top:0})});
   $$('[data-detail-variant]').forEach(el=>el.addEventListener('click',()=>{
    const id=el.dataset.detailVariant;
    S.detailSelections.has(id)?S.detailSelections.delete(id):S.detailSelections.add(id);
@@ -5365,7 +5447,7 @@ function bind(){
    setTimeout(()=>openBranchSheet('gift'),80);
   }));
   $$('[data-flt]').forEach(el=>el.addEventListener('click',()=>{S.svFlt=el.dataset.flt;render()}));
-  $$('[data-service-detail]').forEach(el=>el.addEventListener('click',()=>{S.serviceDetailId=Number(el.dataset.serviceDetail);S.subPage=null;S.svPage=true;render();scrollTo({top:0,behavior:'smooth'})}));
+  $$('[data-service-detail]').forEach(el=>el.addEventListener('click',()=>{S.serviceDetailId=el.dataset.serviceDetail;S.subPage=null;S.svPage=true;render();const selectedGroup=MOBILE_SERVICES.find(g=>String(g.id)===String(S.serviceDetailId));if(selectedGroup?.apiId)navigateParent("/services/"+selectedGroup.apiId);scrollTo({top:0,behavior:'smooth'})}));
   $$('[data-cut]').forEach(el=>el.addEventListener('click',()=>{
    S.svSel=S.svSel===el.dataset.cut?null:el.dataset.cut;
    if(!S.svSel)S.barOpen=false;
@@ -5549,9 +5631,9 @@ $('#headerCartBtn').addEventListener('click',()=>{go('cart');scrollAppTop()});
 const parentPathByGo={
  'home-service':'/home-service', cafe:'/cafe',
  home:'/',services:'/services',book:'/booking',store:'/store',gift:'/gifts',
- packages:'/packages-gifts',branches:'/branches',contact:'/contact',account:'/contact'
+ packages:'/packages-gifts',branches:'/branches',contact:'/contact',account:'/account'
 };
-const parentPathByTab={home:'/',store:'/store',bookings:'/booking',account:'/contact'};
+const parentPathByTab={home:'/',store:'/store',bookings:'/booking',account:'/account'};
 const parentPathByFile={
  'app.html':'/','index.html':'/','booking.html':'/booking','store.html':'/store',
  'packages-gifts.html':'/packages-gifts','gifts.html':'/gifts',

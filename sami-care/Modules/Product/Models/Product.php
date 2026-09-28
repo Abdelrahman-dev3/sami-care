@@ -7,19 +7,20 @@ use App\Models\Branch;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Tag\Models\Tag;
+use Spatie\Translatable\HasTranslations;
 
 class Product extends BaseModel
 {
     use HasFactory;
     use SoftDeletes;
+    use HasTranslations;
 
     protected $table = 'products';
+    public $translatable = ['name','description'];
 
     protected $fillable = [
-        'name',
         'slug',
         'short_description',
-        'description',
         'branch_id',
         'brand_id',
         'unit_id',

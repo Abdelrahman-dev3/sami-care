@@ -310,6 +310,14 @@ class PackagesController extends Controller
         }else {
             $request['name'] = ['ar' => $request->name, 'en' => $request->name];
         }
+        if (is_string($request->description) && $this->isJson($request->description)) {
+            $request['description'] = json_decode($request->description, true);
+        } elseif (! is_array($request->description)) {
+            $request['description'] = [
+                'ar' => $request->description,
+                'en' => $request->description,
+            ];
+        }
         $request['services'] = is_string($request->services) && !empty(is_string($request->services)) ? json_decode($request->services) : [];
         $request['employee_id'] = is_string($request->employee_id) && !empty($request->employee_id) ? explode(',', $request->employee_id) : [];
         $request['category_id'] = is_string($request->category_id) && !empty($request->category_id) ? explode(',', $request->category_id) : [];
@@ -362,6 +370,7 @@ class PackagesController extends Controller
         $data = Package::where('id', $id)
         ->selectRaw("*, JSON_EXTRACT(name, '$.\"{$locale}\"') as translated_name")
         ->with('service')->first();
+        $data['description_translations'] = $data->getTranslations('description');
         
         $data['employee_id'] = $data->employee()->pluck('employee_id');
 
@@ -392,6 +401,14 @@ class PackagesController extends Controller
             $request['name'] = json_decode($request->name, true);
         }else {
             $request['name'] = ['ar' => $request->name, 'en' => $request->name];
+        }
+        if (is_string($request->description) && $this->isJson($request->description)) {
+            $request['description'] = json_decode($request->description, true);
+        } elseif (! is_array($request->description)) {
+            $request['description'] = [
+                'ar' => $request->description,
+                'en' => $request->description,
+            ];
         }
         $request['services'] = is_string($request->services) && !empty(is_string($request->services)) ? json_decode($request->services) : [];
         $request['employee_id'] = is_string($request->employee_id) && !empty($request->employee_id) ? explode(',', $request->employee_id) : [];

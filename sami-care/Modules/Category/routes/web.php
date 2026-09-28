@@ -48,5 +48,9 @@ Route::group(['prefix' => 'app', 'as' => 'backend.', 'middleware' => ['auth']], 
     Route::get('sub-categories.export', [CategoriesController::class, 'subCategoryExport'])->name('sub-categories.export');
     Route::get('sub-categories', [CategoriesController::class, 'index_nested'])->name('categories.index_nested');
     Route::get('sub-categories/index_nested_data', [CategoriesController::class, 'index_nested_data'])->name('categories.index_nested_data');
+    Route::middleware('permission:edit_category')->group(function () {
+        Route::get('categories/{category}/page-content', [\App\Http\Controllers\Backend\CategoryPageController::class, 'edit'])->name('categories.page-content.edit');
+        Route::put('categories/{category}/page-content', [\App\Http\Controllers\Backend\CategoryPageController::class, 'update'])->name('categories.page-content.update');
+    });
     Route::resource('categories', CategoriesController::class);
 });

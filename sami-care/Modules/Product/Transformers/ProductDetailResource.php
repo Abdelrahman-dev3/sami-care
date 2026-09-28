@@ -22,7 +22,8 @@ class ProductDetailResource extends JsonResource
         return [
             'id' => $this->id,
             'slug' => $this->slug,
-            'name' => $this->name,
+            'name' => $this->getTranslations('name'),
+            
             'product_image' => $this->feature_image,
             'category' => ProductCategoryResource::collection($this->categories),
             'brand_id' => $this->brand_id,
@@ -30,7 +31,7 @@ class ProductDetailResource extends JsonResource
             'unit_id' => $this->unit_id,
             'unit_name' => optional($this->unit)->name,
             'short_description' => $this->short_description,
-            'description' => $this->description,
+            'description' => $this->getTranslations('description'),
             'min_price' => $this->min_price,
             'max_price' => $this->max_price,
             // 'discount_value' => $this->discount_value,

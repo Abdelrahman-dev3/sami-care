@@ -735,3 +735,8 @@ Route::middleware(['auth', 'permission:view_terms_and_conditions'])
         Route::get('/', 'edit')->name('edit');
         Route::put('/', 'update')->name('update');
     });
+
+Route::middleware(['auth', 'permission:view_terms_and_conditions'])->prefix('app/home-page-content')->name('backend.home-page-content.')->controller(\App\Http\Controllers\Backend\HomePageContentController::class)->group(function () {
+    Route::get('/', 'edit')->name('edit');
+    Route::put('/', 'update')->name('update');
+});

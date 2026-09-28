@@ -1,5 +1,6 @@
 <div class="d-flex gap-2 align-items-center">
     @hasPermission('edit_category')
+        <a class="btn btn-soft-primary btn-sm" href="{{ route('backend.categories.page-content.edit', $data->id) }}" title="محتوى صفحة الخدمة">محتوى الصفحة</a>
         <button type="button" class="btn btn-soft-primary btn-sm" data-crud-id="{{ $data->id }}"
             data-parent-id="{{ $data->parent_id }}" data-bs-toggle="tooltip" title="{{ __('messages.edit') }}"> <i
                 class="fa-solid fa-pen-clip"></i></button>

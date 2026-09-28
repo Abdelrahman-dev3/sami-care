@@ -19,6 +19,10 @@ class CategoriesController extends Controller
             ->take(6)
             ->get();
     
+        $categories->each(function ($category) {
+            $category->setAttribute('page_content', app(\App\Services\CategoryPageContent::class)->get($category));
+        });
+
         return response()->json([
             'status' => true,
             'data' => $categories

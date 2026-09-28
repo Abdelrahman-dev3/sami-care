@@ -96,9 +96,14 @@ class HomeController extends Controller
                 ];
             });
 
+        $categories->each(function ($category) {
+            $category->setAttribute('page_content', app(\App\Services\CategoryPageContent::class)->get($category));
+        });
+
         return response()->json([
             'status' => true,
             'data' => [
+                'home_content' => app(\App\Services\HomePageContent::class)->get(),
                 'categories' => $categories,
                 'offers' => $offers,
                 'products' => ProductResource::collection($products),
@@ -131,7 +136,7 @@ class HomeController extends Controller
         return [
             'id' => $package->id,
             'name' => $package->getTranslations('name'),
-            'description' => $package->description,
+            'description' => $package->getTranslations('description'),
             'feature_image' => $package->image ?: $package->feature_image,
             'package_price' => (float) $package->package_price,
         ];
@@ -150,6 +155,9 @@ class HomeController extends Controller
             'id' => $branch->id,
             'name' => $branch->getTranslations('name'),
             'address' => $addressParts ? implode('، ', $addressParts) : null,
+            'description' => $branch->description,
+            'description_en' => $branch->description_en,
+            'image' => $branch->feature_image,
             'image' => $branch->feature_image,
         ];
     }
