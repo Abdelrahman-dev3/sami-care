@@ -9,12 +9,12 @@ window.mountSamiNotifications = function ({ apiBase, onCount = () => {}, hideBut
     .sn-panel{width:min(380px,calc(100vw - 32px));max-height:70dvh;overflow:auto;background:#fffdf8;border:1px solid #d9ccb4;border-radius:18px;box-shadow:0 12px 44px #0003;padding:16px;margin-top:8px}
     .sn-head{display:flex;justify-content:space-between;align-items:center;gap:10px}.sn-head h2{font-size:19px;margin:0}.sn-tools{margin:12px 0;display:flex;gap:8px}
     .sn-item{display:block;width:100%;text-align:right;margin:8px 0}.sn-item.unread{background:#f3ead8;border-color:#b89554}.sn-item strong,.sn-item span,.sn-item time{display:block}.sn-item span{font-size:14px;line-height:1.7;margin:6px 0}.sn-item time{font-size:12px;color:#716552}.sn-status{font-size:13px;line-height:1.6}.sn-toast{max-width:340px;padding:12px;background:#30291e;color:white;border-radius:12px;margin-top:8px}
-  </style><div class="sn-root" hidden><button class="sn-bell" aria-label="الإشعارات" aria-expanded="false">🔔 <span class="sn-count">0</span></button><section class="sn-panel" aria-label="الإشعارات" hidden><div class="sn-head"><h2>الإشعارات</h2><button class="sn-close" aria-label="إغلاق الإشعارات">✕</button></div><div class="sn-tools"><button class="sn-all">قراءة الكل</button><button class="sn-refresh">تحديث</button></div><p class="sn-status" role="status"></p><div class="sn-list"></div><button class="sn-more" hidden>عرض المزيد</button></section><div class="sn-toast" role="status" hidden></div></div>`
+  </style><div class="sn-root" hidden><button class="sn-bell" aria-label="الإشعارات" aria-expanded="false"><i class="sami-bell-icon" aria-hidden="true"></i><span class="sn-count">0</span></button><section class="sn-panel" aria-label="الإشعارات" hidden><div class="sn-head"><h2>الإشعارات</h2><button class="sn-close" aria-label="إغلاق الإشعارات">✕</button></div><div class="sn-tools"><button class="sn-all">قراءة الكل</button><button class="sn-refresh">تحديث</button></div><p class="sn-status" role="status"></p><div class="sn-list"></div><button class="sn-more" hidden>عرض المزيد</button></section><div class="sn-toast" role="status" hidden></div></div>`
   document.body.append(root)
   const el = selector => root.querySelector(selector)
   const shell = el('.sn-root'), panel = el('.sn-panel'), bell = el('.sn-bell')
   bell.hidden = hideButton
-  let token = null, generation = 0, streamController, timer, toastTimer, watchdog, disposed = false
+  let token = null, generation = 0, streamController, timer, toastTimer, ringTimer, watchdog, disposed = false
   let items = [], seen = new Set(), initialized = false, page = 1, lastPage = 1, failures = 0
   const base = apiBase.replace(/\/$/, '')
   const readToken = () => { try { return localStorage.getItem('samiAuthToken') } catch { return null } }
@@ -45,6 +45,9 @@ window.mountSamiNotifications = function ({ apiBase, onCount = () => {}, hideBut
     const incoming = payload.notification_data || []
     const fresh = incoming.filter(item => !seen.has(item.id) && !item.read_at)
     if (initialized && fresh.length) {
+      bell.setAttribute('data-arriving', 'true')
+      clearTimeout(ringTimer)
+      ringTimer = setTimeout(() => bell.setAttribute('data-arriving', 'false'), 900)
       el('.sn-toast').textContent = message(fresh[0])
       el('.sn-toast').hidden = false
       clearTimeout(toastTimer)
@@ -58,6 +61,7 @@ window.mountSamiNotifications = function ({ apiBase, onCount = () => {}, hideBut
     items = [...incoming, ...items.filter(item => !ids.has(item.id))]
     lastPage = payload.last_page || 1
     const count = Number(payload.all_unread_count) || 0
+    bell.setAttribute('data-unread', count > 0 ? 'true' : 'false')
     el('.sn-count').textContent = count > 99 ? '99+' : String(count)
     onCount(count)
     el('.sn-status').textContent = items.length ? '' : 'لا توجد إشعارات حتى الآن'
@@ -132,6 +136,9 @@ window.mountSamiNotifications = function ({ apiBase, onCount = () => {}, hideBut
     streamController?.abort()
     clearTimeout(timer)
     clearTimeout(toastTimer)
+    clearTimeout(ringTimer)
+    bell.setAttribute('data-arriving', 'false')
+    bell.setAttribute('data-unread', 'false')
     token = next
     items = []; seen = new Set(); initialized = false; page = 1; lastPage = 1; failures = 0
     shell.hidden = !token; panel.hidden = true; bell.setAttribute('aria-expanded', 'false'); el('.sn-toast').hidden = true
@@ -178,7 +185,7 @@ window.mountSamiNotifications = function ({ apiBase, onCount = () => {}, hideBut
     setHideButton(value) { bell.hidden = value },
     destroy() {
       disposed = true; generation++; streamController?.abort()
-      clearInterval(authTimer); clearTimeout(timer); clearTimeout(watchdog); clearTimeout(toastTimer)
+      clearInterval(authTimer); clearTimeout(timer); clearTimeout(watchdog); clearTimeout(toastTimer); clearTimeout(ringTimer)
       window.removeEventListener('storage', sync)
       document.removeEventListener('visibilitychange', visibility)
       document.removeEventListener('keydown', keydown)
