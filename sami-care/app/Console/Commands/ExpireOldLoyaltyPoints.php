@@ -75,17 +75,17 @@ class ExpireOldLoyaltyPoints extends Command
                     ->update(['points' => $newBalance]);
 
                 // 7. Insert an expiry transaction to log the deduction
-                DB::table('loyalty_points_transactions')->insert([
+                \App\Models\LoyaltyPointTransaction::create([
                     'user_id'       => $row->user_id,
                     'action'        => 'deduct',
                     'points'        => $pointsToDeduct,
                     'balance_after' => $newBalance,
                     'source'        => 'system',
                     'source_id'     => null,
-                    'meta'          => json_encode([
+                    'meta'          => [
                         'reason'         => 'Points expired',
                         'expired_before' => $cutoffDate->toDateTimeString(),
-                    ]),
+                    ],
                     'created_at'    => $now,
                     'updated_at'    => $now,
                 ]);

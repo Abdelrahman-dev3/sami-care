@@ -332,8 +332,8 @@ trait PaymentTrait
 
         // $this->storeUserPackage($data['booking_id']);
         $this->couponExpired($data['coupon_code'], $data['couponDiscountamount'], $data['booking_id']);
-        BookingTransaction::where('id', $booking_transaction_id)->update(['external_transaction_id' => '', 'payment_status' => 1]);
-        Booking::where('id', $data['booking_id'])->update(['status' => 'completed']);
+        BookingTransaction::where('id', $booking_transaction_id)->get()->each->update(['external_transaction_id' => '', 'payment_status' => 1]);
+        Booking::where('id', $data['booking_id'])->get()->each->update(['status' => 'completed']);
         $queryData = Booking::with('services', 'products', 'user')->findOrFail($data['booking_id']);
         $queryData['detail'] = $this->bookingDetail($queryData);
         $messageTemplate = 'New booking #[[booking_id]] has been booked.';
@@ -365,10 +365,10 @@ trait PaymentTrait
             $totalamount = $floatTotalAmount * 100;
             $api = new Api($key_id, $secret);
             $api->payment->fetch($data['response']['razorpay_payment_id'])->capture(['amount' => $totalamount, 'currency' => $currency]);
-            $data = BookingTransaction::where('id', $booking_transaction_id)->update(['external_transaction_id' => $data['response']['razorpay_payment_id'], 'payment_status' => 1]);
+            $data = BookingTransaction::where('id', $booking_transaction_id)->get()->each->update(['external_transaction_id' => $data['response']['razorpay_payment_id'], 'payment_status' => 1]);
 
             $booking_transaction = BookingTransaction::where('id', $booking_transaction_id)->first();
-            Booking::where('id', $booking_transaction['booking_id'])->update(['status' => 'completed']);
+            Booking::where('id', $booking_transaction['booking_id'])->get()->each->update(['status' => 'completed']);
 
             $queryData = Booking::with('services', 'user')->findOrFail($booking_transaction['booking_id']);
 

@@ -1706,7 +1706,7 @@ public function index_list(Request $request)
 
         switch ($actionType) {
             case 'change-status':
-                $branches = Booking::whereIn('id', $ids)->update(['status' => $request->status]);
+                $branches = Booking::whereIn('id', $ids)->get()->each->update(['status' => $request->status]);
                 $message = __('messages.bulk_booking_update');
                 break;
 
@@ -1714,7 +1714,7 @@ public function index_list(Request $request)
                 if (env('IS_DEMO')) {
                     return response()->json(['message' => __('messages.permission_denied'), 'status' => false], 200);
                 }
-                Booking::whereIn('id', $ids)->delete();
+                Booking::whereIn('id', $ids)->get()->each->delete();
                 $message = __('messages.bulk_booking_delete');
                 break;
 
@@ -2147,9 +2147,9 @@ public function index_list(Request $request)
         $session_object = $this->getstripePaymnetId($request_token);
 
         if ($session_object['payment_intent'] !== '' && $session_object['payment_status'] == 'paid') {
-            BookingTransaction::where('id', $id)->update(['external_transaction_id' => $session_object['payment_intent'], 'payment_status' => 1]);
+            BookingTransaction::where('id', $id)->get()->each->update(['external_transaction_id' => $session_object['payment_intent'], 'payment_status' => 1]);
 
-            Booking::where('id', $booking_id)->update(['status' => 'completed']);
+            Booking::where('id', $booking_id)->get()->each->update(['status' => 'completed']);
 
             $queryData = Booking::where('id', $booking_id)->first();
             try {

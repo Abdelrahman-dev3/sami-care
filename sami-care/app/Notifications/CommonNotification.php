@@ -100,7 +100,10 @@ class CommonNotification extends Notification implements ShouldQueue
                 }
             }
         }
-        return array_merge($notification_settings, ['database']);
+        // Activity observers own these transactional customer inbox entries.
+        $recordedByActivity = ($this->data['user_type'] ?? null) === 'user'
+            && in_array($this->data['notification_group'] ?? null, ['booking', 'shop', 'wallet']);
+        return array_merge($notification_settings, $recordedByActivity ? [] : ['database']);
     }
 
 

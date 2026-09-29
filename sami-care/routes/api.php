@@ -290,7 +290,10 @@ Route::get('/success-py-gift', [GiftCardController::class, 'handlePaymentResult'
 Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::apiResource('user', UserApiController::class);
     Route::apiResource('setting', SettingController::class);
-    Route::apiResource('notification', NotificationsController::class);
+    Route::get('notification', [NotificationsController::class, 'index']);
+    Route::get('notifications/stream', [NotificationsController::class, 'stream']);
+    Route::post('notifications/read-all', [NotificationsController::class, 'markAllRead']);
+    Route::post('notifications/{id}/read', [NotificationsController::class, 'markRead']);
     Route::get('notification-list', [NotificationsController::class, 'notificationList']);
     Route::get('gallery-list', [DashboardController::class, 'globalGallery']);
     Route::get('search-list', [DashboardController::class, 'searchList']);

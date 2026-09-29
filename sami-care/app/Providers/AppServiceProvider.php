@@ -38,6 +38,16 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        foreach ([
+            \Modules\Booking\Models\Booking::class,
+            \Modules\Booking\Models\BookingService::class,
+            \Modules\Booking\Models\BookingTransaction::class,
+            \Modules\Product\Models\Order::class,
+            \Modules\Wallet\Models\WalletHistory::class,
+            \App\Models\LoyaltyPointTransaction::class,
+        ] as $model) {
+            $model::observe(\App\Observers\CustomerActivityObserver::class);
+        }
         Schema::defaultStringLength(191);
 
         Paginator::useBootstrap();

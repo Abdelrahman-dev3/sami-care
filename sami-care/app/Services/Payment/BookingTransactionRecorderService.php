@@ -17,6 +17,6 @@ class BookingTransactionRecorderService
             ]);
         }
 
-        \Modules\Booking\Models\Booking::whereIn('id', $bookingIds)->update(['status' => 'confirmed']);
+        \Modules\Booking\Models\Booking::whereIn('id', $bookingIds)->get()->each->update(['status' => 'confirmed']);
     }
 }
