@@ -2135,8 +2135,7 @@ async function loadNotificationsCount(){
  if(!getAuth())return;
  try{
   const res=await authGet('/notification-list');
-  const list=Array.isArray(res.data)?res.data:Array.isArray(res)?res:[];
-  S.notifCount=list.filter(n=>!n.read_at).length||list.length||0;
+  S.notifCount=Number(res.all_unread_count)||0;
   render();
  }catch(e){console.warn('sami: تعذر تحميل الإشعارات',e)}
 }
@@ -5625,7 +5624,8 @@ $('#quickBookBtn').addEventListener('click',()=>{
 $('#quickBookLogo')?.addEventListener('click',()=>$('#quickBookBtn').click());
 $('#bellBtn').addEventListener('click',()=>{
  if(!getAuth()){go('account');return}
- toast(S.notifCount>0?`لديك ${S.notifCount} إشعار جديد 🔔`:'لا توجد إشعارات جديدة');
+ if(window.parent!==window)window.parent.postMessage({type:'sami:notifications'},location.origin);
+ else window.mobileNotificationInbox?.open();
 });
 $('#locBtn').addEventListener('click',()=>openBranchSheet('header'));
 $('#headerCartBtn').addEventListener('click',()=>{go('cart');scrollAppTop()});
@@ -5763,6 +5763,20 @@ document.addEventListener('click', function(e){
   else done();
 });
 
+</script>
+<script src="/customer-notifications.js?v=20260928"></script>
+<script>
+function updateLiveNotificationCount(count){
+ S.notifCount=Number(count)||0;
+ const badge=document.querySelector('#bellBtn .bdg');
+ if(badge){badge.textContent=S.notifCount>9?'9+':String(S.notifCount);badge.style.display=S.notifCount>0?'':'none'}
+}
+window.addEventListener('message',event=>{
+ if(event.origin===location.origin && event.source===window.parent && event.data?.type==='sami:notification-count')updateLiveNotificationCount(event.data.count);
+});
+if(window.parent===window){
+ window.mobileNotificationInbox=window.mountSamiNotifications({apiBase:API_BASE,hideButton:true,onCount:updateLiveNotificationCount});
+}else window.parent.postMessage({type:'sami:notifications-ready'},location.origin);
 </script>
 </body>
 </html>

@@ -28,9 +28,16 @@ const viewByRoute = { account:'account', home:'home', services:'services', 'serv
   Ù„Ø£Ù†Ù‡ Ù‡Ùˆ Ø§Ù„Ù„ÙŠ Ø¨ÙŠÙƒØ³Ø± ÙƒØ§Ø´ Ø§Ù„Ù…ØªØµÙØ­ Ù„Ù„Ø¥Ø·Ø§Ø±. Ù…Ù† ØºÙŠØ±Ù‡ Ø§Ù„Ù…ØªØµÙØ­ Ø¨ÙŠÙØ¶Ù„ ÙŠØ¹Ø±Ø¶
   Ø§Ù„Ù†Ø³Ø®Ø© Ø§Ù„Ù‚Ø¯ÙŠÙ…Ø© Ù…Ù‡Ù…Ø§ Ø§ØªØºÙŠÙ‘Ø± Ø§Ù„Ù…Ù„Ù.
 */
-const mobileVersion = '20260927-service-content-v92'
+const mobileVersion = '20260928-notifications-v93'
 let mobileNavigationPath = null
 const mobileApiBase = (import.meta.env.VITE_API_BASE_URL || `${window.location.origin}/api`).replace(/\/$/, '')
+let notificationInbox
+let notificationScript
+const notificationCount = ref(0)
+const publishNotificationCount = () => {
+  document.querySelector('iframe.global-mobile-frame')?.contentWindow?.postMessage({ type: 'sami:notification-count', count: notificationCount.value }, location.origin)
+}
+watch(useMobileFrame, value => notificationInbox?.setHideButton(value))
 const mobileSrc = ref('')
 watch(() => route.fullPath, path => {
   if (mobileNavigationPath === path) { mobileNavigationPath = null; return }
@@ -75,6 +82,8 @@ const registerMotionTargets = root => {
 const handleMobileNavigation = event => {
   const frame = document.querySelector('iframe.global-mobile-frame')
   if (event.origin !== location.origin || event.source !== frame?.contentWindow) return
+  if (event.data?.type === 'sami:notifications') { notificationInbox?.open(); return }
+  if (event.data?.type === 'sami:notifications-ready') { publishNotificationCount(); return }
   if (event.data?.type !== 'sami:navigate' || typeof event.data.path !== 'string') return
   if (event.data.path === route.fullPath || (event.data.path === '/' && route.path === '/')) return
   if (!event.data.path.startsWith('/') || event.data.path.startsWith('//')) return
@@ -86,6 +95,15 @@ const stopBefore = router.beforeEach(() => { clearTimeout(navTimer); navigating.
 const stopAfter = router.afterEach(() => { navTimer = setTimeout(() => { navigating.value = false }, 260) })
 
 onMounted(() => {
+  notificationScript = document.createElement('script')
+  notificationScript.src = '/customer-notifications.js?v=20260928'
+  notificationScript.onload = () => {
+    notificationInbox = window.mountSamiNotifications({ apiBase: mobileApiBase, hideButton: useMobileFrame.value, onCount: count => {
+      notificationCount.value = count
+      publishNotificationCount()
+    } })
+  }
+  document.head.append(notificationScript)
   media.addEventListener('change', syncMedia)
   standalone.addEventListener('change', syncMedia)
   window.addEventListener('message', handleMobileNavigation)
@@ -108,6 +126,9 @@ onMounted(() => {
   }
 })
 onBeforeUnmount(() => {
+  notificationScript.onload = null
+  notificationScript.remove()
+  notificationInbox?.destroy()
   clearTimeout(navTimer)
   stopBefore()
   stopAfter()

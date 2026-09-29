@@ -1,6 +1,6 @@
 /* Build replaces this marker. Navigations and API responses are never cached. */
 const CACHE_PREFIX = 'sami-pwa-';
-const CACHE_NAME = CACHE_PREFIX + 'a1f54a48bf9d64fa';
+const CACHE_NAME = CACHE_PREFIX + 'd355f2c2f47d9b64';
 const OFFLINE_URL = '/pwa/offline.html';
 const PRECACHE = [OFFLINE_URL, '/pwa/icon-192.png', '/pwa/icon-512.png', '/pwa/icon-maskable-512.png', '/pwa/apple-touch-icon.png'];
 const APP_PATH = /^\/(?:$|index\.html$|(?:services|blog)(?:\/[^/]+)?\/?$|(?:booking|booking-receipt|store|gifts|packages-gifts|branches|contact|gift-recipient|account|terms|privacy-policy|page-about|home-service|cafe)\/?$|(?:booking|services|store|gifts|packages-gifts|branches|contact|gift-recipient|about|blog)\.html$|TermsAndConditions$|mobile\/(?:index(?:\.dynamic)?\.html)?$)/;
