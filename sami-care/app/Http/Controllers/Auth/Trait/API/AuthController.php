@@ -62,8 +62,7 @@ class AuthController extends Controller
             return $this->sendError(__('messagess.sms_daily_limit_reached'), [], 429);
         }
 
-        //$otp = '1111';
-        $otp = (string) random_int(1000, 9999);
+        $otp = app()->environment('local') ? '1234' : (string) random_int(1000, 9999);
 
         Cache::put('login_otp_' . $phone, [
             'otp' => $otp,
@@ -71,7 +70,7 @@ class AuthController extends Controller
         ], now()->addMinutes(5));
 
         $message = __('messagess.otp_sms', ['code' => $otp]);
-        $sent = $smsService->sendSms($phone, $message);
+        $sent = app()->environment('local') ? true : $smsService->sendSms($phone, $message);
 
         if ($sent === false) {
             Cache::forget('login_otp_' . $phone);
@@ -89,7 +88,7 @@ class AuthController extends Controller
 
     public function resendLoginOtp(Request $request)
     {
-        return $this->sendLoginOtp($request);
+        return $this->login($request);
     }
 
     public function verifyLoginOtp(Request $request)
@@ -204,8 +203,7 @@ class AuthController extends Controller
             return $this->sendError(__('messagess.sms_daily_limit_reached'), [], 429);
         }
 
-        //$otp = '1111';
-        $otp = (string) random_int(1000, 9999);
+        $otp = app()->environment('local') ? '1234' : (string) random_int(1000, 9999);
     
         Cache::put('register_otp_'.$phone, [
             'username' => $validated['username'],
@@ -215,7 +213,7 @@ class AuthController extends Controller
         Cache::put($dailyKey, $dailyCount + 1, now()->endOfDay());
     
         $message = __('messagess.otp_sms', ['code' => $otp]);
-        $sent = $smsService->sendSms($phone, $message);
+        $sent = app()->environment('local') ? true : $smsService->sendSms($phone, $message);
     
         if ($sent === false) {
             return $this->sendError(__('messagess.sms_failed'), [], 500);
