@@ -337,3 +337,31 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 Route::post('app-configuration', [SettingController::class, 'appConfiguraton']);
 
 Route::get('/seo', [\App\Http\Controllers\Backend\FrontendSeoController::class, 'show']);
+
+// -------------------------------------------------------------
+//  Membership & Subscriptions Routes
+// -------------------------------------------------------------
+use App\Http\Controllers\Api\MembershipController;
+
+// Public
+Route::prefix('membership')->controller(MembershipController::class)->group(function () {
+    Route::get('/tiers', 'tiers');
+    Route::post('/scan-qr', 'scanQr');
+});
+
+// Authenticated (customer)
+Route::prefix('membership')->middleware('auth:sanctum')->controller(MembershipController::class)->group(function () {
+    Route::get('/my-card', 'myCard');
+    Route::post('/regenerate-qr', 'regenerateQr');
+    Route::post('/redeem-points', 'redeemPoints');
+});
+
+// Admin
+Route::prefix('admin/membership')->middleware('auth:sanctum')->controller(MembershipController::class)->group(function () {
+    Route::get('/members', 'allMembers');
+    Route::post('/tiers', 'storeTier');
+    Route::put('/tiers/{id}', 'updateTier');
+    Route::delete('/tiers/{id}', 'destroyTier');
+    Route::post('/add-points', 'addPoints');
+    Route::post('/seed-tiers', 'seedTiers');
+});

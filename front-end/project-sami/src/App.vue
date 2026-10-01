@@ -28,7 +28,7 @@ const viewByRoute = { account:'account', home:'home', services:'services', 'serv
   Ù„Ø£Ù†Ù‡ Ù‡Ùˆ Ø§Ù„Ù„ÙŠ Ø¨ÙŠÙƒØ³Ø± ÙƒØ§Ø´ Ø§Ù„Ù…ØªØµÙØ­ Ù„Ù„Ø¥Ø·Ø§Ø±. Ù…Ù† ØºÙŠØ±Ù‡ Ø§Ù„Ù…ØªØµÙØ­ Ø¨ÙŠÙØ¶Ù„ ÙŠØ¹Ø±Ø¶
   Ø§Ù„Ù†Ø³Ø®Ø© Ø§Ù„Ù‚Ø¯ÙŠÙ…Ø© Ù…Ù‡Ù…Ø§ Ø§ØªØºÙŠÙ‘Ø± Ø§Ù„Ù…Ù„Ù.
 */
-const mobileVersion = '20260929-notification-bell-v94'
+const mobileVersion = '20260929-nearest-branch-v95'
 let mobileNavigationPath = null
 const mobileApiBase = (import.meta.env.VITE_API_BASE_URL || `${window.location.origin}/api`).replace(/\/$/, '')
 let notificationInbox
@@ -145,7 +145,7 @@ useScrollReveal()
 
 <template>
   <div v-if="useMobileFrame" class="global-mobile-shell">
-    <iframe class="global-mobile-frame" :src="mobileSrc" allow="fullscreen; clipboard-write; web-share" title="ØªØ·Ø¨ÙŠÙ‚ Ø¹Ù†Ø§ÙŠØ© Ø³Ø§Ù…ÙŠ Ù„Ù„Ø¬ÙˆØ§Ù„"></iframe>
+    <iframe class="global-mobile-frame" :src="mobileSrc" allow="geolocation; fullscreen; clipboard-write; web-share" title="ØªØ·Ø¨ÙŠÙ‚ Ø¹Ù†Ø§ÙŠØ© Ø³Ø§Ù…ÙŠ Ù„Ù„Ø¬ÙˆØ§Ù„"></iframe>
   </div>
   <template v-else>
     <!-- Ø§Ù„Ù‡ÙŠØ¯Ø± Ø®Ø§Ø±Ø¬ RouterView: Ù†Ø³Ø®Ø© ÙˆØ§Ø­Ø¯Ø© ØªØ¹ÙŠØ´ Ø·ÙˆÙ„ Ø¹Ù…Ø± Ø§Ù„ØªØ·Ø¨ÙŠÙ‚ ÙÙ„Ø§ ØªÙØ¹Ø§Ø¯ Ø¨Ù†Ø§Ø¤Ù‡Ø§ Ø¹Ù†Ø¯ Ø§Ù„Ø§Ù†ØªÙ‚Ø§Ù„ -->

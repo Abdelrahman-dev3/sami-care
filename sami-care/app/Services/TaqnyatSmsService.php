@@ -3,8 +3,10 @@
 namespace App\Services;
 
 use App\Models\GiftCard;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Modules\Booking\Models\Booking;
 use Modules\Service\Models\Service;
 
 class TaqnyatSmsService
@@ -13,6 +15,7 @@ class TaqnyatSmsService
     protected $sender;
     protected $baseUrl = 'https://api.taqnyat.sa/v1';
     protected ?string $lastError = null;
+    protected static array $sentBookingNotifications = [];
 
     public function __construct()
     {
@@ -82,6 +85,67 @@ class TaqnyatSmsService
         }
     }
 
+    public function sendWhatsApp($recipients, $message, $sender = null)
+    {
+        $this->lastError = null;
+        $recipientList = $this->normalizeRecipients(is_array($recipients) ? $recipients : [$recipients]);
+        $senderName = $this->resolveSenderName($sender);
+
+        $this->giftSmsLog()->info('Preparing Taqnyat WhatsApp request', [
+            'recipients' => $recipientList,
+            'sender' => $senderName,
+            'message_length' => mb_strlen((string) $message),
+            'sms_enabled' => (bool) setting('is_taqnyat_sms'),
+            'has_api_key' => ! empty($this->apiKey),
+        ]);
+
+        if (! setting('is_taqnyat_sms')) {
+            $this->fail('taqnyat_disabled', 'Taqnyat gateway is disabled in settings.');
+            return $this->localBypass($recipientList, $message);
+        }
+
+        if (empty($this->apiKey)) {
+            $this->fail('missing_api_key', 'Taqnyat API key is missing.');
+            return $this->localBypass($recipientList, $message);
+        }
+
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => "Bearer {$this->apiKey}",
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+            ])->post("{$this->baseUrl}/messages", [
+                'recipients' => $recipientList,
+                'body' => $message,
+                'sender' => $senderName,
+                'mediaType' => 'whatsapp',
+                'type' => 'whatsapp',
+            ]);
+
+            if ($response->successful()) {
+                $this->giftSmsLog()->info('Taqnyat WhatsApp sent successfully', [
+                    'status' => $response->status(),
+                    'response' => $response->json(),
+                ]);
+                return $response->json();
+            }
+
+            $this->giftSmsLog()->warning('Taqnyat WhatsApp direct returned failure, falling back to SMS', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+
+            return $this->sendSms($recipientList, $message, $senderName);
+        } catch (\Exception $e) {
+            $this->lastError = $e->getMessage();
+            $this->giftSmsLog()->error('Taqnyat WhatsApp exception, trying SMS fallback', [
+                'message' => $e->getMessage(),
+            ]);
+
+            return $this->sendSms($recipientList, $message, $senderName);
+        }
+    }
+
     public function sendWelcomeMessage($phone, $name)
     {
         return $this->sendMessageFromSetting($phone, 'taqnyat_welcome_message', [
@@ -97,6 +161,119 @@ class TaqnyatSmsService
             'booking_date' => $bookingData['booking_date'] ?? '',
             'booking_time' => $bookingData['booking_time'] ?? '',
         ]);
+    }
+
+    public function sendBookingCreatedNotification($bookingInput)
+    {
+        $this->lastError = null;
+
+        $booking = $bookingInput instanceof Booking
+            ? $bookingInput
+            : Booking::with([
+                'user',
+                'branch',
+                'booking_service.service',
+                'booking_service.employee',
+                'services',
+                'packages',
+            ])->find($bookingInput);
+
+        if (! $booking) {
+            $this->fail('booking_not_found', 'Booking not found for WhatsApp notification.');
+            return false;
+        }
+
+        // Prevent duplicate sending for the same booking in one request lifecycle
+        if (isset(self::$sentBookingNotifications[$booking->id])) {
+            return true;
+        }
+        self::$sentBookingNotifications[$booking->id] = true;
+
+        if (! $booking->relationLoaded('booking_service')) {
+            $booking->load(['user', 'branch', 'booking_service.service', 'booking_service.employee', 'services', 'packages']);
+        }
+
+        $user = $booking->user;
+        $rawPhone = (string) ($user->mobile ?? $booking->user_phone ?? '');
+        $phone = $this->validatePhoneNumber($rawPhone);
+
+        if (! $phone) {
+            $this->fail('invalid_phone', "No valid mobile number found for user in booking #{$booking->id}.");
+            return false;
+        }
+
+        $serviceNamesList = $booking->booking_service
+            ->map(fn ($bs) => $bs->service?->name)
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($serviceNamesList->isEmpty() && $booking->services->isNotEmpty()) {
+            $serviceNamesList = $booking->services->map(fn ($s) => $s->name)->filter()->unique()->values();
+        }
+
+        $packageNamesList = $booking->packages ? $booking->packages->map(fn ($p) => $p->name)->filter()->unique()->values() : collect();
+
+        $itemNames = $serviceNamesList->map(fn ($n) => $this->resolveDisplayValue($n))->merge($packageNamesList)->implode(', ');
+        if (empty($itemNames)) {
+            $itemNames = __('booking.service') ?: 'خدمة';
+        }
+
+        $employeeNames = $booking->booking_service
+            ->map(function ($bs) {
+                if (! $bs->employee) {
+                    return null;
+                }
+                $name = trim(($bs->employee->first_name ?? '') . ' ' . ($bs->employee->last_name ?? ''));
+                return $name ?: $bs->employee->full_name ?? null;
+            })
+            ->filter()
+            ->unique()
+            ->implode(', ');
+
+        if (empty($employeeNames)) {
+            $employeeNames = 'غير محدد';
+        }
+
+        $startAt = $booking->start_date_time ? Carbon::parse($booking->start_date_time) : null;
+        $bookingDate = $startAt ? $startAt->format('Y-m-d') : '';
+        $bookingTime = $startAt ? $startAt->format('h:i A') : '';
+        $branchName = $booking->branch?->name ?? setting('app_name', 'Sami Care');
+        
+        $userName = $user ? trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? '')) : '';
+        if (empty($userName)) {
+            $userName = $user->full_name ?? 'عميلنا العزيز';
+        }
+
+        $totalAmount = number_format((float) ($booking->total_amount ?? $booking->services->sum('service_price') ?? 0), 2);
+
+        $defaultTemplate = "مرحباً [[user_name]] 👋\n\nتم إنشاء وتأكيد حجزك بنجاح في [[app_name]]! 🎉\n\n📋 تفاصيل الحجز:\n• رقم الحجز: #[[booking_id]]\n• الفرع: [[branch_name]]\n• التاريخ: [[booking_date]]\n• الوقت: [[booking_time]]\n• الخدمات: [[service_names]]\n• الأخصائي: [[employee_name]]\n• الإجمالي: [[total_amount]] ريال\n\nنسعد بخدمتك ونتطلع لرؤيتك! 🌸";
+        
+        $template = setting('taqnyat_booking_created') ?: $defaultTemplate;
+        
+        // If the old short text is still there, optionally override it for a better WhatsApp message, 
+        // but we respect the setting. The variables will be replaced.
+        
+        $variables = [
+            'user_name' => $userName,
+            'booking_id' => (string) $booking->id,
+            'booking_date' => $bookingDate,
+            'booking_time' => $bookingTime,
+            'branch_name' => $branchName,
+            'service_names' => $itemNames,
+            'employee_name' => $employeeNames,
+            'total_amount' => $totalAmount,
+            'app_name' => setting('app_name', 'Sami Care'),
+        ];
+
+        $message = $this->replaceVariables($template, $variables);
+
+        $this->giftSmsLog()->info('Sending booking created WhatsApp notification', [
+            'booking_id' => $booking->id,
+            'recipient' => $phone,
+        ]);
+
+        return $this->sendWhatsApp($phone, $message);
     }
 
     public function sendBookingCancelledMessage($phone, $bookingData)

@@ -30,6 +30,7 @@ use Modules\BussinessHour\Models\Shift;
 use Modules\Affiliate\Models\Affiliate;
 use Modules\Tracking\Models\Conversion;
 use App\Models\GiftCard;
+use App\Models\UserMembership;
 
 class User extends Authenticatable implements HasMedia, MustVerifyEmail
 {
@@ -365,5 +366,10 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
     public function isAffiliate()
     {
         return $this->affiliate && $this->affiliate->status === 'active';
+    }
+
+    public function userMembership()
+    {
+        return $this->hasOne(UserMembership::class, 'user_id', 'id');
     }
 }

@@ -38,6 +38,9 @@ function rs(n) {
     </div>
 
     <div class="quick-links">
+      <button @click="$emit('go', 'membership')">
+        <span>عضويتي (Sami Care)</span><em>‹</em>
+      </button>
       <button @click="$emit('go', 'bookings')">
         <span>حجوزاتي</span><em>‹</em>
       </button>

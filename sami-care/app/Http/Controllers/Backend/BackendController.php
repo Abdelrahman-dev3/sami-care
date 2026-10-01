@@ -48,6 +48,10 @@ class BackendController extends Controller
             $endDate = Carbon::now()->toDateString();
         }
 
+        \Validator::make(['start' => $startDate, 'end' => $endDate], [
+            'start' => ['required', 'date_format:Y-m-d'],
+            'end' => ['required', 'date_format:Y-m-d', 'after_or_equal:start'],
+        ])->validate();
         $date_range = $startDate . ' to ' . $endDate;
         $data = [
             'total_appointments' => 0,
@@ -164,6 +168,11 @@ class BackendController extends Controller
         $data['product_sales'] = \Currency::format(
             $orders->where('created_at', '>=', $startDate)
                 ->whereDate('created_at', '<=', $endDate)->sum('total_admin_earnings')
+        );
+        $data['employee_occupancy'] = app(\App\Services\EmployeeOccupancyReport::class)->forPeriod(
+            $startDate, $endDate,
+            $request->selected_session_branch_id !== null ? (int) $request->selected_session_branch_id : null,
+            setting('default_time_zone') ?: 'Asia/Riyadh'
         );
         return view('backend.index', compact('data', 'date_range', 'global_booking'));
     }

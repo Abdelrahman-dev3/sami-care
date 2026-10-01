@@ -12,6 +12,7 @@ import AccountGiftCards from '@/components/account/AccountGiftCards.vue'
 import AccountPackages from '@/components/account/AccountPackages.vue'
 import AccountProducts from '@/components/account/AccountProducts.vue'
 import AccountSettings from '@/components/account/AccountSettings.vue'
+import AccountMembership from '@/components/account/AccountMembership.vue'
 import PageSkeleton from '@/components/common/PageSkeleton.vue'
 
 const { isAuthenticated, openAuthModal } = useAuth()
@@ -21,6 +22,7 @@ const receiptUrl = computed(() => route.query.payment === 'success'
 
 const TABS = [
   { id: 'overview', label: 'نظرة عامة' },
+  { id: 'membership', label: 'عضويتي' },
   { id: 'bookings', label: 'حجوزاتي' },
   // 'addresses' مخفي مؤقتًا بطلب من المشروع
   { id: 'packages', label: 'باقاتي' },
@@ -92,6 +94,7 @@ watch(isAuthenticated, (v) => { if (v) loadProfile() })
       <div v-else-if="error" class="account-state error">{{ error }}</div>
       <template v-else>
         <AccountOverview v-if="activeTab === 'overview'" :profile="profile" @go="activeTab = $event" />
+        <AccountMembership v-else-if="activeTab === 'membership'" />
         <AccountBookings v-else-if="activeTab === 'bookings'" :profile="profile" />
         <AccountAddresses v-else-if="activeTab === 'addresses'" />
         <AccountPackages v-else-if="activeTab === 'packages'" :profile="profile" />

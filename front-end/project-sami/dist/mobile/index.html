@@ -498,6 +498,8 @@ html{--content-direction:rtl}html[dir="ltr"]{--content-direction:ltr}
 <script src="../home-page-content.js"></script>
 <style>.mobile-home-about{padding:20px 16px;line-height:1.8}.mobile-home-about>img{width:100%;height:220px;object-fit:cover;border-radius:16px}.mobile-home-about h2,.mobile-home-about h3{margin-block:12px 6px}.mobile-home-features{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}.mobile-home-features small{display:block}.home-svc .row{background-image:none!important}.home-svc .row>.dynamic-home-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.hin h1{white-space:pre-line}</style>
 <link rel="stylesheet" href="/notification-bell.css?v=20260929">
+<script src="/branch-location.js?v=20260929"></script>
+<link rel="stylesheet" href="/branch-location.css?v=20260929">
 </head>
 <body>
 <div class="app">
@@ -1859,10 +1861,21 @@ function mapBranchSimple(raw){
 /* نحافظ على نفس نظام المعرّفات الثابت (bg/qr/hm) اللي شاشات الحجز والإهداء مبنية عليه
    (branchLabel، شاشة اختيار الفرع، رسوم الخدمة المنزلية...)، ونحدّث بياناته المعروضة فقط من الباك-إند،
    ونضيف realId بمعرّف الفرع الحقيقي عشان نقدر نستخدمه في إرسال حجز حقيقي لاحقًا. */
+async function loadAllPickerBranches(){
+ const first=await apiGet('/branch-list?per_page=100');
+ const data=[...(first.data||[])];
+ for(let page=2;page<=(first.last_page||1);page++){
+  const next=await apiGet('/branch-list?per_page=100&page='+page);
+  data.push(...(next.data||[]));
+ }
+ return {...first,data};
+}
 function mapFullBranch(raw,slotId,fallback){
  return{
   id:slotId,
   realId:Number(raw.id)||null,
+  latitude:raw.latitude??raw.address?.latitude??null,
+  longitude:raw.longitude??raw.address?.longitude??null,
   name:localizedField(raw,'name')||fallback?.name||'فرع',
   addr:localizedField(raw,'address_line_1')||localizedField(raw,'address')||fallback?.addr||'',
   desc:localizedField(raw,'description')||fallback?.desc||'',
@@ -1896,7 +1909,7 @@ async function loadDynamicData(){
   apiGet('/offers?per_page=6'),
   apiGet('/shop'),
   apiGet('/Home/products'),
-  apiGet('/branch-list'),
+  loadAllPickerBranches(),
   apiGet('/Home/categories'),
   apiGet('/Home/wheel/prizes'),
   apiGet('/loyalty/point-value'),
@@ -2001,6 +2014,8 @@ function applyDynamicData(){
     const next=[...realSlots,...extra];
     if(homeEntry)next.push(homeEntry);
     B_BRANCHES.length=0;B_BRANCHES.push(...next);
+    const nearbyContext=document.querySelector('[data-nearby-context]')?.dataset.nearbyContext;
+    if(nearbyContext)refreshNearbyPicker(nearbyContext);
    }
   }catch(e){console.warn('sami: تعذر تجهيز فروع الحجز',e)}
  }else console.warn('sami: فشل تحميل قائمة الفروع',branchListRes.reason);
@@ -3088,14 +3103,45 @@ function openWheelResultSheet(message,won){
  ui.ov.classList.add('on');ui.sheet.classList.add('on');
  $('#wheelResultClose').addEventListener('click',closeBottomSheet);
 }
+let nearbyPosition=null,nearbyBusy=false,nearbyError=null;
+function rankedPickerBranches(){return window.SamiBranchLocation.rank(B_BRANCHES,nearbyPosition)}
+function branchDistanceHTML(branch){
+ if(!nearbyPosition||branch.home)return '';
+ const en=getLang()==='en';
+ return `<small class="branch-distance">${branch.nearest?`<strong>${en?'Nearest to you':'الأقرب إليك'}</strong> · `:''}${escHtml(window.SamiBranchLocation.format(branch.distanceKm,getLang()))}</small>`;
+}
+function branchNearbyControls(context){
+ const en=getLang()==='en';
+ const label=nearbyBusy?(en?'Locating…':'جارٍ تحديد موقعك…'):(en?'Find nearest branch':'تحديد الأقرب لي');
+ const message=nearbyError?window.SamiBranchLocation.errorMessage(nearbyError,getLang()):nearbyPosition?(en?'Approximate straight-line distance, not driving distance.':'المسافة هوائية تقريبية، وليست مسافة القيادة.'):(en?'Allow location access to show nearby branches.':'اسمح بالوصول إلى موقعك لعرض الفروع الأقرب إليك.');
+ return `<div class="branch-nearby" data-nearby-context="${context}"><button type="button" data-locate-branches="${context}" ${nearbyBusy?'disabled':''}>${label}</button><p role="status">${escHtml(message)}</p></div>`;
+}
+function refreshNearbyPicker(context){
+ const marker=document.querySelector(`[data-nearby-context="${context}"]`);
+ if(!marker)return;
+ if(context==='gift-wizard'){render();return}
+ if(!document.getElementById('bs')?.classList.contains('on'))return;
+ if(context==='booking')openBookingLaunchSheet();else openBranchSheet(context);
+}
+document.addEventListener('click',async event=>{
+ const button=event.target.closest('[data-locate-branches]');
+ if(!button||nearbyBusy)return;
+ const context=button.dataset.locateBranches;
+ nearbyBusy=true;nearbyError=null;
+ refreshNearbyPicker(context);
+ try{nearbyPosition=await window.SamiBranchLocation.locate()}
+ catch(error){nearbyError=error}
+ finally{nearbyBusy=false;refreshNearbyPicker(context)}
+});
 function openBranchSheet(ctx){
  if(ctx==='booking'){openBookingLaunchSheet();return}
  const ui=ensureBottomSheet();
  ui.body.innerHTML=`<div class="branch-sheet">
   <div class="branch-sheet-head"><h3>اختر موقع الخدمة</h3><p>حدد الأقرب لك للمتابعة.</p></div>
-  ${B_BRANCHES.map(b=>`<button class="branch-choice ${S.currentBranch===b.id||S.bookBranch===b.id?'sel':''}" data-bs-branch="${b.id}">
+  ${branchNearbyControls(ctx)}
+  ${rankedPickerBranches().map(b=>`<button class="branch-choice ${S.currentBranch===b.id||S.bookBranch===b.id?'sel':''}" data-bs-branch="${b.id}">
    <img src="${b.img}" alt="${b.name}">
-   <span><b>${b.home?'خدمة منزلية':b.name}</b><small>${b.addr}</small>
+   <span><b>${b.home?'خدمة منزلية':b.name}</b><small>${b.addr}</small>${branchDistanceHTML(b)}
     <span class="meta"><span>⭐ ${b.rate}</span><span>${b.home?'نصل إليك':'متاح الآن'}</span></span>
    </span>
    <span class="check">${S.currentBranch===b.id||S.bookBranch===b.id?'✓':'+'}</span>
@@ -3108,15 +3154,16 @@ function openBookingLaunchSheet(){
  if(!S.bookWizard)bookingPageScrollY=window.scrollY;
  S.bookLaunch=true;
  const ui=ensureBottomSheet();
- const order=['bg','qr','hm'].map(id=>B_BRANCHES.find(b=>b.id===id)).filter(Boolean);
+ const order=rankedPickerBranches();
  ui.sheet.classList.add('booking-launch');
  ui.ov.classList.add('booking-branch-backdrop');
  ui.body.innerHTML=`<span class="booking-launch-dome" aria-hidden="true"></span>
   <span class="booking-launch-logo"><img src="logo.png" alt="عناية سامي"></span>
   <span class="booking-launch-grab" aria-hidden="true"></span>
   <div class="booking-launch-head"><h2>اختر الفرع</h2><p>اختر الفرع الأقرب لك لبدء الحجز</p></div>
+  ${branchNearbyControls('booking')}
   <div class="booking-launch-list">${order.map(b=>`<button class="booking-launch-branch ${S.bookBranch===b.id?'sel':''}" data-booking-launch-branch="${b.id}">
-   <i class="booking-launch-arrow">${svg('<path d="M15 6l-6 6 6 6"/>',18)}</i><span class="bl-info"><b>${svg('<path d="M21 10c0 7-9 12-9 12S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>',14)} ${b.id==='bg'?'البغدادية الغربية':b.id==='qr'?'البوادي':'خدمة منزلية'}</b><small>${branchDesc(b)}</small><em class="bl-open">متاح الآن</em></span><img src="${b.img}" alt="${b.name}">
+   <i class="booking-launch-arrow">${svg('<path d="M15 6l-6 6 6 6"/>',18)}</i><span class="bl-info"><b>${svg('<path d="M21 10c0 7-9 12-9 12S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>',14)} ${escHtml(b.name)}</b><small>${branchDesc(b)}</small>${branchDistanceHTML(b)}<em class="bl-open">متاح الآن</em></span><img src="${b.img}" alt="${b.name}">
   </button>`).join('')}</div>`;
  document.body.classList.add('booking-dock-open');
  // Commit the starting position before opening the branch sheet.
@@ -4786,9 +4833,10 @@ function giftWizTypeHTML(){
 }
 function giftWizBranchHTML(){
  return`<div class="m-panel-title"><h1>اختر الفرع الأقرب</h1><p>المستلم يستطيع الاستفادة من الهدية في الفرع المختار أو الخدمة المنزلية</p></div>
- <div class="m-stack">${B_BRANCHES.map(b=>`<article class="m-card ${S.giftBranch===b.id?'sel':''}" data-g-branch="${b.id}">
+ ${branchNearbyControls('gift-wizard')}
+ <div class="m-stack">${rankedPickerBranches().map(b=>`<article class="m-card ${S.giftBranch===b.id?'sel':''}" data-g-branch="${b.id}">
   <div class="m-branch-img"><img src="${b.img}" alt="${b.name}">${b.home?'<span class="flag">🏠 خدمة تصل إليه</span>':''}</div>
-  <div class="m-card-body"><h3>${b.name}</h3><div class="addr">📍 ${b.addr}</div><div class="m-meta"><span>⭐ ${b.rate}</span><span>${b.visitors}</span><span>🕐 ${b.hours}</span></div><button class="m-pick">${S.giftBranch===b.id?'✓ تم الاختيار':'اختيار الفرع'}</button></div>
+  <div class="m-card-body"><h3>${b.name}</h3><div class="addr">📍 ${b.addr}</div>${branchDistanceHTML(b)}<div class="m-meta"><span>⭐ ${b.rate}</span><span>${b.visitors}</span><span>🕐 ${b.hours}</span></div><button class="m-pick">${S.giftBranch===b.id?'✓ تم الاختيار':'اختيار الفرع'}</button></div>
  </article>`).join('')}</div>`;
 }
 function giftWizContentHTML(){

@@ -97,6 +97,7 @@
       </div>
     </div>
   </div>
+  @include('backend.includes.employee_occupancy')
   <div class="col-xl-8">
     <div class="col-lg-12">
       <div class="card card-block card-stretch card-height">

@@ -72,6 +72,8 @@ class BranchController extends Controller
         return response()->json([
             'status' => true,
             'data' => $branchCollection,
+            'current_page' => $branches->currentPage(),
+            'last_page' => $branches->lastPage(),
             'message' => __('branch.branch_list'),
         ], 200);
     }

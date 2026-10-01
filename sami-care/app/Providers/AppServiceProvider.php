@@ -48,7 +48,12 @@ class AppServiceProvider extends ServiceProvider
         ] as $model) {
             $model::observe(\App\Observers\CustomerActivityObserver::class);
         }
+
+        // Membership: award points when a booking is completed
+        \Modules\Booking\Models\Booking::observe(\App\Observers\MembershipPointsObserver::class);
+
         Schema::defaultStringLength(191);
+
 
         Paginator::useBootstrap();
 

@@ -1,8 +1,10 @@
 <script setup>
 import { onMounted } from 'vue'
 import { useServiceLocation } from '@/composables/useServiceLocation'
+import { useLanguage } from '@/composables/useLanguage'
 
-const { locations, current, pickerOpen, closePicker, confirmLocation, loadServiceLocations } = useServiceLocation()
+const { locations, current, pickerOpen, closePicker, confirmLocation, loadServiceLocations, customerPosition, locating, locationMessage, findNearest, formatDistance, locationsLoading, locationsError } = useServiceLocation()
+const { state: language } = useLanguage()
 
 onMounted(loadServiceLocations)
 </script>
@@ -24,6 +26,13 @@ onMounted(loadServiceLocations)
           <p>لعرض الأسعار والمواعيد المتاحة بدقة حسب المكان</p>
         </div>
 
+        <div class="loc-nearby">
+          <button class="loc-detect" type="button" :disabled="locating || locationsLoading" @click="findNearest">
+            {{ locating ? (language.lang === 'en' ? 'Locating…' : 'جارٍ تحديد موقعك…') : (language.lang === 'en' ? 'Find nearest branch' : 'تحديد الأقرب لي') }}
+          </button>
+          <p role="status">{{ locationMessage || (customerPosition ? (language.lang === 'en' ? 'Sorted by approximate straight-line distance, not driving distance.' : 'الفروع مرتبة حسب المسافة الهوائية التقريبية، وليست مسافة القيادة.') : (language.lang === 'en' ? 'Allow location access to see nearby branches.' : 'اسمح بالوصول إلى موقعك لعرض الفروع الأقرب إليك.')) }}</p>
+          <p v-if="locationsError" role="alert">{{ language.lang === 'en' ? 'Could not load branches.' : 'تعذّر تحميل الفروع.' }} <button type="button" @click="loadServiceLocations">{{ language.lang === 'en' ? 'Retry' : 'إعادة المحاولة' }}</button></p>
+        </div>
         <div class="loc-list">
           <button
             v-for="b in locations"
@@ -38,6 +47,9 @@ onMounted(loadServiceLocations)
             </span>
             <span class="loc-txt">
               <b>{{ b.name }}</b>
+              <span v-if="customerPosition && !b.home" class="loc-distance">
+                <strong v-if="b.nearest">{{ language.lang === 'en' ? 'Nearest to you' : 'الأقرب إليك' }} · </strong>{{ formatDistance(b.distanceKm) }}
+              </span>
               <small class="loc-address">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                   <path d="M21 10c0 7-9 12-9 12S3 17 3 10a9 9 0 0118 0z" /><circle cx="12" cy="10" r="3" />
@@ -64,6 +76,7 @@ onMounted(loadServiceLocations)
 </template>
 
 <style>
+.loc-nearby{margin:0 0 18px}.loc-detect{padding:11px 18px;border:1px solid #c6a367;border-radius:12px;background:#f8efdf;color:#61451d;font:inherit;cursor:pointer}.loc-detect:disabled{opacity:.65;cursor:wait}.loc-nearby p{font-size:12px;line-height:1.7;margin:8px 0;color:#706353}.loc-distance{display:block;font-size:12px;color:#795719;margin:6px 0}.loc-distance strong{font-weight:800}
 .loc-ov{position:fixed;inset:0;z-index:5000;background:rgba(18,12,5,.58);backdrop-filter:blur(4px);
   display:flex;align-items:flex-start;justify-content:center;padding:104px 20px 20px}
 .loc-modal{position:relative;width:min(640px,100%);background:linear-gradient(155deg,#fff 0%,#fffdf9 62%,#faf2e5 100%);

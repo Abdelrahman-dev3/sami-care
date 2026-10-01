@@ -43,6 +43,9 @@ const locationsLoading = ref(false)
 
 // الخطأ في حالة فشل الـ API
 const locationsError = ref(null)
+const customerPosition = ref(null)
+const locating = ref(false)
+const locationFailure = ref(null)
 
 
 // ======================================================
@@ -56,7 +59,7 @@ async function loadServiceLocations() {
   locationsError.value = null
 
   try {
-    const response = await fetch(resolveBackendUrl('/api/branches'), {
+    const response = await fetch(resolveBackendUrl('/api/branches?per_page=100'), {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
@@ -91,6 +94,12 @@ async function loadServiceLocations() {
       throw new Error('Invalid service locations response')
     }
 
+    for (let page = 2; page <= (result.last_page || 1); page++) {
+      const next = await fetch(resolveBackendUrl(`/api/branches?per_page=100&page=${page}`), { headers: { Accept: 'application/json' } })
+      if (!next.ok) throw new Error('Unable to load branches')
+      const payload = await next.json()
+      locations.push(...(payload.data || []))
+    }
     serviceLocations.value = [...locations.map(normalizeBranch), HOME_SERVICE]
 
     /*
@@ -188,7 +197,20 @@ export function useServiceLocation() {
     return { ...branch, name: localizeRecord(branch, 'name', lang.lang), address: localizeRecord(branch, 'address', lang.lang) }
   }
 
-  const locations = computed(() => serviceLocations.value.map(withResolvedName))
+  const locations = computed(() => window.SamiBranchLocation.rank(serviceLocations.value.map(withResolvedName), customerPosition.value))
+  const locationMessage = computed(() => locationFailure.value ? window.SamiBranchLocation.errorMessage(locationFailure.value, lang.lang) : '')
+  async function findNearest() {
+    if (locating.value) return
+    locating.value = true
+    locationFailure.value = null
+    try {
+      customerPosition.value = await window.SamiBranchLocation.locate()
+    } catch (error) {
+      locationFailure.value = error
+    } finally {
+      locating.value = false
+    }
+  }
 
   const current = computed(
     () =>
@@ -300,6 +322,11 @@ export function useServiceLocation() {
   // ====================================================
 
   return {
+    customerPosition,
+    locating,
+    locationMessage,
+    findNearest,
+    formatDistance: km => window.SamiBranchLocation.format(km, lang.lang),
 
     locations,
 

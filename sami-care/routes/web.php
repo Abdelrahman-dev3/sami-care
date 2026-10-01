@@ -740,3 +740,17 @@ Route::middleware(['auth', 'permission:view_terms_and_conditions'])->prefix('app
     Route::get('/', 'edit')->name('edit');
     Route::put('/', 'update')->name('update');
 });
+
+// -------------------------------------------------------------
+//  Backend Membership Routes
+// -------------------------------------------------------------
+Route::group(['prefix' => 'backend', 'as' => 'backend.', 'middleware' => ['auth', 'role:manager|admin']], function () {
+    Route::get('/membership/tiers', [\App\Http\Controllers\Backend\MembershipController::class, 'tiersIndex'])->name('membership.tiers.index');
+    Route::post('/membership/tiers', [\App\Http\Controllers\Backend\MembershipController::class, 'tiersStore'])->name('membership.tiers.store');
+    Route::put('/membership/tiers/{tier}', [\App\Http\Controllers\Backend\MembershipController::class, 'tiersUpdate'])->name('membership.tiers.update');
+    Route::delete('/membership/tiers/{tier}', [\App\Http\Controllers\Backend\MembershipController::class, 'tiersDestroy'])->name('membership.tiers.destroy');
+    Route::post('/membership/tiers/seed', [\App\Http\Controllers\Backend\MembershipController::class, 'seedTiers'])->name('membership.seed');
+    
+    Route::get('/membership/members', [\App\Http\Controllers\Backend\MembershipController::class, 'membersIndex'])->name('membership.members.index');
+    Route::post('/membership/add-points', [\App\Http\Controllers\Backend\MembershipController::class, 'addPoints'])->name('membership.add-points');
+});

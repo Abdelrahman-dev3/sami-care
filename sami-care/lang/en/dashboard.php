@@ -1,6 +1,17 @@
 <?php
 
 return [
+    'occupancy_title' => 'Employee occupancy',
+    'occupancy_description' => 'Booked time within working hours ÷ available working time × 100 for the selected dates and branch. Breaks, leave, holidays, cancelled bookings and unpaid carts are excluded. Overlapping intervals count once.',
+    'occupancy_employee' => 'Employee',
+    'occupancy_branch' => 'Branches',
+    'occupancy_booked' => 'Occupied hours',
+    'occupancy_available' => 'Available working hours',
+    'occupancy_rate' => 'Occupancy',
+    'occupancy_unavailable' => 'Unavailable',
+    'occupancy_no_hours' => 'No working hours available in this period, or the schedule has not been configured.',
+    'occupancy_empty' => 'No employees in the selected branch.',
+    'occupancy_schedule_note' => 'Calculated from current schedules, using the employee schedule first, then the assigned branch shift. This is not an attendance record. Available working hours are total capacity before subtracting bookings.',
     'title' => 'Dashboard',
     'lbl_performance' => 'Performance',
     'lbl_appointment' => 'Appointments',
