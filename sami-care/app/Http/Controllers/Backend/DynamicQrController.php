@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Models\DynamicQr;
+use App\Services\QrTextFormatter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -14,7 +15,7 @@ class DynamicQrController extends Controller
     {
         $codes = DynamicQr::latest()->paginate(12);
 
-        return view('backend.dynamic-qr.index', compact('codes'));
+        return view('backend.dynamic-qr.index', ['codes' => $codes, 'assets' => ['editor']]);
     }
 
     public function store(Request $request)
@@ -150,6 +151,21 @@ class DynamicQrController extends Controller
         ) {
             throw ValidationException::withMessages([
                 'content' => 'أدخل رابطًا صحيحًا يبدأ بـ https:// أو http://',
+            ]);
+        }
+    }
+
+    if ($data['type'] === 'text') {
+        $data['content'] = app(QrTextFormatter::class)->format($data['content']);
+        $plainText = html_entity_decode(strip_tags($data['content']), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        if (trim(str_replace("\xc2\xa0", ' ', $plainText)) === '') {
+            throw ValidationException::withMessages([
+                'content' => 'أدخل نصًا للمحتوى.',
+            ]);
+        }
+        if (mb_strlen($data['content']) > 10000) {
+            throw ValidationException::withMessages([
+                'content' => 'النص مع التنسيق يجب ألا يتجاوز 10000 حرف.',
             ]);
         }
     }

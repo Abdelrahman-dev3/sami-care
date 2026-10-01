@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\BookingReview;
+use Modules\Booking\Models\Booking;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -20,6 +21,10 @@ class BookingReviewFrontendController extends Controller
         ]);
 
         $userId = Auth::id();
+        abort_unless($userId, 401);
+        $bookingId = $request->booking_id;
+        $booking = Booking::where('created_by', $userId)->whereNull('deleted_by')->findOrFail($bookingId);
+        abort_unless($booking->status === 'completed', 422, 'يمكن تقييم الحجوزات المكتملة فقط');
 
         // Check if user already reviewed this booking
         $existing = BookingReview::where('booking_id', $request->booking_id)
@@ -31,6 +36,7 @@ class BookingReviewFrontendController extends Controller
             $existing->update([
                 'rating'      => $request->rating,
                 'review_text' => $request->review_text,
+                'is_approved' => 0,
             ]);
 
             return response()->json([
@@ -63,6 +69,8 @@ class BookingReviewFrontendController extends Controller
     public function getByBooking($bookingId)
     {
         $userId = Auth::id();
+        abort_unless($userId, 401);
+        Booking::where('created_by', $userId)->whereNull('deleted_by')->findOrFail($bookingId);
 
         $review = BookingReview::where('booking_id', $bookingId)
             ->where('user_id', $userId)

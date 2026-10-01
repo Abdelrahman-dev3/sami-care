@@ -1,4 +1,5 @@
 <script setup>
+import FavoriteButton from '@/components/common/FavoriteButton.vue'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import PageSkeleton from '@/components/common/PageSkeleton.vue'
@@ -184,6 +185,7 @@ watch(id, loadCategories)
               </div>
               <div class="sd-var__body">
                 <h3>{{ s.name }}</h3>
+<FavoriteButton type="service" :id="s.id" />
                 <p class="sd-var__dur">
                   <SIcon inner='<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>' :size="13" />
                   {{ s.dur }} دقيقة

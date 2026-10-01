@@ -1,4 +1,5 @@
 <script setup>
+import BookingRating from './BookingRating.vue'
 import { computed } from 'vue'
 
 const props = defineProps({ profile: { type: Object, default: null } })
@@ -43,6 +44,7 @@ function serviceNames(b) {
           <span>{{ b.branch?.name }}</span>
           <span>{{ rs(bookingTotal(b)) }} ر.س</span>
         </div>
+        <BookingRating v-if="b.status === 'completed'" :booking="b" />
       </div>
     </div>
   </div>

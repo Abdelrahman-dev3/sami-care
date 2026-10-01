@@ -1,4 +1,5 @@
 <script setup>
+import FavoriteButton from '@/components/common/FavoriteButton.vue'
 /*
   كتالوج الباقات — مُرحَّل حرفيًا من viewPackages() في src/legacy/packages-gifts.html
 */
@@ -68,6 +69,7 @@ const PERKS = [
       </div>
       <span class="badge" :style="`border-color:${p.hex}`"><SIcon :inner="p.ico" :size="22" /></span>
       <div class="body">
+<FavoriteButton type="package" :id="p.id" />
         <h3>{{ p.name }}</h3>
         <div class="dur"><SIcon :inner="I.clock" :size="13" /> {{ p.dur }} دقيقة</div>
         <div class="desc">{{ p.desc }}</div>

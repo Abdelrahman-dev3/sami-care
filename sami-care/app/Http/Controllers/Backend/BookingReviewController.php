@@ -10,7 +10,7 @@ class BookingReviewController extends Controller
 {
     public function index(Request $request)
     {
-        $query = BookingReview::with(['user', 'booking'])
+        $query = BookingReview::with(['user', 'booking.services.employee'])
             ->orderBy('created_at', 'desc');
 
         // Filter by approval status

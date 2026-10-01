@@ -1,4 +1,5 @@
 <script setup>
+import FavoriteButton from '@/components/common/FavoriteButton.vue'
 import ProductStock from '@/components/common/ProductStock.vue'
 /*
   بطاقة المنتج — مُرحَّلة حرفيًا من الدالة card(p,i) في src/legacy/store.html
@@ -17,11 +18,10 @@ const props = defineProps({
   p: { type: Object, required: true },
   index: { type: Number, default: 0 },
   view: { type: String, default: 'grid' },
-  fav: { type: Boolean, default: false },
   qty: { type: Number, default: 0 },
 })
 
-defineEmits(['toggle-fav', 'add', 'set-qty'])
+defineEmits(['add', 'set-qty'])
 
 const delay = computed(() => `animation-delay:${Math.min(props.index * 0.05, 0.4)}s`)
 const size = computed(() => (props.view === 'list' ? 96 : 118))
@@ -32,12 +32,7 @@ const shape = computed(() => shapeParts(props.p.shape, size.value))
   <article class="pcard" :style="delay">
     <div class="pimg"><div class="shelf"></div>
       <span v-if="p.badge" class="badge-tag" :class="{ new: p.new }">{{ p.badge }}</span>
-      <button class="fav2" :class="{ on: fav }" :data-fav="p.id" aria-label="مفضلة"
-              @click="$emit('toggle-fav', p.id)">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <path d="M12 21s-7-4.4-9.3-8.5C.8 9 2.6 5.5 6 5.5c2 0 3.4 1.1 4 2.3.6-1.2 2-2.3 4-2.3 3.4 0 5.2 3.5 3.3 7-2.3 4.1-9.3 8.5-9.3 8.5z"/>
-        </svg>
-      </button>
+      <FavoriteButton class="fav2" type="product" :id="p.id" />
             <img v-if="p.image" class="prod-photo" :src="p.image" :alt="p.n" loading="lazy" />
             <svg v-else class="prod" :width="size" :height="size" :viewBox="shape.viewBox" v-html="shape.inner"></svg>
 

@@ -13,6 +13,8 @@ class BookingReview extends Model
         'booking_id',
         'user_id',
         'rating',
+        'branch_rating',
+        'service_ratings',
         'review_text',
         'is_approved',
         'status',
@@ -20,6 +22,8 @@ class BookingReview extends Model
 
     protected $casts = [
         'rating' => 'integer',
+        'branch_rating' => 'integer',
+        'service_ratings' => 'array',
         'is_approved' => 'boolean',
         'status' => 'boolean',
     ];

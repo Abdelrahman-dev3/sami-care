@@ -5,6 +5,7 @@ import BookingQr from '@/components/common/BookingQr.vue'
 import { returnedReceiptUrl } from '@/utils/bookingReceipt'
 import { useAuth } from '@/composables/useAuth'
 import { fetchProfile } from '@/services/accountApi'
+import AccountFavorites from '@/components/account/AccountFavorites.vue'
 import AccountOverview from '@/components/account/AccountOverview.vue'
 import AccountBookings from '@/components/account/AccountBookings.vue'
 import AccountAddresses from '@/components/account/AccountAddresses.vue'
@@ -24,6 +25,7 @@ const TABS = [
   { id: 'overview', label: 'نظرة عامة' },
   { id: 'membership', label: 'عضويتي' },
   { id: 'bookings', label: 'حجوزاتي' },
+  { id: 'favorites', label: 'المفضلة' },
   // 'addresses' مخفي مؤقتًا بطلب من المشروع
   { id: 'packages', label: 'باقاتي' },
   { id: 'products', label: 'منتجاتي' },
@@ -94,6 +96,7 @@ watch(isAuthenticated, (v) => { if (v) loadProfile() })
       <div v-else-if="error" class="account-state error">{{ error }}</div>
       <template v-else>
         <AccountOverview v-if="activeTab === 'overview'" :profile="profile" @go="activeTab = $event" />
+        <AccountFavorites v-else-if="activeTab === 'favorites'" />
         <AccountMembership v-else-if="activeTab === 'membership'" />
         <AccountBookings v-else-if="activeTab === 'bookings'" :profile="profile" />
         <AccountAddresses v-else-if="activeTab === 'addresses'" />

@@ -1,4 +1,5 @@
 @php
+    $fieldId = isset($code) ? 'qr-' . $code->id : 'qr-new';
     $selectedType = isset($code) ? $code->type : 'url';
 
     $wifi = $selectedType === 'wifi'
@@ -9,14 +10,18 @@
         ? $code->content
         : '';
 
+    if ($selectedType === 'text') {
+        $normalContent = app(\App\Services\QrTextFormatter::class)->format($normalContent);
+    }
+
     $normalTitle = isset($code) ? $code->title
         : '';
 @endphp
 
 <div class="qr-fields">
-<label class="form-label" for="new-title">العنوان</label>
+<label class="form-label" for="{{ $fieldId }}-title">العنوان</label>
                 <input
-                    id="new-title"
+                    id="{{ $fieldId }}-title"
                     name="title"
                     class="form-control mb-3"
                     maxlength="150"
@@ -41,15 +46,17 @@
     </select>
 
     <div class="normal-fields">
-        <label class="form-label">الرابط أو النص</label>
+        <label class="form-label qr-content-label" for="{{ $fieldId }}-content">الرابط أو النص</label>
 
         <textarea
+            id="{{ $fieldId }}-content"
             name="content"
             class="form-control mb-3"
             rows="4"
             maxlength="10000"
             dir="auto"
         >{{ $normalContent }}</textarea>
+        <p class="qr-content-error text-danger small" role="alert" hidden></p>
     </div>
 
     <div class="wifi-fields" hidden>

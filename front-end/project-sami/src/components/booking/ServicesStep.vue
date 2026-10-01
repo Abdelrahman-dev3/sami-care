@@ -1,4 +1,5 @@
 <script setup>
+import FavoriteButton from '@/components/common/FavoriteButton.vue'
 import { ref, computed, onMounted } from 'vue'
 import { getCategories } from '@/data/home'
 import { categoryAccent, categoryIconKey, categoryIconPath } from '@/utils/giftIcons'
@@ -94,6 +95,7 @@ const serviceIcon = service => categoryIconPath(service.icon)
       <div v-if="!list.length" class="empty-hint">لا توجد خدمات متاحة حاليًا ضمن هذا القسم</div>
       <div v-else class="subs">
         <div v-for="s in list" :key="s.id" class="sub" :class="{ sel: hasSvc(s.id) }" :data-svc="s.id" :style="serviceStyle(s)" @click="toggleSvc(s)">
+          <FavoriteButton type="service" :id="s.id" />
           <div class="top">
             <span class="si"><svg viewBox="0 0 24 24" aria-hidden="true" v-html="serviceIcon(s)"></svg></span>
             <b>{{ s.name }}</b>

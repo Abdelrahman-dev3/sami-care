@@ -18,7 +18,7 @@ import { useStore } from '@/composables/useStore'
 import SIcon from '@/components/common/SIcon.vue'
 import ProductCard from './ProductCard.vue'
 
-const { state, isFav, toggleFav, visibleProducts, setQty, products, categories } = useStore()
+const { state, visibleProducts, setQty, products, categories } = useStore()
 
 const qtyOf = id => state.cart[id] || 0
 
@@ -143,7 +143,7 @@ function setView(v) { state.view = v }
     <button class="caro-btn l" data-caro="-1"><SIcon :inner="ICON.chevL" :size="15"/></button>
     <div class="best-caro" id="bestCaro">
       <ProductCard v-for="(p, i) in bestProducts" :key="p.id" :p="p" :index="i" :view="state.view"
-                   :fav="isFav(p.id)" :qty="qtyOf(p.id)" @toggle-fav="toggleFav"
+                   :qty="qtyOf(p.id)"
                    @add="(id, ev) => emit('add', id, ev)" @set-qty="setQty"/>
     </div>
   </div>
@@ -166,7 +166,7 @@ function setView(v) { state.view = v }
   </div>
   <div class="pgrid" :class="{ list: state.view === 'list' }" id="pgrid">
     <ProductCard v-for="(p, i) in visibleProducts" :key="p.id" :p="p" :index="i" :view="state.view"
-                 :fav="isFav(p.id)" :qty="qtyOf(p.id)" @toggle-fav="toggleFav"
+                 :qty="qtyOf(p.id)"
                    @add="(id, ev) => emit('add', id, ev)" @set-qty="setQty"/>
   </div>
   <div v-if="filteredCount > 8" class="show-more">

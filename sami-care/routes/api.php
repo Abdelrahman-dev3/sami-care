@@ -365,3 +365,11 @@ Route::prefix('admin/membership')->middleware('auth:sanctum')->controller(Member
     Route::post('/add-points', 'addPoints');
     Route::post('/seed-tiers', 'seedTiers');
 });
+
+Route::middleware('auth:sanctum')->controller(\App\Http\Controllers\Api\CustomerExperienceController::class)->group(function () {
+ Route::get('/favorites', 'favorites');
+ Route::post('/favorites', 'saveFavorite');
+ Route::delete('/favorites/{type}/{id}', 'deleteFavorite')->whereNumber('id');
+ Route::get('/bookings/{id}/review', 'review')->whereNumber('id');
+ Route::put('/bookings/{id}/review', 'saveReview')->whereNumber('id');
+});

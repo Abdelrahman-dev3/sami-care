@@ -382,6 +382,20 @@
                                 </div>
                             </td>
 
+                            {{-- Detailed booking ratings --}}
+                            @if($review->branch_rating)
+                                <td>
+                                    <div>الفرع: {{ $review->branch_rating }} / 5</div>
+                                    @foreach($review->service_ratings ?? [] as $rating)
+                                        @php($ratedService = $review->booking?->services->firstWhere('id', $rating['booking_service_id']))
+                                        <div>{{ $ratedService?->service_name ?? ('خدمة #' . $rating['service_id']) }}: {{ $rating['service_rating'] }} / 5</div>
+                                        @if($rating['employee_rating'] ?? null)
+                                            <div>{{ $ratedService?->employee?->full_name ?? 'الموظف' }}: {{ $rating['employee_rating'] }} / 5</div>
+                                        @endif
+                                    @endforeach
+                                    <div class="review-text">{{ $review->review_text ?? '-' }}</div>
+                                </td>
+                            @else
                             {{-- Review Text --}}
                             <td>
                                 <div class="review-text truncated" title="{{ $review->review_text }}">
@@ -389,6 +403,7 @@
                                 </div>
                             </td>
 
+                            @endif
                             {{-- Booking Info --}}
                             <td>
                                 <div class="booking-info">

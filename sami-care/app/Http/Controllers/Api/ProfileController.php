@@ -216,6 +216,7 @@ class ProfileController extends Controller
                     'id' => $service->id,
                     'service_id' => $service->service_id,
                     'service_name' => $service->service_name,
+                    'employee_id' => $service->employee_id,
                     'employee_name' => $service->employee->full_name ?? trim(($service->employee->first_name ?? '') . ' ' . ($service->employee->last_name ?? '')),
                     'price' => (float) ($service->service->default_price ?? $service->service_price ?? 0),
                 ];

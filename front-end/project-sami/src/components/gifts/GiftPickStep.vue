@@ -1,4 +1,5 @@
 <script setup>
+import FavoriteButton from '@/components/common/FavoriteButton.vue'
 /*
   اختيار الخدمة أو الباقة — نسخة حقيقية:
   • gtype === 'svc' → أقسام وخدمات حقيقية من /Home/categories (نفس منطق ServicesStep.vue)
@@ -15,7 +16,7 @@ import { localizeField, localizeRecord, translationSource } from '@/utils/i18nFi
 import SIcon from '@/components/common/SIcon.vue'
 import Skeleton from '@/components/common/SkeletonLoader.vue'
 
-const { state, hasSvc, toggleSvc, isFav, toggleFav } = useGifts()
+const { state, hasSvc, toggleSvc } = useGifts()
 const { filteredPkgs } = usePackages()
 const emit = defineEmits(['nav'])
 const { state: lang } = useLanguage()
@@ -157,7 +158,7 @@ function scrollCaro(dir) {
              :data-gp="p.id" :style="`--pc:${p.hex};animation-delay:${i * 0.05}s`" @click="state.pkg = p">
           <div class="ph"><img :src="p.img" :alt="p.name" />
             <span v-if="p.hot" class="hotflag">الأكثر طلبًا</span>
-            <button class="fav" :class="{ on: isFav(p.id) }" :data-fav="p.id" @click.stop="toggleFav(p.id)"><SIcon :inner="I.heart" :size="14" /></button>
+            <FavoriteButton class="fav" type="package" :id="p.id" />
             <span class="chk"><SIcon :inner="I.check" :size="13" /></span></div>
           <div class="bd">
             <h4>{{ p.name }}</h4>

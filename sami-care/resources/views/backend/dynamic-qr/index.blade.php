@@ -259,6 +259,9 @@
         const type = group.querySelector('.qr-type');
         const normalFields = group.querySelector('.normal-fields');
         const content = normalFields.querySelector('[name="content"]');
+        const contentLabel = group.querySelector('.qr-content-label');
+        const contentError = group.querySelector('.qr-content-error');
+        let initializingEditor = false;
         const wifiFields = group.querySelector('.wifi-fields');
         const security = group.querySelector('.wifi-security');
         const password = group.querySelector('.wifi-password');
@@ -280,12 +283,76 @@ togglePassword.addEventListener('click', function () {
     togglePassword.setAttribute('aria-pressed', String(showPassword));
 });
 
+        function syncEditor() {
+            const editor = window.tinymce && tinymce.get(content.id);
+            const isText = type.value === 'text';
+            contentLabel.textContent = isText ? 'النص' : 'الرابط';
+            contentError.hidden = true;
+            content.required = type.value === 'url';
+
+            if (!isText) {
+                if (editor && editor.initialized) {
+                    const plainText = editor.getContent({ format: 'text' });
+                    editor.remove();
+                    if (type.value === 'url') content.value = plainText;
+                }
+                return;
+            }
+            if (editor || initializingEditor || !window.tinymce) {
+                if (!window.tinymce) content.required = true;
+                return;
+            }
+
+            initializingEditor = true;
+            tinymce.init({
+                target: content,
+                height: 320,
+                menubar: false,
+                branding: false,
+                directionality: 'rtl',
+                plugins: 'lists link textcolor colorpicker directionality paste',
+                toolbar: 'undo redo | formatselect | bold italic underline strikethrough | forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist | link unlink | rtl ltr | removeformat',
+                paste_data_images: false,
+                content_style: 'body { font-family: Arial, sans-serif; font-size: 16px; line-height: 1.8; }',
+                setup: function (instance) {
+                    instance.on('init', function () {
+                        initializingEditor = false;
+                        if (type.value !== 'text') syncEditor();
+                    });
+                    instance.on('change input undo redo', function () {
+                        instance.save();
+                        contentError.hidden = true;
+                    });
+                }
+            });
+        }
+
+        group.closest('form').addEventListener('submit', function (event) {
+            if (type.value !== 'text') return;
+            const editor = window.tinymce && tinymce.get(content.id);
+            if (editor && !editor.initialized) {
+                event.preventDefault();
+                return;
+            }
+            if (editor) editor.save();
+            const plainText = editor ? editor.getContent({ format: 'text' }) : content.value;
+            if (!plainText.replace(/\u00a0/g, ' ').trim() || content.value.length > 10000) {
+                event.preventDefault();
+                contentError.textContent = !plainText.replace(/\u00a0/g, ' ').trim()
+                    ? 'أدخل نصًا للمحتوى.'
+                    : 'النص مع التنسيق يجب ألا يتجاوز 10000 حرف.';
+                contentError.hidden = false;
+                if (editor) editor.focus();
+                else content.focus();
+            }
+        });
+
         function syncFields() {
             const isWifi = type.value === 'wifi';
 
             normalFields.hidden = isWifi;
             content.disabled = isWifi;
-            content.required = !isWifi;
+            syncEditor();
 
             wifiFields.hidden = !isWifi;
 
