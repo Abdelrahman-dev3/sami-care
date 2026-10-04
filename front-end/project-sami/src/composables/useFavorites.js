@@ -4,6 +4,7 @@ import { useAuth } from '@/composables/useAuth'
 
 const items = ref([])
 const error = ref('')
+const itemErrors = ref({})
 const pending = ref(new Set())
 const loading = ref(false)
 let initialized = false
@@ -36,6 +37,7 @@ export function useFavorites() {
       generation++
       items.value = []
       error.value = ''
+      itemErrors.value = {}
       loading.value = false
       if (isAuthenticated.value) load()
     }, { immediate: true })
@@ -52,6 +54,7 @@ export function useFavorites() {
     const key = `${type}:${id}`
     if (pending.value.has(key) || loading.value) return
     pending.value.add(key)
+    delete itemErrors.value[key]
     error.value = ''
     const version = generation
     try {
@@ -66,11 +69,11 @@ export function useFavorites() {
         if (version === generation) await load()
       }
     } catch (e) {
-      if (version === generation) error.value = e.message
+      if (version === generation) itemErrors.value[key] = e.message
     } finally {
       pending.value.delete(key)
     }
   }
 
-  return { items, error, pending, loading, has, toggle, load }
+  return { items, error, itemErrors, pending, loading, has, toggle, load }
 }

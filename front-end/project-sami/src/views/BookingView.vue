@@ -13,8 +13,10 @@ import { useInternalLinks } from '@/composables/useInternalLinks'
 import { useServiceLocation } from '@/composables/useServiceLocation'
 import { useAuth } from '@/composables/useAuth'
 import { useBooking, rs, fmtDate, fmtDur, fmtTimeStr } from '@/composables/useBooking'
+import { useStore } from '@/composables/useStore'
+import { productCartPayload } from '@/utils/bookingProducts'
 import { savePendingReceipt } from '@/utils/bookingReceipt'
-import { createBooking, initPayment } from '@/services/bookingApi'
+import { createBooking, initPayment, syncBookingProducts } from '@/services/bookingApi'
 import pageCss from '@/assets/styles/pages/booking.css?raw'
 
 import BookingStepper from '@/components/booking/BookingStepper.vue'
@@ -26,6 +28,7 @@ import PayStep from '@/components/booking/PayStep.vue'
 import BookingSuccess from '@/components/booking/BookingSuccess.vue'
 import BookingSummary from '@/components/booking/BookingSummary.vue'
 
+const { state: storeState, clearCart, cartItems } = useStore()
 const root = ref(null)
 const route = useRoute()
 const { current, locations, loadServiceLocations, setLocation } = useServiceLocation()
@@ -147,6 +150,8 @@ async function doPay() {
       }],
     }))
 
+    await syncBookingProducts(productCartPayload(storeState.cart))
+
     await createBooking({
       branch: branchId,
       services,
@@ -184,8 +189,10 @@ async function doPay() {
       window.location.href = payment.payment_url
       return
     }
+    state.purchasedProducts = cartItems.value.map(item => ({ ...item }))
     state.bookRef = payment.invoice_id || null
     state.done = true
+    clearCart()
     scrollTo({ top: 0, behavior: 'smooth' })
   } catch (e) {
     toast(e.message || 'تعذّر إتمام الحجز، حاول مرة أخرى')

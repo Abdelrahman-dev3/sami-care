@@ -3,7 +3,7 @@ import { computed, ref, watch, nextTick } from 'vue'
 import { useServiceLocation } from '@/composables/useServiceLocation'
 import { useBooking, fmtDur, fmtDate, rs } from '@/composables/useBooking'
 
-const { state, selSvcs, totalDur, priceParts, toggleSvc } = useBooking()
+const { state, selSvcs, totalDur, priceParts, toggleSvc, selectedProducts } = useBooking()
 const { current } = useServiceLocation()
 
 const show = ref(false)
@@ -38,6 +38,11 @@ const dateLabel = computed(() => (state.date ? fmtDate(state.date) : ''))
         </div>
       </div>
 
+      <div v-if="selectedProducts.length" class="sum-svcs">
+        <div v-for="item in selectedProducts" :key="item.id" class="sum-svc">
+          <span class="nm">{{ item.n }} ? {{ item.qty }}</span><span class="pr">{{ rs(item.pr * item.qty) }} ?.?</span>
+        </div>
+      </div>
       <div class="sum-price">
         <div class="sp-row"><span>المجموع الفرعي</span><span>{{ rs(p.sub) }} ر.س</span></div>
         <div class="sp-row"><span>ضريبة القيمة المضافة (15%)</span><span>+{{ rs(p.vat) }} ر.س</span></div>

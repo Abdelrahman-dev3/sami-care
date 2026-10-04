@@ -4,6 +4,7 @@ import { computed, onMounted, onBeforeUnmount, provide, ref, watch } from 'vue'
 import { resolveBackendUrl } from '@/utils/assetPath'
 import { useServiceLocation } from '@/composables/useServiceLocation'
 import { safeAboutUrl, branchPhone } from '@/composables/useAboutContent'
+import FaqSection from '@/components/common/FaqSection.vue'
 import AboutExtras from '@/components/about-page/AboutExtras.vue'
 import HeroSection from '@/components/about-page/HeroSection.vue'
 import QuickActions from '@/components/about-page/QuickActions.vue'
@@ -41,6 +42,7 @@ const page = computed(() => {
 })
 const contentError = ref('')
 const reviews = ref([])
+const faqs = ref([])
 const branchDialog = ref(null)
 const { locations, locationsLoading, locationsError, loadServiceLocations } = useServiceLocation()
 const branches = computed(() => locations.value.filter(b => !b.home).map(b => ({ ...b,
@@ -66,6 +68,7 @@ async function loadServices() {
     if (request !== servicesRequest) return
     serviceCategories.value = homeData.categories || []
     reviews.value = homeData.reviews || []
+    faqs.value = homeData.faqs || []
   } catch (error) {
     if (request !== servicesRequest) return
     console.error('About services API error:', error)
@@ -119,6 +122,7 @@ onBeforeUnmount(() => { clearTimeout(toastTimer); contentRequest++; servicesRequ
       <FeaturesSection />
       <AboutExtras :reviews="reviews" :loading="servicesLoading" />
       <PageActions @notify="notify" />
+      <FaqSection :items="faqs" />
       <SiteFooter class="sami-unified-footer" logo="/logo.png" />
     </main>
 

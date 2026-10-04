@@ -24,7 +24,8 @@ class ProfileController extends Controller
 
         $bookingsQuery = Booking::query()
             ->with(['branch', 'services.employee', 'services.service', 'bookingTransaction'])
-            ->where('created_by', $user->id)
+            //->where('created_by', $user->id)
+            ->where('user_id', $user->id)
             ->whereHas('services')
             ->whereNull('deleted_by')
             ->where(function ($q) {

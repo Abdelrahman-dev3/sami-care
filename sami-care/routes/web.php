@@ -493,6 +493,7 @@ Route::group(['prefix' => 'app', 'middleware' => 'auth'], function () {
             });
         });
         Route::controller(ReportsController::class)->group(function () {
+            Route::get('customer-activity-report', [\App\Http\Controllers\Backend\CustomerActivityReportController::class, 'index'])->name('reports.customer-activity');
             Route::get('daily-booking-report', 'daily_booking_report')->name('reports.daily-booking-report');
             Route::get('daily-booking-report-index-data', 'daily_booking_report_index_data')->name('reports.daily-booking-report.index_data');
             Route::get('overall-booking-report', 'overall_booking_report')->name('reports.overall-booking-report');
@@ -737,6 +738,11 @@ Route::middleware(['auth', 'permission:view_terms_and_conditions'])
     });
 
 Route::middleware(['auth', 'permission:view_terms_and_conditions'])->prefix('app/home-page-content')->name('backend.home-page-content.')->controller(\App\Http\Controllers\Backend\HomePageContentController::class)->group(function () {
+    Route::get('/', 'edit')->name('edit');
+    Route::put('/', 'update')->name('update');
+});
+
+Route::middleware(['auth', 'permission:view_terms_and_conditions'])->prefix('app/faqs')->name('backend.faq.')->controller(\App\Http\Controllers\Backend\FaqController::class)->group(function () {
     Route::get('/', 'edit')->name('edit');
     Route::put('/', 'update')->name('update');
 });

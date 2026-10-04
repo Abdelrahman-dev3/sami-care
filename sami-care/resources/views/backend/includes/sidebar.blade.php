@@ -30,6 +30,18 @@
 @php
     $menu = new \App\Http\Middleware\GenerateMenus();
     $menu = $menu->handle('menu', 'vertical', 'ARRAY_MENU');
+    if (auth()->user()->hasRole('admin') || auth()->user()->can('overall_booking_report')) {
+        $customerReportItem = $menu->add('<span class="item-name">'.e(__('customer_activity.title')).'</span>', [
+            'route' => 'backend.reports.customer-activity',
+            'class' => 'nav-item',
+        ])->data('order', 19)->prepend('<i class="fa-solid fa-users"></i> ');
+        $customerReportItem->link->attr(['class' => 'nav-link']);
+        if (request()->routeIs('backend.reports.customer-activity')) {
+            $customerReportItem->active();
+            $customerReportItem->link->active();
+        }
+        $menu = $menu->sortBy('order');
+    }
     
     $filteredItems = $menu->roots()->filter(function($item) {
         $hiddenItems = [
@@ -156,6 +168,7 @@
 
                 @hasPermission('view_terms_and_conditions')
                 <li class="nav-item"><a href="{{ route('backend.home-page-content.edit') }}" class="nav-link"><i class="fas fa-home"></i><span class="item-name">محتوى الرئيسية</span></a></li>
+                <li class="nav-item"><a href="{{ route('backend.faq.edit') }}" class="nav-link {{ request()->routeIs('backend.faq.*') ? 'active' : '' }}"><i class="fas fa-circle-question"></i><span class="item-name">{{ __('faq.title') }}</span></a></li>
                 <li class="nav-item {{ request()->routeIs('backend.frontend-seo.*') ? 'active' : '' }}">
                     <a href="{{ route('backend.frontend-seo.edit') }}" class="nav-link"><i class="fas fa-search"></i><span class="item-name">إعدادات SEO</span></a>
                 </li>

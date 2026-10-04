@@ -14,6 +14,7 @@ import PackagesSection from '@/components/home/PackagesSection.vue'
 import ProductsSection from '@/components/home/ProductsSection.vue'
 import BranchesSection from '@/components/home/BranchesSection.vue'
 import TestimonialsSection from '@/components/home/TestimonialsSection.vue'
+import FaqSection from '@/components/common/FaqSection.vue'
 import FinalCta from '@/components/home/FinalCta.vue'
 import { getHomeContent } from '@/data/home'
 
@@ -108,6 +109,7 @@ watch(() => language.lang, loadHomeData)
                     :loading="loading"
                 />
         
+        <FaqSection :items="homeData.faqs || []" />
         <FinalCta />
       </div>
     </main>

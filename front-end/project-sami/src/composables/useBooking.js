@@ -1,5 +1,6 @@
 import { useLanguage } from '@/composables/useLanguage'
 import { reactive, computed } from 'vue'
+import { useStore } from '@/composables/useStore'
 import { paymentPolicy } from '@/utils/paymentPolicy'
 
 /*
@@ -71,12 +72,16 @@ const state = reactive({
     couponMessage: '',
   },
   done: false,
+  purchasedProducts: [],
   bookRef: null,
   bookingIds: [],
   walletBalance: null,   // يتحمّل فى PayStep.vue من /profile — لازم يكون معروف قبل السماح باختيار "المحفظة"
 })
 
 export function useBooking() {
+  const { cartTotal, cartItems } = useStore()
+  const selectedProducts = computed(() => state.done ? state.purchasedProducts : cartItems.value)
+  const productsTotal = computed(() => state.done ? state.purchasedProducts.reduce((sum, p) => sum + p.pr * p.qty, 0) : cartTotal.value)
   const hasSvc = id => state.services.some(s => s.id === id)
 
   const toggleSvc = service => {
@@ -92,13 +97,13 @@ export function useBooking() {
 
   const selSvcs = computed(() => state.services)
 
-  const subTotal = computed(() => selSvcs.value.reduce((a, s) => a + s.price, 0))
+  const subTotal = computed(() => selSvcs.value.reduce((a, s) => a + (Number(s.price) || 0), 0))
   const totalDur = computed(() => selSvcs.value.reduce((a, s) => a + s.dur, 0))
 
   const priceParts = computed(() => {
-    const sub = subTotal.value
-    const vat = Math.round(sub * VAT)
-    return { sub, vat, total: sub + vat }
+    const sub = subTotal.value + productsTotal.value
+    const vat = Math.round(sub * VAT * 100) / 100
+    return { sub, products: productsTotal.value, vat, total: sub + vat }
   })
 
   const pointValue = computed(() => Math.max(Number(state.pointValue) || 0.5, 0.01))
@@ -194,6 +199,7 @@ export function useBooking() {
     state.rewards.couponDiscount = 0
     state.rewards.couponStatus = ''
     state.rewards.couponMessage = ''
+    state.purchasedProducts = []
     state.done = false
     state.bookRef = null
     state.bookingIds = []
@@ -202,7 +208,7 @@ export function useBooking() {
   return {
     state, VAT,
     hasSvc, toggleSvc,
-    selSvcs, subTotal, totalDur, priceParts,
+    selSvcs, subTotal, totalDur, priceParts, selectedProducts,
     pointValue, couponDiscount, walletDiscount, loyaltyPointsUsed, loyaltyDiscount, rewardDiscountTotal, payableTotal,
     setEmployee, setTime,
     canProceed, nextLabel,

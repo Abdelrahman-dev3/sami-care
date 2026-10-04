@@ -104,6 +104,7 @@ class HomeController extends Controller
             'status' => true,
             'data' => [
                 'home_content' => app(\App\Services\HomePageContent::class)->get(),
+                'faqs' => app(\App\Services\FaqContent::class)->published(),
                 'categories' => $categories,
                 'offers' => $offers,
                 'products' => ProductResource::collection($products),

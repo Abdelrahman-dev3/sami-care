@@ -1596,11 +1596,8 @@ const B_EMPLOYEES={
  pedi:[{n:'إبراهيم العنزي',r:4.8},{n:'نواف الحارثي',r:4.6},{n:'مروان فقيهي',r:4.7},{n:'زياد المطيري',r:4.8},{n:'رامي السلمي',r:4.7},{n:'فهد القحطاني',r:4.6},{n:'أنس الغامدي',r:4.8},{n:'بسام الشهري',r:4.7}],
  bath:[{n:'يوسف بن موسي',r:4.8},{n:'خالد الشمري',r:4.7},{n:'عبدالعزيز السلمي',r:4.9},{n:'حمد الدوسري',r:4.8},{n:'منصور العنزي',r:4.7},{n:'راشد المطيري',r:4.8},{n:'نايف الحربي',r:4.6},{n:'سعد القحطاني',r:4.7}],
 };
-let B_UPSELL=[
- {id:'u1',cartId:'m1',name:'كريم ترطيب متوازن',desc:'ترطيب وتغذية يدوم طويلًا',price:110,img:'/images/products/moisturizer-1.png'},
- {id:'u2',cartId:'m4',name:'غسول تنظيف البشرة',desc:'ينظف بعمق وينعش البشرة',price:95,img:'/images/products/moisturizer-2.png'},
- {id:'u3',cartId:'m2',name:'زيت اللحية الذهبي',desc:'ترطيب وتغذية عميقة',price:120,img:'/images/generated/products/care-set-card-hq.png'},
-];
+let B_UPSELL=[];
+let HOME_FAQS=[];
 const B_PAY_METHODS=[
  {id:'mada',n:'مدى',d:'ادفع باستخدام بطاقة مدى',logo:'مدى'},
  {id:'apple',n:'Apple Pay',d:'دفع سريع من الجوال',logo:''},
@@ -1709,9 +1706,9 @@ async function authGet(path){
  if(!res.ok||payload?.status===false)throw new Error(payload?.message||('تعذر تحميل '+path));
  return payload;
 }
-async function authPost(path,body){
+async function authPost(path,body,method='POST'){
  const auth=getAuth();
- const res=await fetch(`${API_BASE}${path}`,{method:'POST',headers:{Accept:'application/json','Content-Type':'application/json','frezka-localization':getLang(),...(auth?.api_token?{Authorization:`Bearer ${auth.api_token}`}:{})},body:JSON.stringify(body||{})});
+ const res=await fetch(`${API_BASE}${path}`,{method,headers:{Accept:'application/json','Content-Type':'application/json','frezka-localization':getLang(),...(auth?.api_token?{Authorization:`Bearer ${auth.api_token}`}:{})},body:JSON.stringify(body||{})});
  let payload=null;
  try{payload=await res.json()}catch{payload=null}
  if(!res.ok||payload?.status===false||payload?.success===false){
@@ -1964,21 +1961,19 @@ function applyDynamicData(){
  }else console.warn('sami: فشل تحميل المتجر',shopRes.reason);
 
  /* منتجات مقترحة (Upsell) في ملخص الحجز */
- if(upsellRes.status==='fulfilled'){
-  try{
-   const list=(upsellRes.value.data||[]).slice(0,3);
-   if(list.length){
-    B_UPSELL.length=0;
-    const mapped=list.map(p=>({id:'u'+p.id,cartId:'p'+p.id,stockQty:p.stock_qty??null,name:localizedField(p,'name')||'منتج',desc:localizedField(p,'short_description')||localizedField(p,'description')||'',price:Number(p.min_price??p.max_price??0)||0,img:p.product_image||p.feature_image||IMG.p2}));
-    B_UPSELL.push(...mapped);
-    mapped.forEach(u=>{if(!PRODUCTS.some(p=>String(p.id)===String(u.cartId)))PRODUCTS.push({id:u.cartId,cat:'all',n:u.name,pr:u.price,img:u.img,d:u.desc,stockQty:u.stockQty})});
-   }
-  }catch(e){console.warn('sami: تعذر تجهيز منتجات مقترحة',e)}
- }else console.warn('sami: فشل تحميل المنتجات المميزة',upsellRes.reason);
+ B_UPSELL.length=0;
+ if(shopRes.status==='fulfilled'){
+  const live=[...new Map((shopRes.value.data?.categories||[]).flatMap(c=>(c.products||[]).map(p=>mapProduct(p,c.id))).map(p=>[p.id,p])).values()];
+  PRODUCTS.length=0;PRODUCTS.push(...live);
+  const pool=live.filter(p=>Number(p.stockQty)>0);
+  for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]]}
+  B_UPSELL.push(...pool.slice(0,3).map(p=>({id:'u'+String(p.id).replace(/^p/,''),cartId:p.id,name:p.n,desc:p.d,price:p.pr,img:p.img})));
+ }
 
  /* الفروع: شريط الرئيسية BRANCHES + آراء العملاء TSTS — كلاهما من /Home/all */
  if(homeAll.status==='fulfilled'){
  HOME_CONTENT=homeAll.value.data?.home_content||{};
+ HOME_FAQS=homeAll.value.data?.faqs||[];
  try{
    const list=homeAll.value.data?.branches||[];
    if(list.length){BRANCHES.length=0;BRANCHES.push(...list.map(mapBranchSimple))}
@@ -2435,6 +2430,7 @@ async function attemptRealBookingSubmit(){
   duration:s.dur,
   staffId:S.bookEmp[s.id]?.id,
  }]}));
+ await authPost('/mobile/cart/products',{products:[...S.cart].map(([id,qty])=>({product_id:Number(String(id).replace(/^[pm]/,'')),qty}))},'PUT');
  await authPost('/mobile/cart/bookings',{
   branch:branchId,
   services,
@@ -2874,7 +2870,7 @@ function toggleAppCart(id){
  syncAppAddButtons(id);
 }
 function cartQty(){let n=0;S.cart.forEach(q=>n+=q);return n}
-function cartTotal(){let t=0;S.cart.forEach((q,id)=>t+=PRODUCTS.find(p=>p.id===id).pr*q);return t}
+function cartTotal(){let t=0;S.cart.forEach((q,id)=>t+=(PRODUCTS.find(p=>p.id===id)?.pr||0)*q);return t}
 
 /* ===== سلة حقيقية + إتمام شراء حقيقي — نفس منطق useStore.js في الديسكتوب بالحرف
    (نفس الـ endpoints: add-to-cart/get-cart-list/update-cart/remove-cart/place-order/product_detail) ===== */
@@ -3233,6 +3229,11 @@ function svTotal(){
 function wheelSVG(){
  return`<img id="wheelSvg" src="assets/wheel/wheel-face-exact.webp" alt="عجلة الحظ">`;
 }
+function homeFaqHTML(){
+ if(!HOME_FAQS.length)return '';
+ const title=getLang()==='en'?'Frequently asked questions':'??????? ???????';
+ return `<section class="sec" data-no-i18n><div class="sec-h"><h2>${title}</h2></div><div class="faq">${HOME_FAQS.map(f=>`<details class="faq-i"><summary style="padding:16px;cursor:pointer;font-weight:600;overflow-wrap:anywhere">${escHtml(localized(f.question))}</summary><p style="padding:0 16px 16px;white-space:pre-line;line-height:1.9;overflow-wrap:anywhere">${escHtml(localized(f.answer))}</p></details>`).join('')}</div></section>`;
+}
 function homeHTML(){
  const contactPhone=footerContactPhone();
  return`
@@ -3369,6 +3370,7 @@ function homeHTML(){
     <a class="btn btn-line map" href="${b.map}" target="_blank" rel="noopener">${svg('<path d="M21 10c0 7-9 12-9 12S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>',13)} عرض على الخريطة</a></div>
   </div>`).join('')}
  </div>
+ ${homeFaqHTML()}
  <div class="cta-f cta-reference"><img src="assets/cta/cta-reference-clean-v2.webp" alt="صالون وكوفي عناية سامي" loading="lazy">
   <div class="cin"><h3>جاهز لتجربة مختلفة؟</h3><p>احجز موعدك واستمتع بخدمة راقية وتجربة لا تُنسى.</p>
    <button class="btn btn-org" data-go="book"><span>احجز موعدك الآن</span>${svg('<path d="M15 6l-6 6 6 6"/>',13)}</button></div>
@@ -4269,7 +4271,7 @@ function bApplyEmployeeToGroup(g,e,clearTimes=true){
 function bSubTotal(){return bSelSvcs().reduce((a,s)=>a+s.price,0)}
 function bTotalDur(){return bSelSvcs().reduce((a,s)=>a+s.dur,0)}
 function bFmtDur(min){const h=Math.floor(min/60),m=min%60;if(getLang()==='en')return[h?h+' h':'',m||!h?m+' min':''].filter(Boolean).join(' ');if(!h)return m+' دقيقة';return (h===1?'ساعة':h===2?'ساعتان':h+' ساعات')+(m?' و '+m+' د':'')}
-function bPriceParts(){const sub=bSubTotal(),vat=Math.round(sub*.15);return{sub,vat,total:sub+vat}}
+function bPriceParts(){const products=S.bookDone?(S.bookProductTotal||0):cartTotal(),sub=bSubTotal()+products,vat=Math.round(sub*.15*100)/100;return{sub,products,vat,total:sub+vat}}
 function bookEarnedLoyaltyPoints(){return Math.floor(bPriceParts().total/100)*Math.max(Number(S.bookPointsPer100)||5,1)}
 function bookLoyaltyPreviewHTML(){return`<div class="m-loyalty-preview"><h3>✨ مكافأة نقاط الولاء لهذه الجلسة</h3><p>ستحصل على <b>${rs(bookEarnedLoyaltyPoints())} نقطة ولاء</b> عند إتمام هذا الحجز.</p><strong>يمنحك نظام الولاء ${rs(Math.max(Number(S.bookPointsPer100)||5,1))} نقطة مقابل كل 100 ر.س مدفوعة.</strong></div>`}
 function bookWalletBalance(){return Math.max(Number(_accountData?.balances?.wallet)||0,0)}
@@ -4545,7 +4547,7 @@ function wizSummaryHTML(){
    <div class="m-detail-row"><span>⏱️ المدة الإجمالية</span><b>${bFmtDur(bTotalDur())}</b></div><div class="m-detail-row"><span>✂️ عدد الخدمات</span><b>${svcs.length}</b></div>
   </div>
   <div class="m-card m-detail"><h4>تفاصيل الجلسة</h4>${sessionGroups.map(row=>{const g=row.group,emp=bookGroupEmployee(g),price=g.services.reduce((sum,s)=>sum+(Number(s.price)||0),0);return`<div class="m-plan-item"><b>${escHtml(g.name)}</b><small>مع ${escHtml(emp?.name||'—')}</small><span class="t">${row.pending?'بانتظار وقت متاح':fmtHHMM(row.start)}</span><small>${bFmtDur(row.duration)} · ${rs(price)} ر.س</small></div>`}).join('')}</div>
-  <div class="m-card m-detail booking-upsell"><h4>منتجات مناسبة لجلستك</h4>${B_UPSELL.map(u=>{const cartId=bUpsellCartId(u),added=!!(cartId&&S.cart.has(cartId));return`<div class="m-up ${added?'added':''}"><img src="${u.img}" alt="${u.name}" loading="lazy"><span class="inf"><b>${u.name}</b><small>${u.desc}</small><span class="p">${rs(u.price)} ر.س</span></span><button data-w-up="${u.id}" ${cartId?'':'disabled'}>${added?'✓ أضيف':'إضافة'}</button></div>`}).join('')}</div>
+  ${B_UPSELL.length?`<div class="m-card m-detail booking-upsell"><h4>منتجات مناسبة لجلستك</h4>${B_UPSELL.map(u=>{const cartId=bUpsellCartId(u),added=!!(cartId&&S.cart.has(cartId));return`<div class="m-up ${added?'added':''}"><img src="${u.img}" alt="${u.name}" loading="lazy"><span class="inf"><b>${u.name}</b><small>${u.desc}</small><span class="p">${rs(u.price)} ر.س</span></span><button data-w-up="${u.id}" ${cartId?'':'disabled'}>${added?'✓ أضيف':'إضافة'}</button></div>`}).join('')}</div>`: ''}
   <!-- بيانات العميل مخفية مؤقتًا. الكارت محفوظ في سجل Git ويمكن إعادته عند الحاجة. -->
   <div class="m-summary-mini"><div class="row"><span>المبلغ قبل الضريبة</span><b>${rs(p.sub)} ر.س</b></div><div class="row"><span>الضريبة</span><b>${rs(p.vat)} ر.س</b></div><div class="row"><span>الإجمالي</span><b>${rs(p.total)} ر.س</b></div></div>
  </div>`;
@@ -5181,7 +5183,7 @@ function bind(){
         if(payment?.redirected)return;
         S.bookRef=payment?.invoice_id?`#${payment.invoice_id}`:('#SA-'+String(Math.floor(260000+Math.random()*9000)));
         S.bookSubmitting=false;
-        transitionBooking(()=>{S.bookDone=true},{direction:'forward',resetTop:true});
+        transitionBooking(()=>{S.bookProductTotal=cartTotal();S.bookDone=true;S.cart.clear()},{direction:'forward',resetTop:true});
         toast('تم تأكيد حجزك وتثبيته بنجاح');
         if(getAuth())loadAccountData();
        }catch(e){

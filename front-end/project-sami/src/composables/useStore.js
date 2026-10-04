@@ -178,7 +178,7 @@ export function useStore() {
   const addToCart = id => {
     const current = state.cart[id] || 0
     const max = getMaxQty(id)
-    if (max > 0 && current >= max) return false
+    if (max <= 0 || current >= max) return false
     state.cart[id] = current + 1
     return true
   }

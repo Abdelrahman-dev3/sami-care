@@ -20,6 +20,38 @@ use Modules\Service\Models\Service;
 
 class MobileCartController extends Controller
 {
+    public function syncProducts(Request $request)
+    {
+        $data = $request->validate([
+            'products' => 'present|array|max:100',
+            'products.*' => 'required|array:product_id,qty',
+            'products.*.product_id' => 'required|integer|distinct|min:1',
+            'products.*.qty' => 'required|integer|min:1|max:1000',
+        ]);
+        DB::transaction(function () use ($request, $data) {
+            $products = \Modules\Product\Models\Product::whereIn('id', array_column($data['products'], 'product_id'))
+                ->where('status', 1)->lockForUpdate()->get()->keyBy('id');
+            foreach ($data['products'] as $item) {
+                $product = $products->get($item['product_id']);
+                if (!$product || $item['qty'] > (int) $product->stock_qty
+                    || ($product->max_purchase_qty > 0 && $item['qty'] > $product->max_purchase_qty)) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'products' => app()->getLocale() === 'en' ? 'A selected product or quantity is unavailable.' : 'أحد المنتجات المختارة أو الكمية المطلوبة غير متاح.',
+                    ]);
+                }
+            }
+            Cart::where('user_id', $request->user()->id)->delete();
+            foreach ($data['products'] as $item) {
+                Cart::create([
+                    'product_id' => $item['product_id'], 'qty' => $item['qty'],
+                    'user_id' => $request->user()->id,
+                    'location_id' => $products->get($item['product_id'])->branch_id ?: 1,
+                ]);
+            }
+        });
+        return response()->json(['status' => true]);
+    }
+
     public function index(Request $request)
     {
         $userId = $request->user()->id;
@@ -57,7 +89,7 @@ class MobileCartController extends Controller
         });
 
         $productTotal = (float) $products->sum(function ($item) {
-            $price = (float) ($item->product->max_price ?? $item->product->min_price ?? 0);
+            $price = (float) ($item->product->min_price ?? $item->product->max_price ?? 0);
             return $price * ((int) ($item->qty ?? 1));
         });
 

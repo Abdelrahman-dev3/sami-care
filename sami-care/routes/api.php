@@ -207,6 +207,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 
     Route::controller(MobileCartController::class)->group(function () {
         Route::get('/mobile/cart', 'index');
+        Route::put('/mobile/cart/products', 'syncProducts');
         Route::post('/mobile/cart/bookings', 'storeBooking');
         Route::post('/mobile/cart/packages', 'storePackage');
         Route::post('/mobile/cart/gift-cards', 'storeGiftCard');

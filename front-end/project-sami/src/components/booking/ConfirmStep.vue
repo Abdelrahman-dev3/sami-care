@@ -1,10 +1,10 @@
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useServiceLocation } from '@/composables/useServiceLocation'
 import { useAuth } from '@/composables/useAuth'
 import { useBooking, fmtTimeStr, fmtDur, fmtDate, rs } from '@/composables/useBooking'
 import { useStore } from '@/composables/useStore'
-import { UPSELL } from '@/data/booking'
+import { randomProducts } from '@/utils/bookingProducts'
 
 const { state, selSvcs, totalDur } = useBooking()
 const { current } = useServiceLocation()
@@ -49,26 +49,14 @@ const sessionCategories = computed(() => {
     }
   }).sort((a, b) => toMinutes(a.start) - toMinutes(b.start))
 })
-const suggestedProducts = computed(() => {
-  const liveProducts = storeProducts.value.slice(0, 3)
-  if (liveProducts.length) {
-    return liveProducts.map(p => ({
-      id: p.id,
-      name: p.n,
-      desc: p.d,
-      price: p.pr,
-      img: p.image || p.img || '/images/generated/products/care-set-card-hq.png',
-    }))
-  }
-
-  return UPSELL.map(p => ({
-    id: null,
-    name: p.name,
-    desc: p.desc,
-    price: p.price,
-    img: p.img || '/images/generated/products/care-set-card-hq.png',
-  }))
-})
+const suggestedIds = ref([])
+watch(() => storeProducts.value.map(p => `${p.id}:${p.stockQty}`).join(','), () => {
+  suggestedIds.value = randomProducts(storeProducts.value).map(p => p.id)
+}, { immediate: true })
+const suggestedProducts = computed(() => suggestedIds.value
+  .map(id => storeProducts.value.find(p => p.id === id)).filter(Boolean)
+  .map(p => ({ id: p.id, name: p.n, desc: p.d, price: p.pr,
+    img: p.image || p.img || '/images/generated/products/care-set-card-hq.png' })))
 
 function isSuggestedAdded(product) {
   return product.id != null && !!storeState.cart[product.id]

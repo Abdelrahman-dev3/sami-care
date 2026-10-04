@@ -109,7 +109,7 @@ class PendingCheckoutService
     private function productSubtotal(Collection $products): float
     {
         return (float) $products->sum(function ($item) {
-            $price = (float) ($item->product->max_price ?? $item->product->min_price ?? 0);
+            $price = (float) ($item->product->min_price ?? $item->product->max_price ?? 0);
             return $price * (int) ($item->qty ?? 1);
         });
     }
