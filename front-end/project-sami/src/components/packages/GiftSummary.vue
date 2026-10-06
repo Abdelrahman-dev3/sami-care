@@ -1,4 +1,6 @@
 <script setup>
+import { useSiteContact } from '@/composables/useSiteContact'
+const { whatsappUrl } = useSiteContact()
 /*
   ملخص الإهداء (العمود الجانبي) — مُرحَّل حرفيًا من gSummary()
   في src/legacy/packages-gifts.html
@@ -53,7 +55,7 @@ const EMPTY_B = 'display:block;font-family:var(--font-d);color:var(--ink);margin
     <div class="card help-card">
       <span class="hi"><SIcon :inner="I.head" :size="18" /></span>
       <b>تحتاج مساعدة؟</b><small>فريقنا جاهز لمساعدتك</small>
-      <a href="https://wa.me/963959415545">تواصل معنا</a>
+      <a v-if="whatsappUrl" :href="whatsappUrl">تواصل معنا</a>
     </div>
   </div>
 
@@ -73,6 +75,6 @@ const EMPTY_B = 'display:block;font-family:var(--font-d);color:var(--ink);margin
       <div v-if="p" class="gs-total"><span class="k">الإجمالي</span><span class="v">{{ rs(p.price) }} <small style="font-size:13px">ر.س</small></span></div>
       <div class="gs-note"><SIcon :inner="I.lock" :size="14" /> بإتمامك معلومات الهدية مشفرة وآمنة 100%</div>
     </div>
-    <div v-if="state.gstep === 1" class="card help-card"><span class="hi"><SIcon :inner="I.head" :size="18" /></span><b>تحتاج مساعدة؟</b><small>فريقنا جاهز لمساعدتك في اختيار الهدية المثالية</small><a href="https://wa.me/963959415545">تواصل معنا</a></div>
+    <div v-if="state.gstep === 1" class="card help-card"><span class="hi"><SIcon :inner="I.head" :size="18" /></span><b>تحتاج مساعدة؟</b><small>فريقنا جاهز لمساعدتك في اختيار الهدية المثالية</small><a v-if="whatsappUrl" :href="whatsappUrl">تواصل معنا</a></div>
   </div>
 </template>

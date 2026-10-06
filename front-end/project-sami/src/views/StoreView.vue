@@ -1,4 +1,6 @@
 <script setup>
+import { useSiteContact } from '@/composables/useSiteContact'
+const { whatsappUrl } = useSiteContact()
 /*
   صفحة المتجر — مُرحَّلة بالكامل من src/legacy/store.html إلى مكوّنات Vue.
 
@@ -147,7 +149,7 @@ const sheetThumb = () => sheetProduct.value ? shapeParts(sheetProduct.value.shap
     <div>
       <h3>تواصل معنا</h3>
       <form class="phone-form" onsubmit="return false"><span>+966</span><input type="tel" placeholder="رقم الجوال" /></form>
-      <a class="whatsapp" href="https://wa.me/966566101963">تواصل واتساب ◉</a>
+      <a class="whatsapp" v-if="whatsappUrl" :href="whatsappUrl">تواصل واتساب ◉</a>
     </div>
     <div>
       <h3>عن سامي</h3>

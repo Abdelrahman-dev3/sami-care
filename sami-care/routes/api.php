@@ -47,6 +47,8 @@ use App\Http\Controllers\Backend\TermsAndConditionsController;
 |
 */
 
+Route::get('/public-contact', \App\Http\Controllers\Api\PublicContactController::class);
+
 Route::prefix('Home')->group(function () {
     Route::get('/all', [\App\Http\Controllers\Api\HomeController::class, 'index']);
 

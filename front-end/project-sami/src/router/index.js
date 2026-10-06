@@ -29,7 +29,8 @@ const router = createRouter({
   },
 
   routes: [
-    { path: '/', name: 'home', component: HomeView },
+    { path: '/', name: 'under-development', component: () => import('@/views/UnderDevelopmentView.vue') },
+    { path: '/home', name: 'home', component: HomeView },
     { path: '/index.html', redirect: '/' },
     { path: '/booking', alias: '/booking.html', name: 'booking', component: BookingView, meta: { requiresAuth: true } },
     { path: '/booking-receipt', name: 'booking-receipt', component: BookingView },

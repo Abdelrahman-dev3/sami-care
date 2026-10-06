@@ -20,6 +20,21 @@
 <input type="hidden" name="dark-mini-logo" value="{{asset('images/JOSPA.webp')}}">
 <input type="hidden" name="favicon" value="{{asset('images/JOSPA.webp')}}">
 
+<div class="card mb-4">
+    <div class="card-body">
+        <h5>واتساب الموقع</h5>
+        <form method="post" action="{{ route('backend.settings.store') }}">
+            @csrf
+            <input type="hidden" name="settings_section" value="whatsapp">
+            <label for="site-whatsapp" class="form-label">رقم الواتساب مع رمز الدولة</label>
+            <input id="site-whatsapp" class="form-control" name="whatsapp_number" type="text" inputmode="tel" dir="ltr" maxlength="30" value="{{ old('whatsapp_number', \App\Models\Setting::get('whatsapp_number', '')) }}">
+            <p class="text-muted mt-2">أدخل الرقم مع رمز الدولة، ويمكن استخدام + أو مسافات. ترك الحقل فارغًا يخفي أزرار واتساب الموقع.</p>
+            @error('whatsapp_number')<p class="text-danger">{{ $message }}</p>@enderror
+            @if(session('status'))<p class="text-success">{{ session('status') }}</p>@endif
+            <button class="btn btn-primary" type="submit">حفظ رقم الواتساب</button>
+        </form>
+    </div>
+</div>
 <div id="setting-app"></div>
 {{-- <div class="card">
     <div class="card-body">

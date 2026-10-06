@@ -1,5 +1,6 @@
 /* Shared by the Vue checkout and the standalone mobile checkout. */
 (function (root) {
+  const checkoutEnabled = false;
   const money = value => Math.max(Number(value) || 0, 0);
   function rewards(state, total) {
     total = money(total);
@@ -22,13 +23,14 @@
       { id: 'card', n: 'بطاقات الائتمان والخصم', d: hasRewards ? 'ادفع المتبقي بعد الخصومات' : 'قريبًا — Visa / Mastercard', logo: 'VISA', enabled: hasRewards && payable > 0 },
       { id: 'urpay', n: 'يورباي', d: hasRewards ? 'ادفع المتبقي بعد الخصومات' : 'الدفع عبر يورباي', logo: 'UrPay', enabled: payable > 0 },
       { id: 'tabby', n: 'تابي', d: 'قريبًا', logo: 'tabby', enabled: false },
-    ];
+    ].map(method => checkoutEnabled ? method : { ...method, enabled: false, d: 'غير متاح حاليًا' });
   }
   function options(state, total) {
     const parts = rewards(state, total);
     return methods({ total, walletBalance: state.walletBalance, ...parts });
   }
   function canPay(state, total) {
+    if (!checkoutEnabled) return false;
     return rewards(state, total).payable <= 0 || options(state, total).some(m => m.id === state.pay && m.enabled);
   }
   function payment(state, total) {
@@ -36,5 +38,5 @@
     const parts = rewards(state, total);
     return { gateway: parts.payable <= 0 ? 'card' : state.pay, wallet: parts.wallet > 0, walletAmount: parts.wallet, loyalty: parts.points > 0, loyaltyPoints: parts.points };
   }
-  root.SamiPaymentPolicy = { rewards, methods, options, canPay, payment };
+  root.SamiPaymentPolicy = { checkoutEnabled, rewards, methods, options, canPay, payment };
 })(globalThis);

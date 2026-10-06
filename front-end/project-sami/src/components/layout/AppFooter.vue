@@ -1,4 +1,6 @@
 <script setup>
+import { useSiteContact } from '@/composables/useSiteContact'
+const { whatsappUrl } = useSiteContact()
 import { localizeRecord } from '@/utils/i18nField'
 import { computed, ref, onMounted } from 'vue'
 import { fetchBranches } from '@/services/homeApi'
@@ -23,7 +25,6 @@ function phoneDigits(phone) {
 }
 
 const telHref = phone => `tel:+${phoneDigits(phone)}`
-const whatsappHref = phone => `https://wa.me/${phoneDigits(phone)}`
 const footerContactNumber = computed(() => displayBranches.value.find(branch => branch.contact_number)?.contact_number || '0569472722')
 
 onMounted(async () => {
@@ -46,7 +47,7 @@ function branchDescription(branch) {
           <RouterLink class="logo" to="/"><span class="mark"><img src="/logo.png" alt="عناية سامي" /></span><span class="name"><b>عناية سامي</b><span>SAMI CARE</span></span></RouterLink>
           <p>مركز متخصص في العناية الرجالية المتكاملة بجدة، حيث تلتقي الفخامة بالاحترافية في كل تفصيلة.</p>
           <div class="socials">
-            <a :href="whatsappHref(footerContactNumber)" target="_blank" rel="noopener noreferrer" aria-label="واتساب">WA</a>
+            <a v-if="whatsappUrl" :href="whatsappUrl" target="_blank" rel="noopener noreferrer" aria-label="واتساب">WA</a>
             <a href="https://x.com/samicare_sa" aria-label="X">X</a>
             <a href="https://www.instagram.com/samicare.sa/" aria-label="انستقرام">◎</a>
             <a href="https://www.facebook.com/samicare.sa" aria-label="فيسبوك">f</a>

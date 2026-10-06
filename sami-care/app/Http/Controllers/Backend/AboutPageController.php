@@ -21,7 +21,6 @@ class AboutPageController extends Controller
             'description' => ['نبذة عن المركز', 'مركز عناية سامي للرجال — وجهتك المتكاملة للعناية الرجالية في جدة. نقدم الحلاقة والمساج والحمام المغربي وتنظيف البشرة والبديكير، مع خدمة منزلية تصلك أينما كنت.'],
             'hours' => ['ساعات العمل', 'يوميًا: 10:00 صباحًا — 12:00 منتصف الليل'],
             'email' => ['البريد الإلكتروني', Setting::get('inquriy_email', 'info@sami-care.sa')],
-            'whatsapp' => ['واتساب مع رمز الدولة', '966550046462'],
             'instagram_url' => ['رابط إنستغرام', 'https://instagram.com/samicare.sa'],
             'tiktok_url' => ['رابط تيك توك', 'https://tiktok.com/@samicare.sa'],
             'snapchat_url' => ['رابط سناب شات', 'https://snapchat.com/add/samicare.sa'],
@@ -39,7 +38,7 @@ class AboutPageController extends Controller
         $defaults = array_map(fn ($field) => $field[1], $this->fields());
         $defaults['stats'] = [['value'=>'+10','label'=>'سنوات خبرة'],['value'=>'+45','label'=>'خدمة متخصصة'],['value'=>'+50K','label'=>'عميل سعيد'],['value'=>'4.9 ★','label'=>'تقييم عملائنا']];
         $defaults['features'] = [['name'=>'بطاقات هدايا','detail'=>'أهدِ من تحب تجربة فاخرة','icon'=>'gift'],['name'=>'برنامج الولاء','detail'=>'نقاط ومكافآت مع كل حجز','icon'=>'star'],['name'=>'متجر المنتجات','detail'=>'منتجات عناية أصلية','icon'=>'bag'],['name'=>'حجز إلكتروني','detail'=>'اختر موعدك بسهولة','icon'=>'calendar']];
-        return array_replace($defaults, json_decode(Setting::get('about_page', '{}'), true) ?: []);
+        return array_replace($defaults, json_decode(Setting::get('about_page', '{}'), true) ?: [], ['whatsapp' => (string) Setting::get('whatsapp_number', '')]);
     }
 
     public function edit()
@@ -59,7 +58,6 @@ class AboutPageController extends Controller
         $rules['features.*.detail_en'] = ['nullable','string','max:500'];
         $rules['title'] = ['required','string','max:150'];
         $rules['email'] = ['nullable','email','max:254'];
-        $rules['whatsapp'] = ['nullable','regex:/^\+?[0-9 ()-]{7,25}$/'];
         $rules += ['stats'=>['nullable','array','max:8'], 'stats.*.value'=>['nullable','string','max:50'], 'stats.*.label'=>['nullable','string','max:100'], 'features'=>['nullable','array','max:8'], 'features.*.name'=>['nullable','string','max:100'], 'features.*.detail'=>['nullable','string','max:500'], 'features.*.icon'=>['required','in:gift,star,bag,calendar,home,spa,scissors,bath']];
         $data = $request->validate($rules);
         foreach ($this->fields() as $key => $field) $data[$key] = $data[$key] ?? '';

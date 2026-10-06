@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <title>عناية سامي | التطبيق</title>
-<script src="/payment-policy.js?v=20260921-1"></script>
+<script src="/payment-policy.js?v=20261006-disabled"></script>
 <script src="../site-dictionary.js?v=20260923-language"></script>
 <script src="../data-i18n.js?v=20260923-dynamic"></script>
 <script src="../site-i18n.js?v=20260923-language"></script>
@@ -500,6 +500,7 @@ html{--content-direction:rtl}html[dir="ltr"]{--content-direction:ltr}
 <link rel="stylesheet" href="/notification-bell.css?v=20260929">
 <script src="/branch-location.js?v=20260929"></script>
 <link rel="stylesheet" href="/branch-location.css?v=20260929">
+<script src="/site-contact.js?v=20261006-1"></script>
 </head>
 <body>
 <div class="app">
@@ -1650,6 +1651,15 @@ const API_BASE=(new URLSearchParams(location.search).get('api')||window.SAMI_API
 /* أصل الباك-إند من غير /api — نفس منطق resolveBackendUrl في src/utils/assetPath.js بنسخة الديسكتوب،
    بيستخدم لروابط زي /cafe اللي بتتقدَّم من تطبيق Laravel نفسه مش من الموبايل ده. */
 const API_ORIGIN=API_BASE.replace(/\/api\/?$/,'');
+let siteWhatsappNumber='';
+function siteWhatsappUrl(){return siteWhatsappNumber?'https://wa.me/'+siteWhatsappNumber:''}
+async function loadSiteContact(){
+ try{
+  siteWhatsappNumber=await SamiSiteContact.load(API_BASE+'/public-contact');
+  render();
+ }catch(error){console.warn('Unable to load WhatsApp number from dashboard',error)}
+}
+
 function resolveBackendUrl(path){return `${API_ORIGIN}/${String(path).replace(/^\/+/,'')}`}
 async function apiGet(path){
  const res=await fetch(`${API_BASE}${path}`,{headers:{Accept:'application/json','frezka-localization':getLang()}});
@@ -2413,6 +2423,7 @@ function syncBookingStepData(){
 /* POST /mobile/cart/bookings ثم POST /payments/init — نفس نداءات doPay() في BookingView.vue
    بالديسكتوب بالحرف. محمي بمصادقة، فمحتاج تسجيل دخول حقيقي (متاح دلوقتي عبر authPost). */
 async function attemptRealBookingSubmit(){
+ if(!SamiPaymentPolicy.checkoutEnabled)throw new Error('Payment is currently unavailable');
  if(!getAuth())throw new Error('سجّل دخولك الأول عشان تكمل الحجز');
  const auth=getAuth(),accountUser=_accountData?.user||auth||{};
  S.bookCust.name=S.bookCust.name||accountUser.full_name||[accountUser.first_name,accountUser.last_name].filter(Boolean).join(' ')||accountUser.username||'';
@@ -2924,6 +2935,7 @@ async function ensureMobileAddressId(){
  return list[0]?.id??created?.id;
 }
 async function submitMobileOrder(payWith){
+ if(!SamiPaymentPolicy.checkoutEnabled)throw new Error('Payment is currently unavailable');
  if(!getAuth())throw new Error('سجّل دخولك الأول عشان تكمل الشراء');
  const locationId=mobileCartLocationId();
  await syncMobileCartToBackend(locationId);
@@ -3380,7 +3392,7 @@ function homeHTML(){
     <a class="footer-brand-logo" data-go="home" aria-label="العودة إلى الرئيسية"><span class="footer-brand-mark"><img src="logo.png" alt="عناية سامي"></span><span class="footer-brand-copy"><b class="footer-brand-name">عناية سامي</b><span>SAMI CARE</span></span></a>
    <p>لأن العناية أسلوب حياة.</p><i class="footer-orn"></i>
    <div class="footer-socials">
-    <a href="${whatsappHref(contactPhone)}" target="_blank" rel="noopener noreferrer" aria-label="واتساب">${svg('<path d="M21 11.5a8.4 8.4 0 01-9 8.4 8.5 8.5 0 01-3.8-.9L3 21l2-5.2a8.4 8.4 0 011.5-9.8 8.5 8.5 0 0114.5 5.5z"/>',14)}</a>
+    <a href="${siteWhatsappUrl()}" style="${siteWhatsappNumber?'':'display:none'}" target="_blank" rel="noopener noreferrer" aria-label="واتساب">${svg('<path d="M21 11.5a8.4 8.4 0 01-9 8.4 8.5 8.5 0 01-3.8-.9L3 21l2-5.2a8.4 8.4 0 011.5-9.8 8.5 8.5 0 0114.5 5.5z"/>',14)}</a>
     <a href="https://www.instagram.com/samicare.sa/" aria-label="إنستقرام">${svg('<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/>',14)}</a>
     <a href="https://www.snapchat.com/" aria-label="سناب شات">${svg('<path d="M12 3c3 0 5 2.3 5 5.5 0 1.4-.3 2.5.7 3.4.7.6 1.5.7 2.3.9-.4 1-1.4 1.2-2.3 1.5-.8.3-1 1.1-1.2 1.8-1.6-.1-2.3.7-3.5 1.7-1.2-1-1.9-1.8-3.5-1.7-.2-.7-.4-1.5-1.2-1.8-.9-.3-1.9-.5-2.3-1.5.8-.2 1.6-.3 2.3-.9 1-.9.7-2 .7-3.4C7 5.3 9 3 12 3z"/>',14)}</a>
     <a href="https://www.tiktok.com/" aria-label="تيك توك">${svg('<path d="M15 3v11a4 4 0 11-4-4M15 3c1 3 3 4 6 4"/>',14)}</a>
@@ -3388,7 +3400,7 @@ function homeHTML(){
   </div>
   <div class="footer-cols">
    <section class="footer-col"><h4>تواصل معنا</h4><ul class="footer-list">
-    <li><a href="${whatsappHref(contactPhone)}" target="_blank" rel="noopener noreferrer">${svg('<path d="M21 11.5a8.4 8.4 0 01-9 8.4 8.5 8.5 0 01-3.8-.9L3 21l2-5.2a8.4 8.4 0 011.5-9.8 8.5 8.5 0 0114.5 5.5z"/>',12)} واتساب</a></li>
+    <li><a href="${siteWhatsappUrl()}" style="${siteWhatsappNumber?'':'display:none'}" target="_blank" rel="noopener noreferrer">${svg('<path d="M21 11.5a8.4 8.4 0 01-9 8.4 8.5 8.5 0 01-3.8-.9L3 21l2-5.2a8.4 8.4 0 011.5-9.8 8.5 8.5 0 0114.5 5.5z"/>',12)} واتساب</a></li>
     <li><a href="${telHref(contactPhone)}">${svg('<path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.2 2 2 0 014.1 2h3a2 2 0 012 1.7c.1 1 .4 2 .7 2.8a2 2 0 01-.4 2.1L8.1 9.9a16 16 0 006 6l1.3-1.3a2 2 0 012.1-.4c.9.3 1.8.6 2.8.7a2 2 0 011.7 2z"/>',12)} اتصال</a></li>
     <li><a href="branches.html">${svg('<path d="M21 10c0 7-9 12-9 12S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>',12)} الموقع</a></li>
     <li><a href="https://www.instagram.com/samicare.sa/">${svg('<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/>',12)} إنستقرام</a></li>
@@ -3448,7 +3460,7 @@ function contactPageHTML(){
    <article><i>⌖</i><h3>الإدارة</h3><a href="tel:0569472722">0569472722</a></article>
    <article><i>⌂</i><h3>خدمات منزلية</h3><p>حلاقة وعناية في منزلك داخل جدة.</p></article>
   </section>
-  <a class="btn mobile-contact-whatsapp" href="https://wa.me/966569610958" target="_blank" rel="noopener noreferrer">تواصل سريع عبر واتساب</a>
+  <a class="btn mobile-contact-whatsapp" href="${siteWhatsappUrl()}" style="${siteWhatsappNumber?'':'display:none'}" target="_blank" rel="noopener noreferrer">تواصل سريع عبر واتساب</a>
  </main>`;
 }
 function giftsPageHTML(){
@@ -3752,11 +3764,11 @@ function cartHTML(){
   <div class="r"><span>ضريبة القيمة المضافة (15%)</span><span>+${rs(vat)} ر.س</span></div>
   <div class="r t"><span>الإجمالي</span><b>${rs(sub+vat)} ر.س</b></div>
   <div class="fulfill-row" style="margin-top:10px">
-   <button class="fulfill-opt ${S.ckPay==='cod'?'sel':''}" data-ckpay="cod">💵 عند الاستلام</button>
-   <button class="fulfill-opt ${S.ckPay==='wallet'?'sel':''}" data-ckpay="wallet">👛 المحفظة</button>
+   <button class="fulfill-opt ${S.ckPay==='cod'?'sel':''}" data-ckpay="cod" disabled>💵 عند الاستلام</button>
+   <button class="fulfill-opt ${S.ckPay==='wallet'?'sel':''}" data-ckpay="wallet" disabled>👛 المحفظة</button>
   </div>
   ${S.ckError?`<p style="color:#b42318;font-size:12px;margin:8px 0 0">${escHtml(S.ckError)}</p>`:''}
-  <button class="btn btn-org" id="checkoutBtn" style="width:100%;margin-top:12px" ${S.ckPlacing?'disabled':''}>${svg('<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>',15)} ${S.ckPlacing?'جارٍ إتمام الطلب...':'متابعة الشراء'}</button>
+  <button class="btn btn-org" id="checkoutBtn" style="width:100%;margin-top:12px" ${S.ckPlacing?'disabled':''} disabled>${svg('<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>',15)} ${S.ckPlacing?'جارٍ إتمام الطلب...':'متابعة الشراء'}</button>
  </div>`;
 }
 function bookingsHTML(){
@@ -4162,7 +4174,7 @@ function wizPaymentHTML() {
     <div style="height:8px"></div>
     <div style="display:flex; flex-direction:column; gap:12px">
       ${pays.map(p => `
-        <div class="w-pay-card ${S.bookPay === p.id ? 'sel' : ''}" data-w-pay="${p.id}">
+        <div class="w-pay-card ${S.bookPay === p.id ? 'sel' : ''}" data-w-pay="${p.id}" aria-disabled="true" style="pointer-events:none;opacity:.45">
           <span>${p.logo} ${p.n}</span>
           ${S.bookPay === p.id ? '<span style="color:var(--org)">✓</span>' : ''}
         </div>
@@ -4579,7 +4591,7 @@ function wizPaymentHTML(){
  <div class="m-stack">${mobileBookMethods().map(m=>{
   const en=m.enabled;
   const label=m.d;
-  return`<button class="m-pay ${S.bookPay===m.id?'sel':''} ${en?'':'disabled'}" data-w-pay="${m.id}" ${en?'':'disabled'}><span class="logo">${m.logo}</span><span><b>${m.n}</b><small>${label}</small></span><span style="margin-inline-start:auto;color:var(--org)">${S.bookPay===m.id?'✓':''}</span></button>`;
+  return`<button class="m-pay ${S.bookPay===m.id?'sel':''} ${en?'':'disabled'}" data-w-pay="${m.id}" ${en?'':'disabled'} disabled><span class="logo">${m.logo}</span><span><b>${m.n}</b><small>${label}</small></span><span style="margin-inline-start:auto;color:var(--org)">${S.bookPay===m.id?'✓':''}</span></button>`;
  }).join('')}</div>
  ${S.bookError?`<p style="color:#b42318;font-size:12.5px;margin:12px 0 0">${escHtml(S.bookError)}</p>`:''}
  <div class="m-summary-mini" style="margin-top:12px"><div class="row"><span>الخدمات</span><b>${rs(p.sub)} ر.س</b></div><div class="row"><span>الضريبة</span><b>${rs(p.vat)} ر.س</b></div>${bookCouponDiscount()?`<div class="row"><span>كوبون الخصم</span><b>- ${rs(Math.round(bookCouponDiscount()))} ر.س</b></div>`:''}${bookWalletApplied()?`<div class="row"><span>المحفظة</span><b>- ${rs(Math.round(bookWalletApplied()))} ر.س</b></div>`:''}${bookLoyaltyAppliedAmount()?`<div class="row"><span>نقاط الولاء</span><b>- ${rs(Math.round(bookLoyaltyAppliedAmount()))} ر.س</b></div>`:''}<div class="row"><span>المتبقي للدفع</span><b>${rs(Math.round(payable))} ر.س</b></div></div><div class="m-secure">🔒 جميع عمليات الدفع آمنة ومشفرة</div>`;
@@ -4602,6 +4614,7 @@ function canWizNext(){
  /* بيانات العميل تُقرأ تلقائيًا من الحساب عند الدفع؛ حقولها مخفية مؤقتًا في خطوة التأكيد. */
  if(S.bookStep===5)return true;
  const payable=bookPayableTotal(),subRewards=bookWalletApplied()>0||bookLoyaltyAppliedPoints()>0;
+ if(!SamiPaymentPolicy.checkoutEnabled)return false;
  if(payable<=0)return!S.bookSubmitting;
  if(S.bookPay==='wallet'&&bookWalletBalance()<payable)return false;
  if(subRewards&&S.bookPay==='cash')return false;
@@ -4886,7 +4899,7 @@ function giftWizCheckoutHTML(){
  return`<div class="m-panel-title"><h1>أكمل الدفع لإرسال هديتك</h1><p>سيتم إرسال الهدية مباشرة بعد إتمام الدفع</p></div>${gMiniSummary()}
  <div class="m-stack">${SamiPaymentPolicy.options(giftPaymentState(),p.total).map(m=>{
   const en=m.enabled;
-  return`<button class="m-pay ${S.giftPay===m.id?'sel':''} ${en?'':'disabled'}" data-g-pay="${m.id}" ${en?'':'disabled'}><span class="logo">${m.logo}</span><span><b>${m.n}</b><small>${m.d}</small></span><span style="margin-inline-start:auto;color:var(--org)">${S.giftPay===m.id?'✓':''}</span></button>`;
+  return`<button class="m-pay ${S.giftPay===m.id?'sel':''} ${en?'':'disabled'}" data-g-pay="${m.id}" ${en?'':'disabled'} disabled><span class="logo">${m.logo}</span><span><b>${m.n}</b><small>${m.d}</small></span><span style="margin-inline-start:auto;color:var(--org)">${S.giftPay===m.id?'✓':''}</span></button>`;
  }).join('')}${giftRewardsHTML()}</div>
  <div class="m-card m-detail" style="margin-top:12px"><h4>الشروط والأحكام</h4><button class="m-pay ${S.giftTerms?'sel':''}" id="gTerms"><span class="logo">✓</span><span><b>أوافق على الشروط والأحكام</b><small>وسياسة الخصوصية والإهداء</small></span></button></div>
  <div class="m-summary-mini" style="margin-top:12px"><div class="row"><span>قيمة الهدية</span><b>${rs(p.val)} ر.س</b></div>${p.fee?`<div class="row"><span>رسوم الخدمة المنزلية</span><b>${rs(p.fee)} ر.س</b></div>`:''}${p.disc?`<div class="row"><span>خصم</span><b>- ${rs(p.disc)} ر.س</b></div>`:''}<div class="row"><span>الضريبة</span><b>${rs(p.vat)} ر.س</b></div><div class="row"><span>الإجمالي</span><b>${rs(p.total)} ر.س</b></div></div><div class="m-secure">🔒 الدفع آمن ومشفّر</div>`;
@@ -5099,7 +5112,7 @@ function bind(){
    $$('[data-g-design]').forEach(el=>el.addEventListener('click',()=>{S.giftDesign=el.dataset.gDesign;render()}));
    $$('[data-g-method]').forEach(el=>el.addEventListener('click',()=>{S.giftMethod=el.dataset.gMethod;render()}));
    $$('[data-g-schedule]').forEach(el=>el.addEventListener('click',()=>{S.giftSchedule=el.dataset.gSchedule;render()}));
-   $$('[data-g-pay]').forEach(el=>el.addEventListener('click',()=>{if(!SamiPaymentPolicy.options(giftPaymentState(),gParts().total).some(m=>m.id===el.dataset.gPay&&m.enabled))return;S.giftPay=el.dataset.gPay;render()}));
+   $$('[data-g-pay]').forEach(el=>el.addEventListener('click',()=>{if(!SamiPaymentPolicy.options(giftPaymentState(),gParts().total).some(m=>m.id===el.dataset.gPay&&m.enabled))return;if(!SamiPaymentPolicy.checkoutEnabled)return;S.giftPay=el.dataset.gPay;render()}));
    $$('[data-g-reward-toggle]').forEach(el=>el.addEventListener('change',()=>{
     S.giftRewards=S.giftRewards||{};const key=el.dataset.gRewardToggle;S.giftRewards[key]=el.checked;
     if(key==='useWallet')S.giftRewards.walletAmount=el.checked?Math.min(bookWalletBalance(),gParts().total):0;
@@ -5265,6 +5278,7 @@ function bind(){
    });
    const notes=$('#wbNotes');if(notes)notes.addEventListener('input',()=>S.bookNotes=notes.value);
    $$('[data-w-pay]').forEach(el => el.addEventListener('click', () => {
+    if(!SamiPaymentPolicy.checkoutEnabled)return;
      if(el.disabled)return;
      transitionBooking(()=>{S.bookPay = el.dataset.wPay});
    }));
@@ -5373,7 +5387,8 @@ function bind(){
   const name=$('#mobileContactName')?.value.trim()||'',phone=$('#mobileContactPhone')?.value.trim()||'',email=$('#mobileContactEmail')?.value.trim()||'',message=$('#mobileContactMessage')?.value.trim()||'';
   if(!name||!phone||!message){toast('من فضلك أكمل الاسم ورقم الهاتف والرسالة');return}
   const text=['رسالة جديدة من موقع عناية سامي','الاسم: '+name,'الهاتف: '+phone,email?'البريد: '+email:'','الرسالة: '+message].filter(Boolean).join('\n');
-  window.open('https://wa.me/966569610958?text='+encodeURIComponent(text),'_blank','noopener,noreferrer');
+  if(!siteWhatsappNumber)return;
+  window.open(siteWhatsappUrl()+'?text='+encodeURIComponent(text),'_blank','noopener,noreferrer');
  });
  $$('[data-go-url]').forEach(el=>el.addEventListener('click',()=>{location.href=el.dataset.goUrl}));
  $$('[data-store-cat]').forEach(el=>el.addEventListener('click',e=>{
@@ -5540,9 +5555,10 @@ function bind(){
    if(!FULFILLMENT_OPTIONS[mode]){toast('خيار التوصيل غير متاح حاليًا');return}
    S.fulfillment=mode;render();
   }));
-  $$('[data-ckpay]').forEach(b=>b.addEventListener('click',()=>{S.ckPay=b.dataset.ckpay;render()}));
+  $$('[data-ckpay]').forEach(b=>b.addEventListener('click',()=>{if(!SamiPaymentPolicy.checkoutEnabled)return;S.ckPay=b.dataset.ckpay;render()}));
   const co=$('#checkoutBtn');
   if(co)co.addEventListener('click',async()=>{
+   if(!SamiPaymentPolicy.checkoutEnabled)return;
    S.ckError='';S.ckPlacing=true;render();
    try{
     const total=cartTotal()+Math.round(cartTotal()*.15);
@@ -5814,6 +5830,7 @@ document.addEventListener('click', function(e){
   else done();
 });
 
+loadSiteContact();
 </script>
 <script src="/customer-notifications.js?v=20260929"></script>
 <script>

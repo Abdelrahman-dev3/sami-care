@@ -68,6 +68,20 @@ class SettingController extends Controller
 
     public function store(Request $request)
     {
+        if ($request->input('settings_section') === 'whatsapp') {
+            $number = strtr(trim((string) $request->input('whatsapp_number', '')), [
+                '٠'=>'0', '١'=>'1', '٢'=>'2', '٣'=>'3', '٤'=>'4', '٥'=>'5', '٦'=>'6', '٧'=>'7', '٨'=>'8', '٩'=>'9',
+                '۰'=>'0', '۱'=>'1', '۲'=>'2', '۳'=>'3', '۴'=>'4', '۵'=>'5', '۶'=>'6', '۷'=>'7', '۸'=>'8', '۹'=>'9',
+            ]);
+            $number = preg_replace('/[+ ()-]/', '', $number);
+            $request->merge(['whatsapp_number' => preg_replace('/^00/', '', $number)]);
+            $validated = $request->validate([
+                'whatsapp_number' => ['nullable', 'regex:/^[1-9][0-9]{6,14}$/'],
+            ]);
+            Setting::add('whatsapp_number', $validated['whatsapp_number'] ?? '', 'string');
+            Setting::flushCache();
+            return redirect()->back()->with('status', 'تم حفظ رقم الواتساب');
+        }
         $data = $request->all();
         if ($request->hasFile('json_file')) {
             $file = $request->file('json_file');

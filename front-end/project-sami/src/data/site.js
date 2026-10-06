@@ -1,8 +1,8 @@
 export const contact = {
   phone: '920018844',
   phoneDisplay: '9200 188 44',
-  whatsapp: '966550046462',
-  whatsappDisplay: '+966 55 004 6462',
+  whatsapp: '',
+  whatsappDisplay: '',
   email: 'info@sami-care.sa',
   website: 'https://sami-care.sa'
 }

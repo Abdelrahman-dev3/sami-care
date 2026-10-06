@@ -1,4 +1,6 @@
 <script setup>
+import { useSiteContact } from '@/composables/useSiteContact'
+const { whatsappNumber } = useSiteContact()
 
 import { computed, onMounted, onBeforeUnmount, provide, ref, watch } from 'vue'
 import { resolveBackendUrl } from '@/utils/assetPath'
@@ -49,7 +51,7 @@ const branches = computed(() => locations.value.filter(b => !b.home).map(b => ({
   phone: branchPhone(b.contact_number),
   map: safeAboutUrl(b.map_url || b.map) || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${b.name} ${b.address || ''}`)}`,
 })))
-const contact = computed(() => ({ email: page.value.email || '', whatsapp: branchPhone(page.value.whatsapp).replace(/^\+/, ''), website: '/booking' }))
+const contact = computed(() => ({ email: page.value.email || '', whatsapp: whatsappNumber.value, website: '/booking' }))
 const socialLinks = computed(() => [
   ['instagram', 'إنستغرام', '◎', '#b23986'], ['tiktok', 'تيك توك', '♪', '#161616'],
   ['snapchat', 'سناب شات', '♟', '#c9ad00'], ['facebook', 'فيسبوك', 'f', '#1877f2'], ['youtube', 'يوتيوب', '▶', '#d92323'],

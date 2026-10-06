@@ -8,6 +8,7 @@
 @if($errors->any())<div class="alert alert-danger"><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
 <form class="card card-body" method="POST" action="{{ route('backend.about-page.update') }}">
 @csrf @method('PUT')
+<p class="text-muted">??? ?????? ?????? ??? ?????? ?? <a href="{{ route('backend.settings') }}">????????? ? ?????? ??????</a>.</p>
 @foreach($fields as $key => $field)
 <label class="mb-3">{{ $field[0] }}
 @if(in_array($key, ['description', 'description_en']))

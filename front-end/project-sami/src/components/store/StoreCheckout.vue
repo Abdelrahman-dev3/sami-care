@@ -24,7 +24,7 @@ const I = {
 const thumb = shape => shapeParts(shape, 34)
 
 /* mada/apple/card لسه مش مفعّلة (زي طرق الدفع في باقي الموقع) — cod والمحفظة بس شغالين فعليًا بالباك إند */
-const ENABLED_PAYS = ['cod', 'wallet', 'urpay']
+const ENABLED_PAYS = []
 
 const error = ref('')
 
@@ -72,9 +72,9 @@ async function submit() {
       <div class="card" style="padding:22px">
         <h4 style="font-family:var(--font-d);font-size:16px;color:var(--ink);margin-bottom:14px">3️⃣ طريقة الدفع</h4>
         <div v-for="m in CK_PAYS" :key="m.id" class="acc-pm" :class="{ sel: c.pay === m.id, disabled: !ENABLED_PAYS.includes(m.id) }" :data-ckpay="m.id">
-          <div class="head" @click="selectMethod(m)"><span class="lg">{{ m.logo }}</span>
+          <button type="button" class="head" disabled @click="selectMethod(m)"><span class="lg">{{ m.logo }}</span>
             <span class="tt"><b>{{ m.n }}</b><small>{{ ENABLED_PAYS.includes(m.id) ? m.d : 'قريبًا' }}</small></span>
-            <span class="rad"><i></i></span></div>
+            <span class="rad"><i></i></span></button>
         </div>
         <p v-if="error" style="color:#b42318;font-size:12.5px;margin:12px 0 0">{{ error }}</p>
         <span class="terms-chk" :class="{ on: c.terms }" id="ckTerms" @click="c.terms = !c.terms"><i><SIcon :inner="I.check" :size="11"/></i>
@@ -104,6 +104,8 @@ async function submit() {
 </template>
 
 <style scoped>
+.acc-pm .head{width:100%;border:0;background:none;text-align:start;font:inherit;color:inherit}.acc-pm .head:disabled{cursor:not-allowed}
+
 .acc-pm.disabled { opacity: .45; }
 .acc-pm.disabled .head { cursor: not-allowed; }
 </style>

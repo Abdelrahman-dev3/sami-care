@@ -1,4 +1,6 @@
 <script setup>
+import { useSiteContact } from '@/composables/useSiteContact'
+const { whatsappUrl } = useSiteContact()
 /*
   ملخص الهدية (العمود الجانبي) — نسخة حقيقية: الفرع من useServiceLocation،
   والخدمة/الباقة من useGifts (بيانات حقيقية بالفعل بعد الاختيار).
@@ -91,6 +93,6 @@ const ROW = 'border:none;padding:4px 0'
       <div class="gs-note"><SIcon :inner="I.lock" :size="14" /> الدفع آمن ومشفّر — نستخدم أحدث تقنيات التشفير لحماية بياناتك</div>
     </div>
 
-    <div v-if="state.step <= 1 && !state.done" class="card help-card"><span class="hi"><SIcon :inner="I.head" :size="18" /></span><b>تحتاج مساعدة؟</b><small>فريقنا جاهز لمساعدتك في الاختيار</small><a href="https://wa.me/963959415545">تواصل معنا</a></div>
+    <div v-if="state.step <= 1 && !state.done" class="card help-card"><span class="hi"><SIcon :inner="I.head" :size="18" /></span><b>تحتاج مساعدة؟</b><small>فريقنا جاهز لمساعدتك في الاختيار</small><a v-if="whatsappUrl" :href="whatsappUrl">تواصل معنا</a></div>
   </div>
 </template>

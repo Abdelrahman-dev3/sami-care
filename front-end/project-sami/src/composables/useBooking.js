@@ -157,6 +157,7 @@ export function useBooking() {
         // بيانات العميل تُقرأ من الحساب عند الدفع؛ حقولها مخفية مؤقتًا في شاشة التأكيد.
         return true
       case 4:
+        if (!paymentPolicy.checkoutEnabled) return false
         if (payableTotal.value <= 0) {
           return !!(state.rewards.useWallet || state.rewards.useLoyalty || state.rewards.couponApplied || state.pay)
         }

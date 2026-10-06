@@ -1,4 +1,6 @@
 <script setup>
+import { useSiteContact } from '@/composables/useSiteContact'
+const { whatsappUrl } = useSiteContact()
 /*
   صفحة الإهداء — مُرحَّلة بالكامل من src/legacy/gifts.html إلى مكوّنات Vue.
 
@@ -136,7 +138,7 @@ const WHY = [
           <div class="container">
             <div class="help-bar">
               <div class="help-bar__txt"><b>تحتاج مساعدة؟</b><small>فريقنا جاهز لمساعدتك في اختيار الهدية المناسبة.</small></div>
-              <a href="https://wa.me/963959415545" class="btn btn-line">تواصل معنا</a>
+              <a v-if="whatsappUrl" :href="whatsappUrl" class="btn btn-line">تواصل معنا</a>
               <span class="hi"><SIcon :inner="I.head" :size="22" /></span>
             </div>
           </div>

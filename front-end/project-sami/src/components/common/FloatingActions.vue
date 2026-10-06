@@ -1,10 +1,11 @@
 <script setup>
+import { useSiteContact } from '@/composables/useSiteContact'
 import WheelResultDialog from '@/components/common/WheelResultDialog.vue'
 import { ref, computed } from 'vue'
 import { fetchWheelInfo, spinWheel } from '@/services/wheelApi'
 
 /* ===== WhatsApp ===== */
-const whatsappUrl = 'https://wa.me/966546160704'
+const { whatsappUrl } = useSiteContact()
 
 /* ===== Lucky Wheel Modal ===== */
 const showModal = ref(false)
@@ -148,7 +149,7 @@ async function spin() {
   <div class="floating-actions">
     <!-- WhatsApp -->
     <a
-      :href="whatsappUrl"
+      v-if="whatsappUrl" :href="whatsappUrl"
       target="_blank"
       rel="noopener noreferrer"
       class="fab fab--whatsapp"

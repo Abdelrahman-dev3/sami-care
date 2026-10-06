@@ -1,3 +1,4 @@
+import { paymentPolicy } from '@/utils/paymentPolicy'
 //import { reactive, computed } from 'vue'
 //import { PRODUCTS } from '@/data/store'
 
@@ -211,6 +212,7 @@ export function useStore() {
   })
 
   const ckCan = computed(() => {
+    if (!paymentPolicy.checkoutEnabled) return false
     const c = state.ck
     return Object.keys(state.cart).length > 0 &&
       c.name.trim().length > 1 &&

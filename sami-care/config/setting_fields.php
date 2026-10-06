@@ -8,6 +8,14 @@ return [
 
         'elements' => [
             [
+                'type' => 'text',
+                'data' => 'string',
+                'name' => 'whatsapp_number',
+                'label' => 'WhatsApp Number',
+                'rules' => ['nullable', 'regex:/^[1-9][0-9]{6,14}$/'],
+                'value' => '',
+            ],
+            [
                 'type' => 'text', // input fields type
                 'data' => 'general', // data type, string, int, boolean
                 'name' => 'app_name', // unique name for field

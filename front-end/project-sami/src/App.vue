@@ -28,7 +28,7 @@ const viewByRoute = { account:'account', home:'home', services:'services', 'serv
   Ù„Ø£Ù†Ù‡ Ù‡Ùˆ Ø§Ù„Ù„ÙŠ Ø¨ÙŠÙƒØ³Ø± ÙƒØ§Ø´ Ø§Ù„Ù…ØªØµÙØ­ Ù„Ù„Ø¥Ø·Ø§Ø±. Ù…Ù† ØºÙŠØ±Ù‡ Ø§Ù„Ù…ØªØµÙØ­ Ø¨ÙŠÙØ¶Ù„ ÙŠØ¹Ø±Ø¶
   Ø§Ù„Ù†Ø³Ø®Ø© Ø§Ù„Ù‚Ø¯ÙŠÙ…Ø© Ù…Ù‡Ù…Ø§ Ø§ØªØºÙŠÙ‘Ø± Ø§Ù„Ù…Ù„Ù.
 */
-const mobileVersion = '20261004-booking-products-faq-v96'
+const mobileVersion = '20261006-whatsapp-loading-v99'
 let mobileNavigationPath = null
 const mobileApiBase = (import.meta.env.VITE_API_BASE_URL || `${window.location.origin}/api`).replace(/\/$/, '')
 let notificationInbox
@@ -144,7 +144,8 @@ useScrollReveal()
 </script>
 
 <template>
-  <div v-if="useMobileFrame" class="global-mobile-shell">
+  <RouterView v-if="route.name === 'under-development'" />
+  <div v-else-if="useMobileFrame" class="global-mobile-shell">
     <iframe class="global-mobile-frame" :src="mobileSrc" allow="geolocation; fullscreen; clipboard-write; web-share" title="ØªØ·Ø¨ÙŠÙ‚ Ø¹Ù†Ø§ÙŠØ© Ø³Ø§Ù…ÙŠ Ù„Ù„Ø¬ÙˆØ§Ù„"></iframe>
   </div>
   <template v-else>
@@ -160,7 +161,7 @@ useScrollReveal()
     <CartDrawer :open="cartDrawerOpen" @close="closeCart" @checkout="checkoutCart" />
   </template>
   <!-- عائم على كل الأجهزة (موبايل + ديسكتوب) -->
-  <FloatingActions />
+  <FloatingActions v-if="route.name !== 'under-development'" />
   <AuthModal />
 </template>
 

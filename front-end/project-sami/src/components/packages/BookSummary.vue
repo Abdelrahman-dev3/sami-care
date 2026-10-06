@@ -1,4 +1,6 @@
 <script setup>
+import { useSiteContact } from '@/composables/useSiteContact'
+const { whatsappUrl } = useSiteContact()
 /*
   ملخص الحجز (العمود الجانبي) — مُرحَّل حرفيًا من bkSummary() في src/legacy/packages-gifts.html
 */
@@ -35,6 +37,6 @@ const I = {
       <div class="gs-total"><span class="k">الإجمالي</span><span class="v">{{ rs(p.price) }} <small style="font-size:13px">ر.س</small></span></div>
       <div class="gs-note"><SIcon :inner="I.shield" :size="14" /> حجز آمن — تعديل أو إلغاء مجاني قبل 6 ساعات</div>
     </div>
-    <div class="card help-card"><span class="hi"><SIcon :inner="I.head" :size="18" /></span><b>دعم على مدار الساعة</b><small>نحن هنا لخدمتك</small><a href="https://wa.me/963959415545">تواصل معنا</a></div>
+    <div class="card help-card"><span class="hi"><SIcon :inner="I.head" :size="18" /></span><b>دعم على مدار الساعة</b><small>نحن هنا لخدمتك</small><a v-if="whatsappUrl" :href="whatsappUrl">تواصل معنا</a></div>
   </div>
 </template>
