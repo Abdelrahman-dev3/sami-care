@@ -23,7 +23,7 @@ class CategoryRequest extends FormRequest
                     'price_from' => 'required|numeric|min:0',
                     'durMin' => 'required|integer|min:0',
                     'durMax' => 'required|integer|min:0',
-                    'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+                    'feature_image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
                 ];
                 break;
             case 'put':
