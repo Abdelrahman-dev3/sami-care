@@ -760,3 +760,19 @@ Route::group(['prefix' => 'backend', 'as' => 'backend.', 'middleware' => ['auth'
     Route::get('/membership/members', [\App\Http\Controllers\Backend\MembershipController::class, 'membersIndex'])->name('membership.members.index');
     Route::post('/membership/add-points', [\App\Http\Controllers\Backend\MembershipController::class, 'addPoints'])->name('membership.add-points');
 });
+
+Route::middleware(['auth', 'role:admin'])->prefix('app/customer-messages')->name('backend.customer-messages.')
+    ->controller(\App\Http\Controllers\Backend\CustomerMessagesController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::post('/', 'store')->name('store');
+        Route::put('/birthdays', 'birthdaySettings')->name('birthdays');
+    });
+
+Route::middleware(['auth', 'permission:edit_booking'])->prefix('app/booking-arrival')->name('backend.booking-arrival.')
+    ->controller(\App\Http\Controllers\Backend\BookingArrivalController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/{booking}/scan', 'show')->middleware('signed')->name('scan');
+        Route::post('/{booking}/scan', 'update')->middleware('signed')->name('scan-confirm');
+        Route::get('/{booking}', 'show')->name('show');
+        Route::post('/{booking}', 'update')->name('update');
+    });

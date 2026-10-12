@@ -61,7 +61,21 @@ class OfferBannerController extends Controller
             $data['image'] = 'uploads/offer-banners/' . $imageName;
         }
 
-        Ouroffersection::create($data);
+        \Illuminate\Support\Facades\DB::transaction(function () use ($data) {
+            $offer = Ouroffersection::create($data);
+            \App\Models\User::role('user')->where('status', 1)->where('is_banned', 0)->chunkById(200, function ($users) use ($offer) {
+                foreach ($users as $user) {
+                    $user->notifications()->create([
+                        'id' => (string) \Illuminate\Support\Str::uuid(),
+                        'type' => 'offer.created',
+                        'data' => ['subject' => 'عرض جديد من عناية سامي', 'data' => [
+                            'type' => 'عرض جديد', 'message' => 'عرض جديد: '.($offer->title['ar'] ?? '').' — '.($offer->description['ar'] ?? ''),
+                            'notification_group' => 'offer', 'id' => $offer->id, 'event' => 'offer.created',
+                        ]],
+                    ]);
+                }
+            });
+        });
 
         return redirect()->back()->with('success', 'تم إضافة العرض بنجاح ✅');
     }

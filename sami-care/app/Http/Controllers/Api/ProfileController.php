@@ -203,6 +203,9 @@ class ProfileController extends Controller
     {
         return [
             'id' => $booking->id,
+            'arrived_at' => $booking->arrived_at?->toIso8601String(),
+            'arrival_qr_url' => in_array($booking->status, ['pending', 'confirmed', 'check_in'], true)
+                ? \Illuminate\Support\Facades\URL::signedRoute('backend.booking-arrival.scan', ['booking' => $booking->id]) : null,
             'status' => $booking->status,
             'payment_status' => (int) $booking->payment_status,
             'branch' => [

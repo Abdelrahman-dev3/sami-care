@@ -30,6 +30,8 @@ class Booking extends BaseModel
     protected $casts = [
         'user_id' => 'integer',
         'branch_id' => 'integer',
+        'arrived_at' => 'datetime',
+        'arrival_confirmed_by' => 'integer',
     ];
 
     /**
@@ -114,6 +116,11 @@ class Booking extends BaseModel
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function arrivalConfirmedBy()
+    {
+        return $this->belongsTo(User::class, 'arrival_confirmed_by')->withTrashed();
     }
 
     public function bookingTransaction()

@@ -7,6 +7,9 @@
 
 @endpush
 @section('banner-button')
+@hasPermission('edit_booking')
+<a class="btn btn-success" href="{{ route('backend.booking-arrival.index') }}"><i class="fas fa-qrcode"></i> تأكيد الوصول وQR</a>
+@endhasPermission
 @hasPermission('add_booking')
 <button type="button" class="btn btn-primary" data-booking-create><i class="fa-solid fa-plus"></i> {{ __('booking.lbl_new_appointment') }}</button>
 <button type="button" class="btn btn-soft-primary" data-home-booking-create data-bs-toggle="offcanvas" data-bs-target="#home-booking-form" aria-controls="home-booking-form">

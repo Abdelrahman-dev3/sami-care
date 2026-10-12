@@ -496,6 +496,7 @@ html{--content-direction:rtl}html[dir="ltr"]{--content-direction:ltr}
 <script src="/service-page-defaults.js"></script>
 <script src="/service-page-content.js"></script>
 <script src="../home-page-content.js"></script>
+<script src="../qrcode.min.js"></script>
 <style>.mobile-home-about{padding:20px 16px;line-height:1.8}.mobile-home-about>img{width:100%;height:220px;object-fit:cover;border-radius:16px}.mobile-home-about h2,.mobile-home-about h3{margin-block:12px 6px}.mobile-home-features{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}.mobile-home-features small{display:block}.home-svc .row{background-image:none!important}.home-svc .row>.dynamic-home-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.hin h1{white-space:pre-line}</style>
 <link rel="stylesheet" href="/notification-bell.css?v=20260929">
 <script src="/branch-location.js?v=20260929"></script>
@@ -3284,7 +3285,7 @@ function homeHTML(){
   </div>`).join('')}
  </div>
  <div class="cafe-slide" id="coffeeBar" data-go="cafe" role="link" tabindex="0">
-  <img src="assets/cafe-interior-clean.webp" alt="كوفي عناية سامي داخل الفرع" loading="lazy">
+  <img src="${escHtml(HOME_CONTENT.cafe_image || 'assets/cafe-interior-clean.webp')}" alt="كوفي عناية سامي داخل الفرع" loading="lazy">
   <div class="cafe-in">
    <h3><b>لأن التجربة</b><span>لا تنتهي عند الخدمة</span></h3>
    <p>استمتع بوقتك في أجواء مريحة مع قهوة مختصة، مشروبات وحلويات أثناء زيارتك.</p>
@@ -3798,6 +3799,8 @@ function bookingsHTML(){
     <span>${svg('<path d="M21 10c0 7-9 12-9 12S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>',13)} ${escHtml(b.branch?.name||'')}</span>
     <span>${svg('<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>',13)} ${rs(total)} ريال</span>
    </div>
+   <p>${b.arrived_at?'تم تأكيد الوصول':'لم يتم تأكيد الوصول بعد'}</p>
+   ${b.arrival_qr_url?`<details style="padding:12px"><summary>عرض QR لتأكيد الوصول عند الاستقبال</summary><div data-arrival-qr="${escHtml(b.arrival_qr_url)}" style="width:240px;padding:20px;background:white;margin:12px auto"></div><small>اعرض الرمز لموظف الاستقبال ليؤكد وصولك.</small></details>`:''}
   </div>`}).join('')}`;
 }
 function loyaltyGemSVG(){return`<svg viewBox="0 0 58 74" fill="none" stroke="currentColor" stroke-width="1.1" aria-hidden="true"><path d="M29 2 52 18 48 51 29 72 10 51 6 18 29 2Z"/><path d="m29 2 9 19-9 51-9-51 9-19ZM6 18l14 3L10 51l19 21M52 18l-14 3 10 30-19 21M20 21h18M10 51l19-15 19 15M20 21l9 15 9-15"/></svg>`}
@@ -3949,6 +3952,8 @@ function settingsHTML(){
   <input id="setLast" type="text" placeholder="اسم العائلة" value="${escHtml(u.last_name||'')}" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--line);font-family:inherit">
   <input id="setMobile" type="tel" dir="ltr" placeholder="رقم الجوال" value="${escHtml(u.mobile||'')}" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--line);font-family:inherit">
   <input id="setEmail" type="email" dir="ltr" placeholder="البريد الإلكتروني" value="${escHtml(u.email||'')}" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--line);font-family:inherit">
+  <label for="setBirthday">تاريخ الميلاد (اختياري)</label>
+  <input id="setBirthday" type="date" dir="ltr" value="${escHtml((u.date_of_birth||'').slice(0,10))}" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--line);font-family:inherit">
   ${S.authError?`<p style="color:#b42318;font-size:12px;margin:0">${escHtml(S.authError)}</p>`:''}
   <button type="submit" class="btn btn-org" style="min-height:46px" ${S.authLoading?'disabled':''}>${S.authLoading?'جارٍ الحفظ...':'حفظ التعديلات'}</button>
  </form>
@@ -5003,6 +5008,10 @@ function render(){
  // Set native lazy-loading before insertion so offscreen images do not fetch eagerly.
  html=html.replace(/<img\b[^>]*>/gi,tag=> /\bloading\s*=/.test(tag)?tag:tag.replace('<img','<img loading="lazy" decoding="async"'));
  scr.innerHTML=`<div class="screen on">${html}</div>`;
+ scr.querySelectorAll('[data-arrival-qr]').forEach(host=>{
+  try { new QRCode(host,{text:host.dataset.arrivalQr,width:200,height:200,correctLevel:QRCode.CorrectLevel.M}); }
+  catch { host.textContent='تعذر عرض الرمز، يرجى مراجعة موظف الاستقبال.'; }
+ });
  translateStaticText(scr);
  /* الشريط اللاصق */
  let bar=$('#bookbar');
@@ -5666,6 +5675,7 @@ function bind(){
     last_name:($('#setLast')?.value||'').trim(),
     mobile:($('#setMobile')?.value||'').trim(),
     email:($('#setEmail')?.value||'').trim(),
+    date_of_birth:$('#setBirthday')?.value||null,
    });
    toast('تم حفظ التعديلات');
    await loadAccountData();

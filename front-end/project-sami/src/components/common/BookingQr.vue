@@ -2,7 +2,7 @@
 import { ref, watch, onMounted } from 'vue'
 import QRCode from '@/vendor/qrcode'
 
-const props = defineProps({ url: { type: String, required: true } })
+const props = defineProps({ url: { type: String, required: true }, showLink: { type: Boolean, default: true } })
 const host = ref(null)
 const failed = ref(false)
 function draw() {
@@ -23,7 +23,7 @@ watch(() => props.url, draw)
   <div class="booking-qr">
     <div v-show="!failed" ref="host" class="booking-qr-image" role="img" aria-label="رمز QR لفتح بيانات الحجز"></div>
     <p v-if="failed">تعذّر عرض الرمز. يمكنك فتح بيانات الحجز من الرابط.</p>
-    <a :href="url" target="_blank" rel="noopener">فتح تفاصيل الحجز</a>
+    <a v-if="showLink" :href="url" target="_blank" rel="noopener">فتح تفاصيل الحجز</a>
     <small>امسح الرمز بالكاميرا لعرض بيانات الحجز</small>
   </div>
 </template>

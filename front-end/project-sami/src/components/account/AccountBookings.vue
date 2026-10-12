@@ -1,5 +1,6 @@
 <script setup>
 import BookingRating from './BookingRating.vue'
+import BookingQr from '../common/BookingQr.vue'
 import { computed } from 'vue'
 
 const props = defineProps({ profile: { type: Object, default: null } })
@@ -45,6 +46,12 @@ function serviceNames(b) {
           <span>{{ rs(bookingTotal(b)) }} ر.س</span>
         </div>
         <BookingRating v-if="b.status === 'completed'" :booking="b" />
+        <p>{{ b.arrived_at ? 'تم تأكيد الوصول' : 'لم يتم تأكيد الوصول بعد' }}</p>
+        <details v-if="b.arrival_qr_url">
+          <summary>عرض QR لتأكيد الوصول عند الاستقبال</summary>
+          <BookingQr :url="b.arrival_qr_url" :show-link="false" />
+          <small>اعرض الرمز لموظف الاستقبال ليؤكد وصولك.</small>
+        </details>
       </div>
     </div>
   </div>

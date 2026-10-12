@@ -4,13 +4,14 @@
   من غير ما ياخد مساحة قسم كامل.
 */
 import { RouterLink } from 'vue-router'
+const props = defineProps({ image: { type: String, default: '' } })
 </script>
 
 <template>
   <section data-reveal class="home-section container cafe-strip" aria-label="سامي كافي">
     <RouterLink to="/cafe" class="cafe-strip__link">
       <div class="cafe-strip__img">
-        <img src="/images/cafe-interior-clean.webp" alt="سامي كافي داخل الفرع" loading="lazy" />
+        <img :src="props.image || '/images/cafe-interior-clean.webp'" alt="سامي كافي داخل الفرع" loading="lazy" />
       </div>
       <div class="cafe-strip__copy">
         <span class="cafe-strip__eyebrow">☕ سامي كافي</span>

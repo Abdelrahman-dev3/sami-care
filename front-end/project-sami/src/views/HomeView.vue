@@ -92,7 +92,7 @@ watch(() => language.lang, loadHomeData)
                     />
 
                 </div>
-        <CafeStrip />
+        <CafeStrip :image="homeData.home_content?.cafe_image" />
         <GiftBanner />
        <LuckyWheelCard
                     :prizes="homeData.wheel_prizes"

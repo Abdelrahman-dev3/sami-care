@@ -143,6 +143,12 @@
                 </li>
                 @endhasPermission
 
+                @hasPermission('edit_booking')
+                <li class="nav-item"><a href="{{ route('backend.booking-arrival.index') }}" class="nav-link"><i class="fas fa-qrcode"></i><span class="item-name">تأكيد وصول العملاء</span></a></li>
+                @endhasPermission
+                @role('admin')
+                <li class="nav-item"><a href="{{ route('backend.customer-messages.index') }}" class="nav-link"><i class="fab fa-whatsapp"></i><span class="item-name">رسائل العملاء والمناسبات</span></a></li>
+                @endrole
                 <li class="nav-item {{ request()->routeIs('app.offer-banners') ? 'active' : '' }}">
                     <a href="{{ route('app.offer-banners') }}" class="nav-link {{ request()->routeIs('app.offer-banners') ? 'active' : '' }}">
                         <i class="fas fa-tags"></i>

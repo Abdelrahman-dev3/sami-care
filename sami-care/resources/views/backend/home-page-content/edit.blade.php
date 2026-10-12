@@ -6,7 +6,7 @@
 @if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
 @if($errors->any())<div class="alert alert-danger"><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
 <form method="POST" enctype="multipart/form-data" action="{{ route('backend.home-page-content.update') }}">@csrf @method('PUT')
-@foreach(['about_image'=>'صورة من نحن','home_service_image'=>'صورة الخدمات المنزلية'] as $key=>$label)
+@foreach(['cafe_image'=>'صورة قسم المقهى','about_image'=>'صورة من نحن','home_service_image'=>'صورة الخدمات المنزلية'] as $key=>$label)
 <div class="card card-body mb-3"><label>{{ $label }}<input class="form-control" type="file" name="{{ $key }}_file" accept="image/jpeg,image/png,image/webp"></label><small>حتى 2 ميجابايت. عدم اختيار ملف يحافظ على الصورة الحالية.</small>
 @if(filter_var($page[$key], FILTER_VALIDATE_URL))<img src="{{ $page[$key] }}" alt="{{ $label }}" style="max-width:240px;max-height:160px;object-fit:contain" loading="lazy">@endif</div>
 @endforeach

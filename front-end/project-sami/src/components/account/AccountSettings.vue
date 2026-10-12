@@ -11,6 +11,10 @@ const firstName = ref('')
 const lastName = ref('')
 const mobile = ref('')
 const email = ref('')
+const dateOfBirth = ref('')
+const yesterday = new Date()
+yesterday.setDate(yesterday.getDate() - 1)
+const maxBirthday = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`
 const saving = ref(false)
 const error = ref('')
 const saved = ref(false)
@@ -22,6 +26,7 @@ function syncFromProfile() {
   lastName.value = u.last_name || ''
   mobile.value = u.mobile || ''
   email.value = u.email || ''
+  dateOfBirth.value = u.date_of_birth?.slice(0, 10) || ''
 }
 syncFromProfile()
 watch(() => props.profile, syncFromProfile)
@@ -36,6 +41,7 @@ async function submit() {
       last_name: lastName.value.trim(),
       mobile: mobile.value.trim(),
       email: email.value.trim(),
+      date_of_birth: dateOfBirth.value || null,
     })
     saved.value = true
     emit('updated')
@@ -64,6 +70,8 @@ async function onDelete() {
       <input v-model="lastName" type="text" placeholder="اسم العائلة" />
       <input v-model="mobile" type="tel" dir="ltr" placeholder="رقم الجوال" />
       <input v-model="email" type="email" dir="ltr" placeholder="البريد الإلكتروني" />
+      <label for="birthday">تاريخ الميلاد (اختياري)</label>
+      <input id="birthday" v-model="dateOfBirth" type="date" dir="ltr" :max="maxBirthday" />
       <p v-if="error" class="err">{{ error }}</p>
       <p v-if="saved" class="ok">تم حفظ التعديلات بنجاح</p>
       <button type="submit" class="btn-org" :disabled="saving">{{ saving ? 'جارٍ الحفظ...' : 'حفظ التعديلات' }}</button>

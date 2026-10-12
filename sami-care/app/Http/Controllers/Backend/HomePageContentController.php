@@ -15,10 +15,10 @@ class HomePageContentController extends Controller
             $rules[$key] = ['required','array:ar,en'];
             foreach (['ar','en'] as $lang) $rules[$key.'.'.$lang] = ['required','string','max:4000'];
         }
-        foreach (['about_image','home_service_image'] as $key) $rules[$key.'_file'] = ['nullable','image','mimes:jpg,jpeg,png,webp','max:2048'];
+        foreach (['about_image','home_service_image','cafe_image'] as $key) $rules[$key.'_file'] = ['nullable','image','mimes:jpg,jpeg,png,webp','max:2048'];
         $data = $request->validate($rules);
         $current = $content->get();
-        foreach (['about_image','home_service_image'] as $key) {
+        foreach (['about_image','home_service_image','cafe_image'] as $key) {
             unset($data[$key.'_file']);
             $data[$key] = $current[$key];
             if ($request->hasFile($key.'_file')) {
