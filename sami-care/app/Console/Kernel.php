@@ -27,8 +27,7 @@ class Kernel extends ConsoleKernel
 //        $schedule->command('cart:cleanup')->hourly();
         $schedule->command('basket:clear-expired')->everyMinute();
         $schedule->command('loyalty:expire-points')->daily();
-        $schedule->command('customers:send-messages --birthdays')->dailyAt('08:00')->withoutOverlapping();
-        $schedule->command('customers:send-messages')->everyMinute()->withoutOverlapping();
+        $schedule->command('customers:send-messages')->dailyAt('08:00')->withoutOverlapping();
     }
 
     /**

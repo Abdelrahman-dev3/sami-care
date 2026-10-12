@@ -71,40 +71,69 @@ class CustomerMessagesTest extends TestCase
         $this->assertNull($messages->birthdays());
     }
 
-    public function test_selected_and_future_messages_are_sent_once_with_personalized_text(): void
+    public function test_selected_campaign_is_sent_immediately_once_and_does_not_send_other_campaigns(): void
     {
         $messages = new CustomerMessages;
-        $id = $messages->create('العيد', 'أهلاً {name} بمناسبة {occasion}', now()->addHour(), $messages->customers()->where('users.id', 1));
+        $other = $messages->create('مناسبة أخرى', 'لا ترسل الآن', $messages->customers()->where('users.id', 2));
+        $id = $messages->create('العيد', 'أهلاً {name} بمناسبة {occasion}', $messages->customers()->where('users.id', 1));
         $gateway = \Mockery::mock(TaqnyatSmsService::class);
         $gateway->shouldReceive('sendWhatsApp')->once()->with('966500000001', 'أهلاً عميل 1 بمناسبة العيد')->andReturn(['status'=>'success']);
-        $this->assertSame(0, $messages->sendDue($gateway));
-        $this->travel(2)->hours();
-        $this->assertSame(1, $messages->sendDue($gateway));
-        $this->assertSame(0, $messages->sendDue($gateway));
+        $this->assertSame(1, $messages->sendCampaign($id, $gateway));
+        $this->assertSame(0, $messages->sendCampaign($id, $gateway));
+        $this->assertSame('pending', DB::table('customer_message_deliveries')->where('campaign_id', $other)->value('status'));
         $this->assertSame('sent', DB::table('customer_message_deliveries')->where('campaign_id', $id)->value('status'));
     }
 
     public function test_failed_missing_phone_and_local_simulation_are_distinguished(): void
     {
         $messages = new CustomerMessages;
-        $messages->create('اختبار', 'مرحباً', now(), $messages->customers()->whereIn('users.id', [1,6,7]));
+        $id = $messages->create('اختبار', 'مرحباً', $messages->customers()->whereIn('users.id', [1,6,7]));
         $gateway = \Mockery::mock(TaqnyatSmsService::class);
         $gateway->shouldReceive('sendWhatsApp')->once()->with('966500000001', 'مرحباً')->andReturn(false);
         $gateway->shouldReceive('sendWhatsApp')->once()->with('966500000006', 'مرحباً')->andReturn(['status'=>'bypassed_local']);
-        $this->assertSame(3, $messages->sendDue($gateway));
+        $this->assertSame(3, $messages->sendCampaign($id, $gateway));
         $this->assertEquals(['failed','simulated','failed'], DB::table('customer_message_deliveries')->orderBy('user_id')->pluck('status')->all());
-        $this->assertSame(0, $messages->sendDue($gateway));
+        $this->assertSame(0, $messages->sendCampaign($id, $gateway));
     }
 
-    public function test_customers_who_become_inactive_after_scheduling_are_skipped(): void
+    public function test_customers_who_become_inactive_before_sending_are_skipped(): void
     {
         $messages = new CustomerMessages;
-        $messages->create('اختبار', 'مرحباً', now(), $messages->customers()->where('users.id', 1));
+        $id = $messages->create('اختبار', 'مرحباً', $messages->customers()->where('users.id', 1));
         DB::table('users')->where('id', 1)->update(['is_banned'=>1]);
         $gateway = \Mockery::mock(TaqnyatSmsService::class);
         $gateway->shouldNotReceive('sendWhatsApp');
-        $messages->sendDue($gateway);
+        $messages->sendCampaign($id, $gateway);
         $this->assertSame('failed', DB::table('customer_message_deliveries')->value('status'));
+    }
+
+    public function test_dashboard_sends_occasion_immediately_and_ignores_old_schedule_input(): void
+    {
+        $gateway = \Mockery::mock(TaqnyatSmsService::class);
+        $gateway->shouldReceive('sendWhatsApp')->once()->with('966500000001', 'أهلاً عميل 1')->andReturn(['status'=>'success']);
+        $request = Request::create('/app/customer-messages', 'POST', [
+            'occasion'=>'العيد', 'message'=>'أهلاً {name}', 'audience'=>'selected', 'customer_ids'=>[1],
+            'send_at'=>now()->addMonth()->toDateTimeString(),
+        ]);
+        (new \App\Http\Controllers\Backend\CustomerMessagesController)->store($request, new CustomerMessages, $gateway);
+        $this->assertSame('sent', DB::table('customer_message_deliveries')->value('status'));
+        $this->assertSame(now()->toDateTimeString(), DB::table('customer_message_campaigns')->value('send_at'));
+    }
+
+    public function test_birthday_command_sends_only_today_birthdays_and_never_pending_occasions(): void
+    {
+        $messages = new CustomerMessages;
+        $occasion = $messages->create('مناسبة قديمة', 'لا ترسل', $messages->customers()->where('users.id', 2));
+        $gateway = \Mockery::mock(TaqnyatSmsService::class);
+        foreach ([1,6] as $id) {
+            $gateway->shouldReceive('sendWhatsApp')->once()->with('96650000000'.$id,
+                strtr(CustomerMessages::BIRTHDAY_MESSAGE, ['{name}'=>'عميل '.$id]))->andReturn(['status'=>'success']);
+        }
+        $this->instance(TaqnyatSmsService::class, $gateway);
+        $this->artisan('customers:send-messages')->assertExitCode(0);
+        $this->artisan('customers:send-messages')->assertExitCode(0);
+        $this->assertSame('pending', DB::table('customer_message_deliveries')->where('campaign_id', $occasion)->value('status'));
+        $this->assertSame(2, DB::table('customer_message_deliveries')->where('status', 'sent')->count());
     }
 
     public function test_new_offer_notifies_only_active_customers_in_arabic_and_edit_does_not_repeat(): void

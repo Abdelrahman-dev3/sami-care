@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Backend;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use App\Services\CustomerMessages;
+use App\Services\TaqnyatSmsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -21,11 +22,11 @@ class CustomerMessagesController extends Controller
         ]);
     }
 
-    public function store(Request $request, CustomerMessages $messages)
+    public function store(Request $request, CustomerMessages $messages, TaqnyatSmsService $gateway)
     {
         $data = $request->validate([
             'occasion' => 'required|string|max:255', 'message' => 'required|string|max:4000',
-            'audience' => 'required|in:all,selected', 'send_at' => 'nullable|date|after_or_equal:now',
+            'audience' => 'required|in:all,selected',
             'customer_ids' => 'required_if:audience,selected|array',
             'customer_ids.*' => ['integer', 'distinct', Rule::exists('users', 'id')],
         ]);
@@ -36,8 +37,16 @@ class CustomerMessagesController extends Controller
                 return back()->withErrors(['customer_ids' => 'يجب اختيار عملاء نشطين فقط.'])->withInput();
             }
         }
-        $messages->create($data['occasion'], $data['message'], $data['send_at'] ?? now(), $customers);
-        return back()->with('success', 'تمت جدولة الرسائل؛ سيتم الإرسال عند تشغيل المجدول.');
+        if (! $customers->exists()) {
+            return back()->withErrors(['customer_ids' => 'لا يوجد عملاء لإرسال الرسالة إليهم.'])->withInput();
+        }
+        $campaignId = $messages->create($data['occasion'], $data['message'], $customers);
+        $messages->sendCampaign($campaignId, $gateway);
+        $counts = DB::table('customer_message_deliveries')->where('campaign_id', $campaignId)
+            ->selectRaw('status, COUNT(*) as total')->groupBy('status')->pluck('total', 'status');
+        $summary = 'تم الإرسال: '.($counts['sent'] ?? 0).'، فشل الإرسال: '.($counts['failed'] ?? 0);
+        if ($counts['simulated'] ?? 0) $summary .= '، محاكاة محلية: '.$counts['simulated'];
+        return back()->with(($counts['failed'] ?? 0) || ($counts['simulated'] ?? 0) ? 'warning' : 'success', $summary);
     }
 
     public function birthdaySettings(Request $request)

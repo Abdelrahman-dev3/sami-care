@@ -7,16 +7,14 @@ use Illuminate\Console\Command;
 
 class SendCustomerMessages extends Command
 {
-    protected $signature = 'customers:send-messages {--birthdays : Prepare birthday messages for today}';
-    protected $description = 'Prepare birthday messages or deliver scheduled customer WhatsApp messages';
+    protected $signature = 'customers:send-messages';
+    protected $description = 'Send WhatsApp birthday greetings to customers whose birthday is today';
 
     public function handle(CustomerMessages $messages): int
     {
-        if ($this->option('birthdays')) {
-            $messages->birthdays();
-        } else {
-            $this->info('Processed: '.$messages->sendDue(app(TaqnyatSmsService::class)));
-        }
+        $campaignId = $messages->birthdays();
+        $count = $campaignId === null ? 0 : $messages->sendCampaign($campaignId, app(TaqnyatSmsService::class));
+        $this->info('Birthday messages processed: '.$count);
         return self::SUCCESS;
     }
 }

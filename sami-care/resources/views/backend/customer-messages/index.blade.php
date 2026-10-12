@@ -4,6 +4,7 @@
 <div dir="rtl">
     <h4>رسائل العملاء والمناسبات</h4>
     @if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
+    @if(session('warning'))<div class="alert alert-warning">{{ session('warning') }}</div>@endif
     @if($errors->any())<div class="alert alert-danger">@foreach($errors->all() as $error)<p>{{ $error }}</p>@endforeach</div>@endif
     <form class="card card-body mb-4" method="POST" action="{{ route('backend.customer-messages.birthdays') }}">
         @csrf @method('PUT')
@@ -14,7 +15,7 @@
         <small>يمكن استخدام {name} لاسم العميل.</small>
         <button class="btn btn-primary mt-2">حفظ إعدادات عيد الميلاد</button>
     </form>
-    <form class="card card-body mb-4" method="POST" action="{{ route('backend.customer-messages.store') }}">
+    <form class="card card-body mb-4" method="POST" action="{{ route('backend.customer-messages.store') }}" onsubmit="this.querySelector('[type=submit]').disabled=true; this.querySelector('[type=submit]').textContent='جارٍ الإرسال...';">
         @csrf
         <h5>رسالة مناسبة جديدة</h5>
         <label for="occasion">اسم المناسبة</label>
@@ -22,9 +23,7 @@
         <label for="message">نص الرسالة</label>
         <textarea id="message" class="form-control mb-2" name="message" required maxlength="4000" rows="4">{{ old('message') }}</textarea>
         <small>يمكن استخدام {name} لاسم العميل و{occasion} لاسم المناسبة.</small>
-        <label for="send-at">موعد الإرسال (اتركه فارغاً للإرسال عند أقرب تشغيل للمجدول)</label>
-        <input id="send-at" class="form-control mb-2" type="datetime-local" name="send_at" value="{{ old('send_at') }}">
-        <small>التوقيت: {{ config('app.timezone') }}. تُرسل الرسالة مرة واحدة لكل عميل.</small>
+        <p>تُرسل الرسالة فور الضغط على «إرسال الآن» إلى المستلمين المختارين.</p>
         <label for="audience">المستلمون</label>
         <select id="audience" class="form-select mb-2" name="audience">
             <option value="all" @selected(old('audience') === 'all')>كل العملاء النشطين</option>
@@ -36,12 +35,12 @@
             <option value="{{ $customer->id }}" @selected(in_array($customer->id, old('customer_ids', [])))>{{ $customer->full_name }} — {{ $customer->mobile ?: 'بدون جوال' }}</option>
             @endforeach
         </select>
-        <button class="btn btn-primary mt-3">جدولة رسالة المناسبة</button>
+        <button type="submit" class="btn btn-primary mt-3">إرسال الآن</button>
     </form>
     <h5>سجل الإرسال</h5>
     <p>الإرسال عبر بوابة الواتساب الحالية مع التحويل إلى SMS عند فشل الواتساب وفق آلية النظام.</p>
     <div class="table-responsive"><table class="table">
-        <thead><tr><th>المناسبة</th><th>الموعد</th><th>حالة الرسائل</th></tr></thead>
+        <thead><tr><th>المناسبة</th><th>وقت طلب الإرسال</th><th>حالة الرسائل</th></tr></thead>
         <tbody>@foreach($campaigns as $campaign)<tr>
             <td>{{ $campaign->occasion }}</td><td>{{ $campaign->send_at }}</td>
             <td>@foreach($stats->get($campaign->id, collect()) as $stat)

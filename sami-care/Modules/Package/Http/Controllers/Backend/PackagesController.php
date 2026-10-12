@@ -15,6 +15,8 @@ use Modules\Service\Models\Service;
 use Yajra\DataTables\DataTables;
 use Modules\Package\Models\UserPackage;
 use App\Models\User;
+use App\Services\NewPackageCustomerNotification;
+use Illuminate\Support\Facades\DB;
 
 class PackagesController extends Controller
 {
@@ -324,6 +326,7 @@ class PackagesController extends Controller
 
     
         $totalprice = 0;
+        $service = [];
         foreach ($request['services'] as $serviceItem) {
             $filteredService = [];
             foreach ($serviceItem as $key => $value) {
@@ -339,15 +342,17 @@ class PackagesController extends Controller
     
         $request['package_price'] = $totalprice;
     
-        $data = Package::create($request->all());
-    
-        $data->employees()->sync($request['employee_id']);
-    
-        $data->services()->sync($service);
+        DB::transaction(function () use ($request, $service) {
+            $data = Package::create($request->all());
+            $data->employees()->sync($request['employee_id']);
+            $data->services()->sync($service);
 
-        if ($request->hasFile('package_image')) {
-            storeMediaFile($data, $request->file('package_image'), 'package_image');
-        }
+            if ($request->hasFile('package_image')) {
+                storeMediaFile($data, $request->file('package_image'), 'package_image');
+            }
+
+            app(NewPackageCustomerNotification::class)->send($data);
+        });
     
         $message = 'New Package Added';
 

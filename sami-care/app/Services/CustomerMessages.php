@@ -15,14 +15,14 @@ class CustomerMessages
         return User::role('user')->where('status', 1)->where('is_banned', 0);
     }
 
-    public function create(string $occasion, string $message, $sendAt, $customers, ?string $birthdayKey = null): int
+    public function create(string $occasion, string $message, $customers, ?string $birthdayKey = null): int
     {
-        return DB::transaction(function () use ($occasion, $message, $sendAt, $customers, $birthdayKey) {
+        return DB::transaction(function () use ($occasion, $message, $customers, $birthdayKey) {
             if ($birthdayKey && ($existing = DB::table('customer_message_campaigns')->where('birthday_key', $birthdayKey)->value('id'))) {
                 return (int) $existing;
             }
             $id = DB::table('customer_message_campaigns')->insertGetId([
-                'occasion' => $occasion, 'message' => $message, 'send_at' => $sendAt,
+                'occasion' => $occasion, 'message' => $message, 'send_at' => now(),
                 'birthday_key' => $birthdayKey, 'created_at' => now(), 'updated_at' => now(),
             ]);
             $customers->select('users.id')->chunkById(200, function ($users) use ($id) {
@@ -40,17 +40,17 @@ class CustomerMessages
         if (! Setting::get('birthday_messages_enabled', '1')) return null;
         $today = now();
         return $this->create('أعياد ميلاد '.$today->toDateString(),
-            Setting::get('birthday_message', self::BIRTHDAY_MESSAGE), $today,
+            Setting::get('birthday_message', self::BIRTHDAY_MESSAGE),
             $this->customers()->whereMonth('date_of_birth', $today->month)->whereDay('date_of_birth', $today->day),
             $today->toDateString());
     }
 
-    public function sendDue(TaqnyatSmsService $gateway): int
+    public function sendCampaign(int $campaignId, TaqnyatSmsService $gateway): int
     {
         $count = 0;
         DB::table('customer_message_deliveries as d')
             ->join('customer_message_campaigns as c', 'c.id', '=', 'd.campaign_id')
-            ->where('d.status', 'pending')->where('c.send_at', '<=', now())
+            ->where('d.status', 'pending')->where('c.id', $campaignId)
             ->select('d.id', 'd.user_id', 'c.message', 'c.occasion')->orderBy('d.id')
             ->chunkById(100, function ($deliveries) use ($gateway, &$count) {
                 foreach ($deliveries as $delivery) {

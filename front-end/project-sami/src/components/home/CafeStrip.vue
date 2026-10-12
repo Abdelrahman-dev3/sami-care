@@ -29,21 +29,21 @@ const props = defineProps({ image: { type: String, default: '' } })
 </template>
 
 <style scoped>
-.cafe-strip{margin-bottom:20px;display:grid;grid-template-columns:1.15fr 1fr;align-items:stretch;gap:0;
+.cafe-strip{margin-bottom:20px;padding:0;position:relative;
   overflow:hidden;border-radius:20px;border:1px solid var(--border);
   background:linear-gradient(160deg,#14100b,#080706);color:#fff;
   box-shadow:0 20px 40px -30px rgba(0,0,0,.7);transition:box-shadow .25s,transform .25s}
 .cafe-strip:hover{box-shadow:0 24px 48px -28px rgba(0,0,0,.8);transform:translateY(-2px)}
 
-.cafe-strip__link{display:contents;color:inherit;text-decoration:none;cursor:pointer}
+.cafe-strip__link{display:block;position:relative;min-height:230px;color:inherit;text-decoration:none;cursor:pointer}
 
-.cafe-strip__img{position:relative;min-height:190px}
+.cafe-strip__img{position:absolute;inset:0}
 .cafe-strip__img img{width:100%;height:100%;object-fit:cover;display:block;
   filter:saturate(.97) contrast(1.02)}
 .cafe-strip__img::after{content:"";position:absolute;inset:0;
-  background:linear-gradient(270deg,rgba(8,7,6,.92) 0%,rgba(8,7,6,.35) 45%,transparent 78%)}
+  background:linear-gradient(270deg,rgba(8,7,6,.82) 0%,rgba(8,7,6,.45) 45%,rgba(8,7,6,.12) 100%)}
 
-.cafe-strip__copy{padding:24px 26px;display:flex;flex-direction:column;justify-content:center}
+.cafe-strip__copy{position:relative;z-index:1;width:min(100%,560px);min-height:230px;padding:24px 26px;display:flex;flex-direction:column;justify-content:center}
 .cafe-strip__eyebrow{font-size:11px;font-weight:700;letter-spacing:.4px;color:var(--gold);margin-bottom:8px}
 .cafe-strip__copy h3{margin:0 0 8px;font-size:21px;line-height:1.5;color:var(--gold-light,#f2d28e)}
 .cafe-strip__copy h3 span{display:block;color:#fff;font-size:16px}
@@ -57,9 +57,7 @@ const props = defineProps({ image: { type: String, default: '' } })
   font-size:12px;font-weight:700;color:var(--gold)}
 
 @media(max-width:760px){
-  .cafe-strip{grid-template-columns:1fr}
-  .cafe-strip__img{height:150px;min-height:0}
-  .cafe-strip__img::after{background:linear-gradient(180deg,transparent 30%,rgba(8,7,6,.9) 100%)}
+  .cafe-strip__img::after{background:rgba(8,7,6,.62)}
   .cafe-strip__copy{padding:18px 18px 22px}
 }
 </style>
