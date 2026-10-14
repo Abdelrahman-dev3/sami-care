@@ -206,7 +206,7 @@ class UserController extends Controller
     {
         $user = Auth::user();
         $data = User::findOrFail($user->id);
-        $request_data = $request->except('profile_image');
+        $request_data = $request->only('first_name', 'last_name', 'mobile', 'gender', 'date_of_birth', 'address', 'city', 'country');
         $data->update($request_data);
 
         if ($request->custom_fields_data) {

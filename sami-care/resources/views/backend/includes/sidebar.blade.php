@@ -27,6 +27,9 @@
     <div class="sidebar-body pt-0 data-scrollbar">
         <div class="sidebar-list" id="sidebar">
             <ul class="navbar-nav iq-main-menu" id="sidebar-menu">
+                @role('admin')
+                <li class="nav-item"><a href="{{ route('backend.access.index') }}" class="nav-link {{ request()->routeIs('backend.access.*') ? 'active' : '' }}"><i class="fa-solid fa-user-shield"></i><span class="item-name">العضويات والصلاحيات</span></a></li>
+                @endrole
 @php
     $menu = new \App\Http\Middleware\GenerateMenus();
     $menu = $menu->handle('menu', 'vertical', 'ARRAY_MENU');

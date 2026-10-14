@@ -11,6 +11,7 @@ class RolePermission extends Controller
 {
     public function __construct()
     {
+        $this->middleware(['auth', 'role:admin', \App\Http\Middleware\LegacyAccessManagement::class]);
         $this->module_title = 'Permission';
         $this->module_name = 'permission';
     }

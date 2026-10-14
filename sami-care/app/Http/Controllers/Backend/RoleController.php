@@ -10,6 +10,11 @@ use Spatie\Permission\Models\Role;
 
 class RoleController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(['auth', 'role:admin', \App\Http\Middleware\LegacyAccessManagement::class]);
+    }
+
     public function index()
     {
         $data = Role::all();

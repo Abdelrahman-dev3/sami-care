@@ -15,6 +15,7 @@ class UsersController extends Controller
 {
     public function __construct()
     {
+        $this->middleware(['auth', 'role:admin', \App\Http\Middleware\LegacyAccessManagement::class]);
         $this->module_title = 'Users';
         $this->module_name = 'users';
         $this->module_path = 'users';

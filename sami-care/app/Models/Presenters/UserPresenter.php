@@ -46,31 +46,4 @@ trait UserPresenter
         }
     }
 
-    /**
-     * Cache Permissions Query.
-     */
-    public function getPermissionsAttribute()
-    {
-        $permissions = Cache::rememberForever('permissions_cache', function () {
-            return Permission::select('permissions.*', 'model_has_permissions.*')
-                ->join('model_has_permissions', 'permissions.id', '=', 'model_has_permissions.permission_id')
-                ->get();
-        });
-
-        return $permissions->where('model_id', $this->id);
-    }
-
-    /**
-     * Cache Roles Query.
-     */
-    public function getRolesAttribute()
-    {
-        $roles = Cache::rememberForever('roles_cache', function () {
-            return Role::select('roles.*', 'model_has_roles.*')
-                ->join('model_has_roles', 'roles.id', '=', 'model_has_roles.role_id')
-                ->get();
-        });
-
-        return $roles->where('model_id', $this->id);
-    }
 }

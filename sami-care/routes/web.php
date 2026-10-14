@@ -51,6 +51,15 @@ use App\Http\Controllers\Backend\UsersController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
 
+Route::prefix('app/access')->name('backend.access.')->middleware(['auth', 'role:admin'])->controller(\App\Http\Controllers\Backend\AccessController::class)->group(function () {
+    Route::get('/', 'index')->name('index');
+    Route::post('/members', 'saveMember')->name('members.store');
+    Route::put('/members/{member}', 'saveMember')->name('members.update');
+    Route::post('/roles', 'saveRole')->name('roles.store');
+    Route::put('/roles/{role}', 'saveRole')->name('roles.update');
+    Route::delete('/roles/{role}', 'deleteRole')->name('roles.destroy');
+});
+
 use Modules\Affiliate\Http\Controllers\AffiliateAdminController;
 use Modules\Employee\Http\Controllers\Backend\EmployeesController;
 

@@ -16,6 +16,7 @@ class RolesController extends Controller
 
     public function __construct()
     {
+        $this->middleware(['auth', 'role:admin', \App\Http\Middleware\LegacyAccessManagement::class]);
         // Page Title
         $this->module_title = 'Roles';
 
