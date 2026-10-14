@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -39,11 +38,20 @@ class AccessController extends Controller
 
     public function saveMember(Request $request, ?User $member = null)
     {
+        // Store the same local Saudi number format used by OTP login.
+        $request->validate(['mobile' => 'required|string|max:20']);
+        $mobile = preg_replace('/[^0-9]/', '', $request->input('mobile'));
+        if (str_starts_with($mobile, '966')) {
+            $mobile = '0'.substr($mobile, 3);
+        }
+        if (preg_match('/^5[0-9]{8}$/', $mobile)) {
+            $mobile = '0'.$mobile;
+        }
+        $request->merge(['mobile' => $mobile]);
         $data = $request->validate([
             'first_name' => 'required|string|max:191', 'last_name' => 'required|string|max:191',
             'email' => ['required', 'email', 'max:191', Rule::unique('users')->ignore($member?->id)],
-            'mobile' => ['nullable', 'string', 'max:20', Rule::unique('users')->ignore($member?->id)],
-            'password' => [$member ? 'nullable' : 'required', 'string', 'min:12', 'confirmed'],
+            'mobile' => ['required', 'string', 'regex:/^05[0-9]{8}$/', Rule::unique('users')->ignore($member?->id)],
             'status' => 'required|boolean', 'roles' => 'required|array|min:1',
             'roles.*' => ['required', 'integer', 'distinct', Rule::exists('roles', 'id')->where('guard_name', 'web')],
         ]);
@@ -57,10 +65,7 @@ class AccessController extends Controller
                 abort_if($member->id === $request->user()->id && (!$data['status'] || !$roles->contains('name', 'admin')), 422, 'لا يمكنك تعطيل حسابك أو إزالة دور المدير منه.');
                 abort_if($member->hasRole('admin') && (!$data['status'] || !$roles->contains('name', 'admin')) && User::role('admin')->where('status', 1)->where('id', '!=', $member->id)->count() === 0, 422, 'يجب الإبقاء على مدير نشط واحد على الأقل.');
             }
-            $attributes = collect($data)->except(['roles', 'password'])->all();
-            if (!empty($data['password'])) {
-                $attributes['password'] = Hash::make($data['password']);
-            }
+            $attributes = collect($data)->except(['roles'])->all();
             $member = $member ?: new User;
             $member->fill($attributes)->save();
             $member->syncRoles($roles);
