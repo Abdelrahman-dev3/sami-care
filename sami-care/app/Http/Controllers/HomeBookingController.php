@@ -165,6 +165,9 @@ class HomeBookingController extends Controller
     public function getAvailableTimes(Request $request ,$date, $staffId)
     {
         $timezone = 'Asia/Riyadh'; 
+        if (!is_string($date) || !Carbon::canBeCreatedFromFormat($date, 'Y-m-d')) {
+            return response()->json([]);
+        }
         
         $user = User::find($staffId);
         if (!$user) { 
@@ -193,8 +196,12 @@ class HomeBookingController extends Controller
             return response()->json([]);
         }
 
-        $workStartTime = Carbon::createFromFormat('H:i:s', $workingHours->start_time);
-        $workEndTime = Carbon::createFromFormat('H:i:s', $workingHours->end_time);
+        // Both HH:mm and HH:mm:ss are supported by the dated parsing below.
+        foreach ([$workingHours->start_time, $workingHours->end_time] as $time) {
+            if (!is_string($time) || !preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/', $time)) {
+                return response()->json([]);
+            }
+        }
         $bookedTimes = BookingService::where('employee_id', $staffId)->whereDate('start_date_time', $date)
             ->whereHas('booking', function ($q) {
                 $q->whereIn('status', ['pending', 'confirmed', 'check_in']);
