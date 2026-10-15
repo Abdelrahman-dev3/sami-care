@@ -202,6 +202,9 @@ Route::controller(BranchController::class)->group(function () {
 });
 
 Route::group(['middleware' => 'auth:sanctum'], function () {
+    Route::get('webpush/config', [\App\Http\Controllers\BrowserPushController::class, 'config']);
+    Route::post('webpush/subscription', [\App\Http\Controllers\BrowserPushController::class, 'store'])->middleware('throttle:20,1');
+    Route::delete('webpush/subscription', [\App\Http\Controllers\BrowserPushController::class, 'destroy'])->middleware('throttle:20,1');
     Route::controller(ProfileController::class)->group(function () {
         Route::get('/profile', 'show');
         Route::post('/profile/update', 'update');

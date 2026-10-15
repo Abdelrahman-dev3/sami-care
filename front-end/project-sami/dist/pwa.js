@@ -1,7 +1,7 @@
 /* Shared by the Vue shell and direct mobile entry. Only the top window installs. */
 (function () {
   'use strict';
-  const build = 'd355f2c2f47d9b64';
+  const build = '3f6b271f65ee0ef0';
   if (build.startsWith('__') || window.top !== window || !window.isSecureContext || !('serviceWorker' in navigator)) return;
   const mobile = matchMedia('(max-width: 640px)');
   const standalone = matchMedia('(display-mode: standalone)');

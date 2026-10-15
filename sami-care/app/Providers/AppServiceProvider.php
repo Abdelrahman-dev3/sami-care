@@ -38,6 +38,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        \Illuminate\Notifications\DatabaseNotification::observe(\App\Observers\BrowserPushObserver::class);
         foreach ([
             \Modules\Booking\Models\Booking::class,
             \Modules\Booking\Models\BookingService::class,

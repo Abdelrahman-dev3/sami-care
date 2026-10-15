@@ -17,6 +17,14 @@ window.mountSamiNotifications = function ({ apiBase, onCount = () => {}, hideBut
   let token = null, generation = 0, streamController, timer, toastTimer, ringTimer, watchdog, disposed = false
   let items = [], seen = new Set(), initialized = false, page = 1, lastPage = 1, failures = 0
   const base = apiBase.replace(/\/$/, '')
+  let browserPush
+  import('/browser-push.js').then(module => {
+    if (disposed) return
+    const controls = document.createElement('div')
+    panel.insertBefore(controls, el('.sn-list'))
+    browserPush = module.mountBrowserPush(controls, base)
+    browserPush.sync(token)
+  }).catch(() => {})
   const readToken = () => { try { return localStorage.getItem('samiAuthToken') } catch { return null } }
   const headers = () => ({ Accept: 'application/json', Authorization: `Bearer ${token}` })
   const message = item => {
@@ -140,6 +148,7 @@ window.mountSamiNotifications = function ({ apiBase, onCount = () => {}, hideBut
     bell.setAttribute('data-arriving', 'false')
     bell.setAttribute('data-unread', 'false')
     token = next
+    browserPush?.sync(next)
     items = []; seen = new Set(); initialized = false; page = 1; lastPage = 1; failures = 0
     shell.hidden = !token; panel.hidden = true; bell.setAttribute('aria-expanded', 'false'); el('.sn-toast').hidden = true
     el('.sn-count').textContent = '0'
@@ -184,6 +193,7 @@ window.mountSamiNotifications = function ({ apiBase, onCount = () => {}, hideBut
     open,
     setHideButton(value) { bell.hidden = value },
     destroy() {
+      browserPush?.destroy()
       disposed = true; generation++; streamController?.abort()
       clearInterval(authTimer); clearTimeout(timer); clearTimeout(watchdog); clearTimeout(toastTimer); clearTimeout(ringTimer)
       window.removeEventListener('storage', sync)

@@ -29,6 +29,13 @@ return [
     */
 
     'connections' => [
+        'webpush' => [
+            'driver' => 'database',
+            'table' => 'jobs',
+            'queue' => 'webpush',
+            'retry_after' => 180,
+            'after_commit' => true,
+        ],
 
         'sync' => [
             'driver' => 'sync',

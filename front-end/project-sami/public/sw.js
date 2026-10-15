@@ -2,6 +2,28 @@
 const CACHE_PREFIX = 'sami-pwa-';
 const CACHE_NAME = CACHE_PREFIX + '__PWA_BUILD__';
 const OFFLINE_URL = '/pwa/offline.html';
+// Native Web Push wakes this worker without an open website tab.
+self.addEventListener('push', event => {
+  let data = {};
+  try { data = event.data?.json() || {}; } catch { /* Show a generic notification for invalid payloads. */ }
+  event.waitUntil(self.registration.showNotification(data.title || 'عناية سامي', {
+    body: data.body || 'لديك إشعار جديد', icon: '/pwa/icon-192.png',
+    tag: data.tag || 'sami-update', data: { url: '/account' }, dir: 'rtl', lang: 'ar',
+  }));
+});
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  event.waitUntil((async () => {
+    const url = new URL('/account', self.location.origin).href;
+    const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const client of windows) {
+      if (new URL(client.url).origin === self.location.origin) {
+        await client.navigate(url); return client.focus();
+      }
+    }
+    return self.clients.openWindow(url);
+  })());
+});
 const PRECACHE = [OFFLINE_URL, '/pwa/icon-192.png', '/pwa/icon-512.png', '/pwa/icon-maskable-512.png', '/pwa/apple-touch-icon.png'];
 const APP_PATH = /^\/(?:$|index\.html$|(?:services|blog)(?:\/[^/]+)?\/?$|(?:booking|booking-receipt|store|gifts|packages-gifts|branches|contact|gift-recipient|account|terms|privacy-policy|page-about|home-service|cafe)\/?$|(?:booking|services|store|gifts|packages-gifts|branches|contact|gift-recipient|about|blog)\.html$|TermsAndConditions$|mobile\/(?:index(?:\.dynamic)?\.html)?$)/;
 
