@@ -96,7 +96,7 @@ const stopAfter = router.afterEach(() => { navTimer = setTimeout(() => { navigat
 
 onMounted(() => {
   notificationScript = document.createElement('script')
-  notificationScript.src = '/customer-notifications.js?v=20261015-2'
+  notificationScript.src = '/customer-notifications.js?v=20261015-3'
   notificationScript.onload = () => {
     notificationInbox = window.mountSamiNotifications({ apiBase: mobileApiBase, hideButton: useMobileFrame.value, onCount: count => {
       notificationCount.value = count

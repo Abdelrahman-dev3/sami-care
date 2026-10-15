@@ -1,11 +1,14 @@
 export function mountBrowserPush(container, apiBase) {
-  const button = document.createElement('button')
-  const status = document.createElement('p')
+  const button = container.querySelector('.sn-push-toggle') || document.createElement('button')
+  const status = container.querySelector('.sn-push-status') || document.createElement('p')
   status.setAttribute('role', 'status')
-  status.className = 'sn-status'
+  status.className = 'sn-push-status'
+  button.className = 'sn-push-toggle'
+  button.hidden = false
   button.textContent = 'تفعيل إشعارات المتصفح'
   button.type = 'button'
-  container.append(button, status)
+  if (!button.parentNode) container.append(button)
+  if (!status.parentNode) container.append(status)
   let token = null, settings, registration, busy = false, disposed = false
   const supported = window.isSecureContext && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window
   button.disabled = true

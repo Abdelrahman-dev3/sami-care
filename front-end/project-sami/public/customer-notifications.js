@@ -17,20 +17,20 @@ window.mountSamiNotifications = function ({ apiBase, onCount = () => {}, hideBut
   let token = null, generation = 0, streamController, timer, toastTimer, ringTimer, watchdog, disposed = false
   let items = [], seen = new Set(), initialized = false, page = 1, lastPage = 1, failures = 0
   const base = apiBase.replace(/\/$/, '')
+  // Keep push controls outside the message list and give them their own status.
+  // They must survive both inbox refreshes and delayed configuration responses.
+  const pushControls = document.createElement('div')
+  pushControls.className = 'sn-push-controls'
+  pushControls.innerHTML = '<button type="button" class="sn-push-toggle" disabled>تفعيل إشعارات المتصفح</button><p class="sn-push-status" role="status">جارٍ تجهيز إشعارات المتصفح…</p>'
+  panel.insertBefore(pushControls, el('.sn-list'))
   let browserPush
-  import('/browser-push.js?v=20261015-2').then(module => {
+  import('/browser-push.js?v=20261015-3').then(module => {
     if (disposed) return
-    const controls = document.createElement('div')
-    panel.insertBefore(controls, el('.sn-list'))
-    browserPush = module.mountBrowserPush(controls, base)
+    browserPush = module.mountBrowserPush(pushControls, base)
     browserPush.sync(token)
   }).catch(() => {
     if (disposed) return
-    const notice = document.createElement('p')
-    notice.className = 'sn-status'
-    notice.setAttribute('role', 'status')
-    notice.textContent = 'تعذر تحميل إعدادات إشعارات المتصفح. أعد تحميل الصفحة وحاول مجددًا.'
-    panel.insertBefore(notice, el('.sn-list'))
+    el('.sn-push-status').textContent = 'تعذر تحميل إعدادات إشعارات المتصفح. أعد تحميل الصفحة وحاول مجددًا.'
   })
   const readToken = () => { try { return localStorage.getItem('samiAuthToken') } catch { return null } }
   const headers = () => ({ Accept: 'application/json', Authorization: `Bearer ${token}` })
