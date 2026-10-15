@@ -1,6 +1,7 @@
 /* Shared by the Vue checkout and the standalone mobile checkout. */
 (function (root) {
-  const checkoutEnabled = false;
+  const checkoutEnabled = true;
+  const enabledGateways = new Set(['cod']);
   const money = value => Math.max(Number(value) || 0, 0);
   function rewards(state, total) {
     total = money(total);
@@ -12,7 +13,7 @@
     return { wallet, points, loyalty, maxPoints, payable: Math.max(total - wallet - loyalty, 0), hasRewards: wallet > 0 || points > 0 };
   }
   function methods({ total, walletBalance, payable = total, hasRewards = false }) {
-    const deposit = Math.round(money(total) * 0.3);
+    const deposit = Math.round((money(total) * 0.3 + Number.EPSILON) * 100) / 100;
     const balance = money(walletBalance);
     return [
       { id: 'cod', n: 'الدفع عند الوصول', logo: 'COD', enabled: !hasRewards && balance >= deposit,
@@ -23,7 +24,7 @@
       { id: 'card', n: 'بطاقات الائتمان والخصم', d: hasRewards ? 'ادفع المتبقي بعد الخصومات' : 'قريبًا — Visa / Mastercard', logo: 'VISA', enabled: hasRewards && payable > 0 },
       { id: 'urpay', n: 'يورباي', d: hasRewards ? 'ادفع المتبقي بعد الخصومات' : 'الدفع عبر يورباي', logo: 'UrPay', enabled: payable > 0 },
       { id: 'tabby', n: 'تابي', d: 'قريبًا', logo: 'tabby', enabled: false },
-    ].map(method => checkoutEnabled ? method : { ...method, enabled: false, d: 'غير متاح حاليًا' });
+    ].map(method => checkoutEnabled && enabledGateways.has(method.id) ? method : { ...method, enabled: false, d: 'غير متاح حاليًا' });
   }
   function options(state, total) {
     const parts = rewards(state, total);
@@ -31,7 +32,7 @@
   }
   function canPay(state, total) {
     if (!checkoutEnabled) return false;
-    return rewards(state, total).payable <= 0 || options(state, total).some(m => m.id === state.pay && m.enabled);
+    return options(state, total).some(m => m.id === state.pay && m.enabled);
   }
   function payment(state, total) {
     if (!canPay(state, total)) throw new Error('اختر وسيلة دفع متاحة لإتمام العملية');

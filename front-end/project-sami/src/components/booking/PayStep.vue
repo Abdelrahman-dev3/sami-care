@@ -40,7 +40,7 @@ const walletApplied = computed(() => Math.min(walletDiscount.value, walletMax.va
 const loyaltyRemaining = computed(() => Math.max(priceParts.value.total - couponDiscount.value - walletApplied.value, 0))
 const loyaltyMaxPoints = computed(() => Math.min(loyaltyBalance.value, Math.ceil(loyaltyRemaining.value / pointValue.value)))
 const hasSubRewards = computed(() => walletApplied.value > 0 || loyaltyPointsUsed.value > 0)
-const codRequiredDeposit = computed(() => Math.round(priceParts.value.total * 0.3))
+const codRequiredDeposit = computed(() => Math.round((priceParts.value.total * 0.3 + Number.EPSILON) * 100) / 100)
 const hasCodDeposit = computed(() => walletBalance.value >= codRequiredDeposit.value)
 
 const PAY_METHODS = computed(() => paymentPolicy.methods({ total: priceParts.value.total, walletBalance: walletBalance.value, payable: payableTotal.value, hasRewards: hasSubRewards.value }))
