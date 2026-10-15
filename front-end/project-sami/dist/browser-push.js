@@ -8,7 +8,8 @@ export function mountBrowserPush(container, apiBase) {
   container.append(button, status)
   let token = null, settings, registration, busy = false, disposed = false
   const supported = window.isSecureContext && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window
-  button.hidden = !supported
+  button.disabled = true
+  if (!supported) status.textContent = 'إشعارات المتصفح غير مدعومة في وضع التصفح الحالي. على iPhone أضف الموقع للشاشة الرئيسية ثم افتحه من الأيقونة. تأكد أيضًا من استخدام اتصال HTTPS.'
   const request = async (path, method = 'GET', body, credential = token) => {
     const response = await fetch(apiBase + '/webpush/' + path, { method, headers: { Accept: 'application/json', 'Content-Type': 'application/json', Authorization: `Bearer ${credential}` }, body: body ? JSON.stringify(body) : undefined, cache: 'no-store' })
     if (!response.ok) throw new Error('push request failed')
@@ -54,14 +55,17 @@ export function mountBrowserPush(container, apiBase) {
         if (previous && previous !== next) await removeSubscription(previous)
         if (!next || next !== token) return
         settings = await request('config', 'GET', undefined, next)
-        button.hidden = !settings.enabled
-        if (!settings.enabled) return
+        if (!settings.enabled) {
+          status.textContent = 'إشعارات المتصفح غير مفعّلة بالموقع حاليًا.'
+          return
+        }
+        status.textContent = ''
         const sub = await registration.pushManager.getSubscription()
         if (sub) {
           try { await request('subscription', 'POST', sub.toJSON(), next); label(true) }
           catch { await sub.unsubscribe(); label(false) }
         } else label(false)
-      }).catch(() => { status.textContent = 'إشعارات المتصفح غير متاحة حاليًا.' }).finally(() => { button.disabled = false })
+      }).catch(() => { settings = null; status.textContent = 'تعذر تجهيز إشعارات المتصفح. أعد تحميل الصفحة وحاول مجددًا.' }).finally(() => { button.disabled = !supported || !token || !settings?.enabled || !registration?.active })
     },
     destroy() { disposed = true; button.remove(); status.remove() },
   }

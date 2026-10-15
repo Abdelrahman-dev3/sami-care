@@ -18,13 +18,20 @@ window.mountSamiNotifications = function ({ apiBase, onCount = () => {}, hideBut
   let items = [], seen = new Set(), initialized = false, page = 1, lastPage = 1, failures = 0
   const base = apiBase.replace(/\/$/, '')
   let browserPush
-  import('/browser-push.js').then(module => {
+  import('/browser-push.js?v=20261015-2').then(module => {
     if (disposed) return
     const controls = document.createElement('div')
     panel.insertBefore(controls, el('.sn-list'))
     browserPush = module.mountBrowserPush(controls, base)
     browserPush.sync(token)
-  }).catch(() => {})
+  }).catch(() => {
+    if (disposed) return
+    const notice = document.createElement('p')
+    notice.className = 'sn-status'
+    notice.setAttribute('role', 'status')
+    notice.textContent = 'تعذر تحميل إعدادات إشعارات المتصفح. أعد تحميل الصفحة وحاول مجددًا.'
+    panel.insertBefore(notice, el('.sn-list'))
+  })
   const readToken = () => { try { return localStorage.getItem('samiAuthToken') } catch { return null } }
   const headers = () => ({ Accept: 'application/json', Authorization: `Bearer ${token}` })
   const message = item => {
