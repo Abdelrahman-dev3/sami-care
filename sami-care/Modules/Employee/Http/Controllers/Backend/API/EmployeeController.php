@@ -50,17 +50,17 @@ class EmployeeController extends Controller
 
         if ($branchId && $employeeId) {
             // Fetch employee details based on both branch_id and employee_id
-            $employee = User::role('employee')->with('media')->whereHas('branches', function ($query) use ($branchId) {
+            $employee = User::role('employee')->active()->with('media')->whereHas('branches', function ($query) use ($branchId) {
                 $query->where('branch_id', $branchId);
             })->find($employeeId);
         } elseif ($branchId) {
             // Fetch employee details based on branch_id
-            $employee = User::role('employee')->with('media')->whereHas('branches', function ($query) use ($branchId) {
+            $employee = User::role('employee')->active()->with('media')->whereHas('branches', function ($query) use ($branchId) {
                 $query->where('branch_id', $branchId);
             })->first();
         } elseif ($employeeId) {
             // Fetch employee details based on employee_id
-            $employee = User::role('employee')->with('media')->find($employeeId);
+            $employee = User::role('employee')->active()->with('media')->find($employeeId);
         } else {
             return response()->json(['status' => false, 'message' => __('employee.branch_employee_id')]);
         }

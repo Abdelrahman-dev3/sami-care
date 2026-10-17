@@ -104,6 +104,7 @@ class HomeBookingController extends Controller
             ->where('model_has_roles.model_type', \App\Models\User::class)
             ->where('users.is_manager', 0)
             ->where('users.status', 1)
+            ->where('users.is_banned', 0)
             ->whereNull('users.deleted_at');
     
         if ($branchId != 0) {
@@ -118,7 +119,7 @@ class HomeBookingController extends Controller
             $query->where('service_employees.service_id', $serviceId);
         }
     
-        $employees = $query->select('users.*')->get();
+        $employees = $query->select('users.*')->distinct()->get();
     
         // Add rating data to each employee
         $availabilityDate = $request->get('date') ?: Carbon::now('Asia/Riyadh')->toDateString();
@@ -136,13 +137,13 @@ class HomeBookingController extends Controller
                 try {
                     $branchId = optional($user->branch)->branch_id;
                     $baseShiftId = $user->shift?->shift_id;
-                    $shiftId = $this->resolveWeeklyRotatingShiftId($baseShiftId, $availabilityDate);
+                    $shiftId = $this->resolveWeeklyRotatingShiftId($baseShiftId, $availabilityDate, $user->id);
                     $dayName = strtolower(Carbon::createFromFormat('Y-m-d', $availabilityDate, 'Asia/Riyadh')->format('l'));
 
                     $workingHours = BussinessHour::where('branch_id', $branchId)
                         ->where('day', $dayName)
                         ->where('is_holiday', 0)
-                        ->where('shift_id', $shiftId)
+                        ->where('shift_id', $shiftId ?: -1)
                         ->orderBy('id', 'desc')
                         ->first();
 
@@ -170,7 +171,7 @@ class HomeBookingController extends Controller
         }
         
         $user = User::find($staffId);
-        if (!$user) { 
+        if (!$user || !(int) $user->status || (int) $user->is_banned) {
             return response()->json([]);
         }
         
@@ -179,7 +180,7 @@ class HomeBookingController extends Controller
             return response()->json([]);
         }
         $baseShiftId = $user->shift?->shift_id;
-        $shift = $this->resolveWeeklyRotatingShiftId($baseShiftId, $date);
+        $shift = $this->resolveWeeklyRotatingShiftId($baseShiftId, $date, $user->id);
 
 
         try {
@@ -190,6 +191,7 @@ class HomeBookingController extends Controller
         
         $serve_book_min = max(1, (int) $request->query('Increasing', 30));
 
+        if (!$shift) return response()->json([]);
         $workingHours = BussinessHour::where('branch_id', $branchId)->where('day', $dayName)->where('is_holiday', 0)->where('shift_id', $shift)->orderBy('id', 'desc')->first();
 
         if (!$workingHours) {
@@ -336,28 +338,9 @@ class HomeBookingController extends Controller
         return $normalized;
     }
 
-    private function resolveWeeklyRotatingShiftId($baseShiftId, string $date)
+    private function resolveWeeklyRotatingShiftId($baseShiftId, string $date, ?int $employeeId = null)
     {
-        if (!$baseShiftId) {
-            return $baseShiftId;
-        }
-    
-        $activeShiftIds = DB::table('shifts')->where('status', 1)->orderBy('id')->pluck('id')->map(fn ($id) => (int) $id)->values();
-    
-        // Weekly rotation requires exactly two active shifts (morning/evening).
-        if ($activeShiftIds->count() !== 2 || !$activeShiftIds->contains((int) $baseShiftId)) {
-            return $baseShiftId;
-        }
-
-        $requestedWeekStart = Carbon::createFromFormat('Y-m-d', $date, 'Asia/Riyadh')->startOfWeek(Carbon::SUNDAY);
-        $currentWeekStart = Carbon::createFromFormat('Y-m-d', '2026-02-15', 'Asia/Riyadh')->startOfWeek(Carbon::SUNDAY);
-        $weekDiff = $currentWeekStart->diffInWeeks($requestedWeekStart);
-    
-        if ($weekDiff % 2 === 0) {
-            return (int) $baseShiftId;
-        }
-    
-        return (int) $activeShiftIds->first(fn ($shiftId) => $shiftId !== (int) $baseShiftId);
+        return app(\App\Services\EmployeeShiftSchedule::class)->resolve($baseShiftId, $date, $employeeId);
     }
 
 
@@ -419,6 +402,9 @@ class HomeBookingController extends Controller
     private function persistPackageBooking(array $data): void
     {
     
+            if (!User::role('employee')->active()->whereKey($data['employye_id'])->exists()) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['employye_id' => 'الموظف المختار موقوف أو غير متاح.']);
+            }
             $booking = Booking::create([
                 'status'          => 'pending',
                 'start_date_time' => $data['date'].' '.$data['time'],

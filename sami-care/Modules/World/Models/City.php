@@ -13,12 +13,13 @@ class City extends BaseModel
 
     protected $table = 'cities';
 
-    protected $fillable = ['name', 'state_id', 'status'];
+    protected $fillable = ['name', 'state_id', 'status', 'home_service_fee'];
 
     protected $casts = [
 
         'state_id' => 'integer',
         'status' => 'integer',
+        'home_service_fee' => 'decimal:2',
 
     ];
 

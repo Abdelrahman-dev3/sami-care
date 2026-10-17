@@ -170,6 +170,7 @@ $query->select('cities.*')
      */
     public function store(Request $request)
     {
+        $request->validate(['home_service_fee' => ['sometimes', 'required', 'numeric', 'min:0', 'max:99999999.99']]);
         $data = City::create($request->all());
 
         $message = 'New City Added';
@@ -200,6 +201,7 @@ $query->select('cities.*')
      */
     public function update(Request $request, $id)
     {
+        $request->validate(['home_service_fee' => ['sometimes', 'required', 'numeric', 'min:0', 'max:99999999.99']]);
         $data = City::findOrFail($id);
 
         $data->update($request->all());

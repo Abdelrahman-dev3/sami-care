@@ -11,6 +11,7 @@
 @endpush
 
 @section('content')
+<div class="mb-3"><a class="btn btn-primary" href="{{ route('app.booking-reviews') }}">تقييمات الحجوزات والخدمات والموظفين من الموقع</a></div>
 <div class="card">
   <div class="card-body">
     <x-backend.section-header>

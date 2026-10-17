@@ -1,3 +1,4 @@
+import { homeService, loadHomeService } from '@/composables/useHomeService'
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 
@@ -55,7 +56,11 @@ const router = createRouter({
   ]
 })
 
-router.beforeEach(to => {
+router.beforeEach(async to => {
+  if (to.name === 'home-service') {
+    try { await loadHomeService() } catch {}
+    if (!homeService.enabled) return { name: 'home' }
+  }
   if (!to.meta.requiresAuth) return true
   const { isAuthenticated, openAuthModal } = useAuth()
   if (isAuthenticated.value) return true

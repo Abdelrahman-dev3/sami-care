@@ -3,6 +3,7 @@
     <div class="offcanvas offcanvas-end" tabindex="-1" id="form-offcanvas" aria-labelledby="form-offcanvasLabel">
       <FormHeader :currentId="currentId" :editTitle="editTitle" :createTitle="createTitle"></FormHeader>
       <div class="offcanvas-body">
+        <p v-if="currentId > 0" class="alert alert-info">متوسط تقييم العملاء: {{ rating_summary?.count ? Number(rating_summary.average).toFixed(2) + ' / 5 (' + rating_summary.count + ')' : 'لا توجد تقييمات' }}</p>
         <div class="row">
           <div class="col-12 row">
             <div class="col-md-8">
@@ -271,9 +272,9 @@ const { getRequest, storeRequest, updateRequest } = useRequest()
 const currentId = useModuleId(() => {
   useSelect({ url: BRANCH_LIST }, { value: 'id', label: 'name' }).then((data) => {
     branch.value = data
-    if(props.selectedSessionBranchId !== null) {
+    if(currentId.value === 0 && props.selectedSessionBranchId !== null) {
       branch_id.value = props.selectedSessionBranchId
-    } else if (data.options.length === 1) {
+    } else if (currentId.value === 0 && data.options.length === 1) {
       branch_id.value = data.options[0].value
       loadServicesForCurrentFilters()
     }
@@ -281,9 +282,9 @@ const currentId = useModuleId(() => {
   })
   useSelect({ url: SHIFT_LIST }, { value: 'id', label: 'name' }).then((data) => {
     shift.value = data
-    if(props.selectedSessionShiftId !== null) {
+    if(currentId.value === 0 && props.selectedSessionShiftId !== null) {
       shift_id.value = props.selectedSessionShiftId
-    } else if (data.options.length === 1) {
+    } else if (currentId.value === 0 && data.options.length === 1) {
       shift_id.value = data.options[0].value
       loadServicesForCurrentFilters()
     }
@@ -333,7 +334,7 @@ const branchSelect = () => {
 }
 
 const shiftSelect = () => {
-  loadServicesForCurrentFilters({ resetSelected: true })
+  loadServicesForCurrentFilters()
 }
 
 const categorySelect = async () => {
@@ -401,6 +402,8 @@ const defaultData = () => {
     profile_image: '',
     status: 1,
     branch_id: 0,
+    shift_id: '',
+    rating_summary: null,
     category_id: [],
     service_id: [],
     commission_id: '',
@@ -445,7 +448,8 @@ const setFormData = (data) => {
       category_id: normalizeCategoryIds(data.category_id),
       service_id: data.service_id,
       commission_id: data.commission_id,
-      status: data.status ? true : false,
+      status: data.status == 1,
+      rating_summary: data.rating_summary,
       show_in_calender: data.show_in_calender,
       is_manager: data.is_manager,
       show_in_home_booking: data.show_in_home_booking == 1 ? true : false,
@@ -550,6 +554,7 @@ const { value: branch_id } = useField('branch_id')
 const { value: shift_id } = useField('shift_id')
 const { value: category_id } = useField('category_id')
 const { value: status } = useField('status')
+const { value: rating_summary } = useField('rating_summary')
 const { value: service_id } = useField('service_id')
 const { value: commission_id } = useField('commission_id')
 const { value: profile_image } = useField('profile_image')
@@ -581,8 +586,8 @@ const formSubmit = handleSubmit((values) => {
   if(IS_SUBMITED.value) return false
   IS_SUBMITED.value = true;
   values.show_in_home_booking = show_in_home_booking.value ? 1 : 0;
+  delete values.rating_summary
   values.custom_fields_data = JSON.stringify(values.custom_fields_data)
-  console.log("submit",values);
   if (currentId.value > 0) {
     updateRequest({ url: UPDATE_URL, id: currentId.value, body: values, type: 'file' }).then((res) => reset_datatable_close_offcanvas(res))
   } else {

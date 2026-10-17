@@ -1,4 +1,6 @@
 <script setup>
+import { homeService, loadHomeService } from '@/composables/useHomeService'
+loadHomeService().catch(() => {})
 import { useSiteContact } from '@/composables/useSiteContact'
 const { whatsappUrl } = useSiteContact()
 import { localizeRecord } from '@/utils/i18nField'
@@ -10,7 +12,8 @@ const branches = ref([])
 const { state: lang } = useLanguage()
 
 const displayBranches = computed(() => {
-  const list = branches.value
+  const list = branches.value.filter(b => homeService.enabled || !(b.home || b.id === 'hm'))
+  if (!homeService.enabled) return list
   return list.some(branch => branch.home || branch.id === 'hm')
     ? list
     : [...list, { id: 'hm', home: true, name: 'خدمات منزلية', description: 'حلاقة شعر ولحية وماسكات طبيعية',description_en: 'Haircut, beard, and natural masks', image: '/images/generated/branches/home-service-hq.png' }]

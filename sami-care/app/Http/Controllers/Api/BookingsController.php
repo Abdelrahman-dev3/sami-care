@@ -106,6 +106,7 @@ public function getstaff(Request $request)
         ->where('model_has_roles.model_type', \App\Models\User::class)
         ->where('users.is_manager', 0)
         ->where('users.status', 1)
+            ->where('users.is_banned', 0)
         ->whereNull('users.deleted_at');
 
     if ($branchId != 0) {
@@ -120,7 +121,7 @@ public function getstaff(Request $request)
         $query->where('service_employees.service_id', $serviceId);
     }
 
-    $employees = $query->select('users.*')->get();
+    $employees = $query->select('users.*')->distinct()->get();
 
     return response()->json($employees);
 }
@@ -133,7 +134,7 @@ public function getAvailableTimes(Request $request ,$date, $staffId)
     }
     
     $user = User::find($staffId);
-    if (!$user) { 
+    if (!$user || !(int) $user->status || (int) $user->is_banned) {
         return response()->json([]);
     }
     
@@ -142,7 +143,7 @@ public function getAvailableTimes(Request $request ,$date, $staffId)
         return response()->json([]);
     }
     $baseShiftId = $user->shift?->shift_id;
-    $shift = $this->resolveWeeklyRotatingShiftId($baseShiftId, $date);
+    $shift = $this->resolveWeeklyRotatingShiftId($baseShiftId, $date, $user->id);
 
 
     try {
@@ -153,7 +154,8 @@ public function getAvailableTimes(Request $request ,$date, $staffId)
     
     $serve_book_min = max(1, (int) $request->query('Increasing', 30));
 
-    $workingHours = BussinessHour::where('branch_id', $branchId)->where('day', $dayName)->where('is_holiday', 0)->where('shift_id', $shift)->orderBy('id', 'desc')->first();
+    if (!$shift) return response()->json([]);
+        $workingHours = BussinessHour::where('branch_id', $branchId)->where('day', $dayName)->where('is_holiday', 0)->where('shift_id', $shift)->orderBy('id', 'desc')->first();
 
     if (!$workingHours) {
         return response()->json([]);
@@ -300,29 +302,10 @@ private function normalizeBreaks($breaks, string $date): array
     return $normalized;
 }
 
-private function resolveWeeklyRotatingShiftId($baseShiftId, string $date)
-{
-    if (!$baseShiftId) {
-        return $baseShiftId;
+private function resolveWeeklyRotatingShiftId($baseShiftId, string $date, ?int $employeeId = null)
+    {
+        return app(\App\Services\EmployeeShiftSchedule::class)->resolve($baseShiftId, $date, $employeeId);
     }
-
-    $activeShiftIds = DB::table('shifts')->where('status', 1)->orderBy('id')->pluck('id')->map(fn ($id) => (int) $id)->values();
-
-    // Weekly rotation requires exactly two active shifts (morning/evening).
-    if ($activeShiftIds->count() !== 2 || !$activeShiftIds->contains((int) $baseShiftId)) {
-        return $baseShiftId;
-    }
-
-    $requestedWeekStart = Carbon::createFromFormat('Y-m-d', $date, 'Asia/Riyadh')->startOfWeek(Carbon::SUNDAY);
-    $currentWeekStart = Carbon::createFromFormat('Y-m-d', '2026-02-15', 'Asia/Riyadh')->startOfWeek(Carbon::SUNDAY);
-    $weekDiff = $currentWeekStart->diffInWeeks($requestedWeekStart);
-
-    if ($weekDiff % 2 === 0) {
-        return (int) $baseShiftId;
-    }
-
-    return (int) $activeShiftIds->first(fn ($shiftId) => $shiftId !== (int) $baseShiftId);
-}
 
 /*-----------------------Helper function to filter time---------------------------*/
     function filterAvailableTimes($availableTimes, $serviceDuration) {

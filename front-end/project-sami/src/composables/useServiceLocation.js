@@ -1,4 +1,5 @@
 import { ref, computed } from 'vue'
+import { homeService, loadHomeService } from '@/composables/useHomeService'
 import { localizeRecord } from '@/utils/i18nField'
 import { useLanguage } from '@/composables/useLanguage'
 import { resolveBackendUrl } from '@/utils/assetPath'
@@ -100,7 +101,8 @@ async function loadServiceLocations() {
       const payload = await next.json()
       locations.push(...(payload.data || []))
     }
-    serviceLocations.value = [...locations.map(normalizeBranch), HOME_SERVICE]
+    await loadHomeService()
+    serviceLocations.value = [...locations.map(normalizeBranch), ...(homeService.enabled ? [HOME_SERVICE] : [])]
 
     /*
       لو المكان المحفوظ لم يعد موجودًا في الـ API

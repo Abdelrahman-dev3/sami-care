@@ -163,7 +163,8 @@ class PaymentOrchestratorService
                 $attempt->gift_ids ?? [],
                 $this->resolvePaymentMethod($gateway, false),
                 $attempt->coupon_code ?? '',
-                $attempt->submethods ?? []
+                $attempt->submethods ?? [],
+                (float) $attempt->amount
             );
 
             $attempt->update([
@@ -242,6 +243,7 @@ class PaymentOrchestratorService
 
                 $invoiceId = app(PaymentFinalizerService::class)->finalizePayment($userId,$grossAmount,$taxAmount,$discountAmount,$pageType,$checkout['cart_ids'] ?? [],$checkout['gift_ids'] ?? [],'cash on delivery',$couponCode ?? '',false);
 
+                \App\Models\Invoice::findOrFail($invoiceId)->update(['collection_details' => ['gateway' => 0, 'wallet' => $requiredDeposit, 'loyalty' => 0]]);
                 BookingTransaction::where('external_transaction_id', 'INV-' . $invoiceId)->update(['transaction_type' => 'cash_on_delivery_deposit_percent']);
             });
 
@@ -273,10 +275,15 @@ class PaymentOrchestratorService
         }
     }
 
-    private function finalize(int $userId,float $grossAmount,float $taxAmount,float $discountAmount,string $pageType,array $cartIds,array $giftIds,string $paymentMethod,?string $couponCode,array $submethods): int {
+    private function finalize(int $userId,float $grossAmount,float $taxAmount,float $discountAmount,string $pageType,array $cartIds,array $giftIds,string $paymentMethod,?string $couponCode,array $submethods,?float $gatewayCollected = null): int {
         
         $invoiceId = app(PaymentFinalizerService::class)->finalizePayment($userId,$grossAmount, $taxAmount, $discountAmount, $pageType, $cartIds, $giftIds, $paymentMethod, $couponCode ?? '', true );
-        app(PaymentSubMethodsService::class)->apply($userId,new Request($submethods),$grossAmount,true);
+        $settlement = app(PaymentSubMethodsService::class)->apply($userId,new Request($submethods),$grossAmount,true);
+        \App\Models\Invoice::findOrFail($invoiceId)->update(['collection_details' => [
+            'gateway' => max(0, $gatewayCollected ?? 0),
+            'wallet' => (float) ($settlement['used_wallet'] ?? 0),
+            'loyalty' => (float) ($settlement['used_loyalty_amount'] ?? 0),
+        ]]);
         return $invoiceId;
     }
 

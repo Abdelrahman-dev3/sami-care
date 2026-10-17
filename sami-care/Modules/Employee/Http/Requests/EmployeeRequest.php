@@ -21,6 +21,9 @@ class EmployeeRequest extends FormRequest
                     'last_name' => 'required|string|max:255',
                     'email' => 'required|string|unique:users,email',
                     'mobile' => 'required|string',
+                    'status' => ['sometimes', 'boolean'],
+                    'branch_id' => ['required', 'integer', Rule::exists('branches', 'id')->where('status', 1)->whereNull('deleted_at')],
+                    'shift_id' => ['required', 'integer', Rule::exists('shifts', 'id')->where('status', 1)],
                     'password' => 'required|min:8',
                     'confirm_password' => 'required|same:password',
                 ];
@@ -32,6 +35,9 @@ class EmployeeRequest extends FormRequest
                     'last_name' => 'required|string|max:255',
                     'email' => ['required', 'string', Rule::unique('users', 'email')->ignore($this->id)->whereNull('deleted_at')],
                     'mobile' => 'required|string',
+                    'status' => ['sometimes', 'boolean'],
+                    'branch_id' => ['required', 'integer', Rule::exists('branches', 'id')->where('status', 1)->whereNull('deleted_at')],
+                    'shift_id' => ['required', 'integer', Rule::exists('shifts', 'id')->where('status', 1)],
                 ];
                 break;
             default:

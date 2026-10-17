@@ -192,6 +192,10 @@ class MobileCartController extends Controller
         $startDateTime = \Carbon\Carbon::createFromFormat('Y-m-d H:i', $validated['date'].' '.$validated['time']);
 
         $data = DB::transaction(function () use ($user, $package, $branchId, $employeeId, $validated, $startDateTime) {
+            $selectedEmployee = User::role('employee')->whereKey($employeeId)->lockForUpdate()->first();
+            if (!$selectedEmployee || !(int) $selectedEmployee->status || (int) $selectedEmployee->is_banned) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['employee_id' => 'الموظف المختار موقوف أو غير متاح.']);
+            }
             $booking = Booking::create([
                 'status' => 'pending',
                 'start_date_time' => $startDateTime,
@@ -247,7 +251,10 @@ class MobileCartController extends Controller
     public function storeBooking(Request $request)
     {
         $validated = $request->validate([
-            'branch' => ['required', 'integer'],
+            'branch' => ['required', 'integer', 'min:0'],
+            'city_id' => ['required_if:branch,0', 'nullable', 'integer'],
+            'latitude' => ['required_if:branch,0', 'nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['required_if:branch,0', 'nullable', 'numeric', 'between:-180,180'],
             'services' => ['required', 'array', 'min:1'],
             'services.*.subServices' => ['required', 'array', 'min:1'],
             'services.*.subServices.*.id' => ['required', 'integer', 'exists:services,id'],
@@ -262,12 +269,13 @@ class MobileCartController extends Controller
 
         $user = $request->user();
         $branchId = (int) $validated['branch'];
+        $homeCity = $branchId === 0 ? app(\App\Services\HomeService::class)->quote($validated) : null;
         $createdBookingIds = [];
 
         // Expired unpaid carts must not keep otherwise available appointments blocked.
         app(CartExpirationService::class)->clearExpired();
 
-        DB::transaction(function () use ($validated, $user, $branchId, &$createdBookingIds) {
+        DB::transaction(function () use ($validated, $user, $branchId, $homeCity, &$createdBookingIds) {
             foreach ($validated['services'] as $serviceGroup) {
                 foreach ($serviceGroup['subServices'] as $subService) {
                     $service = Service::query()->findOrFail($subService['id']);
@@ -283,7 +291,13 @@ class MobileCartController extends Controller
                      * Serialise availability checks for this employee. This prevents
                      * two simultaneous requests from both passing the conflict check.
                      */
-                    User::query()->whereKey($staffId)->lockForUpdate()->firstOrFail();
+                    $selectedEmployee = User::role('employee')->whereKey($staffId)->lockForUpdate()->first();
+                    if (!$selectedEmployee || !(int) $selectedEmployee->status || (int) $selectedEmployee->is_banned) {
+                        throw \Illuminate\Validation\ValidationException::withMessages(['staffId' => 'الموظف المختار موقوف أو غير متاح. اختر موظفاً آخر.']);
+                    }
+                    if ($branchId === 0 && !(int) $selectedEmployee->show_in_home_booking) {
+                        throw \Illuminate\Validation\ValidationException::withMessages(['staffId' => 'الموظف غير متاح للحجز المنزلي.']);
+                    }
 
                     $hasConflict = BookingService::query()
                         ->where('employee_id', $staffId)
@@ -307,6 +321,13 @@ class MobileCartController extends Controller
                         ], 409));
                     }
 
+                    $availableSlots = app(\App\Http\Controllers\HomeBookingController::class)->getAvailableTimes(
+                        new Request(['Increasing' => $duration]), $subService['date'], $staffId
+                    )->getData(true);
+                    if (!in_array($subService['time'], $availableSlots, true)) {
+                        throw \Illuminate\Validation\ValidationException::withMessages(['time' => 'الموعد خارج وردية الموظف الحالية أو لم يعد متاحاً. اختر موعداً جديداً.']);
+                    }
+
                     $booking = new Booking();
 
                     if ($branchId !== 0) {
@@ -324,6 +345,13 @@ class MobileCartController extends Controller
                     $booking->branch_id = $branchId ?: 1;
                     $booking->created_by = $user->id;
                     $booking->status = 'pending';
+                    if ($homeCity) {
+                        $booking->home_city_id = $homeCity->id;
+                        $booking->home_latitude = $validated['latitude'];
+                        $booking->home_longitude = $validated['longitude'];
+                        $booking->home_service_fee = count($createdBookingIds) === 0 ? $homeCity->home_service_fee : 0;
+                        $booking->note .= ', City: ' . $homeCity->name . ', Google Maps: https://maps.google.com/?q=' . $validated['latitude'] . ',' . $validated['longitude'];
+                    }
                     $booking->payment_type = 'cart';
                     $booking->save();
 
@@ -332,7 +360,7 @@ class MobileCartController extends Controller
                     $bookingService->service_id = $subService['id'];
                     $bookingService->employee_id = $staffId;
                     $bookingService->start_date_time = $startDateTime;
-                    $bookingService->service_price = $service->default_price ?? 0;
+                    $bookingService->service_price = (float) ($service->default_price ?? 0) + (float) $booking->home_service_fee;
                     $bookingService->duration_min = $duration;
                     $bookingService->sequance = 1;
                     $bookingService->created_by = $user->id;

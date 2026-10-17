@@ -45,6 +45,9 @@ class BookingsController extends Controller
         }
 
         $employeeId = (int) ($request->employee_id ?? 0);
+        if ($employeeId > 0 && !\App\Models\User::role('employee')->active()->whereKey($employeeId)->exists()) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['employee_id' => 'الموظف المختار موقوف أو غير متاح.']);
+        }
         $startDateTime = isset($data['start_date_time']) ? $data['start_date_time'] : null;
         if ($employeeId > 0 && $startDateTime) {
             $durationMinutes = 0;

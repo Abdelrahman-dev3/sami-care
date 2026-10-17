@@ -458,7 +458,7 @@
 @push('after-scripts')
 <script>
     function toggleApproval(id) {
-        fetch(`/app/booking-reviews/${id}/approve`, {
+        fetch(@json(route('booking-reviews.approve', '__ID__')).replace('__ID__', encodeURIComponent(id)), {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -490,7 +490,7 @@
     function deleteReview(id) {
         if (!confirm('هل أنت متأكد من حذف هذا التقييم؟')) return;
 
-        fetch(`/app/booking-reviews/${id}`, {
+        fetch(@json(route('booking-reviews.destroy', '__ID__')).replace('__ID__', encodeURIComponent(id)), {
             method: 'DELETE',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
