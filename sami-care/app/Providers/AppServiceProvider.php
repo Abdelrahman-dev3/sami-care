@@ -53,6 +53,10 @@ class AppServiceProvider extends ServiceProvider
         // Membership: award points when a booking is completed
         \Modules\Booking\Models\Booking::observe(\App\Observers\MembershipPointsObserver::class);
 
+        // Wallet: refund cancelled paid bookings / orders according to the wallet policy
+        \Modules\Booking\Models\Booking::observe(\App\Observers\WalletRefundObserver::class);
+        \Modules\Product\Models\Order::observe(\App\Observers\WalletRefundObserver::class);
+
         Schema::defaultStringLength(191);
 
 

@@ -75,7 +75,8 @@ class ProfileController extends Controller
             ->latest('id')
             ->get();
 
-        $walletBalance = (float) (Wallet::where('user_id', $user->id)->where('status', 1)->value('amount') ?? 0);
+        $walletSummary = app(\App\Services\Wallet\WalletLedger::class)->summary($user->id);
+        $walletBalance = $walletSummary['active'] ? (float) $walletSummary['balance'] : 0.0;
         $loyaltyPoints = (int) (LoyaltyPoint::where('user_id', $user->id)->value('points') ?? 0);
 
         return response()->json([
@@ -97,6 +98,8 @@ class ProfileController extends Controller
                 ],
                 'balances' => [
                     'wallet' => $walletBalance,
+                    'wallet_cash' => $walletSummary['active'] ? $walletSummary['cash_balance'] : 0.0,
+                    'wallet_bonus' => $walletSummary['active'] ? $walletSummary['bonus_balance'] : 0.0,
                     'loyalty_points' => $loyaltyPoints,
                 ],
                 'stats' => [

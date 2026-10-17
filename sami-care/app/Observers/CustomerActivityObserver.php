@@ -53,7 +53,9 @@ class CustomerActivityObserver
             $group = 'wallet';
             $activity = is_array($model->activity_data) ? $model->activity_data : json_decode($model->activity_data ?? '{}', true);
             $amount = abs((float) ($activity['credit_debit_amount'] ?? $activity['reward_value'] ?? $activity['amount'] ?? 0));
-            $debit = in_array($model->activity_type, ['withdraw', 'withdrawal', 'debit']);
+            $debit = $model->direction
+                ? $model->direction === 'debit'
+                : in_array($model->activity_type, ['withdraw', 'withdrawal', 'debit']);
             $title = $debit ? 'خصم من المحفظة' : 'إضافة إلى المحفظة';
             $message = $title.' بقيمة '.number_format($amount, 2).' ر.س';
             $details = ['amount' => $amount, 'activity_type' => $model->activity_type];

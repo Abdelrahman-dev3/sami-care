@@ -9,10 +9,13 @@ use Illuminate\Http\Response;
 use Yajra\DataTables\DataTables;
 use Modules\Wallet\Models\Wallet;
 use Modules\Wallet\Models\WalletHistory;
+use App\Models\PaymentAttempt;
+use App\Services\Payment\PaymentOrchestratorService;
 use App\Services\TapPaymentService;
-use Illuminate\Support\Facades\DB;
+use App\Services\Wallet\WalletLedger;
+use App\Services\Wallet\WalletSettings;
 use Currency;
-use carbon\Carbon;
+use Carbon\Carbon;
 
 class WalletController extends Controller
 {
@@ -26,6 +29,9 @@ class WalletController extends Controller
 
         // directory path of the module
         $this->module_path = 'Wallet::wallet';
+
+        // Customer wallet histories are staff-only.
+        $this->middleware('permission:view_wallet_admin|view_customer')->only('walletHistory', 'walletHistoryData');
 
         view()->share([
             'module_title' => $this->module_title,
@@ -75,117 +81,76 @@ class WalletController extends Controller
             ->make(true);
     }
 
+    /** Web top-up: same verified flow as the API; the balance is credited in the gateway callback. */
     public function addbalance(Request $request)
     {
-        $tap = new TapPaymentService();
-        $user = auth()->user();
-        $amount = $request->amount;
-        
-        if (!$amount || !is_numeric($amount)) {
-            return redirect()->back()->with('error', __('messages.invalid_amount'));
-        }
-        
-        session([
-            'walletToAdd' => (float) $amount,
-        ]);
+        $settings = app(WalletSettings::class);
+        $amount = (float) $request->amount;
 
-        $charge = $tap->createCharge(
-            amount: $amount,
-            customerData: [
-                "name"         => $user->first_name . $user->last_name ,
-                "country_code" => "966",
-                "phone"        => $user->mobile,
-                "method"       => 'src_card', 
-            ],
-            redirectUrl: route('addbalance.callback')
-        );
-        if (!isset($charge['transaction']['url'])) {
-            return "Error: " . json_encode($charge);
+        if ($amount < $settings->float('wallet_topup_min') || $amount > $settings->float('wallet_topup_max')) {
+            return redirect()->back()->with('error', __('wallet_ledger.topup_amount_range', [
+                'min' => $settings->float('wallet_topup_min'),
+                'max' => $settings->float('wallet_topup_max'),
+            ]));
         }
 
-        $paymentUrl = $charge['transaction']['url'];
-        
+        $result = app(PaymentOrchestratorService::class)->initiateTopup(auth()->id(), round($amount, 2), ['channel' => 'web']);
+        if (($result['status'] ?? '') !== 'redirect' || empty($result['payment_url'])) {
+            return redirect()->back()->with('error', $result['message'] ?? __('wallet_ledger.topup_failed'));
+        }
+
+        $paymentUrl = $result['payment_url'];
         $lang = app()->getLocale() ?? 'en';
-        
         $paymentUrl = preg_replace('/([&?])language=[^&]+/', '$1language=' . $lang, $paymentUrl);
-        
         if (!str_contains($paymentUrl, 'language=')) {
             $paymentUrl .= (str_contains($paymentUrl, '?') ? '&' : '?') . 'language=' . $lang;
         }
-        
+
         return redirect()->away($paymentUrl);
     }
-    
+
+    /**
+     * Callback of the old session-based top-up, kept only for charges started before
+     * the switch to PaymentAttempt. It credits the amount Tap actually captured, and
+     * only when it equals the amount this session asked for.
+     */
     public function callback(Request $request)
     {
-        $tap = new TapPaymentService();
-        
-        $failed = fn ($message, $sub = '', $redirect = '/') => redirect('/app')->with('error', $message);
-        
-        $amount = (float) session('walletToAdd');
-        if (!$amount || $amount <= 0) {
+        $failed = fn ($message) => redirect('/app')->with('error', $message);
+
+        $expected = round((float) session()->pull('walletToAdd'), 2);
+        $chargeId = (string) $request->tap_id;
+        if ($expected <= 0 || $chargeId === '') {
             return $failed(__('messages.invalid_amount'));
         }
-        
-        $chargeId = $request->tap_id;
-        if (!$chargeId) {
-            return "خطأ: لم يتم العثور على معرف العملية tap_id";
-        }
 
-        $alreadyExists = WalletHistory::where('activity_type', 'deposit')->where('activity_data->tap_id', $chargeId)->exists();
-        
-        if ($alreadyExists) {
+        // A charge created through PaymentAttempt is handled by the main payment callback.
+        if (PaymentAttempt::where('external_id', $chargeId)->exists()) {
             return $failed(__('messages.duplicate_payment'));
         }
 
-        $charge = $tap->getCharge($chargeId);
-        if (!isset($charge['status'])) {
-            return $failed("خطأ غير متوقع: " . json_encode($charge), '');
+        $charge = (new TapPaymentService())->getCharge($chargeId);
+        if (strtoupper((string) ($charge['status'] ?? '')) !== 'CAPTURED') {
+            return $failed(__('messages.payment_failed'));
         }
 
-
-        $status = $charge['status'];
-        switch ($status) {
-            case "CAPTURED":
-                DB::transaction(function () use ($amount, $chargeId, $charge) {
-
-                    $wallet = Wallet::firstOrCreate(
-                        ['user_id' => auth()->id()],
-                        [
-                            'amount' => 0,
-                            'title' => auth()->user()->first_name . ' ' . auth()->user()->second_name,
-                        ]
-                    );
-
-                    $wallet->increment('amount', $amount);
-                
-                    WalletHistory::create([
-                        'datetime'         => now(),
-                        'user_id'          => auth()->id(),
-                        'activity_type'    => 'deposit',
-                        'activity_message' => 'Wallet balance added',
-                        'activity_data'    => json_encode([
-                            'tap_id' => $chargeId,
-                            'credit_debit_amount' => $amount,
-                            'status' => $charge['status'],
-                        ]),
-                    ]);
-                });                
-                session()->forget('walletToAdd');
-                return redirect('/app')->with('success', __('messages.payment_success'));
-            case "FAILED":
-                session()->forget('walletToAdd');
-                return $failed(__('messages.failed_status'), __('messages.failed_message'));
-            case "CANCELLED":
-                session()->forget('walletToAdd');
-                return $failed(__('messages.cancelled_status'), __('messages.cancelled_message'));
-        
-            case "INITIATED":
-                session()->forget('walletToAdd');
-                return $failed(__('messages.initiated_status'), __('messages.initiated_message'));
-            default:
-                session()->forget('walletToAdd');
-                return $failed(__('messages.unknown_status') . ": " . $status);
+        $captured = round((float) ($charge['amount'] ?? 0), 2);
+        if (abs($captured - $expected) > 0.009 || strtoupper((string) ($charge['currency'] ?? '')) !== 'SAR') {
+            return $failed(__('wallet_ledger.payment_mismatch'));
         }
+
+        // Legacy rows recorded the charge in activity_data; the ledger key covers new ones.
+        if (WalletHistory::where('activity_type', 'deposit')->where('activity_data->tap_id', $chargeId)->exists()) {
+            return $failed(__('messages.duplicate_payment'));
+        }
+
+        app(WalletLedger::class)->credit(auth()->id(), $captured, 'topup', [
+            'activity_type' => 'deposit',
+            'source_type' => 'tap_charge',
+            'idempotency_key' => 'topup:tap:' . $chargeId,
+            'meta' => ['tap_id' => $chargeId, 'status' => $charge['status']],
+        ]);
+
+        return redirect('/app')->with('success', __('messages.payment_success'));
     }
 }

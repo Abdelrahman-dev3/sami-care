@@ -216,6 +216,11 @@ class BookingsController extends Controller
 
         if ($request->has('status') && $request->status == 'cancelled') {
 
+            // Cancelling a paid booking refunds the owner's wallet: owner or staff only.
+            if ((int) $booking->user_id !== (int) auth()->id() && !(auth()->user()?->can('edit_booking') || auth()->user()?->hasAnyRole(['admin', 'manager', 'employee']))) {
+                return response()->json(['message' => __('wallet_ledger.forbidden'), 'status' => false], 403);
+            }
+
             if (!in_array($booking->status, ['check_in', 'checkout', 'completed'])) {
 
                 $booking->update(['status' => 'cancelled']);

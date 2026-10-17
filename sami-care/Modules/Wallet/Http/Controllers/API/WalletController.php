@@ -2,42 +2,25 @@
 
 namespace Modules\Wallet\Http\Controllers\API;
 
-use App\Models\User;
 use Modules\Wallet\Models\Wallet;
 use App\Http\Controllers\Controller;
-use DateTime;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Modules\Wallet\Http\Requests\WalletRequest;
 use Modules\Wallet\Models\WalletHistory;
-use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
-use Modules\Wallet\Models\WithdrawMoney;
+use App\Services\Wallet\WalletLedger;
+use App\Services\Wallet\WalletWithdrawalService;
 
+/**
+ * Legacy wallet endpoints kept for the existing mobile apps.
+ * New clients should use /api/wallet/* (App\Http\Controllers\Api\WalletV2Controller).
+ */
 class WalletController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Create an empty wallet for the current user. The balance can only change
+     * through the ledger, so any amount sent by the client is ignored.
      */
-    public function index()
-    {
-        return view('wallet::index');
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        return view('wallet::create');
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-
-
     public function store(WalletRequest $request)
     {
         $user = auth()->user();
@@ -52,11 +35,14 @@ class WalletController extends Controller
             ], 400);
         }
 
-        $data = $request->all();
-        $data['user_id'] = $user->id; // Assign the user ID
-        $data['title'] = $user->first_name . ' ' . $user->last_name; // Store the user's name in the title field
-
-        $wallet = Wallet::create($data);
+        $wallet = Wallet::create([
+            'user_id' => $user->id,
+            'title' => $user->first_name . ' ' . $user->last_name,
+            'amount' => 0,
+            'cash_balance' => 0,
+            'bonus_balance' => 0,
+            'status' => 1,
+        ]);
 
         return response()->json([
             'status' => true,
@@ -65,107 +51,35 @@ class WalletController extends Controller
         ], 201);
     }
 
-    public function getBalance()
+    public function getBalance(WalletLedger $ledger)
     {
-        $user = auth()->user();
-
-
-        $wallet = Wallet::where('user_id', $user->id)->first();
+        $summary = $ledger->summary(auth()->id());
 
         return response()->json([
-            'balance' => $wallet ? $wallet->amount : 0,
+            'balance' => $summary['balance'],
+            'cash_balance' => $summary['cash_balance'],
+            'bonus_balance' => $summary['bonus_balance'],
         ], 200);
     }
 
-
-    public function walletTopup(WalletRequest $request)
+    /**
+     * Retired: it added the client-supplied amount to the balance without any payment.
+     * Top-ups now go through POST /api/wallet/topup and are credited in the gateway callback.
+     */
+    public function walletTopup()
     {
-
-        $user_id = auth()->user()->id;
-
-
-        $wallet = Wallet::where('user_id', $user_id)->first();
-
-
-        if (!$wallet) {
-            $user = User::find($user_id);
-
-            if ($user) {
-                $wallet = Wallet::create([
-                    'title' => $user->display_name,
-                    'user_id' => $user->id,
-                    'amount' => 0,
-                ]);
-            } else {
-                return response()->json(['error' => 'User not found'], 400);
-            }
-        }
-
-        // Increase the wallet balance by the amount from the request
-        $wallet->amount += $request->amount;
-        $wallet->save();
-
-        // Prepare the activity message
-        $activity_message = __('messages.top_up');
-
-        // Get the user and provider details
-        $user = \App\Models\User::find($wallet->user_id);
-
-        // Prepare activity data
-        $activity_data = [
-            'title' => $wallet->title,
-            'user_id' => $wallet->user_id,
-            'amount' => $wallet->amount,
-            'transaction_id' => $request->transaction_id,
-            'transaction_type' => $request->transaction_type,
-            'credit_debit_amount' => (float) $request->amount,
-            'transaction_type' => 'credit',
-        ];
-
-        // Prepare the data for the WalletHistory entry
-        $data = [
-            'user_id' => $wallet->user_id,
-            'datetime' => now(),
-            'activity_type' => 'wallet_top_up',
-            'activity_message' => $activity_message,
-            'activity_data' => json_encode($activity_data),
-        ];
-
-        // Create an entry in the WalletHistory table
-        WalletHistory::create($data);
-
-        $notification_data = [
-            'type' => 'Wallet Top Up',
-            'message' => 'Wallet Top up SuccessFully',
-            'notification_type' => 'wallet_top_up', // Matches the seeder type
-            'wallet' => [
-                'user_id' => $wallet->user_id,
-                'user_name' => auth()->user()->first_name . ' ' . auth()->user()->last_name,
-                'credit_debit_amount' => (float) $request->amount,
-                'transaction_id' => $request->transaction_id,
-                'transaction_type' => 'credit',
-                'id' => $wallet->id,
-            ],
-        ];
-
-        // Send the notification
-        sendNotification($notification_data);
-
-        Log::info('Sending Notification', ['data' => $data]);
-
-        // Return the response with success message and updated wallet data
         return response()->json([
-            'message' => 'Wallet top-up successful. New balance: ' . $wallet->amount,
-            'data' => $wallet,
-        ]);
+            'status' => false,
+            'message' => __('wallet_ledger.endpoint_retired'),
+        ], 410);
     }
 
 
     public function walletHistory(Request $request)
     {
 
-        $perPage = $request->get('per_page', 25);
-        $orderBy = $request->get('orderby', 'desc');
+        $perPage = min(max((int) $request->get('per_page', 25), 1), 100);
+        $orderBy = $request->get('orderby') === 'asc' ? 'asc' : 'desc';
 
 
         $userId = auth()->user()->id;
@@ -174,8 +88,7 @@ class WalletController extends Controller
             ->orderBy('created_at', $orderBy)
             ->paginate($perPage);
 
-        $wallet = Wallet::where('user_id', $userId)->first();
-        $availableBalance = $wallet ? $wallet->amount : 0;
+        $availableBalance = app(WalletLedger::class)->spendable($userId);
 
         $timezone = setting('default_time_zone') ?? 'UTC';
 
@@ -183,9 +96,9 @@ class WalletController extends Controller
 
             $item->datetime = Carbon::parse($item->datetime)
                 ->setTimezone($timezone)
-                ->toDateTimeString();  
+                ->toDateTimeString();
             return $item;
-        });        
+        });
 
         $response = [
             'pagination' => [
@@ -206,162 +119,25 @@ class WalletController extends Controller
         return response()->json($response);
     }
 
-    public function withdrawMoney(Request $request)
+    /**
+     * Withdrawal request for the authenticated user (any user_id in the body is ignored).
+     * The amount is held from the cash balance and paid out after staff review.
+     */
+    public function withdrawMoney(Request $request, WalletWithdrawalService $withdrawals)
     {
-        $data = $request->except('_token');
+        $data = $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'bank_id' => 'nullable|integer',
+            'iban' => ['nullable', 'string', 'regex:/^\s*SA\s*(\d\s*){22}$/i'],
+            'account_name' => 'nullable|string|max:120',
+        ]);
 
-        $payment_gateway = $data['payment_gateway'];
-        $user_id = $data['user_id'];
+        $withdrawal = $withdrawals->request(auth()->id(), (float) $data['amount'], $data);
 
-        // Fetch user's wallet details
-        $wallet = Wallet::where('user_id', $user_id)->first();
-
-        if (!$wallet) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Wallet not found for user.'
-            ], 404);
-        }
-
-        if ($wallet->amount < $request->amount) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Insufficient balance to withdraw.'
-            ], 400);
-        }
-
-        $payout_status = '';
-        $status = '';
-
-        // Check the payment method (bank)
-        if ($data['payment_method'] === 'bank') {
-
-            switch ($payment_gateway) {
-
-                    // RazorpayX case
-                case 'razorpayx':
-
-                    // Call the provider payout function from helpers.php
-                    $response = providerpayout_rezopayX($data);
-
-                    if ($response == '') {
-                        // Handle failure if response is empty
-                        $data['bank_id'] = $data['bank_id'];
-                        $data['payment_type'] = $payment_gateway;
-                        $data['datetime'] = Carbon::now();
-                        $data['status'] = 'failed';
-                        WithdrawMoney::create($data);
-
-                        return response()->json([
-                            'status' => false,
-                            'message' => 'Error with RazorpayX details.'
-                        ], 500);
-                    }
-
-                    $payout_details = json_decode($response, true);
-
-                    // Check if payout response is valid
-                    if (isset($payout_details['status']) && $payout_details['status'] == 'processing') {
-                        $data['status'] = 'paid';
-                    }
-
-                    // Check for Razorpay error and handle accordingly
-                    if (isset($payout_details['error'])) {
-                        // Safely access 'description' if it exists
-                        $razorpay_message = isset($payout_details['error']['description']) ? $payout_details['error']['description'] : 'Unknown error occurred';
-
-                        if (isset($payout_details['error']['code']) && $payout_details['error']['code'] == 'BAD_REQUEST_ERROR') {
-                            return response()->json([
-                                'status' => false,
-                                'message' => 'Razorpay Error: ' . $razorpay_message
-                            ], 406);
-                        }
-
-                        // If error is not related to bad request, mark the transaction as failed
-                        $data['bank_id'] = $data['bank_id'];
-                        $data['payment_type'] = $payment_gateway;
-                        $data['datetime'] = Carbon::now();
-                        $data['status'] = 'failed';
-                        WithdrawMoney::create($data);
-
-                        return response()->json([
-                            'status' => false,
-                            'message' => 'Razorpay Error: ' . $razorpay_message
-                        ], 500);
-                    }
-                    break;
-            }
-        }
-
-        // Save withdrawal request in the database
-        $data['bank_id'] = $data['bank_id'];
-        $data['payment_type'] = $payment_gateway;
-        $data['datetime'] = Carbon::now();
-        WithdrawMoney::create($data);
-
-        // Deduct the withdrawal amount from the wallet balance
-        $wallet->amount -= $data['amount'];
-        $wallet->save();
-
-        $activity_message =  __('messages.amount_withdrawn');
-
-        // Prepare activity data for the WalletHistory entry
-        $activity_data = [
-            'title' => $wallet->title,
-            'amount' => $wallet->amount,
-            'transaction_id' => "",
-            'transaction_type' => 'debit', // Withdrawals are considered as debits
-            'credit_debit_amount' => (float) $data['amount'],
-        ];
-
-        // Prepare data for the WalletHistory entry
-        $history_data = [
-            'user_id' => $wallet->user_id,
-            'datetime' => now(),
-            'activity_type' => 'debit', // Debit for withdrawal
-            'activity_message' => $activity_message,
-            'activity_data' => json_encode($activity_data),
-        ];
-
-        // Create an entry in the WalletHistory table for the withdrawal
-        WalletHistory::create($history_data);
-
-        // Return response to the user (API or Web)
         return response()->json([
             'status' => true,
-            'message' => 'Money transferred successfully.'
+            'message' => __('wallet_ledger.withdrawal_created'),
+            'data' => ['id' => $withdrawal->id, 'status' => $withdrawal->status],
         ], 200);
-    }
-
-    /**
-     * Show the specified resource.
-     */
-    public function show($id)
-    {
-        return view('wallet::show');
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit($id)
-    {
-        return view('wallet::edit');
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($id)
-    {
-        //
     }
 }

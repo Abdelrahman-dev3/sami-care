@@ -18,8 +18,8 @@ use Modules\Product\Models\OrderUpdate;
 use Modules\Product\Trait\OrderTrait;
 use Modules\Product\Transformers\OrderDetailsResource;
 use Modules\Product\Transformers\OrderResource;
-use Modules\Wallet\Models\Wallet;
-use Modules\Wallet\Models\WalletHistory;
+use App\Services\Wallet\InsufficientWalletBalance;
+use App\Services\Wallet\WalletLedger;
 
 class OrdersController extends Controller
 {
@@ -94,35 +94,41 @@ class OrdersController extends Controller
             $orderGroup->grand_total_amount = $orderGroup->sub_total_amount + $orderGroup->total_tax_amount + $orderGroup->total_shipping_cost + $orderGroup->total_tips_amount - $orderGroup->total_coupon_discount_amount;
 
             if ($request->payment_method == 'wallet') {
-    
                 if (!$userId) {
                     return response()->json([
                         'status' => false,
                         'message' => 'User not found.'
-                    ], 404);  
+                    ], 404);
                 }
-    
-                $wallet = Wallet::where('user_id', $userId)->first();
-    
-                if (!$wallet) {
-                    return response()->json([
-                        'status' => false,
-                        'message' => 'Wallet not found.'
-                    ], 404);  
-                }
-    
-                if ($wallet->amount >= $orderGroup->grand_total_amount) {
-                    $wallet->amount -= $orderGroup->grand_total_amount;
-                    $walletsSaveStatus = $wallet->save(); 
-                } else {
+
+                if (app(WalletLedger::class)->spendable($userId) + 0.0001 < (float) $orderGroup->grand_total_amount) {
                     return response()->json([
                         'status' => false,
                         'message' => 'Insufficient wallet balance.'
-                    ], 400);  
+                    ], 400);
                 }
             }
 
             $orderGroup->save();
+
+            if ($request->payment_method == 'wallet') {
+                try {
+                    app(WalletLedger::class)->debit($userId, (float) $orderGroup->grand_total_amount, 'payment', [
+                        'activity_type' => 'debit',
+                        'message' => __('messages.wallet_paid_order') . $orderGroup->id,
+                        'source_type' => 'order_group',
+                        'source_id' => $orderGroup->id,
+                        'idempotency_key' => 'payment:order_group:' . $orderGroup->id,
+                    ]);
+                } catch (InsufficientWalletBalance $e) {
+                    $orderGroup->delete();
+
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Insufficient wallet balance.'
+                    ], 400);
+                }
+            }
 
             // order -> todo::[update version] make array for each vendor, create order in loop
             $order = new Order;
@@ -133,32 +139,11 @@ class OrdersController extends Controller
             $order->logistic_id = $logisticZone->id ?? null;
             $order->logistic_name = ($logisticZone->logistic)->name ?? null;
             // $order->shipping_delivery_type          = $request['shipping_delivery_type'];
-            $order->payment_status = $request['payment_status'];
+            $order->payment_status = $request->payment_method == 'wallet' ? 'paid' : $request['payment_status'];
             $order->shipping_cost = $orderGroup->total_shipping_cost; // todo::[update version] calculate for each vendors
             $order->tips_amount = $orderGroup->total_tips_amount; // todo::[update version] calculate for each vendors
 
             $order->save();
-
-            if ($request->payment_method == 'wallet' && $walletsSaveStatus) {
-                $activity_message = __('messages.wallet_paid_order') . $order->id;
-
-                $activity_data = [
-                    'title' => $wallet->title,
-                    'amount' => $wallet->amount,
-                    'transaction_id' => null,
-                    'transaction_type' => 'wallet',
-                    'credit_debit_amount' => (float) $orderGroup->grand_total_amount,
-                    'transaction_type' => 'debit',
-                ];
-                $walletHistoryData = [
-                    'user_id' => $wallet->user_id,
-                    'datetime' => now(),
-                    'activity_type' => 'debit',
-                    'activity_message' => $activity_message,
-                    'activity_data' => json_encode($activity_data),
-                ];
-                WalletHistory::create($walletHistoryData);
-            } 
 
             // order items
             $total_points = 0;
@@ -297,6 +282,15 @@ class OrdersController extends Controller
 
         if ($request->has('id') && $request->id != '') {
             $order = Order::where('id', $request->id)->first();
+
+            // Cancelling refunds the wallet, so only the owner (or staff) may cancel,
+            // and only before delivery.
+            if ($order && (int) $order->user_id !== (int) $userId && !(Auth::user()?->can('edit_order') || Auth::user()?->hasAnyRole(['admin', 'manager', 'employee']))) {
+                return response()->json(['status' => false, 'message' => __('wallet_ledger.forbidden')], 403);
+            }
+            if ($order && in_array($order->delivery_status, ['delivered', 'cancelled'], true)) {
+                return response()->json(['status' => false, 'message' => __('wallet_ledger.cannot_cancel_delivered')], 422);
+            }
 
             if ($order) {
                 $order->delivery_status = 'cancelled';

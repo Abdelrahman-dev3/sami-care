@@ -11,10 +11,10 @@ function rs(n) {
   <div class="overview">
     <div v-if="profile?.user?.referral_code" class="stat-card" style="margin-bottom:20px"><h3>كود الإحالة الخاص بك</h3><p>شارك الكود مع أصدقائك واكسب نقاط ولاء عند تسجيلهم.</p><input :value="profile.user.referral_code" readonly dir="ltr" aria-label="كود الإحالة الخاص بك" @click="$event.target.select()" style="text-align:center;font-size:20px;padding:10px;border:1px solid #e9e0d3;border-radius:8px;max-width:100%" /></div>
     <div class="stat-grid">
-      <div class="stat-card">
+      <button type="button" class="stat-card stat-link" @click="$emit('go', 'wallet')">
         <b>{{ rs(profile?.balances?.wallet) }} ر.س</b>
         <small>رصيد المحفظة</small>
-      </div>
+      </button>
       <div class="stat-card">
         <b>{{ rs(profile?.balances?.loyalty_points) }}</b>
         <small>نقطة ولاء</small>
@@ -38,6 +38,9 @@ function rs(n) {
     </div>
 
     <div class="quick-links">
+      <button @click="$emit('go', 'wallet')">
+        <span>محفظتي</span><em>‹</em>
+      </button>
       <button @click="$emit('go', 'membership')">
         <span>عضويتي (Sami Care)</span><em>‹</em>
       </button>
@@ -66,6 +69,8 @@ function rs(n) {
   background: #fff; border: 1px solid #e9e0d3; border-radius: 14px; padding: 16px;
   text-align: center;
 }
+.stat-link { font: inherit; cursor: pointer; transition: .2s; }
+.stat-link:hover { border-color: #c98b31; background: #fff8e9; }
 .stat-card b { display: block; font-size: 20px; color: #7c571d; margin-bottom: 4px; }
 .stat-card small { font-size: 11px; color: #8b8379; }
 .quick-links { display: grid; gap: 8px; }

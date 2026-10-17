@@ -30,6 +30,19 @@
         [/^فتح السلة، (\d+) منتجات$/, (_, count) => 'Open cart, ' + count + ' products'],
         [/^الهدايا اللي أرسلتها \((\d+)\)$/, (_, count) => 'Gifts I sent (' + count + ')'],
         [/^([\d.,]+) ر\.س رصيد$/, (_, amount) => amount + ' SAR balance'],
+        // Wallet (AccountWallet.vue)
+        [/^ينتهي ([\d.,]+) ر\.س من الرصيد الترويجي بتاريخ ([\d-]+)$/, (_, amount, date) => amount + ' SAR of promotional balance expires on ' + date],
+        [/^🎁 ستحصل على ([\d.,]+) ر\.س رصيداً ترويجياً مع هذا الشحن$/, (_, amount) => '🎁 You will get ' + amount + ' SAR promotional balance with this top-up'],
+        [/^اشحن ([\d.,]+) ر\.س واحصل على ([\d.,]+) ر\.س$/, (_, min, bonus) => 'Top up ' + min + ' SAR, get ' + bonus + ' SAR'],
+        [/^صلاحية المكافأة (\d+) يوم$/, (_, days) => 'Bonus valid for ' + days + ' days'],
+        [/^يُضاف الرصيد بعد تأكيد الدفع من البوابة\. الحد: ([\d.,]+) – ([\d.,]+) ر\.س$/, (_, min, max) => 'Balance is added once the payment gateway confirms the payment. Limits: ' + min + ' – ' + max + ' SAR'],
+        [/^لديك ([\d.,]+) نقطة · النقطة = ([\d.,]+) ر\.س · الحد الأدنى ([\d.,]+) نقطة$/, (_, points, value, min) => 'You have ' + points + ' points · 1 point = ' + value + ' SAR · minimum ' + min + ' points'],
+        [/^= ([\d.,]+) ر\.س رصيد ترويجي$/, (_, amount) => '= ' + amount + ' SAR promotional balance'],
+        [/^ينتهي ([\d-]+)$/, (_, date) => 'Expires ' + date],
+        [/^الرصيد ([\d.,]+)$/, (_, amount) => 'Balance ' + amount],
+        [/^يُحوَّل إلى حسابك البنكي بعد المراجعة\. المتاح للسحب: ([\d.,]+) ر\.س · الحد الأدنى ([\d.,]+) ر\.س$/, (_, available, min) => 'Transferred to your bank account after review. Available: ' + available + ' SAR · minimum ' + min + ' SAR'],
+        [/^عند إلغاء حجز مدفوع قبل موعده بـ ([\d.,]+) ساعة أو أكثر يُرجع المبلغ كاملاً إلى محفظتك، وبعد ذلك تُخصم رسوم ([\d.,]+)%\.$/, (_, hours, fee) => 'Cancel a paid booking at least ' + hours + ' hours before it starts and the full amount returns to your wallet; later cancellations carry a ' + fee + '% fee.'],
+        [/^مبلغ الشحن يجب أن يكون بين ([\d.,]+) و ([\d.,]+) ر\.س$/, (_, min, max) => 'Top-up amount must be between ' + min + ' and ' + max + ' SAR'],
       ];
       for (const [pattern, render] of patterns) {
         if (pattern.test(key)) { result = key.replace(pattern, render); break; }

@@ -167,26 +167,21 @@ class WheelController extends Controller
                 $rewardType = $winner['type'];
 
                 if ($rewardType === 'wallet_balance') {
-                    $wallet = Wallet::firstOrNew(['user_id' => $user->id]);
-                    $wallet->title = trim(($user->first_name ?? '').' '.($user->last_name ?? ''));
-                    $wallet->amount = (float) ($wallet->amount ?? 0) + $rewardValue;
-                    $wallet->status = 1;
-                    $wallet->save();
-
-                    WalletHistory::create([
-                        'datetime' => $now,
-                        'user_id' => $user->id,
+                    // Wheel winnings are promotional: bonus bucket, not withdrawable.
+                    $entry = app(\App\Services\Wallet\WalletLedger::class)->credit($user->id, (float) $rewardValue, 'reward', [
+                        'bucket' => 'bonus',
                         'activity_type' => 'wheel_win',
-                        'activity_message' => "Won {$rewardValue} from lucky wheel",
-                        'activity_data' => json_encode([
+                        'message' => "Won {$rewardValue} from lucky wheel",
+                        'source_type' => 'wheel',
+                        'meta' => [
                             'segment' => $segment,
                             'reward_id' => $rewardId,
                             'reward_type' => $rewardType,
                             'reward_value' => $rewardValue,
-                        ]),
+                        ],
                     ]);
 
-                    $walletBalance = (float) $wallet->amount;
+                    $walletBalance = (float) $entry->balance_after;
                     $message = __('messagess.wheel_congrats_wallet', [
                         'amount' => $this->formatRewardNumber($rewardValue),
                     ]);
@@ -385,26 +380,21 @@ class WheelController extends Controller
 
                 // ── WALLET BALANCE ───────────────────────────────────────
                 if ($rewardType === 'wallet_balance') {
-                    $wallet = Wallet::firstOrNew(['user_id' => $user->id]);
-                    $wallet->title  = trim(($user->first_name ?? '').' '.($user->last_name ?? ''));
-                    $wallet->amount = (float) ($wallet->amount ?? 0) + $rewardValue;
-                    $wallet->status = 1;
-                    $wallet->save();
-
-                    WalletHistory::create([
-                        'datetime'         => $now,
-                        'user_id'          => $user->id,
-                        'activity_type'    => 'wheel_win',
-                        'activity_message' => "Won {$rewardValue} from lucky wheel",
-                        'activity_data'    => json_encode([
+                    // Wheel winnings are promotional: bonus bucket, not withdrawable.
+                    $entry = app(\App\Services\Wallet\WalletLedger::class)->credit($user->id, (float) $rewardValue, 'reward', [
+                        'bucket' => 'bonus',
+                        'activity_type' => 'wheel_win',
+                        'message' => "Won {$rewardValue} from lucky wheel",
+                        'source_type' => 'wheel',
+                        'meta' => [
                             'segment'      => $segment,
                             'reward_id'    => $rewardId,
                             'reward_type'  => $rewardType,
                             'reward_value' => $rewardValue,
-                        ]),
+                        ],
                     ]);
 
-                    $walletBalance = (float) $wallet->amount;
+                    $walletBalance = (float) $entry->balance_after;
                     $message = __('messagess.wheel_congrats_wallet', [
                         'amount' => $this->formatRewardNumber($rewardValue),
                     ]);

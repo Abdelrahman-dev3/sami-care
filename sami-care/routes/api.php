@@ -363,7 +363,7 @@ Route::prefix('membership')->middleware('auth:sanctum')->controller(MembershipCo
 });
 
 // Admin
-Route::prefix('admin/membership')->middleware('auth:sanctum')->controller(MembershipController::class)->group(function () {
+Route::prefix('admin/membership')->middleware(['auth:sanctum', 'role:admin|manager'])->controller(MembershipController::class)->group(function () {
     Route::get('/members', 'allMembers');
     Route::post('/tiers', 'storeTier');
     Route::put('/tiers/{id}', 'updateTier');
@@ -378,4 +378,15 @@ Route::middleware('auth:sanctum')->controller(\App\Http\Controllers\Api\Customer
  Route::delete('/favorites/{type}/{id}', 'deleteFavorite')->whereNumber('id');
  Route::get('/bookings/{id}/review', 'review')->whereNumber('id');
  Route::put('/bookings/{id}/review', 'saveReview')->whereNumber('id');
+});
+
+// Wallet (section 19). Top-ups go through the payment gateway; see WalletV2Controller.
+Route::prefix('wallet')->middleware('auth:sanctum')->controller(\App\Http\Controllers\Api\WalletV2Controller::class)->group(function () {
+    Route::get('/', 'show');
+    Route::get('/history', 'history');
+    Route::get('/topup-offers', 'topupOffers');
+    Route::post('/topup', 'topup')->middleware('throttle:10,1');
+    Route::post('/convert-points', 'convertPoints')->middleware('throttle:10,1');
+    Route::get('/withdrawals', 'withdrawals');
+    Route::post('/withdrawals', 'requestWithdrawal')->middleware('throttle:5,1');
 });

@@ -7,9 +7,10 @@ use App\Models\Setting;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Models\PaymentAttempt;
-use Modules\Wallet\Models\Wallet;
 use Illuminate\Support\Facades\DB;
-use Modules\Wallet\Models\WalletHistory;
+use App\Services\Wallet\InsufficientWalletBalance;
+use App\Services\Wallet\WalletLedger;
+use App\Services\Wallet\WalletTopupService;
 use Modules\Booking\Models\BookingTransaction;
 use App\Services\Payment\Gateways\ArbGateway;
 use App\Services\Payment\Gateways\TabbyGateway;
@@ -127,6 +128,10 @@ class PaymentOrchestratorService
             return ['status' => 'paid', 'invoice_id' => $attempt->invoice_id];
         }
 
+        if ($attempt->purpose === PaymentAttempt::PURPOSE_WALLET_TOPUP) {
+            return $this->handleTopupCallback($attempt, $request);
+        }
+
         if (! $request->has('trandata')) {
             $resultHint = strtolower((string) ($request->query('result') ?: $request->input('result')));
             $errorText = strtolower((string) ($request->query('ErrorText') ?: $request->input('ErrorText') ?: $request->input('errorText')));
@@ -200,47 +205,34 @@ class PaymentOrchestratorService
             $invoiceId = null;
 
             DB::transaction(function () use ( $userId, $pageType, $grossAmount, $taxAmount, $discountAmount, $checkout, $couponCode, $requiredDeposit, $codDepositPercent, &$invoiceId ) {
-                $wallet = Wallet::where('user_id', $userId)
-                    ->where('status', 1)
-                    ->lockForUpdate()
-                    ->first();
+                $insufficient = fn () => new \RuntimeException(__('messagess.wallet_balance_requirement', [
+                    'percent' => rtrim(rtrim(number_format($codDepositPercent, 2, '.', ''), '0'), '.'),
+                ]));
+                $ledger = app(WalletLedger::class);
 
-                if (! $wallet && $requiredDeposit > 0) {
-                    $user = User::find($userId);
-                    $wallet = Wallet::create([
-                        'user_id' => $userId,
-                        'title' => trim(($user?->first_name ?? '') . ' ' . ($user?->last_name ?? '')) ?: ($user?->username ?? 'Wallet'),
-                        'amount' => 0,
-                        'status' => 1,
-                    ]);
+                if ($requiredDeposit > 0 && $ledger->spendable($userId) + 0.0001 < $requiredDeposit) {
+                    throw $insufficient();
                 }
 
-                $walletBalance = (float) ($wallet->amount ?? 0);
-                if ($walletBalance + 0.0001 < $requiredDeposit) {
-                    throw new \RuntimeException(__('messagess.wallet_balance_requirement', [
-                        'percent' => rtrim(rtrim(number_format($codDepositPercent, 2, '.', ''), '0'), '.'),
-                    ]));
-                }
-
+                // Take the deposit before finalizing (finalizing sends the success SMS),
+                // then link the ledger row to the invoice it paid.
+                $deposit = null;
                 if ($requiredDeposit > 0) {
-                    $wallet->amount = $walletBalance - $requiredDeposit;
-                    $wallet->save();
-
-                    WalletHistory::create([
-                        'user_id' => $wallet->user_id,
-                        'datetime' => now(),
-                        'activity_type' => 'withdraw',
-                        'activity_message' => __('messagess.cash_on_delivery'),
-                        'activity_data' => json_encode([
-                            'title' => $wallet->title,
-                            'amount' => $wallet->amount,
-                            'transaction_type' => 'cash_on_delivery',
-                            'credit_debit_amount' => $requiredDeposit,
-                        ]),
-                    ]);
+                    try {
+                        $deposit = $ledger->debit($userId, $requiredDeposit, 'payment', [
+                            'activity_type' => 'withdraw',
+                            'message' => __('messagess.cash_on_delivery'),
+                            'source_type' => 'invoice',
+                            'meta' => ['transaction_type' => 'cash_on_delivery'],
+                        ]);
+                    } catch (InsufficientWalletBalance) {
+                        throw $insufficient();
+                    }
                 }
 
                 $invoiceId = app(PaymentFinalizerService::class)->finalizePayment($userId,$grossAmount,$taxAmount,$discountAmount,$pageType,$checkout['cart_ids'] ?? [],$checkout['gift_ids'] ?? [],'cash on delivery',$couponCode ?? '',false);
+
+                $deposit?->update(['source_id' => $invoiceId, 'idempotency_key' => 'payment:invoice:' . $invoiceId]);
 
                 BookingTransaction::where('external_transaction_id', 'INV-' . $invoiceId)->update(['transaction_type' => 'cash_on_delivery_deposit_percent']);
             });
@@ -273,10 +265,86 @@ class PaymentOrchestratorService
         }
     }
 
+    /**
+     * Start a wallet top-up. The balance is credited only in the gateway callback,
+     * after the gateway itself confirms the charge, its amount and its currency.
+     * Only the card gateway (Tap) is offered for top-ups because it is the one whose
+     * verification checks the captured amount.
+     */
+    public function initiateTopup(int $userId, float $amount, array $input = []): array
+    {
+        $offer = app(WalletTopupService::class)->bestOfferFor($userId, $amount);
+
+        $attempt = PaymentAttempt::create([
+            'token' => (string) Str::uuid(),
+            'user_id' => $userId,
+            'gateway' => 'card',
+            'purpose' => PaymentAttempt::PURPOSE_WALLET_TOPUP,
+            'isBuyNow' => false,
+            'currency' => 'SAR',
+            'gross_amount' => $amount,
+            'amount' => $amount,
+            'tax_amount' => 0,
+            'discount_amount' => 0,
+            'cart_ids' => [],
+            'gift_ids' => [],
+            'submethods' => [],
+            'status' => PaymentAttempt::STATUS_INITIATED,
+            'meta' => [
+                'channel' => $input['channel'] ?? 'web',
+                'payment_source' => $input['payment_source'] ?? 'src_card',
+                'offer_id' => $offer?->id,
+            ],
+        ]);
+
+        try {
+            $gatewayResult = $this->createGatewayPayment($attempt, $this->buildCustomer($userId), $this->buildGatewayUrls($attempt), $input);
+        } catch (\Throwable $e) {
+            $attempt->update(['status' => PaymentAttempt::STATUS_FAILED, 'meta' => array_merge($attempt->meta ?? [], ['error' => $e->getMessage()])]);
+
+            return ['status' => 'error', 'message' => __('wallet_ledger.topup_failed')];
+        }
+
+        $attempt->update([
+            'external_id' => $gatewayResult['external_id'] ?? null,
+            'payment_url' => $gatewayResult['payment_url'] ?? null,
+            'status' => PaymentAttempt::STATUS_REDIRECTED,
+            'meta' => array_merge($attempt->meta ?? [], ['gateway_response' => $gatewayResult['raw'] ?? null]),
+        ]);
+
+        return [
+            'status' => 'redirect',
+            'payment_url' => $attempt->payment_url,
+            'attempt_token' => $attempt->token,
+            'attempt_id' => $attempt->id,
+            'amount' => (float) $attempt->amount,
+            'bonus' => $offer ? (float) $offer->bonus_amount : 0,
+        ];
+    }
+
+    private function handleTopupCallback(PaymentAttempt $attempt, Request $request): array
+    {
+        $verification = $this->verifyGatewayPayment($attempt, $request);
+        $status = $verification['status'] ?? 'failed';
+
+        if ($status === 'paid') {
+            app(WalletTopupService::class)->creditPaidAttempt($attempt, $verification);
+
+            return ['status' => 'paid', 'purpose' => PaymentAttempt::PURPOSE_WALLET_TOPUP];
+        }
+
+        $attempt->update([
+            'status' => $status === 'cancelled' ? PaymentAttempt::STATUS_CANCELLED : PaymentAttempt::STATUS_FAILED,
+            'meta' => array_merge($attempt->meta ?? [], ['verify_response' => $verification['raw'] ?? null]),
+        ]);
+
+        return ['status' => $status === 'cancelled' ? 'cancelled' : 'failed', 'purpose' => PaymentAttempt::PURPOSE_WALLET_TOPUP];
+    }
+
     private function finalize(int $userId,float $grossAmount,float $taxAmount,float $discountAmount,string $pageType,array $cartIds,array $giftIds,string $paymentMethod,?string $couponCode,array $submethods): int {
         
         $invoiceId = app(PaymentFinalizerService::class)->finalizePayment($userId,$grossAmount, $taxAmount, $discountAmount, $pageType, $cartIds, $giftIds, $paymentMethod, $couponCode ?? '', true );
-        app(PaymentSubMethodsService::class)->apply($userId,new Request($submethods),$grossAmount,true);
+        app(PaymentSubMethodsService::class)->apply($userId,new Request($submethods),$grossAmount,true,$invoiceId);
         return $invoiceId;
     }
 

@@ -137,6 +137,21 @@
                 </li>
                 @endhasPermission
 
+                @if (auth()->user()->canAny(['view_wallet_admin', 'manage_wallet_withdrawals', 'manage_wallet_offers', 'manage_wallet_policy']))
+                @php
+                    $walletHome = auth()->user()->can('view_wallet_admin') ? route('wallet.index')
+                        : (auth()->user()->can('manage_wallet_withdrawals') ? route('wallet.withdrawals')
+                        : (auth()->user()->can('manage_wallet_offers') ? route('wallet.offers') : route('wallet.policy')));
+                    $walletActive = request()->routeIs('wallet.index', 'wallet.withdrawals', 'wallet.offers', 'wallet.policy');
+                @endphp
+                <li class="nav-item {{ $walletActive ? 'active' : '' }}">
+                    <a href="{{ $walletHome }}" class="nav-link {{ $walletActive ? 'active' : '' }}">
+                        <i class="fa-solid fa-wallet"></i>
+                        <span class="item-name">{{ __('wallet_ledger.admin.title') }}</span>
+                    </a>
+                </li>
+                @endif
+
                 @hasPermission('view_ads')
                 <li class="nav-item {{ request()->routeIs('app.ads') ? 'active' : '' }}">
                     <a href="{{ route('app.ads') }}" class="nav-link {{ request()->routeIs('app.ads') ? 'active' : '' }}">

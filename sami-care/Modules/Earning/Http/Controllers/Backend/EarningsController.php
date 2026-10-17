@@ -243,28 +243,15 @@ class EarningsController extends Controller
 
         if($data['payment_method'] == 'Wallet') {
             $wallet  = Wallet::where('user_id', $id)->first();
-            if ($wallet) {
-                $wallet->update(['amount' => $wallet->amount + $unpaidAmount->total_pay]);
-
-                $activity_message = __('messages.wallet_payout_added') . $query->first_name . ' ' . $query->last_name;
-
-                $activity_data = [
-                    'title' => $wallet->title,
-                    'amount' => $wallet->amount,
-                    'transaction_id' => null,
-                    'transaction_type' => 'wallet',
-                    'credit_debit_amount' => (float) $unpaidAmount->total_pay,
-                    'transaction_type' => 'credit',
-                ];
-                $walletHistoryData = [
-                    'user_id' => $wallet->user_id,
-                    'datetime' => now(),
+            if ($wallet && $unpaidAmount->total_pay > 0) {
+                app(\App\Services\Wallet\WalletLedger::class)->credit((int) $id, (float) $unpaidAmount->total_pay, 'payout', [
                     'activity_type' => 'employee_payout',
-                    'activity_message' => $activity_message,
-                    'activity_data' => json_encode($activity_data),
-                ];
-                WalletHistory::create($walletHistoryData);
-            } 
+                    'message' => __('messages.wallet_payout_added') . $query->first_name . ' ' . $query->last_name,
+                    'source_type' => 'employee',
+                    'source_id' => (int) $id,
+                    'created_by' => auth()->id(),
+                ]);
+            }
         }
 
         $earning_data = [

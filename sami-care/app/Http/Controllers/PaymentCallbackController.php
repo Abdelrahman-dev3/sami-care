@@ -44,6 +44,17 @@ class PaymentCallbackController extends Controller
 
         $result = app(PaymentOrchestratorService::class)->handleCallback($gateway, $token, $request);
 
+        if ($attempt?->purpose === PaymentAttempt::PURPOSE_WALLET_TOPUP) {
+            $status = $result['status'] ?? 'failed';
+            if ($isApi) {
+                return redirect($frontendUrl . '/account?tab=wallet&topup=' . $status);
+            }
+
+            return $status === 'paid'
+                ? redirect('/app')->with('success', __('wallet_ledger.topup_success'))
+                : redirect('/app')->with('error', $status === 'cancelled' ? __('messages.payment_cancelled') : __('messages.payment_failed'));
+        }
+
         if (($result['status'] ?? '') === 'paid') {
             if ($isApi) {
                 return redirect($frontendUrl . '/account?payment=success&invoice=' . ($result['invoice_id'] ?? '') . '&attempt_id=' . ($attempt?->id ?? ''));

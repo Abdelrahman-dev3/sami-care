@@ -31,6 +31,8 @@ class MembershipController extends Controller
             'discount_percentage' => 'nullable|numeric|min:0|max:100',
             'benefits_ar'         => 'nullable|string',
             'benefits_en'         => 'nullable|string',
+            'wallet_bonus'        => 'nullable|numeric|min:0|max:100000',
+            'wallet_bonus_expiry_days' => 'nullable|integer|min:1|max:3650',
         ]);
 
         $benefitsAr = array_filter(array_map('trim', explode("\n", $request->benefits_ar ?? '')));
@@ -42,7 +44,7 @@ class MembershipController extends Controller
             'level'               => $request->level,
             'min_points'          => $request->min_points,
             'discount_percentage' => $request->discount_percentage ?? 0,
-            'benefits'            => ['ar' => array_values($benefitsAr), 'en' => array_values($benefitsEn)],
+            'benefits'            => $this->benefits($request, $benefitsAr, $benefitsEn),
         ]);
 
         return back()->with('success', 'تم إنشاء الفئة بنجاح');
@@ -57,6 +59,8 @@ class MembershipController extends Controller
             'discount_percentage' => 'nullable|numeric|min:0|max:100',
             'benefits_ar'         => 'nullable|string',
             'benefits_en'         => 'nullable|string',
+            'wallet_bonus'        => 'nullable|numeric|min:0|max:100000',
+            'wallet_bonus_expiry_days' => 'nullable|integer|min:1|max:3650',
         ]);
 
         $benefitsAr = array_filter(array_map('trim', explode("\n", $request->benefits_ar ?? '')));
@@ -67,10 +71,21 @@ class MembershipController extends Controller
             'name_ar'             => $request->name_ar,
             'min_points'          => $request->min_points,
             'discount_percentage' => $request->discount_percentage ?? 0,
-            'benefits'            => ['ar' => array_values($benefitsAr), 'en' => array_values($benefitsEn)],
+            'benefits'            => $this->benefits($request, $benefitsAr, $benefitsEn),
         ]);
 
         return back()->with('success', 'تم تحديث الفئة بنجاح');
+    }
+
+    /** Benefit lines plus the wallet bonus granted once when a member reaches the tier. */
+    private function benefits(Request $request, array $ar, array $en): array
+    {
+        return array_filter([
+            'ar' => array_values($ar),
+            'en' => array_values($en),
+            'wallet_bonus' => $request->filled('wallet_bonus') ? (float) $request->wallet_bonus : null,
+            'wallet_bonus_expiry_days' => $request->filled('wallet_bonus_expiry_days') ? (int) $request->wallet_bonus_expiry_days : null,
+        ], fn ($v) => $v !== null);
     }
 
     public function tiersDestroy(MembershipTier $tier)

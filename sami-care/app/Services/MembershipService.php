@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\MembershipTier;
 use App\Models\User;
 use App\Models\UserMembership;
+use App\Services\Wallet\WalletLedger;
 use Illuminate\Support\Str;
 
 class MembershipService
@@ -114,6 +115,8 @@ class MembershipService
             $membership->membership_tier_id = $newTier->id;
             $membership->save();
 
+            $this->grantTierWalletBonuses($membership->user_id, $currentTier->level, $newTier->level);
+
             // Send upgrade notification via SMS
             $this->sendTierUpgradeNotification($membership->user, $newTier);
 
@@ -121,6 +124,33 @@ class MembershipService
         }
 
         return false;
+    }
+
+    /**
+     * Wallet bonus configured on each tier the member just passed (benefits.wallet_bonus),
+     * credited once per member and tier as promotional balance.
+     */
+    protected function grantTierWalletBonuses(int $userId, int $fromLevel, int $toLevel): void
+    {
+        $tiers = MembershipTier::where('level', '>', $fromLevel)->where('level', '<=', $toLevel)->orderBy('level')->get();
+
+        foreach ($tiers as $tier) {
+            $bonus = (float) ($tier->benefits['wallet_bonus'] ?? 0);
+            if ($bonus <= 0) {
+                continue;
+            }
+            $days = (int) ($tier->benefits['wallet_bonus_expiry_days'] ?? 0);
+
+            app(WalletLedger::class)->credit($userId, $bonus, 'reward', [
+                'bucket' => 'bonus',
+                'expires_at' => $days > 0 ? now()->addDays($days) : null,
+                'activity_type' => 'tier_bonus',
+                'message' => __('wallet_ledger.admin.tier_bonus', ['tier' => $tier->name_ar]),
+                'source_type' => 'membership_tier',
+                'source_id' => $tier->id,
+                'idempotency_key' => "tier_bonus:{$userId}:{$tier->id}",
+            ]);
+        }
     }
 
     /**

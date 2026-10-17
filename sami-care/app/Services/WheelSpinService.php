@@ -7,8 +7,7 @@ use App\Models\LoyaltyPointTransaction;
 use App\Models\User;
 use App\Models\WheelSpin;
 use Illuminate\Support\Facades\DB;
-use Modules\Wallet\Models\Wallet;
-use Modules\Wallet\Models\WalletHistory;
+use App\Services\Wallet\WalletLedger;
 
 /**
  * Tracks lucky-wheel spins per IP address so each IP only ever gets one
@@ -89,26 +88,21 @@ class WheelSpinService
             return;
         }
 
-        $now = now();
-
         if ($spin->reward_type === 'wallet_balance') {
-            $wallet = Wallet::firstOrNew(['user_id' => $user->id]);
-            $wallet->title = trim(($user->first_name ?? '').' '.($user->last_name ?? ''));
-            $wallet->amount = (float) ($wallet->amount ?? 0) + $spin->reward_value;
-            $wallet->status = 1;
-            $wallet->save();
-
-            WalletHistory::create([
-                'datetime' => $now,
-                'user_id' => $user->id,
+            // Wheel winnings are promotional: bonus bucket, not withdrawable.
+            $entry = app(WalletLedger::class)->credit($user->id, (float) $spin->reward_value, 'reward', [
+                'bucket' => 'bonus',
                 'activity_type' => 'wheel_win',
-                'activity_message' => "Won {$spin->reward_value} from lucky wheel",
-                'activity_data' => json_encode([
+                'message' => "Won {$spin->reward_value} from lucky wheel",
+                'source_type' => 'wheel_spin',
+                'source_id' => $spin->id,
+                'idempotency_key' => 'wheel:spin:'.$spin->id,
+                'meta' => [
                     'wheel_spin_id' => $spin->id,
                     'wheel_id' => $spin->wheel_id,
                     'reward_type' => $spin->reward_type,
                     'reward_value' => $spin->reward_value,
-                ]),
+                ],
             ]);
 
             LoyaltyPointTransaction::create([
@@ -123,7 +117,7 @@ class WheelSpinService
                     'wheel_spin_id' => $spin->id,
                     'reward_type' => $spin->reward_type,
                     'reward_value' => $spin->reward_value,
-                    'wallet_balance_after' => (float) $wallet->amount,
+                    'wallet_balance_after' => (float) $entry->balance_after,
                 ],
             ]);
         } elseif ($spin->reward_type === 'points') {
