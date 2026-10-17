@@ -30,6 +30,8 @@ class WalletRefundObserver
         try {
             if ($model instanceof Booking) {
                 $this->policy->refundBooking($model);
+                // A booking paid with a service gift: give the gift back once all its bookings are cancelled.
+                app(\App\Services\Gifts\GiftCardService::class)->onBookingCancelled($model);
             } elseif ($model instanceof Order) {
                 $this->policy->refundOrder($model);
             }

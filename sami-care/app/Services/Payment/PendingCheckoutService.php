@@ -45,11 +45,13 @@ class PendingCheckoutService
         $bookingSubtotal = $serviceSubtotal + $packageSubtotal;
         $productSubtotal = $this->productSubtotal($products);
         $giftSubtotal = (float) $gifts->sum(fn ($gift) => (float) ($gift->subtotal ?? 0));
+        // Value gift cards are stored value: VAT is charged when they are spent, not when bought.
+        $taxableGiftSubtotal = (float) $gifts->where('type', '!=', \App\Models\GiftCard::TYPE_VALUE)->sum(fn ($gift) => (float) ($gift->subtotal ?? 0));
 
         // Gift cards carry the same VAT as the services/packages they contain.
         // Previously giftSubtotal was omitted here, so wallet payments for gifts
         // were finalized and deducted without VAT even though the UI showed it.
-        $tax = $this->taxAmount($bookingSubtotal, $productSubtotal, $giftSubtotal);
+        $tax = $this->taxAmount($bookingSubtotal, $productSubtotal, $taxableGiftSubtotal);
         $subtotal = $bookingSubtotal + $productSubtotal + $giftSubtotal + $tax;
 
         $discount = 0.0;

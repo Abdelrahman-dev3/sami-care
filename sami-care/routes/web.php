@@ -659,9 +659,32 @@ Route::middleware(['auth'])->prefix('app/affiliate')->name('affiliate.')->group(
     });
 });
 Route::middleware(['auth'])->group(function () use ($dashboardRedirect) {
+    // Gifts (section 20). Paid gifts are cancelled with a reason, never deleted.
     Route::controller(GiftController::class)->group(function () {
         Route::get('/app/gift', 'index')->name('app.gift');
-        Route::get('/gift/delete/{id}', 'destroy')->name('gift.delete');
+        Route::get('/app/gifts/settings', 'settings')->name('gifts.settings');
+        Route::post('/app/gifts/settings', 'saveSettings')->name('gifts.settings.save');
+        Route::get('/app/gifts/{id}', 'show')->whereNumber('id')->name('gifts.show');
+        Route::post('/app/gifts/{id}/cancel', 'cancel')->whereNumber('id')->name('gifts.cancel');
+        Route::post('/app/gifts/{id}/extend', 'extend')->whereNumber('id')->name('gifts.extend');
+        Route::post('/app/gifts/{id}/resend', 'resend')->whereNumber('id')->name('gifts.resend');
+        Route::post('/app/gifts/{id}/code', 'revealCode')->whereNumber('id')->name('gifts.code');
+    });
+    Route::controller(\App\Http\Controllers\Backend\GiftBatchesController::class)->group(function () {
+        Route::get('/app/gifts/batches', 'index')->name('gifts.batches');
+        Route::post('/app/gifts/batches', 'store')->name('gifts.batches.store');
+        Route::get('/app/gifts/batches/{batch}/export', 'exportCodes')->name('gifts.batches.export');
+    });
+    Route::controller(\App\Http\Controllers\Backend\GiftBranchRedeemController::class)->group(function () {
+        Route::get('/app/gifts/redeem', 'index')->name('gifts.redeem');
+        Route::post('/app/gifts/redeem', 'apply')->name('gifts.redeem.apply');
+    });
+    Route::get('/app/gifts/report', [\App\Http\Controllers\Backend\GiftReportController::class, 'index'])->name('gifts.report');
+    Route::controller(\App\Http\Controllers\Backend\GiftDesignsController::class)->group(function () {
+        Route::get('/app/gift-designs', 'index')->name('gift-designs.index');
+        Route::post('/app/gift-designs', 'store')->name('gift-designs.store');
+        Route::put('/app/gift-designs/{design}', 'update')->name('gift-designs.update');
+        Route::delete('/app/gift-designs/{design}', 'destroy')->name('gift-designs.destroy');
     });
 
     Route::get('/complate-Gift', $dashboardRedirect)->name('profile.complateGift');

@@ -3,6 +3,7 @@
 namespace App\Services\Payment;
 
 use App\Models\GiftCard;
+use App\Services\Gifts\GiftCardService;
 use App\Services\TaqnyatSmsService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -21,12 +22,8 @@ class GiftCardPaymentActivatorService
             ->get();
 
         foreach ($giftCards as $giftCard) {
-            $giftCard->ensureClaimToken();
-
-            $giftCard->update([
-                'payment_status' => 1,
-                'gift_status' => GiftCard::STATUS_PAID,
-            ]);
+            // Code, validity (gift_validity_days) and the "paid" timeline event.
+            app(GiftCardService::class)->activate($giftCard);
 
             if ($giftCard->send_channel === 'sms' && $giftCard->recipient_phone) {
                 Log::channel('gift_sms')->info('Gift card activated, SMS dispatch queued after commit', [

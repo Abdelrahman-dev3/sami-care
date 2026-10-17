@@ -121,6 +121,8 @@ class GiftCardController extends Controller
 
         $giftCard = GiftCard::create([
             'user_id' => $user->id,
+            'type' => $serviceIds === [] ? GiftCard::TYPE_PACKAGE : GiftCard::TYPE_SERVICE,
+            'source' => 'customer',
             'branch_id' => $this->resolveBranchId((int) ($validated['branch'] ?? 0)),
             'recipient_name' => $validated['location']['recipient_name'],
             'recipient_phone' => $this->normalizeSaudiPhone($validated['location']['recipient_mobile']),

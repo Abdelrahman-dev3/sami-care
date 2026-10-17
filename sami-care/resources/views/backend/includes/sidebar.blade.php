@@ -88,14 +88,21 @@
 
 
 
-                @hasPermission('view_gift')
-                <li class="nav-item {{ request()->routeIs('app.gift') ? 'active' : '' }}">
-                    <a href="{{ route('app.gift') }}" class="nav-link {{ request()->routeIs('app.gift') ? 'active' : '' }}">
-                        <i class="fa fa-chart-bar"></i>
+                @if (auth()->user()->canAny(['view_gift', 'redeem_gift_branch', 'manage_gift_batches', 'manage_gift_designs', 'view_gift_reports']))
+                @php
+                    $giftHome = auth()->user()->can('view_gift') ? route('app.gift')
+                        : (auth()->user()->can('redeem_gift_branch') ? route('gifts.redeem')
+                        : (auth()->user()->can('view_gift_reports') ? route('gifts.report')
+                        : (auth()->user()->can('manage_gift_batches') ? route('gifts.batches') : route('gift-designs.index'))));
+                    $giftActive = request()->routeIs('app.gift', 'gifts.*', 'gift-designs.*');
+                @endphp
+                <li class="nav-item {{ $giftActive ? 'active' : '' }}">
+                    <a href="{{ $giftHome }}" class="nav-link {{ $giftActive ? 'active' : '' }}">
+                        <i class="fa fa-gift"></i>
                         <span class="item-name">{{ __('messagess.gifts') }}</span>
                     </a>
                 </li>
-                @endhasPermission
+                @endif
                 
                 @hasPermission('view_Lucky_Wheel')
                 <li class="nav-item {{ request()->routeIs('app.Wheel') ? 'active' : '' }}">

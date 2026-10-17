@@ -28,6 +28,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('basket:clear-expired')->everyMinute();
         $schedule->command('loyalty:expire-points')->daily();
         $schedule->command('wallet:expire-bonus')->hourly()->withoutOverlapping();
+        $schedule->command('gifts:expire')->dailyAt('09:00')->withoutOverlapping();
         $schedule->command('customers:send-messages')->dailyAt('08:00')->withoutOverlapping();
     }
 

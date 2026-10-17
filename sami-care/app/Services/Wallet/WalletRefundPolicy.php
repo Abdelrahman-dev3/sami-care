@@ -2,6 +2,7 @@
 
 namespace App\Services\Wallet;
 
+use App\Models\GiftCard;
 use App\Models\Invoice;
 use App\Models\LoyaltyPoint;
 use App\Models\LoyaltyPointTransaction;
@@ -97,11 +98,47 @@ class WalletRefundPolicy
         return $this->pay($parts, 0.0, (int) $order->user_id, 'order', $order->id);
     }
 
+    /** Gift purchases (cancelled before the recipient claimed them): refund the buyer. */
+    public function refundGift(GiftCard $gift): ?array
+    {
+        if (! $gift->user_id) {
+            return null;
+        }
+
+        $parts = ['cash' => 0.0, 'bonus' => 0.0, 'points' => 0, 'points_amount' => 0.0];
+        $invoices = Invoice::where('user_id', $gift->user_id)->get()
+            ->filter(fn (Invoice $invoice) => in_array((int) $gift->id, array_map('intval', $invoice->gift_ids ?? []), true));
+
+        foreach ($invoices as $invoice) {
+            $alone = count($invoice->gift_ids ?? []) === 1 && empty($invoice->cart_ids) && empty($invoice->product_ids);
+            $value = $alone ? (float) $invoice->final_total : $this->giftGross($gift) * $this->discountFactor($invoice);
+            $this->addInvoiceShare($parts, $invoice, $value, null, null, $gift->id);
+        }
+
+        return $this->pay($parts, 0.0, (int) $gift->user_id, 'gift', $gift->id);
+    }
+
+    /** Price the buyer paid for one gift: value cards carry no VAT, service/package gifts do. */
+    private function giftGross(GiftCard $gift): float
+    {
+        $subtotal = (float) $gift->subtotal;
+        if ($gift->type === GiftCard::TYPE_VALUE) {
+            return $subtotal;
+        }
+        try {
+            $tax = (float) (getBookingTaxamount($subtotal, 0, null)['total_tax_amount'] ?? 0);
+        } catch (\Throwable) {
+            $tax = 0.0;
+        }
+
+        return $subtotal + $tax;
+    }
+
     /**
      * Add this item's share of one invoice, split by how the invoice was paid.
      * $value is the item's price after the invoice discount.
      */
-    private function addInvoiceShare(array &$parts, Invoice $invoice, float $value, ?int $bookingId, ?int $orderId = null): void
+    private function addInvoiceShare(array &$parts, Invoice $invoice, float $value, ?int $bookingId, ?int $orderId = null, ?int $giftId = null): void
     {
         $total = (float) $invoice->final_total;
         if ($total <= 0 || $value <= 0) {
@@ -113,10 +150,12 @@ class WalletRefundPolicy
         $siblingBookings = array_diff(array_map('intval', $invoice->cart_ids ?? []), [(int) $bookingId]);
         $siblingOrders = DB::table('orders')->whereIn('order_group_id', array_map('intval', $invoice->product_ids ?? []))
             ->where('id', '!=', (int) $orderId)->pluck('id')->all();
+        $siblingGifts = array_diff(array_map('intval', $invoice->gift_ids ?? []), [(int) $giftId]);
         $alreadyRefunded = (float) WalletHistory::where('source', 'refund')
             ->where(fn ($q) => $q
                 ->where(fn ($b) => $b->where('source_type', 'booking')->whereIn('source_id', $siblingBookings ?: [0]))
-                ->orWhere(fn ($o) => $o->where('source_type', 'order')->whereIn('source_id', $siblingOrders ?: [0])))
+                ->orWhere(fn ($o) => $o->where('source_type', 'order')->whereIn('source_id', $siblingOrders ?: [0]))
+                ->orWhere(fn ($g) => $g->where('source_type', 'gift')->whereIn('source_id', $siblingGifts ?: [0])))
             ->get(['activity_data'])
             ->map(fn ($row) => json_decode($row->activity_data ?? '', true) ?: [])
             ->filter(fn (array $data) => (int) ($data['invoice_id'] ?? 0) === (int) $invoice->id)

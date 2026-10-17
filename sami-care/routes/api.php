@@ -390,3 +390,15 @@ Route::prefix('wallet')->middleware('auth:sanctum')->controller(\App\Http\Contro
     Route::get('/withdrawals', 'withdrawals');
     Route::post('/withdrawals', 'requestWithdrawal')->middleware('throttle:5,1');
 });
+
+// Gifts (section 20): sender/recipient views, redeem by code, online booking of gifted services.
+Route::get('gift-designs', [\App\Http\Controllers\Api\GiftAccountController::class, 'designs']);
+Route::prefix('gifts')->middleware('auth:sanctum')->controller(\App\Http\Controllers\Api\GiftAccountController::class)->group(function () {
+    Route::get('/sent', 'sent');
+    Route::get('/sent/{id}', 'sentShow')->whereNumber('id');
+    Route::post('/sent/{id}/resend', 'resend')->whereNumber('id')->middleware('throttle:3,10');
+    Route::get('/received', 'received');
+    Route::post('/received/{id}/claim', 'claim')->whereNumber('id')->middleware('throttle:10,1');
+    Route::post('/received/{id}/book', 'book')->whereNumber('id')->middleware('throttle:10,1');
+    Route::post('/redeem', 'redeem')->middleware('throttle:10,1');
+});

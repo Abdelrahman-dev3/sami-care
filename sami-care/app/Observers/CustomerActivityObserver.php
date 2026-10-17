@@ -90,7 +90,11 @@ class CustomerActivityObserver
             foreach ($labels as $field => $label) {
                 if (array_key_exists($field, $fields)) {
                     $value = $fields[$field];
-                    $display = $field === 'payment_status' && in_array((string) $value, ['0', '1'], true) ? ((int) $value === 1 ? 'مدفوع' : 'غير مدفوع') : ($states[$value] ?? $value);
+                    // Dates may arrive as Carbon objects; they can't be array keys.
+                    if ($value instanceof \DateTimeInterface) {
+                        $value = $value->format('Y-m-d H:i:s');
+                    }
+                    $display = $field === 'payment_status' && in_array((string) $value, ['0', '1'], true) ? ((int) $value === 1 ? 'مدفوع' : 'غير مدفوع') : (is_scalar($value) ? ($states[$value] ?? $value) : $value);
                     $message .= ' — '.$label.': '.$display;
                     $details[$field] = $value;
                 }

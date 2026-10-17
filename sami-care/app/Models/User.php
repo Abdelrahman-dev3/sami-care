@@ -205,7 +205,8 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
     public function pendingGiftCards()
     {
         return $this->hasMany(GiftCard::class, 'user_id', 'id')
-            ->where('payment_status', 0);
+            ->where('payment_status', 0)
+            ->where('gift_status', GiftCard::STATUS_PENDING_PAYMENT); // a cancelled unpaid gift leaves the cart
     }
 
     public function scopeCalenderResource($query)

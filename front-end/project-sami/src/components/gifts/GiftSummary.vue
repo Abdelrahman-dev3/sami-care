@@ -51,10 +51,11 @@ const ROW = 'border:none;padding:4px 0'
     <div class="card">
       <h3>ملخص الهدية</h3>
 
-      <div v-if="label && (img || state.gtype === 'svc')" class="pkline">
+      <div v-if="label && (img || state.gtype === 'svc' || state.gtype === 'val')" class="pkline">
         <img v-if="img" :src="img" alt="" />
         <span><b>{{ label }}</b>
         <template v-if="state.gtype === 'pkg' && state.pkg"><small>🕐 {{ state.pkg.dur }} دقيقة</small><small>{{ state.pkg.desc }}</small></template>
+        <template v-else-if="state.gtype === 'val'"><small>تُضاف لمحفظة المستلم</small></template>
         <template v-else><small>{{ state.svcs.length }} {{ state.svcs.length > 2 ? 'خدمات' : 'خدمة' }} مختارة</small></template>
         <span class="pr">{{ rs(p.val) }} ر.س</span></span></div>
 
@@ -85,7 +86,7 @@ const ROW = 'border:none;padding:4px 0'
       <template v-if="p.val">
         <div class="sum-like" style="margin-top:10px;padding-top:12px;border-top:1px dashed var(--line)">
           <div class="gs-row" :style="ROW"><span class="k">قيمة الهدية</span><span class="v">{{ rs(p.val) }} ر.س</span></div>
-          <div class="gs-row" :style="ROW"><span class="k">ضريبة القيمة المضافة (15%)</span><span class="v">+{{ rs(p.vat) }} ر.س</span></div>
+          <div v-if="state.gtype !== 'val'" class="gs-row" :style="ROW"><span class="k">ضريبة القيمة المضافة (15%)</span><span class="v">+{{ rs(p.vat) }} ر.س</span></div>
         </div>
         <div class="gs-total"><span class="k">الإجمالي</span><span class="v">{{ rs(p.total) }} <small style="font-size:13px">ر.س</small></span></div>
       </template>

@@ -12,6 +12,7 @@ const I = {
   chair: '<path d="M3 18v-6a2 2 0 012-2h14a2 2 0 012 2v6"/><path d="M5 18v2M19 18v2M7 10V7a2 2 0 012-2h6a2 2 0 012 2v3"/>',
   gift:  '<path d="M20 12v10H4V12M2 7h20v5H2zM12 22V7M12 7s-2-5-5-5-3 5 0 5h5zM12 7s2-5 5-5 3 5 0 5h-5z"/>',
   arrow: '<path d="M19 12H5M11 18l-6-6 6-6"/>',
+  card:  '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/>',
 }
 </script>
 
@@ -29,6 +30,12 @@ const I = {
         <span class="ic"><SIcon :inner="I.gift" :size="20" /></span></div>
       <div class="bd"><h3>إهداء باقة</h3><p>اختر باقة مصممة بعناية<br />لتمنح تجربة متكاملة لمن تحب.</p>
         <span class="go"><SIcon :inner="I.arrow" :size="14" /> اختر باقة لإهدائها</span></div>
+    </div>
+    <div class="gtype" :class="{ sel: state.gtype === 'val' }" data-gt="val" @click="emit('pick', 'val')">
+      <div class="im"><img src="/images/gifts/hero.jpg" alt="بطاقة هدية بقيمة" />
+        <span class="ic"><SIcon :inner="I.card" :size="20" /></span></div>
+      <div class="bd"><h3>بطاقة هدية بقيمة</h3><p>حدد المبلغ ودعه يختار<br />ما يحب من خدماتنا ومنتجاتنا.</p>
+        <span class="go"><SIcon :inner="I.arrow" :size="14" /> اختر قيمة البطاقة</span></div>
     </div>
   </div>
 </template>

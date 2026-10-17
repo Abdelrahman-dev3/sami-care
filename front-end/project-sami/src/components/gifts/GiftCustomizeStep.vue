@@ -4,12 +4,14 @@
   يشمل: المعاينة الحيّة · بيانات الإهداء · تصميم البطاقة · طريقة وتوقيت الإرسال
 */
 import { computed } from 'vue'
-import { DESIGNS, SENDS } from '@/data/gifts'
+import { SENDS } from '@/data/gifts'
+import { useGiftDesigns } from '@/composables/useGiftDesigns'
 import { useGifts } from '@/composables/useGifts'
 import SIcon from '@/components/common/SIcon.vue'
 import GiftCard from './GiftCard.vue'
 
 const { state, canNext } = useGifts()
+const { designs } = useGiftDesigns()
 const emit = defineEmits(['nav'])
 
 const remain = computed(() => 200 - state.msg.length)
@@ -50,8 +52,8 @@ const I = {
       <div class="card" style="margin-bottom:14px">
         <h4><SIcon :inner="I.brush" :size="16" /> تصميم بطاقة الإهداء</h4>
         <div class="designs">
-          <div v-for="x in DESIGNS" :key="x.id" class="design" :class="{ sel: state.design === x.id }" :data-d="x.id" @click="state.design = x.id">
-            <div class="sw" :style="`background:${x.bg};color:${x.fg}`"><span class="dchk"><SIcon :inner="I.check" :size="10" /></span>SAMI</div>
+          <div v-for="x in designs.designs" :key="x.id" class="design" :class="{ sel: state.design === x.id }" :data-d="x.id" @click="state.design = x.id">
+            <div class="sw" :style="x.image ? `background:${x.bg};background-image:url('${encodeURI(x.image)}');background-size:cover;color:${x.fg}` : `background:${x.bg};color:${x.fg}`"><span class="dchk"><SIcon :inner="I.check" :size="10" /></span>SAMI</div>
             <small style="visibility:hidden" aria-hidden="true">{{ x.n }}</small>
           </div>
         </div>

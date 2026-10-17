@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { paymentPolicy } from '@/utils/paymentPolicy'
 import PaymentMethodList from '@/components/common/PaymentMethodList.vue'
+import GiftCodeRedeem from '@/components/gifts/GiftCodeRedeem.vue'
 import { useBooking, rs } from '@/composables/useBooking'
 import { fetchProfile } from '@/services/accountApi'
 import { fetchLoyaltyPointValue, validateInvoiceCoupon } from '@/services/bookingApi'
@@ -19,13 +20,23 @@ const {
 
 const couponLoading = ref(false)
 
-onMounted(async () => {
+async function loadBalances() {
   try {
     const res = await fetchProfile()
     const balances = res?.data?.balances || {}
     state.walletBalance = Number(balances.wallet ?? 0)
     state.loyaltyPoints = Number(balances.loyalty_points ?? 0)
   } catch { /* يفضل بدون رصيد معروض لو فشل التحميل */ }
+}
+
+/* كود بطاقة هدية بقيمة: يضاف للمحفظة، فنحدّث الرصيد ونفعّل "استخدام المحفظة" مباشرة */
+async function onGiftRedeemed(gift) {
+  await loadBalances()
+  if (gift?.type === 'value' && !state.rewards.useWallet) toggleWallet()
+}
+
+onMounted(async () => {
+  await loadBalances()
 
   try {
     const res = await fetchLoyaltyPointValue()
@@ -185,6 +196,7 @@ watch(loyaltyMaxPoints, () => {
     <h4><span class="step-dot">2</span> استخدام العروض و المكافآت</h4>
 
     <div class="rewards">
+      <div class="gift-code-box"><GiftCodeRedeem compact @redeemed="onGiftRedeemed" /></div>
       <div class="rw" :class="{ on: state.rewards.useWallet }">
         <div class="rt">
           <span class="ri"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" v-html="ICONS.wallet"></svg></span>
@@ -267,4 +279,5 @@ watch(loyaltyMaxPoints, () => {
   color: #8c5b16;
   line-height: 1.6;
 }
+.gift-code-box { margin-bottom: 10px; }
 </style>

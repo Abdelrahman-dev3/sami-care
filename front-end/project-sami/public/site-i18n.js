@@ -30,6 +30,11 @@
         [/^فتح السلة، (\d+) منتجات$/, (_, count) => 'Open cart, ' + count + ' products'],
         [/^الهدايا اللي أرسلتها \((\d+)\)$/, (_, count) => 'Gifts I sent (' + count + ')'],
         [/^([\d.,]+) ر\.س رصيد$/, (_, amount) => amount + ' SAR balance'],
+        // Gifts (AccountGifts.vue, GiftValueStep.vue)
+        [/^بطاقة هدية بقيمة ([\d.,]+) ر\.س$/, (_, amount) => 'Gift card worth ' + amount + ' SAR'],
+        [/^هداياي المستلمة \((\d+)\)$/, (_, n) => 'Received gifts (' + n + ')'],
+        [/^هداياي المرسلة \((\d+)\)$/, (_, n) => 'Sent gifts (' + n + ')'],
+        [/^المبلغ بين ([\d.,]+) و ([\d.,]+) ر\.س · صالحة لمدة (\d+) أشهر$/, (_, min, max, m) => 'Amount between ' + min + ' and ' + max + ' SAR · valid for ' + m + ' months'],
         // Wallet (AccountWallet.vue)
         [/^ينتهي ([\d.,]+) ر\.س من الرصيد الترويجي بتاريخ ([\d-]+)$/, (_, amount, date) => amount + ' SAR of promotional balance expires on ' + date],
         [/^🎁 ستحصل على ([\d.,]+) ر\.س رصيداً ترويجياً مع هذا الشحن$/, (_, amount) => '🎁 You will get ' + amount + ' SAR promotional balance with this top-up'],

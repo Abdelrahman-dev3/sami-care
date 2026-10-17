@@ -9,7 +9,7 @@ import AccountFavorites from '@/components/account/AccountFavorites.vue'
 import AccountOverview from '@/components/account/AccountOverview.vue'
 import AccountBookings from '@/components/account/AccountBookings.vue'
 import AccountAddresses from '@/components/account/AccountAddresses.vue'
-import AccountGiftCards from '@/components/account/AccountGiftCards.vue'
+import AccountGifts from '@/components/account/AccountGifts.vue'
 import AccountPackages from '@/components/account/AccountPackages.vue'
 import AccountProducts from '@/components/account/AccountProducts.vue'
 import AccountSettings from '@/components/account/AccountSettings.vue'
@@ -31,7 +31,7 @@ const TABS = [
   // 'addresses' مخفي مؤقتًا بطلب من المشروع
   { id: 'packages', label: 'باقاتي' },
   { id: 'products', label: 'منتجاتي' },
-  { id: 'gifts', label: 'بطاقات الهدايا' },
+  { id: 'gifts', label: 'هداياي' },
   { id: 'settings', label: 'الإعدادات' },
 ]
 
@@ -107,7 +107,7 @@ watch(isAuthenticated, (v) => { if (v) loadProfile() })
         <AccountAddresses v-else-if="activeTab === 'addresses'" />
         <AccountPackages v-else-if="activeTab === 'packages'" :profile="profile" />
         <AccountProducts v-else-if="activeTab === 'products'" :profile="profile" />
-        <AccountGiftCards v-else-if="activeTab === 'gifts'" :profile="profile" />
+        <AccountGifts v-else-if="activeTab === 'gifts'" @updated="loadProfile" />
         <AccountSettings v-else-if="activeTab === 'settings'" :profile="profile" @updated="loadProfile" />
       </template>
     </template>
