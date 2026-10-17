@@ -38,6 +38,31 @@
     description.content = data.description;
     doc.head.querySelectorAll('meta[name="description"]').forEach(node => { if (node !== description) node.remove(); });
   }
+  function meta(doc, attribute, key, content) {
+    const nodes = [...doc.head.querySelectorAll(`meta[${attribute}="${key}"]`)];
+    const node = nodes.shift() || doc.createElement('meta');
+    node.setAttribute(attribute, key); node.content = content;
+    if (!node.parentNode) doc.head.append(node);
+    nodes.forEach(duplicate => duplicate.remove());
+  }
+  function technical(doc, path, lang, data, missing = false) {
+    const url = new URL(path, new URL(doc.baseURI).origin).href;
+    const nodes = [...doc.head.querySelectorAll('link[rel="canonical"]')];
+    const canonical = nodes.shift() || doc.createElement('link');
+    canonical.rel = 'canonical'; canonical.href = url;
+    if (!canonical.parentNode) doc.head.append(canonical);
+    nodes.forEach(duplicate => duplicate.remove());
+    const privatePage = ['/booking','/booking-receipt','/gift-recipient','/account'].includes(path);
+    meta(doc, 'name', 'robots', missing || privatePage || !supported(path) ? 'noindex,follow' : 'index,follow');
+    meta(doc, 'property', 'og:url', url);
+    meta(doc, 'property', 'og:type', path.startsWith('/blog/') ? 'article' : 'website');
+    meta(doc, 'property', 'og:locale', lang === 'en' ? 'en_US' : 'ar_SA');
+    meta(doc, 'property', 'og:title', data.title);
+    meta(doc, 'property', 'og:description', data.description);
+    meta(doc, 'name', 'twitter:card', 'summary');
+    meta(doc, 'name', 'twitter:title', data.title);
+    meta(doc, 'name', 'twitter:description', data.description);
+  }
   function setKeywords(doc, value) {
     const nodes = [...doc.head.querySelectorAll('meta[name="keywords"]')];
     const content = typeof value === 'string' ? value.trim() : '';
@@ -52,7 +77,7 @@
     let serial = 0, lastKey = '', controller;
     async function update(path, lang, force = false) {
       path = normalize(path); lang = lang === 'en' ? 'en' : 'ar';
-      if (!supported(path)) return;
+      if (!supported(path)) { serial++; controller?.abort(); const data = fallback(path, lang); data.title = lang === 'en' ? 'Page not found | Sami Care' : 'الصفحة غير موجودة | عناية سامي'; apply(doc, data); technical(doc, path, lang, data, true); lastKey = ''; return; }
       const key = path + ':' + lang;
       if (!force && key === lastKey) return;
       lastKey = key;
@@ -63,19 +88,22 @@
       const timer = setTimeout(() => current.abort(), 8000);
       const defaults = fallback(path, lang);
       apply(doc, defaults);
+      technical(doc, path, lang, defaults);
       try {
         const url = new URL(endpoint, doc.baseURI);
         url.searchParams.set('path', path); url.searchParams.set('lang', lang);
         const response = await fetcher(url.href, { signal: current.signal, cache: 'no-store', headers: { Accept: 'application/json' } });
-        if (!response.ok) throw new Error('SEO unavailable');
+        if (!response.ok) { if (response.status === 404 && request === serial) technical(doc, path, lang, defaults, true); throw new Error('SEO unavailable'); }
         const body = await response.json();
         if (request !== serial || !body.status || !body.data) return;
         const data = body.data;
-        apply(doc, {
+        const resolved = {
           keywords: typeof data.keywords === 'string' ? data.keywords : '',
           title: typeof data.title === 'string' && data.title.trim() ? data.title : defaults.title,
           description: typeof data.description === 'string' && data.description.trim() ? data.description : defaults.description
-        });
+        };
+        apply(doc, resolved);
+        technical(doc, path, lang, resolved);
       } catch { /* Keep localized defaults when offline or the API is unavailable. */ }
       finally { clearTimeout(timer); }
     }

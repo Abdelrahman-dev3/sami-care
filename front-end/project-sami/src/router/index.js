@@ -49,7 +49,7 @@ const router = createRouter({
     { path: '/cafe', name: 'cafe', component: () => import('@/views/CafeView.vue') },
     { path: '/privacy-policy', name: 'privacy-policy', component: PrivacyPolicyView },
     { path: '/page-about', alias: '/about.html', name: 'about', component: AboutView },
-    { path: '/:pathMatch(.*)*', redirect: '/' },
+    { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('@/views/NotFoundView.vue') },
     { path: '/blog', alias: '/blog.html', name: 'blog', component: BlogView },
     { path: '/blog/:slug', name: 'blog-detail', component: BlogDetailView },
     

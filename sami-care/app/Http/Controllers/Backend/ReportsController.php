@@ -33,7 +33,7 @@ class ReportsController extends Controller
         // module icon
         $this->module_icon = 'fa-solid fa-chart-line';
 
-        $this->middleware('permission:view_financial_report')->only(['financial_report']);
+        $this->middleware('permission:view_financial_report')->only(['financial_report', 'financial_report_index_data']);
         $this->middleware('permission:view_coupon_report')->only(['coupon_report']);
         $this->middleware('permission:orders_report')->only(['order_report']);
 

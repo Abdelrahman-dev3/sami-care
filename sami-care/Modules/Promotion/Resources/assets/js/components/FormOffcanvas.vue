@@ -3,6 +3,8 @@
     <div class="offcanvas offcanvas-end" tabindex="-1" id="form-offcanvas" aria-labelledby="form-offcanvasLabel">
       <FormHeader :currentId="currentId" :editTitle="editTitle" :createTitle="createTitle"></FormHeader>
       <div class="offcanvas-body">
+        <InputField label="الحد الأدنى لقيمة الحجز قبل الضريبة (ر.س)" type="number" min="0" step="0.01" v-model="minimum_booking_amount" :error-message="errors.minimum_booking_amount" />
+        <p class="text-muted">الكوبون للحجوزات فقط. المنتجات والهدايا ورسوم الزيارة لا تدخل في الحد الأدنى أو الخصم. عند تخصيصه لخدمات يجب أن تكون كل خدمات الحجز ضمن القائمة.</p>
         <div class="form-group">
           <div class="col-md-12 text-center">
             <img :src="ImageViewer || defaultImage" alt="feature-image"
@@ -49,21 +51,21 @@
         <div class="form-group">
           <div class="col-md-12">
             <label class="form-label">{{ $t('promotion.lbl_services') }} <span class="text-danger">*</span></label>
-            
+
             <!-- Select All / Clear All buttons -->
             <div class="mb-2">
               <button 
                 type="button" 
                 class="btn btn-sm btn-primary me-2" 
                 @click="selectAllServices"
-                :disabled="ISREADONLY">
+                >
                 Select All ({{ serviceOptions.length }})
               </button>
               <button 
                 type="button" 
                 class="btn btn-sm btn-outline-secondary" 
                 @click="clearAllServices"
-                :disabled="ISREADONLY"
+
                 v-if="services && services.length > 0">
                 Clear All
               </button>
@@ -76,7 +78,7 @@
               :options="serviceOptions"
               id="services" 
               autocomplete="off" 
-              :disabled="ISREADONLY" 
+
               track-by="value" 
               label="label" 
               mode="tags"
@@ -277,6 +279,7 @@ const defaultData = () => {
     number_of_coupon: 1,
     coupon_code: '',
     use_limit: 1,
+    minimum_booking_amount: 0,
 
     custom_fields_data: {},
     coupon: [
@@ -316,11 +319,17 @@ const setFormData = (data) => {
     }
   }
 
+  while (typeof parsedServices === 'string') {
+    try { parsedServices = JSON.parse(parsedServices) } catch { parsedServices = []; break }
+  }
+  parsedServices = Array.isArray(parsedServices) ? parsedServices.map(Number) : []
+
   // Safe access to coupon data
   const firstCoupon = data.coupon && data.coupon[0] ? data.coupon[0] : {}
 
   resetForm({
     values: {
+      minimum_booking_amount: firstCoupon.minimum_booking_amount ?? 0,
       name: data.name || '',
       description: data.description || '',
       services: parsedServices,
@@ -334,7 +343,7 @@ const setFormData = (data) => {
       coupon_type: data.coupon && data.coupon.length === 1 ? 'custom' : 'bulk',
       number_of_coupon: data.coupon ? data.coupon.length : 1,
       coupon_code: firstCoupon.coupon_code || '',
-      use_limit: firstCoupon.use_limit || 1
+      use_limit: firstCoupon.use_limit ?? 1
     }
   })
 }
@@ -366,9 +375,10 @@ const validationSchema = yup.object({
     .min(1, 'At least one service must be selected')
     .required('Services are required'),
   start_date_time: yup.string().required('start date time is a required field'),
-  end_date_time: yup.date().required('end datetime is required').min(new Date(), 'end datetime cannot be in the past').typeError('Enter valid date'),
+  end_date_time: yup.string().required('End date is required').test('date-range', 'End date cannot be before start date', function(value) { return !this.parent.start_date_time || value >= this.parent.start_date_time }),
   description: yup.string().required('Description is a required field'),
-  use_limit: yup.number().required('Use limit is required').min(1, 'Use limit must be greater than or equal to 1').typeError('Use limit must be a valid number'),
+  minimum_booking_amount: yup.number().required().min(0),
+  use_limit: yup.number().integer().required('Use limit is required').min(0, 'Use limit cannot be negative').typeError('Use limit must be a valid number'),
   coupon_code: yup.string().when('coupon_type', {
     is: 'custom',
     then: () =>
@@ -426,6 +436,7 @@ const { value: coupon_type } = useField('coupon_type')
 const { value: number_of_coupon } = useField('number_of_coupon')
 const { value: coupon_code } = useField('coupon_code')
 const { value: use_limit } = useField('use_limit')
+const { value: minimum_booking_amount } = useField('minimum_booking_amount')
 
 const errorMessages = ref({})
 
@@ -444,9 +455,9 @@ onMounted(() => {
 })
 
 const serviceOptions = computed(() => {
-  if (!props.services?.length) return [{ label: 'علي الفاتورة', value: 0 }]
+  if (!props.services?.length) return [{ label: 'كل الحجوزات (بدون المنتجات والهدايا)', value: 0 }]
 
-  const defaultOption = { label: 'علي الفاتورة', value: 0 }
+  const defaultOption = { label: 'كل الحجوزات (بدون المنتجات والهدايا)', value: 0 }
 
   const otherOptions = props.services.map(service => ({
     label: service.name || `Service ${service.id}`,
@@ -460,7 +471,7 @@ const serviceOptions = computed(() => {
 
 // Select all services function
 const selectAllServices = () => {
-  const allServiceIds = serviceOptions.value.map(option => option.value)
+  const allServiceIds = [0]
   services.value = [...allServiceIds]
   console.log('Selected all services:', services.value)
 }

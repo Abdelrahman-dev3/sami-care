@@ -1,2 +1,6 @@
 User-agent: *
-Disallow:
+Disallow: /
+Allow: /api/
+Allow: /storage/
+Allow: /uploads/
+Allow: /images/

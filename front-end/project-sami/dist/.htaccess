@@ -5,6 +5,9 @@
   RewriteEngine On
   RewriteBase /
 
+  # Live sitemap from published backend content, before the static-file fallback.
+  RewriteRule ^sitemap\.xml$ sitemap.php [L]
+
   # الملفات والفولدرات الحقيقية (assets، الصور، إلخ) تتقدّم زي ما هي
   RewriteCond %{REQUEST_FILENAME} -f [OR]
   RewriteCond %{REQUEST_FILENAME} -d

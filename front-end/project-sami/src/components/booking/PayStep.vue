@@ -9,6 +9,7 @@ import { fetchLoyaltyPointValue, validateInvoiceCoupon } from '@/services/bookin
 const {
   state,
   priceParts,
+  selSvcs,
   pointValue,
   couponDiscount,
   walletDiscount,
@@ -18,6 +19,7 @@ const {
 } = useBooking()
 
 const couponLoading = ref(false)
+let couponRequest = 0
 
 onMounted(async () => {
   try {
@@ -113,14 +115,6 @@ function setLoyaltyPoints(value) {
   state.rewards.useLoyalty = points > 0
 }
 
-function couponAmountFrom(result) {
-  const type = result?.discount_type
-  const raw = type === 'percent'
-    ? priceParts.value.total * (Number(result?.discount_percentage) || 0) / 100
-    : Number(result?.discount_amount) || 0
-  return Math.min(Math.max(raw, 0), priceParts.value.total)
-}
-
 async function applyCoupon() {
   const code = state.rewards.couponCode.trim()
   if (!code) {
@@ -130,22 +124,26 @@ async function applyCoupon() {
   }
 
   couponLoading.value = true
+  const request = ++couponRequest
   try {
-    const result = await validateInvoiceCoupon(code)
+    const result = await validateInvoiceCoupon(code, selSvcs.value.map(service => service.id))
+    if (request !== couponRequest || state.rewards.couponCode.trim() !== code) return
     if (!result?.valid) {
       state.rewards.couponApplied = ''
       state.rewards.couponDiscount = 0
       state.rewards.couponStatus = 'bad'
-      state.rewards.couponMessage = 'كود الخصم غير صالح'
+      state.rewards.couponMessage = result?.message || 'كود الخصم غير صالح'
       return
     }
-    const discount = couponAmountFrom(result)
+    const discount = Math.max(0, Number(result.effective_discount) || 0)
     state.rewards.couponCode = code
     state.rewards.couponApplied = code
     state.rewards.couponDiscount = discount
     state.rewards.couponStatus = 'ok'
     state.rewards.couponMessage = `تم تطبيق خصم ${rs(Math.round(discount))} ر.س`
   } catch (e) {
+    state.rewards.couponApplied = ''
+    state.rewards.couponDiscount = 0
     state.rewards.couponStatus = 'bad'
     state.rewards.couponMessage = e.message || 'تعذّر التحقق من الكوبون'
   } finally {
@@ -154,11 +152,14 @@ async function applyCoupon() {
 }
 
 function clearCoupon() {
+  couponRequest++
   state.rewards.couponApplied = ''
   state.rewards.couponDiscount = 0
   state.rewards.couponStatus = ''
   state.rewards.couponMessage = ''
 }
+
+watch(() => selSvcs.value.map(s => `${s.id}:${s.price}`).join('|'), clearCoupon)
 
 watch([walletBalance, walletMax], () => {
   if (state.rewards.useWallet) setWalletAmount(state.rewards.walletAmount)

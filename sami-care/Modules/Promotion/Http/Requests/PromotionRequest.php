@@ -35,11 +35,17 @@ class PromotionRequest extends FormRequest
         $rules = [
             'name' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
-            'services' => ['required'],
+            'services' => ['required', 'array', 'min:1', function ($attribute, $value, $fail) {
+                if (is_array($value) && in_array(0, array_map('intval', $value), true) && count($value) > 1) $fail('اختر كل الحجوزات أو خدمات محددة، ولا تجمع بينهما.');
+            }],
+            'services.*' => ['required', 'integer', 'min:0', 'distinct', function ($attribute, $value, $fail) {
+                if ((int) $value !== 0 && !\Modules\Service\Models\Service::whereKey($value)->exists()) $fail('الخدمة المختارة غير موجودة.');
+            }],
+            'minimum_booking_amount' => ['sometimes', 'required', 'numeric', 'min:0', 'max:9999999999.99'],
             'start_date_time' => ['required', 'date'],
-            'end_date_time' => ['required', 'date', 'after:start_date_time'],
+            'end_date_time' => ['required', 'date', 'after_or_equal:start_date_time'],
             'discount_type' => ['required', 'in:fixed,percent'],
-            'use_limit' => ['required', 'integer', 'min:1'],
+            'use_limit' => ['required', 'integer', $this->isMethod('post') ? 'min:1' : 'min:0'],
             'status' => ['sometimes', 'boolean'],
         ];
 
@@ -56,7 +62,7 @@ class PromotionRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('promotions_coupon', 'coupon_code')->ignore($this->route('promotion')),
+                Rule::unique('promotions_coupon', 'coupon_code')->where(fn ($q) => $q->where('promotion_id', '!=', (int) $this->route('promotion'))),
             ];
         } elseif ($this->input('coupon_type') === 'bulk') {
             $rules['number_of_coupon'] = ['required', 'integer', 'min:1', 'max:1000'];

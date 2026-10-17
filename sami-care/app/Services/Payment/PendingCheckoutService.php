@@ -46,24 +46,23 @@ class PendingCheckoutService
         $productSubtotal = $this->productSubtotal($products);
         $giftSubtotal = (float) $gifts->sum(fn ($gift) => (float) ($gift->subtotal ?? 0));
 
-        // Gift cards carry the same VAT as the services/packages they contain.
-        // Previously giftSubtotal was omitted here, so wallet payments for gifts
-        // were finalized and deducted without VAT even though the UI showed it.
-        $tax = $this->taxAmount($bookingSubtotal, $productSubtotal, $giftSubtotal);
-        $subtotal = $bookingSubtotal + $productSubtotal + $giftSubtotal + $tax;
-
         $discount = 0.0;
         if (filled($couponCode)) {
-            $coupon = Coupon::where('coupon_code', $couponCode)
-                ->where('is_expired', 0)
-                ->first();
-
-            if (! $coupon) {
-                return ['error' => __('messages.invalid_coupon')];
-            }
-
-            $discount = $this->couponDiscount($coupon, $subtotal);
+            $lines = $bookings->flatMap(function ($booking) {
+                $fee = max(0, (float) ($booking->home_service_fee ?? 0));
+                return $booking->services->map(function ($service) use (&$fee) {
+                    $price = max(0, (float) $service->service_price - (float) $service->discount_amount);
+                    $excluded = min($price, $fee);
+                    $fee -= $excluded;
+                    return ['service_id' => (int) $service->service_id, 'amount' => $price - $excluded];
+                });
+            })->all();
+            $quote = app(\App\Services\BookingCoupon::class)->quote($couponCode, $lines, $packageSubtotal);
+            if (isset($quote['error'])) return $quote;
+            $discount = $quote['discount'];
         }
+        $tax = $this->taxAmount(max(0, $bookingSubtotal - $discount), $productSubtotal, $giftSubtotal);
+        $subtotal = $bookingSubtotal + $productSubtotal + $giftSubtotal + $tax;
 
         $total = max($subtotal - $discount, 0);
 
@@ -123,12 +122,4 @@ class PendingCheckoutService
         return round($bookingTax + $productTax + $giftTax, 2);
     }
 
-    private function couponDiscount(Coupon $coupon, float $subtotal): float
-    {
-        $discount = $coupon->discount_type === 'percent'
-            ? ($subtotal * (float) ($coupon->discount_percentage ?? 0)) / 100
-            : (float) ($coupon->discount_amount ?? 0);
-
-        return round(min($discount, $subtotal), 2);
-    }
 }

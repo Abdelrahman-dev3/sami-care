@@ -16,7 +16,7 @@ class UserCouponRedeem extends Model
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = ['user_id', 'coupon_code', 'discount', 'coupon_id', 'booking_id'];
+    protected $fillable = ['user_id', 'coupon_code', 'discount', 'coupon_id', 'booking_id', 'invoice_id'];
 
     // protected static function newFactory(): UserCouponRedeemFactory
     // {
@@ -25,7 +25,7 @@ class UserCouponRedeem extends Model
 
     public function coupon()
     {
-        return $this->belongsTo(Coupon::class, 'coupon_code');
+        return $this->belongsTo(Coupon::class, 'coupon_id');
     }
 
     public function user()

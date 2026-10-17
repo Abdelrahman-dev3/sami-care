@@ -57,7 +57,7 @@ return [
     'client_packages' => 'باقات العملاء',
     'User Access' => 'تحكم المستخدمين',
     'customer_packages' => 'باقات الزبائن',
-    'Financial report' => 'تقرير مالي',
+    'Financial report' => 'تقرير الإيرادات',
     'Payment Transactions' => 'عمليات الدفع',
     'invoice'     => 'الفواتير',
     'Coupon Report' => 'تقارير الكوبونات',

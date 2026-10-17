@@ -43,7 +43,7 @@ return [
     'title_promotion_report' => 'تقرير العروض والخصومات',
     'lbl_coupon' => 'قسيمة',
     'lbl_promotion' => 'العرض',
-    'title_financial_report' => 'التقرير المالي',
+    'title_financial_report' => 'تقرير الإيرادات',
     'lbl_period' => 'الفترة',
     'lbl_bookings_total' => 'إجمالي الحجوزات',
     'lbl_orders_total' => 'إجمالي المتجر',

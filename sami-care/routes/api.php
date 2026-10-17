@@ -383,3 +383,5 @@ Route::middleware('auth:sanctum')->controller(\App\Http\Controllers\Api\Customer
  Route::get('/bookings/{id}/review', 'review')->whereNumber('id');
  Route::put('/bookings/{id}/review', 'saveReview')->whereNumber('id');
 });
+
+Route::get('/seo-sitemap', \App\Http\Controllers\Api\SitemapController::class);

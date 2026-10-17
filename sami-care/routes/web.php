@@ -502,6 +502,9 @@ Route::group(['prefix' => 'app', 'middleware' => 'auth'], function () {
             });
         });
         Route::controller(ReportsController::class)->group(function () {
+            Route::get('loyalty-points-report', [\App\Http\Controllers\Backend\LoyaltyReportController::class, 'index'])->name('reports.loyalty');
+            Route::get('reviews-report', [\App\Http\Controllers\Backend\ReviewReportController::class, 'index'])->name('reports.reviews');
+            Route::get('referral-registration-report', [\App\Http\Controllers\Backend\ReferralReportController::class, 'index'])->name('reports.referrals');
             Route::get('customer-activity-report', [\App\Http\Controllers\Backend\CustomerActivityReportController::class, 'index'])->name('reports.customer-activity');
             Route::get('daily-booking-report', 'daily_booking_report')->name('reports.daily-booking-report');
             Route::get('daily-booking-report-index-data', 'daily_booking_report_index_data')->name('reports.daily-booking-report.index_data');
@@ -785,3 +788,9 @@ Route::middleware(['auth', 'permission:edit_booking'])->prefix('app/booking-arri
         Route::get('/{booking}', 'show')->name('show');
         Route::post('/{booking}', 'update')->name('update');
     });
+
+Route::middleware(['auth','permission:view_terms_and_conditions'])->prefix('app/sitemap')->name('backend.sitemap.')->controller(\App\Http\Controllers\Backend\SitemapManagerController::class)->group(function () {
+    Route::get('/', 'index')->name('index');
+    Route::post('/generate', 'generate')->name('generate');
+    Route::get('/download', 'download')->name('download');
+});

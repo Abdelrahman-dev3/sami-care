@@ -43,10 +43,43 @@
             $customerReportItem->active();
             $customerReportItem->link->active();
         }
+        $referralReportItem = $menu->add('<span class="item-name">تقرير إحالات التسجيل</span>', [
+            'route' => 'backend.reports.referrals', 'class' => 'nav-item',
+        ])->data('order', 19)->prepend('<i class="fa-solid fa-user-plus"></i> ');
+        $referralReportItem->link->attr(['class' => 'nav-link']);
+        if (request()->routeIs('backend.reports.referrals')) {
+            $referralReportItem->active();
+            $referralReportItem->link->active();
+        }
+        $reviewReportItem = $menu->add('<span class="item-name">تقرير التقييمات</span>', [
+            'route' => 'backend.reports.reviews', 'class' => 'nav-item',
+        ])->data('order', 19)->data('keep_visible', true)->prepend('<i class="fa-solid fa-star"></i> ');
+        $reviewReportItem->link->attr(['class' => 'nav-link']);
+        if (request()->routeIs('backend.reports.reviews')) {
+            $reviewReportItem->active();
+            $reviewReportItem->link->active();
+        }
         $menu = $menu->sortBy('order');
     }
     
+    if (auth()->user()->hasRole('admin') || auth()->user()->can('view_loyalty')) {
+        $loyaltyReportItem = $menu->add('<span class="item-name">تقرير نقاط الولاء</span>', ['route'=>'backend.reports.loyalty','class'=>'nav-item'])
+            ->data('order',19)->prepend('<i class="fa-solid fa-coins"></i> ');
+        $loyaltyReportItem->link->attr(['class'=>'nav-link']);
+        if(request()->routeIs('backend.reports.loyalty')) { $loyaltyReportItem->active(); $loyaltyReportItem->link->active(); }
+        $menu=$menu->sortBy('order');
+    }
+    if (auth()->user()->hasRole('admin') || auth()->user()->can('view_financial_report')) {
+        $hasRevenueLink = collect($menu->all())->contains(fn($item) => $item->link && $item->link->href === route('backend.reports.financial-report'));
+        if (!$hasRevenueLink) {
+            $revenueItem=$menu->add('<span class="item-name">تقرير الإيرادات</span>', ['route'=>'backend.reports.financial-report','class'=>'nav-item'])->data('order',19)->prepend('<i class="fa-solid fa-chart-line"></i> ');
+            $revenueItem->link->attr(['class'=>'nav-link']);
+            if(request()->routeIs('backend.reports.financial-report')) { $revenueItem->active(); $revenueItem->link->active(); }
+            $menu=$menu->sortBy('order');
+        }
+    }
     $filteredItems = $menu->roots()->filter(function($item) {
+        if ($item->data('keep_visible')) return true;
         $hiddenItems = [
             'staff_earnings', 'أرباح', 'earnings',
             'staffs_payouts', 'مدفوعات', 'payouts',

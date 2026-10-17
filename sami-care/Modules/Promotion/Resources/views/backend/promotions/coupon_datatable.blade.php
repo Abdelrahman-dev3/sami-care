@@ -67,7 +67,21 @@
             {
                 data: 'use_limit',
                 name: 'use_limit',
-                title: "{{ __('promotion.use_limit') }}"
+                title: 'عدد الاستخدامات المتبقية'
+            },
+            {
+                data: 'user_coupon_redeem_count', name: 'user_coupon_redeem_count', title: 'مرات الاستخدام المسجلة', searchable: false
+            },
+            {
+                data: 'minimum_booking_amount',
+                name: 'minimum_booking_amount',
+                title: 'الحد الأدنى للحجز قبل الضريبة'
+            },
+            {
+                data: 'start_date_time', name: 'start_date_time', title: 'بداية الصلاحية'
+            },
+            {
+                data: 'end_date_time', name: 'end_date_time', title: 'نهاية الصلاحية'
             },
             {
                 data: 'used_by',
