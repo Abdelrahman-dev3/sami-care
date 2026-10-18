@@ -1530,27 +1530,6 @@ function sendBookingCancelledSms($phone, $bookingData)
     }
 }
 
-/**
- * Send booking reminder SMS message
- *
- * @param string $phone
- * @param array $bookingData
- * @return mixed
- */
-function sendBookingReminderSms($phone, $bookingData)
-{
-    if (!setting('is_taqnyat_sms')) {
-        return false;
-    }
-
-    try {
-        $taqnyatService = app('taqnyat-sms');
-        return $taqnyatService->sendBookingReminderMessage($phone, $bookingData);
-    } catch (\Exception $e) {
-        Log::error('Booking reminder SMS sending failed: ' . $e->getMessage());
-        return false;
-    }
-}
 
 /**
  * Send password reset SMS message

@@ -73,7 +73,7 @@ class CombinedImportSeeder extends Seeder
                     'first_name' => $firstName,
                     'last_name' => $lastName,
                     'email' => $email,
-                    'password' => Hash::make('password'),
+                    'password' => null,
                     'status' => 1
                 ]);
                 $user->assignRole('employee');

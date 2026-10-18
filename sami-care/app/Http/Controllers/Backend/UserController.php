@@ -108,20 +108,33 @@ class UserController extends Controller
 
         $query_data = [];
 
+        $viewer = auth()->user();
+        $isStaffOnly = $viewer && $viewer->hasRole('employee') && ! $viewer->hasRole('admin') && ! $viewer->hasRole('manager');
+
         if ($role == 'employee') {
-            $query_data = User::role(['manager', 'employee'])->with('media')->where(function ($q) {
-                if (!empty($term)) {
-                    $q->orWhere('first_name', 'LIKE', "%$term%")->
-                    $q->orWhere('last_name', 'LIKE', "%$term%");
-                }
-            })->where('is_show_calender', 1)->get();
+            $query = User::role(['manager', 'employee'])->with('media')->where('is_show_calender', 1);
+            if ($isStaffOnly) {
+                $query->where('id', $viewer->id);
+            }
+            if (!empty($term)) {
+                $query->where(function ($q) use ($term) {
+                    $q->orWhere('first_name', 'LIKE', "%$term%")
+                      ->orWhere('last_name', 'LIKE', "%$term%");
+                });
+            }
+            $query_data = $query->get();
         } elseif ($role == 'user') {
-            $query_data = User::role(['user'])->where(function ($q) {
-                if (!empty($term)) {
-                    $q->orWhere('first_name', 'LIKE', "%$term%")->
-                    $q->orWhere('last_name', 'LIKE', "%$term%");
-                }
-            })->active()->get();
+            $userQuery = User::role(['user'])->active();
+            if ($isStaffOnly) {
+                $userQuery->whereHas('bookings.bookingService', fn ($s) => $s->where('employee_id', $viewer->id));
+            }
+            if (!empty($term)) {
+                $userQuery->where(function ($q) use ($term) {
+                    $q->orWhere('first_name', 'LIKE', "%$term%")
+                      ->orWhere('last_name', 'LIKE', "%$term%");
+                });
+            }
+            $query_data = $userQuery->get();
         }
 
         $data = [];

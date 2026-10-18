@@ -23,14 +23,14 @@ class AuthenticatedSessionController extends Controller
     /**
      * معالجة تسجيل الدخول
      */
-   public function store(Request $request)
-{
-    $user = $this->loginTrait($request);
+    public function store(Request $request)
+    {
+        // Enforce OTP login for all users and staff
+        if ($request->filled('mobile')) {
+            return app(\App\Http\Controllers\SignController::class)->verify($request);
+        }
 
-    if (!$user) {
-        return back()->withErrors([
-            'username' => 'These credentials do not match our records.',
-        ])->onlyInput('username');
+        return redirect()->route('signin')->with('info', 'تسجيل الدخول متاح عبر رمز التحقق (OTP) فقط.');
     }
 
     // التعامل مع جلسات الحجز المؤقتة

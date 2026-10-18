@@ -71,10 +71,36 @@ class BookingsController extends Controller
             'module_name' => $this->module_name,
             'module_icon' => $this->module_icon,
         ]);
-        $this->middleware(['permission:view_booking'])->only('index');
-        $this->middleware(['permission:edit_booking'])->only('edit', 'update');
-        $this->middleware(['permission:add_booking'])->only('store');
-        $this->middleware(['permission:delete_booking'])->only('destroy');
+        $this->middleware(['permission:view_booking'])->only([
+            'index',
+            'index_data',
+            'list_view',
+            'index_list',
+            'services_index_list',
+            'trashed',
+            'slots',
+            'payment_success',
+            'export',
+            'show',
+            'viewInvoice',
+            'downloadInvoice',
+        ]);
+        $this->middleware(['permission:edit_booking'])->only([
+            'edit',
+            'update',
+            'restore',
+            'updateStatus',
+            'updatePaymentStatus',
+            'employee_order',
+            'payment',
+            'payment_create',
+            'booking_payment',
+            'booking_payment_update',
+            'checkout',
+            'stripe_payment',
+        ]);
+        $this->middleware(['permission:add_booking'])->only(['create', 'store']);
+        $this->middleware(['permission:delete_booking'])->only(['destroy', 'bulk_action']);
         $this->middleware(['permission:booking_booking_tableview'])->only('datatable_view');
     }
 
@@ -160,6 +186,12 @@ public function index_list(Request $request)
     $selectedEmployeeIds = array_values(array_unique(array_filter(array_map('intval', $selectedEmployeeIds))));
     if ($employeeId && empty($selectedEmployeeIds)) {
         $selectedEmployeeIds = [(int) $employeeId];
+    }
+
+    $viewer = $request->user();
+    $isStaffOnly = $viewer && $viewer->hasRole('employee') && ! $viewer->hasRole('admin') && ! $viewer->hasRole('manager');
+    if ($isStaffOnly) {
+        $selectedEmployeeIds = [(int) $viewer->id];
     }
     $branchId = (int) $request->get('branch_id', 0);
 
@@ -330,14 +362,20 @@ public function index_list(Request $request)
         });
     }
 
-    $viewer = $request->user();
+    if ($isStaffOnly) {
+        $orderEmployeesQuery->where('users.id', $viewer->id);
+    }
+
     $preferenceMap = $this->getCalendarEmployeePreferenceMap($viewer, $branchId);
     $orderEmployees = $this->sortCalendarEmployees($orderEmployeesQuery->get(), $branchId, $viewer, $preferenceMap);
     $employees = $orderEmployees
         ->filter(fn ($employee) => $this->isCalendarEmployeeVisibleForUser($employee, $branchId, $viewer, $preferenceMap))
         ->values();
 
-    if (! empty($selectedEmployeeIds)) {
+    if ($isStaffOnly) {
+        $orderEmployees = $orderEmployees->where('id', $viewer->id)->values();
+        $employees = $orderEmployees;
+    } elseif (! empty($selectedEmployeeIds)) {
         $employees = $orderEmployees->whereIn('id', $selectedEmployeeIds)->values();
     }
 
@@ -898,6 +936,14 @@ public function index_list(Request $request)
                     });
             });
 
+        $viewer = auth()->user();
+        if ($viewer && $viewer->hasRole('employee') && ! $viewer->hasRole('admin') && ! $viewer->hasRole('manager')) {
+            $query->where(function ($q) use ($viewer) {
+                $q->whereHas('services', fn ($s) => $s->where('employee_id', $viewer->id))
+                  ->orWhereHas('bookingPackages', fn ($p) => $p->where('employee_id', $viewer->id));
+            });
+        }
+
         $filter = $request->filter;
 
         if (isset($filter)) {
@@ -1125,6 +1171,16 @@ public function index_list(Request $request)
      * @param  int  $id
      * @return Response
      */
+    public function checkEmployeeBookingAccess(Booking $booking): void
+    {
+        $viewer = auth()->user();
+        if ($viewer && $viewer->hasRole('employee') && ! $viewer->hasRole('admin') && ! $viewer->hasRole('manager')) {
+            $isAssigned = $booking->services()->where('employee_id', $viewer->id)->exists()
+                || $booking->bookingPackages()->where('employee_id', $viewer->id)->exists();
+            abort_unless($isAssigned, 403, 'غير مصرح لك بالوصول لهذا الحجز.');
+        }
+    }
+
     public function show($id)
     {
         $booking = Booking::with(['services', 'user', 'products', 'userCouponRedeem'])->find($id);
@@ -1132,6 +1188,8 @@ public function index_list(Request $request)
         if (is_null($booking)) {
             return response()->json(['message' => __('messages.booking_not_found')], 404);
         }
+
+        $this->checkEmployeeBookingAccess($booking);
 
         $bookingTransaction = BookingTransaction::where('booking_id', $booking->id)->where('payment_status', 1)->first();
 
@@ -1171,6 +1229,8 @@ public function index_list(Request $request)
             'userCouponRedeem'  // Ensure this is included
         ])->findOrFail($id);
 
+        $this->checkEmployeeBookingAccess($data);
+
         return response()->json(['data' => new BookingResource($data), 'status' => true]);
     }
 
@@ -1188,11 +1248,14 @@ public function index_list(Request $request)
      */
     public function update(BookingRequest $request, $id)
     {
+        $existing = Booking::with('services', 'bookingPackages')->findOrFail($id);
+        $this->checkEmployeeBookingAccess($existing);
+        $fingerprintBefore = app(\App\Services\BookingWhatsAppService::class)->fingerprint($existing);
+
         // FIX: lock both the employees currently assigned to this booking AND any new
         // employee(s) named in the request — a reschedule can move a booking onto an
         // employee who wasn't previously involved, and that employee's schedule needs
         // the same protection as a brand-new booking would get.
-        $existing = Booking::with('services', 'bookingPackages')->find($id);
         $employeeIds = array_merge(
             $this->extractRequestEmployeeIds($request),
             $existing ? $existing->services->pluck('employee_id')->all() : [],
@@ -1200,7 +1263,7 @@ public function index_list(Request $request)
         );
         $date = $this->extractRequestDate($request, $existing->start_date_time ?? null);
 
-        return $this->withEmployeeScheduleLocks($employeeIds, $date, function () use ($request, $id) {
+        $response = $this->withEmployeeScheduleLocks($employeeIds, $date, function () use ($request, $id) {
             return DB::transaction(function () use ($request, $id) {
                 $booking = Booking::with('transactions')->lockForUpdate()->findOrFail($id);
 
@@ -1255,6 +1318,13 @@ public function index_list(Request $request)
                 return response()->json(['message' => $message, 'status' => true, 'data' => new BookingResource($data)], 200);
             }, 3); // FIX: retry up to 3x on deadlock before giving up
         });
+
+        $updatedBooking = Booking::find($id);
+        if ($updatedBooking) {
+            app(\App\Services\BookingWhatsAppService::class)->enqueueCalendarUpdate($updatedBooking, $fingerprintBefore);
+        }
+
+        return $response;
     }
 
     private function updatePaidBookingSchedule(Booking $booking, Request $request): void
@@ -1609,6 +1679,7 @@ public function index_list(Request $request)
             return response()->json(['message' => __('messages.permission_denied'), 'status' => false], 200);
         }
         $booking = Booking::findOrFail($id);
+        $this->checkEmployeeBookingAccess($booking);
 
         $booking->delete();
 
@@ -1620,6 +1691,7 @@ public function index_list(Request $request)
     public function updateStatus($id, Request $request)
     {
         $booking = Booking::with('services', 'user', 'products', 'packages', 'bookingPackages.services')->findOrFail($id);
+        $this->checkEmployeeBookingAccess($booking);
         $status = $request->status;
 
         if (isset($request->action_type) && $request->action_type == 'update-status') {

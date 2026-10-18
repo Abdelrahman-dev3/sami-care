@@ -252,14 +252,15 @@ Route::get('/about-page', [\App\Http\Controllers\Backend\AboutPageController::cl
 
 
 Route::get('user-detail', [AuthController::class, 'userDetails']);
-Route::get('services', [CalanderBookingController::class, 'getservices']);
-Route::post('/Calander-bookings-new', [CalanderBookingController::class, 'store']);
-Route::get('/employees', [CalanderBookingController::class, 'emplouee']);
-// routes/api.php
-Route::put('/booking-carts/{id}', [CalanderBookingController::class, 'update']);
-Route::delete('/booking-carts/{id}', [CalanderBookingController::class, 'destroy']);
-Route::get('/booking-carts/by-time', [CalanderBookingController::class, 'getAllByTime']);
-Route::get('/booking-carts/by-day', [CalanderBookingController::class, 'getAllByDay']);
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('services', [CalanderBookingController::class, 'getservices'])->middleware('permission:view_booking');
+    Route::post('/Calander-bookings-new', [CalanderBookingController::class, 'store'])->middleware('permission:add_booking');
+    Route::get('/employees', [CalanderBookingController::class, 'emplouee'])->middleware('permission:view_booking');
+    Route::put('/booking-carts/{id}', [CalanderBookingController::class, 'update'])->middleware('permission:edit_booking');
+    Route::delete('/booking-carts/{id}', [CalanderBookingController::class, 'destroy'])->middleware('permission:delete_booking');
+    Route::get('/booking-carts/by-time', [CalanderBookingController::class, 'getAllByTime'])->middleware('permission:view_booking');
+    Route::get('/booking-carts/by-day', [CalanderBookingController::class, 'getAllByDay'])->middleware('permission:view_booking');
+});
 
 Route::middleware('auth:sanctum')->controller(SystemUtilityController::class)->group(function () {
     Route::get('/admin', 'adminRedirect');

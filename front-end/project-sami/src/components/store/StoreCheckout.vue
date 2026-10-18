@@ -24,7 +24,7 @@ const I = {
 const thumb = shape => shapeParts(shape, 34)
 
 /* mada/apple/card لسه مش مفعّلة (زي طرق الدفع في باقي الموقع) — cod والمحفظة بس شغالين فعليًا بالباك إند */
-const ENABLED_PAYS = []
+const ENABLED_PAYS = ['cod']
 
 const error = ref('')
 
@@ -72,7 +72,7 @@ async function submit() {
       <div class="card" style="padding:22px">
         <h4 style="font-family:var(--font-d);font-size:16px;color:var(--ink);margin-bottom:14px">3️⃣ طريقة الدفع</h4>
         <div v-for="m in CK_PAYS" :key="m.id" class="acc-pm" :class="{ sel: c.pay === m.id, disabled: !ENABLED_PAYS.includes(m.id) }" :data-ckpay="m.id">
-          <button type="button" class="head" disabled @click="selectMethod(m)"><span class="lg">{{ m.logo }}</span>
+          <button type="button" class="head" :disabled="!ENABLED_PAYS.includes(m.id)" @click="selectMethod(m)"><span class="lg">{{ m.logo }}</span>
             <span class="tt"><b>{{ m.n }}</b><small>{{ ENABLED_PAYS.includes(m.id) ? m.d : 'قريبًا' }}</small></span>
             <span class="rad"><i></i></span></button>
         </div>

@@ -27,7 +27,18 @@ class Kernel extends ConsoleKernel
 //        $schedule->command('cart:cleanup')->hourly();
         $schedule->command('basket:clear-expired')->everyMinute();
         $schedule->command('loyalty:expire-points')->daily();
-        $schedule->command('customers:send-messages')->dailyAt('08:00')->withoutOverlapping();
+        $schedule->command('customers:send-messages')->timezone('Asia/Riyadh')->dailyAt('08:00')->withoutOverlapping();
+        $schedule->command('bookings:send-whatsapp')->everyMinute()->withoutOverlapping();
+    }
+
+    /**
+     * Get the timezone that should be used by default for scheduled events.
+     *
+     * @return \DateTimeZone|string|null
+     */
+    protected function scheduleTimezone()
+    {
+        return 'Asia/Riyadh';
     }
 
     /**

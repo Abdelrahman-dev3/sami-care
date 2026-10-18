@@ -21,13 +21,27 @@ class BookingArrivalTest extends TestCase
         Schema::create('users', function (Blueprint $table) {
             $table->id(); $table->softDeletes(); $table->timestamps();
         });
+        Schema::create('settings', function (Blueprint $table) {
+            $table->id(); $table->string('name')->unique(); $table->text('val')->nullable();
+            $table->string('type')->default('string'); $table->softDeletes(); $table->timestamps();
+        });
         Schema::create('bookings', function (Blueprint $table) {
-            $table->id(); $table->unsignedBigInteger('user_id'); $table->string('status');
+            $table->id(); $table->unsignedBigInteger('user_id'); $table->unsignedBigInteger('branch_id')->nullable();
+            $table->string('status'); $table->dateTime('start_date_time')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable(); $table->softDeletes(); $table->timestamps();
+        });
+        Schema::create('booking_services', function (Blueprint $table) {
+            $table->id(); $table->unsignedBigInteger('booking_id'); $table->unsignedBigInteger('service_id')->nullable();
+            $table->unsignedBigInteger('employee_id')->nullable(); $table->dateTime('start_date_time')->nullable();
+            $table->timestamps();
+        });
+        Schema::create('booking_packages', function (Blueprint $table) {
+            $table->id(); $table->unsignedBigInteger('booking_id'); $table->unsignedBigInteger('package_id')->nullable();
+            $table->unsignedBigInteger('employee_id')->nullable(); $table->timestamps();
         });
         (require database_path('migrations/2026_10_12_000002_add_arrival_to_bookings.php'))->up();
         DB::table('users')->insert([['id'=>1], ['id'=>2]]);
-        DB::table('bookings')->insert(['id'=>10, 'user_id'=>2, 'status'=>'confirmed']);
+        DB::table('bookings')->insert(['id'=>10, 'user_id'=>2, 'status'=>'confirmed', 'start_date_time'=>now('Asia/Riyadh')->format('Y-m-d H:i:s')]);
         (require database_path('migrations/2023_01_01_000021_create_permission_tables.php'))->up();
         DB::table('roles')->insert([
             ['id'=>1, 'name'=>'admin', 'title'=>'Admin', 'guard_name'=>'web'],

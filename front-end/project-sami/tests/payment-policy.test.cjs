@@ -7,9 +7,9 @@ const context = vm.createContext({})
 vm.runInContext(fs.readFileSync(path.join(__dirname, '../public/payment-policy.js'), 'utf8'), context)
 const policy = context.SamiPaymentPolicy
 
-test('arrival payment stays disabled even with sufficient deposit', () => {
+test('arrival payment is enabled only with sufficient deposit and without rewards', () => {
   assert.equal(policy.canPay({ pay: 'cod', walletBalance: 29 }, 100), false)
-  assert.equal(policy.canPay({ pay: 'cod', walletBalance: 30 }, 100), false)
+  assert.equal(policy.canPay({ pay: 'cod', walletBalance: 30 }, 100), true)
   assert.equal(policy.canPay({ pay: 'cod', walletBalance: 100, useWallet: true, walletAmount: 10 }, 100), false)
 })
 
@@ -63,14 +63,15 @@ test('mobile gift controls use list selectors and apply wallet and points', () =
   assert.throws(() => policy.payment(giftState(), 100))
 })
 
-test('all payment methods remain disabled regardless of balances or rewards', () => {
-  for (const total of [0, 100]) {
-    for (const state of [{ walletBalance: 1000 }, { walletBalance: 1000, useWallet: true, walletAmount: 1000 }, { useLoyalty: true, loyaltyPoints: 1000, loyaltyPointsUsed: 1000 }]) {
-      assert.equal(policy.options(state, total).every(method => method.enabled === false), true)
-      for (const pay of ['cod', 'card', 'urpay', 'mada', 'tabby', null]) {
-        assert.equal(policy.canPay({ ...state, pay }, total), false)
-        assert.throws(() => policy.payment({ ...state, pay }, total))
-      }
+test('online payment methods remain disabled and cod requires sufficient deposit without rewards', () => {
+  for (const total of [100]) {
+    const rewardState = { walletBalance: 1000, useWallet: true, walletAmount: 50 }
+    assert.equal(policy.canPay({ ...rewardState, pay: 'cod' }, total), false)
+
+    for (const pay of ['card', 'urpay', 'mada', 'tabby']) {
+      assert.equal(policy.canPay({ walletBalance: 1000, pay }, total), false)
     }
+
+    assert.equal(policy.canPay({ walletBalance: 1000, pay: 'cod' }, total), true)
   }
 })

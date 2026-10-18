@@ -17,12 +17,28 @@ class BookingArrivalController extends Controller
         return view('backend.booking-arrival.index', compact('bookings'));
     }
 
-    public function show(Booking $booking)
+    public function show(Request $request, Booking $booking)
     {
-        $booking->load(['user', 'branch', 'booking_service.service', 'arrivalConfirmedBy']);
-        $qrUrl = URL::signedRoute('backend.booking-arrival.scan', ['booking' => $booking->id]);
+        $booking->load(['user', 'branch', 'booking_service.service', 'arrivalConfirmedBy', 'payment', 'transactions']);
+
+        $isPaid = (bool) (
+            $booking->payment_status === 1 ||
+            ($booking->payment && $booking->payment->payment_status === 'paid') ||
+            $booking->transactions()->where('payment_status', 1)->exists()
+        );
+
+        $expiresAt = $booking->start_date_time
+            ? \Carbon\Carbon::parse($booking->start_date_time)->endOfDay()
+            : now()->endOfDay();
+
+        $qrUrl = $isPaid ? URL::temporarySignedRoute('backend.booking-arrival.scan', $expiresAt, ['booking' => $booking->id]) : null;
         $fromScan = request()->routeIs('backend.booking-arrival.scan');
-        return view('backend.booking-arrival.show', compact('booking', 'qrUrl', 'fromScan'));
+
+        $viewer = $request->user();
+        $userBranches = $viewer ? $viewer->branches->pluck('id')->all() : [];
+        $branchMismatch = !empty($userBranches) && !in_array((int) $booking->branch_id, $userBranches);
+
+        return view('backend.booking-arrival.show', compact('booking', 'qrUrl', 'fromScan', 'isPaid', 'branchMismatch'));
     }
 
     public function update(Request $request, Booking $booking, BookingArrival $arrival)
