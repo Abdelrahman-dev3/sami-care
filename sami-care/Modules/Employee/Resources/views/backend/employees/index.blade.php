@@ -9,14 +9,13 @@
     <link rel="stylesheet" href="{{ mix('modules/constant/style.css') }}">
 @endpush
 @section('content')
+    <div class="mb-3"><a class="btn btn-outline-primary" href="{{ route('app.booking-reviews') }}">تقييمات الحجوزات والخدمات والموظفين</a></div>
     <!-- Employee Ratings Statistics -->
     @php
-        $employeeStats = \Modules\Employee\Models\EmployeeRating::select('employee_id')
-            ->selectRaw('AVG(rating) as avg_rating, COUNT(*) as total_reviews')
-            ->groupBy('employee_id')
-            ->get();
-        $overallAvg = $employeeStats->avg('avg_rating') ?? 0;
-        $totalReviews = $employeeStats->sum('total_reviews');
+        $ratingSummaries = app(\App\Services\EmployeeReviewSummary::class)->summaries(\App\Models\User::role('employee')->branch()->pluck('users.id')->all());
+        $employeeStats = collect($ratingSummaries);
+        $totalReviews = $employeeStats->sum('count');
+        $overallAvg = $totalReviews ? $employeeStats->sum('sum') / $totalReviews : 0;
     @endphp
     <div class="row mb-4">
         <div class="col-md-4">
@@ -185,6 +184,13 @@
                 searchable: false
             },
             {
+                data: 'average_rating',
+                name: 'average_rating',
+                title: 'متوسط تقييم العملاء (العدد)',
+                orderable: false,
+                searchable: false
+            },
+            {
                 data: 'shift_id',
                 name: 'shift_id',
                 title: "{{ __('employee.lbl_shift') }}",
@@ -262,7 +268,7 @@
                 url: '{{ route("backend.$module_name.index_data") }}',
                 finalColumns,
                 orderColumn: [
-                    [7, "desc"]
+                    [1, "asc"]
                 ],
             })
         })

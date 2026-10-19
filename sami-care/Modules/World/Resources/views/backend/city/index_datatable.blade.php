@@ -100,6 +100,11 @@
                 title: "{{ __('service.lbl_name') }}"
             },
             {
+                data: 'home_service_fee',
+                name: 'home_service_fee',
+                title: 'رسوم الزيارة المنزلية'
+            },
+            {
                 data: 'state_id',
                 name: 'state_id',
                 title: "{{ __('state.singule_title') }}"

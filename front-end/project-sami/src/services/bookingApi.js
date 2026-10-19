@@ -59,8 +59,10 @@ export async function fetchLoyaltyPointValue() {
   return authFetch('/loyalty/point-value')
 }
 
-export async function validateInvoiceCoupon(couponCode) {
-  return authFetch(`/validate-invoice-coupon?coupon_code=${encodeURIComponent(couponCode)}`)
+export async function validateInvoiceCoupon(couponCode, serviceIds = []) {
+  const params = new URLSearchParams({ coupon_code: couponCode })
+  serviceIds.forEach(id => params.append('service_ids[]', id))
+  return authFetch(`/validate-invoice-coupon?${params}`)
 }
 
 export const syncBookingProducts = products => authFetch('/mobile/cart/products', { method: 'PUT', body: { products } })

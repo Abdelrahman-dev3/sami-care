@@ -102,6 +102,9 @@ class HomeBookingsController extends Controller
         $validated = $request->validate([
             'customer_name' => ['required', 'string', 'max:255'],
             'mobile_no' => ['required', 'string', 'max:20'],
+            'city_id' => ['required', 'integer'],
+            'latitude' => ['required', 'numeric', 'between:-90,90'],
+            'longitude' => ['required', 'numeric', 'between:-180,180'],
             'address' => ['required', 'string', 'max:1000'],
             'date' => ['required', 'date'],
             'time' => ['required', 'date_format:H:i'],
@@ -125,6 +128,7 @@ class HomeBookingsController extends Controller
             ]);
         }
 
+        $homeCity = app(\App\Services\HomeService::class)->quote($validated);
         $availableEmployees = $this->resolveAvailableEmployees((int) $service->id);
         $employee = $availableEmployees->firstWhere('id', (int) $validated['staff_home_id']);
 
@@ -177,6 +181,10 @@ class HomeBookingsController extends Controller
             'user_id' => $customer->id,
             'branch_id' => $branchId,
             'location' => $validated['address'],
+            'home_city_id' => $homeCity->id,
+            'home_latitude' => $validated['latitude'],
+            'home_longitude' => $validated['longitude'],
+            'home_service_fee' => $homeCity->home_service_fee,
             'created_by' => auth()->id(),
             'payment_type' => 'cart',
         ]);
@@ -185,7 +193,7 @@ class HomeBookingsController extends Controller
             'booking_id' => $booking->id,
             'service_id' => $service->id,
             'employee_id' => $employee->id,
-            'service_price' => $service->default_price ?? 0,
+            'service_price' => (float) ($service->default_price ?? 0) + (float) $homeCity->home_service_fee,
             'duration_min' => $duration,
             'start_date_time' => $startDateTime,
             'sequance' => 1,

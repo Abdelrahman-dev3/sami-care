@@ -29,6 +29,7 @@ class PaymentController extends Controller
 {
     try {
         $data = $request->all();
+        if (filled($request->coupon_code)) return response()->json(['status' => false, 'message' => 'أرسل الكوبون مع طلب الدفع الموحد للتحقق منه وحسابه.'], 422);
         $data['tip_amount'] = 0;
 
         $booking = Booking::where('id', $data['booking_id'])->first();

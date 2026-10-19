@@ -1,4 +1,6 @@
 <script setup>
+import { homeService, loadHomeService } from '@/composables/useHomeService'
+loadHomeService().catch(() => {})
 import { localizeField, localizeRecord } from '@/utils/i18nField'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
@@ -24,7 +26,8 @@ const props = defineProps({
 })
 
 const displayBranches = computed(() => {
-    const branches = props.branches || []
+    const branches = (props.branches || []).filter(b => homeService.enabled || !(b.home || b.id === 'home-service'))
+    if (!homeService.enabled) return branches
     const hasHomeService = branches.some(branch => branch.home || branch.id === 'home-service')
 
     return hasHomeService

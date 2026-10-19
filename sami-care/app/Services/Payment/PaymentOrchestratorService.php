@@ -21,6 +21,21 @@ class PaymentOrchestratorService
 {
     public function initiate(array $input): array
     {
+        $input['coupon_code'] = trim((string) ($input['coupon_code'] ?? ''));
+        if ($input['coupon_code'] === '') return $this->initiateCheckout($input);
+        return DB::transaction(function () use ($input) {
+            $coupon = \Modules\Promotion\Models\Coupon::where('coupon_code', $input['coupon_code'])->lockForUpdate()->first();
+            if (!$coupon) return ['status' => 'error', 'message' => 'كود الخصم غير صالح.'];
+            // Pending gateways hold capacity until a verified success, failure or cancellation.
+            $pending = PaymentAttempt::where('coupon_code', $input['coupon_code'])
+                ->whereIn('status', [PaymentAttempt::STATUS_INITIATED, PaymentAttempt::STATUS_REDIRECTED])->count();
+            if ($coupon->use_limit <= $pending) return ['status' => 'error', 'message' => 'لا توجد استخدامات متاحة للكوبون حالياً؛ توجد عمليات دفع قيد التنفيذ.'];
+            return $this->initiateCheckout($input);
+        });
+    }
+
+    private function initiateCheckout(array $input): array
+    {
         $userId = auth()->id();
 
         // Determine page type based on input ( buy-now , cart )
@@ -117,6 +132,14 @@ class PaymentOrchestratorService
 
     public function handleCallback(string $gateway, string $token, Request $request): array
     {
+        return DB::transaction(function () use ($gateway, $token, $request) {
+            PaymentAttempt::where('token', $token)->lockForUpdate()->first();
+            return $this->processCallback($gateway, $token, $request);
+        });
+    }
+
+    private function processCallback(string $gateway, string $token, Request $request): array
+    {
         $attempt = PaymentAttempt::where('token', $token)->first();
 
         if (! $attempt || $attempt->gateway !== $gateway) {
@@ -125,23 +148,6 @@ class PaymentOrchestratorService
 
         if ($attempt->status === PaymentAttempt::STATUS_PAID) {
             return ['status' => 'paid', 'invoice_id' => $attempt->invoice_id];
-        }
-
-        if (! $request->has('trandata')) {
-            $resultHint = strtolower((string) ($request->query('result') ?: $request->input('result')));
-            $errorText = strtolower((string) ($request->query('ErrorText') ?: $request->input('ErrorText') ?: $request->input('errorText')));
-
-            if (in_array($resultHint, ['cancel', 'cancelled', 'canceled'], true) || str_contains($errorText, 'cancel')) {
-                $attempt->update(['status' => PaymentAttempt::STATUS_CANCELLED]);
-                $this->cleanupFailedCartBookings($attempt);
-                return ['status' => 'cancelled'];
-            }
-
-            if (in_array($resultHint, ['fail', 'failed', 'failure'], true) || (!empty($errorText) && !str_contains($errorText, 'cancel'))) {
-                $attempt->update(['status' => PaymentAttempt::STATUS_FAILED]);
-                $this->cleanupFailedCartBookings($attempt);
-                return ['status' => 'failed'];
-            }
         }
 
         $verification = $this->verifyGatewayPayment($attempt, $request);
@@ -163,7 +169,8 @@ class PaymentOrchestratorService
                 $attempt->gift_ids ?? [],
                 $this->resolvePaymentMethod($gateway, false),
                 $attempt->coupon_code ?? '',
-                $attempt->submethods ?? []
+                $attempt->submethods ?? [],
+                (float) $attempt->amount
             );
 
             $attempt->update([
@@ -242,6 +249,7 @@ class PaymentOrchestratorService
 
                 $invoiceId = app(PaymentFinalizerService::class)->finalizePayment($userId,$grossAmount,$taxAmount,$discountAmount,$pageType,$checkout['cart_ids'] ?? [],$checkout['gift_ids'] ?? [],'cash on delivery',$couponCode ?? '',false);
 
+                \App\Models\Invoice::findOrFail($invoiceId)->update(['collection_details' => ['gateway' => 0, 'wallet' => $requiredDeposit, 'loyalty' => 0]]);
                 BookingTransaction::where('external_transaction_id', 'INV-' . $invoiceId)->update(['transaction_type' => 'cash_on_delivery_deposit_percent']);
             });
 
@@ -273,10 +281,15 @@ class PaymentOrchestratorService
         }
     }
 
-    private function finalize(int $userId,float $grossAmount,float $taxAmount,float $discountAmount,string $pageType,array $cartIds,array $giftIds,string $paymentMethod,?string $couponCode,array $submethods): int {
+    private function finalize(int $userId,float $grossAmount,float $taxAmount,float $discountAmount,string $pageType,array $cartIds,array $giftIds,string $paymentMethod,?string $couponCode,array $submethods,?float $gatewayCollected = null): int {
         
         $invoiceId = app(PaymentFinalizerService::class)->finalizePayment($userId,$grossAmount, $taxAmount, $discountAmount, $pageType, $cartIds, $giftIds, $paymentMethod, $couponCode ?? '', true );
-        app(PaymentSubMethodsService::class)->apply($userId,new Request($submethods),$grossAmount,true);
+        $settlement = app(PaymentSubMethodsService::class)->apply($userId,new Request($submethods),$grossAmount,true);
+        \App\Models\Invoice::findOrFail($invoiceId)->update(['collection_details' => [
+            'gateway' => max(0, $gatewayCollected ?? 0),
+            'wallet' => (float) ($settlement['used_wallet'] ?? 0),
+            'loyalty' => (float) ($settlement['used_loyalty_amount'] ?? 0),
+        ]]);
         return $invoiceId;
     }
 

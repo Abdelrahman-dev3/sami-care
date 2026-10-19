@@ -1,3 +1,4 @@
+import { homeService, loadHomeService } from '@/composables/useHomeService'
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 
@@ -48,14 +49,18 @@ const router = createRouter({
     { path: '/cafe', name: 'cafe', component: () => import('@/views/CafeView.vue') },
     { path: '/privacy-policy', name: 'privacy-policy', component: PrivacyPolicyView },
     { path: '/page-about', alias: '/about.html', name: 'about', component: AboutView },
-    { path: '/:pathMatch(.*)*', redirect: '/' },
+    { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('@/views/NotFoundView.vue') },
     { path: '/blog', alias: '/blog.html', name: 'blog', component: BlogView },
     { path: '/blog/:slug', name: 'blog-detail', component: BlogDetailView },
     
   ]
 })
 
-router.beforeEach(to => {
+router.beforeEach(async to => {
+  if (to.name === 'home-service') {
+    try { await loadHomeService() } catch {}
+    if (!homeService.enabled) return { name: 'home' }
+  }
   if (!to.meta.requiresAuth) return true
   const { isAuthenticated, openAuthModal } = useAuth()
   if (isAuthenticated.value) return true

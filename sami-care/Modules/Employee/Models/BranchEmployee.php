@@ -15,7 +15,7 @@ class BranchEmployee extends Model
     protected $table = 'branch_employee';
 
     protected $fillable = [
-        'employee_id', 'branch_id','shift_id', 'is_primary',
+        'employee_id', 'branch_id','shift_id', 'is_primary', 'shift_rotation_enabled', 'shift_rotation_anchor',
     ];
 
     protected static function newFactory()

@@ -31,20 +31,22 @@ class InvoicePaymentRecorderService
             'payment_method' => $paymentMethod,
         ]);
 
-        $this->recordCouponRedeem($userId, $couponCode, $discountAmount);
+        $this->recordCouponRedeem($userId, $couponCode, $discountAmount, $invoice->id, $bookingIds);
 
         return (int) $invoice->id;
     }
 
-    private function recordCouponRedeem(int $userId, string $couponCode, float $discountAmount): void
+    private function recordCouponRedeem(int $userId, string $couponCode, float $discountAmount, int $invoiceId, array $bookingIds): void
     {
         if ($couponCode === '' || $discountAmount <= 0) {
             return;
         }
 
-        $coupon = Coupon::where('coupon_code', $couponCode)->first();
-        if (! $coupon) {
-            return;
+        if (!$bookingIds) throw new \RuntimeException('الكوبون متاح للحجوزات فقط.');
+        if (UserCouponRedeem::where('invoice_id', $invoiceId)->exists()) return;
+        $coupon = Coupon::where('coupon_code', $couponCode)->lockForUpdate()->first();
+        if (!$coupon || $coupon->use_limit < 1) {
+            throw new \RuntimeException('استنفد الكوبون عدد الاستخدامات المتاح.');
         }
 
         $coupon->decrement('use_limit');
@@ -54,6 +56,8 @@ class InvoicePaymentRecorderService
             'coupon_code' => $coupon->coupon_code,
             'discount' => $discountAmount,
             'coupon_id' => $coupon->id,
+            'invoice_id' => $invoiceId,
+            'booking_id' => count($bookingIds) === 1 ? $bookingIds[0] : null,
         ]);
     }
 }

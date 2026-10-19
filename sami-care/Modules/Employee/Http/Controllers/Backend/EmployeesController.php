@@ -48,7 +48,7 @@ class EmployeesController extends Controller
             'module_path' => $this->module_path,
         ]);
         $this->middleware(['permission:view_staff'])->only('index');
-        $this->middleware(['permission:edit_staff'])->only('edit', 'update');
+        $this->middleware(['permission:edit_staff'])->only('edit', 'update', 'update_status');
         $this->middleware(['permission:add_staff'])->only('store');
         $this->middleware(['permission:delete_staff'])->only('destroy');
     }
@@ -243,7 +243,8 @@ class EmployeesController extends Controller
     public function index_data(Datatables $datatable, Request $request)
     {
         $module_name = $this->module_name;
-        $query = User::select('users.*')->role(['employee', 'manager'])->branch()->with('media', 'mainBranch', 'mainShift');
+        $query = User::select('users.*')->role(['employee', 'manager'])->branch()->with('media', 'mainBranch', 'mainShift', 'services');
+        $ratingSummaries = app(\App\Services\EmployeeReviewSummary::class)->summaries((clone $query)->pluck('users.id')->all());
 
         $filter = $request->filter;
 
@@ -315,6 +316,10 @@ class EmployeesController extends Controller
             })
             ->addColumn('shift_id', function ($data) {
                 return optional($data->mainShift)->pluck('name')->toArray() ?? '-';
+            })
+            ->addColumn('average_rating', function ($data) use ($ratingSummaries) {
+                $summary = $ratingSummaries[$data->id] ?? null;
+                return $summary ? number_format($summary['average'], 2).' / 5 ('.$summary['count'].')' : 'لا توجد تقييمات';
             })
             ->addColumn('wallet_balance', function ($data) {
                 return '<a href="' . route('wallet.history', ['id' => $data->id]) . '">' . Currency::format(optional($data->wallet)->amount) . '</a>';
@@ -510,6 +515,7 @@ class EmployeesController extends Controller
         $data['shift_id'] = $data->branch->shift_id ?? null;
 
         $data['show_in_home_booking'] = $data->show_in_home_booking;
+        $data['rating_summary'] = app(\App\Services\EmployeeReviewSummary::class)->summaries([(int) $data->id])[$data->id] ?? ['average' => null, 'count' => 0];
 
         $data['service_id'] = $data->services->pluck('service_id') ?? [];
 
@@ -574,6 +580,7 @@ class EmployeesController extends Controller
             storeMediaFile($data, $request->file('profile_image'), 'profile_image');
         }
 
+        $oldAssignment = BranchEmployee::where('employee_id', $id)->first();
         BranchEmployee::where('employee_id', $id)->delete();
 
         ServiceEmployee::where('employee_id', $id)->delete();
@@ -601,6 +608,8 @@ class EmployeesController extends Controller
                 'employee_id' => $id,
                 'branch_id' => $request->branch_id,
                 'shift_id' => $request->shift_id,
+                'shift_rotation_enabled' => $oldAssignment->shift_rotation_enabled ?? true,
+                'shift_rotation_anchor' => $oldAssignment->shift_rotation_anchor ?? '2026-02-15',
             ];
 
             BranchEmployee::create($branch_data);
@@ -671,8 +680,9 @@ class EmployeesController extends Controller
 
     public function update_status(Request $request, $id)
     {
-        $data = User::role('employee')->findOrFail($id);
-        $data->update(['status' => $request->status]);
+        $request->validate(['status' => ['required', 'boolean']]);
+        $data = User::select('users.*')->role('employee')->branch()->findOrFail($id);
+        $data->update(['status' => $request->boolean('status')]);
 
         return response()->json(['status' => true, 'message' => __('branch.status_update')]);
     }

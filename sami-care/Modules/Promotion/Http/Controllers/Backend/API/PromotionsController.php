@@ -14,11 +14,11 @@ class PromotionsController extends Controller
     public function getCouponsList(Request $request)
     {
         $perPage = $request->input('per_page', 10);
-        $today_date = date('Y-m-d');
+        $today_date = now('Asia/Riyadh')->toDateString();
         $coupons = Promotion::with('coupon')
             ->where('status', 1)
             ->whereHas('coupon', function ($query) use ($today_date) {
-                $query->where('is_expired', 0)
+                $query->where('is_expired', 0)->where('use_limit', '>', 0)->whereNull('deleted_at')
                     ->where('end_date_time', '>=', $today_date)
                     ->where('start_date_time', '<=', $today_date);
             });

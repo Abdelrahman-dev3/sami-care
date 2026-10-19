@@ -154,6 +154,7 @@ async function doPay() {
 
     await createBooking({
       branch: branchId,
+      ...(branchId === 0 ? { city_id: state.homeCityId, latitude: state.homeLatitude, longitude: state.homeLongitude } : {}),
       services,
       customerName: state.cust.name,
       mobileNo: state.cust.phone,

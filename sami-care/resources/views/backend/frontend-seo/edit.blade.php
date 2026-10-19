@@ -1,6 +1,7 @@
 @extends('backend.layouts.app')
 @section('title', 'إعدادات SEO')
 @section('content')
+<a class="btn btn-outline-primary mb-3" href="{{ route('backend.sitemap.index') }}">توليد وتحميل ملف sitemap</a>
 <div dir="rtl">
     <h4>إعدادات SEO لصفحات الموقع</h4>
     <p>حدد عنوان الصفحة ووصفها والكلمات المفتاحية لكل لغة. اترك الحقل فارغًا لاستخدام القيمة الافتراضية المعروضة تحته.</p>

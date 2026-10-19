@@ -1,4 +1,7 @@
 <div class="d-flex gap-2 align-items-center">
+    @hasPermission('view_staff')
+        <a class="btn btn-soft-info btn-sm" href="{{ route('backend.employees.performance', $data->id) }}" title="تقرير الأداء والتقييمات والوردية"><i class="fa-solid fa-chart-line"></i></a>
+    @endhasPermission
     @hasPermission('staff_password')
         {{-- <button type='button' data-assign-module="{{ $data->id }}" data-assign-target='#Employee_change_password'
             data-assign-event='employee_assign' class='btn btn-soft-info btn-sm rounded text-nowrap' data-bs-toggle="tooltip"

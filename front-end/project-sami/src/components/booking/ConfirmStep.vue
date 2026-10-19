@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
+import HomeVisitLocation from '@/components/booking/HomeVisitLocation.vue'
 import { useServiceLocation } from '@/composables/useServiceLocation'
 import { useAuth } from '@/composables/useAuth'
 import { useBooking, fmtTimeStr, fmtDur, fmtDate, rs } from '@/composables/useBooking'
@@ -70,6 +71,7 @@ function toggleSuggestedProduct(product) {
 </script>
 
 <template>
+  <HomeVisitLocation v-if="current?.home" />
   <div class="panel-head"><h1>تأكيد الحجز</h1><p>راجع تفاصيل جلستك قبل تأكيد الحجز والدفع</p></div>
 
   <div class="card detail-card">

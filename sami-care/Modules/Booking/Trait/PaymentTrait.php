@@ -25,6 +25,11 @@ trait PaymentTrait
 {
     public function getpayment_method($data, $booking_id)
     {
+        return \Illuminate\Support\Facades\DB::transaction(fn () => $this->processBookingPayment($data, $booking_id));
+    }
+
+    private function processBookingPayment($data, $booking_id)
+    {
 
         $data['booking_id'] = $booking_id;
         $data['transaction_type'] = $data['payment_method'];
@@ -55,15 +60,9 @@ trait PaymentTrait
 
         }
         
-        $total_amount = $this->getTotalAmount($data['booking_id'], $data['taxes']);
-        if (isset($data['coupondiscount'])) {
-            $couponDiscountamount = $data['coupondiscount']; 
-        } else {
-            $couponDiscountamount = $this->couponDiscount($total_amount, $data['coupon_code'], $booking_id);
-        }
-        
+        $couponDiscountamount = $this->couponDiscount(0, $data['coupon_code'] ?? '', $booking_id);
+        $total_amount = $this->getTotalAmount($booking_id, $data['taxes'], $couponDiscountamount);
         $data['couponDiscountamount'] = $couponDiscountamount;
-        $total_amount = $total_amount - $couponDiscountamount;
         $data['$total_amount'] = $total_amount;
 
         $currency = Currency::where('is_primary', 1)->first();
@@ -113,21 +112,22 @@ trait PaymentTrait
 
     //GET TOTAL AMOUNT
 
-    public function getTotalAmount($booking_id, $tax = [])
+    public function getTotalAmount($booking_id, $tax = [], $pendingCouponDiscount = null)
     {
         $booking_services = BookingService::where('booking_id', $booking_id)->get();
         $total_service_amount = $booking_services->sum('service_price');
         $booking_products = BookingProduct::where('booking_id', $booking_id)->with('product')->get();
-        $booking_packages = UserPackage::where('booking_id', $booking_id)->get();
+        $booking_packages = BookingPackages::where('booking_id', $booking_id)->get();
         $total_package_amount = $booking_packages->sum('package_price');
         $discounted_product_amount = getproductDiscountAmount($booking_products);
         $total_product_amount = BookingProduct::where('booking_id', $booking_id)->sum(\DB::raw('product_qty * product_price'));
         $product_amount = $total_product_amount - $discounted_product_amount;
 
         $coupon_discount = UserCouponRedeem::where('booking_id', $booking_id)->value('discount');
-        if($coupon_discount != null){
-            $total_service_amount = $total_service_amount - $coupon_discount;
-        }
+        $coupon_discount = max(0, (float) ($coupon_discount ?? $pendingCouponDiscount ?? 0));
+        $fromServices = min($total_service_amount, $coupon_discount);
+        $total_service_amount -= $fromServices;
+        $total_package_amount = max(0, $total_package_amount - ($coupon_discount - $fromServices));
 
         $tax_amount = 0;
         if ($tax != '') {
@@ -147,49 +147,27 @@ trait PaymentTrait
 
     public function couponDiscount($total_amount, $coupon_code, $booking_id)
     {
-        $coupon = Coupon::query()
-            ->where('coupon_code', $coupon_code)
-            ->usable()
-            ->first();
-
-        $couponDiscountamount = 0;
-        if ($coupon) {
-            $couponDiscountamount = $coupon->discount_type == 'percent' ? $total_amount * ($coupon->discount_percentage / 100) : $coupon->discount_amount;
-        }
-
-        return $couponDiscountamount;
+        if (!filled($coupon_code)) return 0;
+        $quote = app(\App\Services\BookingCoupon::class)->quoteBooking($coupon_code, (int) $booking_id);
+        if (isset($quote['error'])) throw \Illuminate\Validation\ValidationException::withMessages(['coupon_code' => $quote['error']]);
+        return $quote['discount'];
     }
 
     public function couponExpired($coupon_code, $couponDiscountamount, $booking_id)
     {
-        $coupon = Coupon::where('coupon_code', $coupon_code)->first();
-        $user_id = Booking::where('id', $booking_id)->first();
-        if ($coupon) {
-            if ($coupon->isCurrentlyExpired()) {
-                return;
-            }
-
-            $redeemCoupon['coupon_code'] = $coupon_code;
-            $redeemCoupon['discount'] = $couponDiscountamount;
-            $redeemCoupon['user_id'] = $user_id->user_id;
-            $redeemCoupon['coupon_id'] = $coupon->id;
-            $redeemCoupon['booking_id'] = $booking_id;
-            UserCouponRedeem::create($redeemCoupon);
-
-            $coupon->syncExpiredState();
-
-            if ($coupon->is_expired) {
-
-                $allCouponsExpired = Coupon::where('promotion_id', $coupon->promotion_id)
-                    ->usable()
-                    ->doesntExist();
-
-                // Update promotion status if all coupons are expired
-                if ($allCouponsExpired) {
-                    Promotion::where('id', $coupon->promotion_id)->update(['status' => 0]);
-                }
-            }
-        }
+        if (!filled($coupon_code)) return;
+        \Illuminate\Support\Facades\DB::transaction(function () use ($coupon_code, $booking_id) {
+            $coupon = Coupon::where('coupon_code', $coupon_code)->lockForUpdate()->firstOrFail();
+            if (UserCouponRedeem::where('booking_id', $booking_id)->where('coupon_id', $coupon->id)->exists()) return;
+            if (UserCouponRedeem::where('booking_id', $booking_id)->exists()) throw \Illuminate\Validation\ValidationException::withMessages(['coupon_code' => 'يوجد كوبون مستخدم لهذا الحجز بالفعل.']);
+            $pending = \App\Models\PaymentAttempt::where('coupon_code', $coupon_code)->whereIn('status', ['initiated','redirected'])->count();
+            if ($coupon->use_limit <= $pending) throw \Illuminate\Validation\ValidationException::withMessages(['coupon_code' => 'استخدامات الكوبون المتاحة محجوزة لعمليات دفع قيد التنفيذ.']);
+            $quote = app(\App\Services\BookingCoupon::class)->quoteBooking($coupon_code, (int) $booking_id);
+            if (isset($quote['error'])) throw \Illuminate\Validation\ValidationException::withMessages(['coupon_code' => $quote['error']]);
+            $coupon->decrement('use_limit');
+            UserCouponRedeem::create(['coupon_code' => $coupon_code, 'coupon_id' => $coupon->id, 'booking_id' => $booking_id,
+                'user_id' => Booking::findOrFail($booking_id)->user_id, 'discount' => $quote['discount']]);
+        });
     }
     function storeApiUserPackage($booking_id)
     {
@@ -583,31 +561,7 @@ trait PaymentTrait
 
     public function ExpireCoupon($data)
     {
-        $couponData = Coupon::where('coupon_code', $data['coupon_code'])->first();
-
-        if ($couponData) {
-            if ($couponData->isCurrentlyExpired()) {
-                $message = 'Coupon has expired.';
-                return response()->json(['message' => $message, 'status' => false], 200);
-            } elseif ($couponData->hasReachedUseLimit()) {
-                $message = 'Your coupon limit has been reached.';
-                return response()->json(['message' => $message, 'status' => false], 200);
-            } else {
-                $redeemCoupon = [
-                    'coupon_code' => $data['coupon_code'],
-                    'discount' => $data['couponDiscountamount'],
-                    'user_id' => $data['user_id'],
-                    'coupon_id' => $couponData->id,
-                    'booking_id' => $data['booking_id'],
-                ];
-
-                UserCouponRedeem::create($redeemCoupon);
-                $couponData->syncExpiredState();
-                return response()->json(['message' => 'Coupon redeemed successfully', 'status' => true, 'data' => $redeemCoupon], 200);
-            }
-        } else {
-            $message = 'Coupon not found.';
-            return response()->json(['message' => $message, 'status' => false], 404);
-        }
+        $this->couponExpired($data['coupon_code'] ?? '', 0, $data['booking_id']);
+        return response()->json(['status' => true]);
     }
 }

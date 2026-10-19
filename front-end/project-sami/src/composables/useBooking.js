@@ -1,5 +1,7 @@
 import { useLanguage } from '@/composables/useLanguage'
 import { reactive, computed } from 'vue'
+import { useServiceLocation } from '@/composables/useServiceLocation'
+import { homeService } from '@/composables/useHomeService'
 import { useStore } from '@/composables/useStore'
 import { paymentPolicy } from '@/utils/paymentPolicy'
 
@@ -43,6 +45,9 @@ export function fmtDate(d) {
 }
 
 const state = reactive({
+  homeCityId: '',
+  homeLatitude: '',
+  homeLongitude: '',
   step: 0,
   services: [],      // [{id, categoryId, categoryName, name, dur, price}]
   activeCat: null,    // القسم المفتوح حاليًا في خطوة اختيار الخدمات
@@ -100,10 +105,20 @@ export function useBooking() {
   const subTotal = computed(() => selSvcs.value.reduce((a, s) => a + (Number(s.price) || 0), 0))
   const totalDur = computed(() => selSvcs.value.reduce((a, s) => a + s.dur, 0))
 
+  const { current } = useServiceLocation()
+  const homeFee = computed(() => current.value?.home ? Number(homeService.cities.find(c => String(c.id) === String(state.homeCityId))?.home_service_fee || 0) : 0)
+  const homeCovered = computed(() => {
+    if (!current.value?.home) return true
+    if (!homeService.enabled || !state.homeCityId || state.homeLatitude === '' || state.homeLongitude === '') return false
+    const lat=Number(state.homeLatitude), lng=Number(state.homeLongitude), rad=n=>n*Math.PI/180
+    if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat)>90 || Math.abs(lng)>180) return false
+    const a=Math.sin(rad(lat-homeService.latitude)/2)**2+Math.cos(rad(lat))*Math.cos(rad(homeService.latitude))*Math.sin(rad(lng-homeService.longitude)/2)**2
+    return 6371*2*Math.asin(Math.sqrt(Math.min(1,a))) <= Number(homeService.radius_km)
+  })
   const priceParts = computed(() => {
-    const sub = subTotal.value + productsTotal.value
+    const sub = subTotal.value + productsTotal.value + homeFee.value
     const vat = Math.round(sub * VAT * 100) / 100
-    return { sub, products: productsTotal.value, vat, total: sub + vat }
+    return { homeFee: homeFee.value, sub, products: productsTotal.value, vat, total: sub + vat }
   })
 
   const pointValue = computed(() => Math.max(Number(state.pointValue) || 0.5, 0.01))
@@ -155,8 +170,9 @@ export function useBooking() {
         return !!state.date && selSvcs.value.every(s => state.time[s.id])
       case 3:
         // بيانات العميل تُقرأ من الحساب عند الدفع؛ حقولها مخفية مؤقتًا في شاشة التأكيد.
-        return true
+        return homeCovered.value
       case 4:
+        if (!homeCovered.value) return false
         if (!paymentPolicy.checkoutEnabled) return false
         if (payableTotal.value <= 0) {
           return !!(state.rewards.useWallet || state.rewards.useLoyalty || state.rewards.couponApplied || state.pay)
@@ -181,6 +197,9 @@ export function useBooking() {
   }
 
   function reset() {
+    state.homeCityId = ''
+    state.homeLatitude = ''
+    state.homeLongitude = ''
     state.step = 0
     state.services = []
     state.activeCat = null
@@ -207,7 +226,7 @@ export function useBooking() {
   }
 
   return {
-    state, VAT,
+    state, VAT, homeFee, homeCovered,
     hasSvc, toggleSvc,
     selSvcs, subTotal, totalDur, priceParts, selectedProducts,
     pointValue, couponDiscount, walletDiscount, loyaltyPointsUsed, loyaltyDiscount, rewardDiscountTotal, payableTotal,

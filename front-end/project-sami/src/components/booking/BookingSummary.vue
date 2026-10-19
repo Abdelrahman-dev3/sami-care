@@ -31,6 +31,7 @@ const dateLabel = computed(() => (state.date ? fmtDate(state.date) : ''))
       <div class="sum-row"><span class="k">✂️ عدد الخدمات</span><span class="v">{{ selSvcs.length }} {{ selSvcs.length > 2 ? 'خدمات' : 'خدمة' }}</span></div>
       <div v-if="state.mode" class="sum-row"><span class="k">👤 الموظفون</span><span class="v">{{ state.mode === 'auto' ? 'اختيار تلقائي ذكي' : 'اختيار يدوي' }}</span></div>
 
+      <div v-if="current?.home" class="sum-row"><span class="k">رسوم الزيارة المنزلية</span><span class="v">{{ rs(p.homeFee) }} ر.س</span></div>
       <div class="sum-svcs">
         <div v-for="s in selSvcs" :key="s.id" class="sum-svc"><i style="background:var(--gold)"></i>
           <span class="nm">{{ s.name }}</span><span class="pr">{{ rs(s.price) }} ر.س</span>

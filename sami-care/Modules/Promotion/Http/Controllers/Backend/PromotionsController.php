@@ -149,7 +149,7 @@ class PromotionsController extends Controller
                 $query->orderBy('description', $order);
             })
             ->addColumn('is_expired', function ($data) {
-                return $data->coupon->every(fn($coupon) => $coupon->is_expired) ? 'Yes' : 'No';
+                return $data->coupon->every(fn($coupon) => $coupon->isCurrentlyExpired() || $coupon->use_limit <= 0) ? 'Yes' : 'No';
 
             })
             ->editColumn('coupon_type', function ($data) {
@@ -282,7 +282,7 @@ class PromotionsController extends Controller
 
         $couponData = $data;
         $couponData['promotion_id'] = $promotion->id;
-        // $couponData['services'] = json_encode($request->services);
+        // $couponData['services'] = $request->services;
         $couponData['services'] = $request->services;
 
         if ($request->coupon_type == 'custom') {
@@ -326,7 +326,19 @@ class PromotionsController extends Controller
      * @param  int  $id
      * @return Response
      */
-    public function update(Request $request, $id)
+    public function update(PromotionRequest $request, $id)
+    {
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $id) {
+            $coupons = Coupon::where('promotion_id', $id)->lockForUpdate()->get();
+            foreach ($coupons as $coupon) {
+                $pending = \App\Models\PaymentAttempt::where('coupon_code', $coupon->coupon_code)->whereIn('status', ['initiated', 'redirected'])->count();
+                if ((int) $request->use_limit < $pending) throw \Illuminate\Validation\ValidationException::withMessages(['use_limit' => 'لا يمكن تقليل الاستخدامات المتبقية عن عدد عمليات الدفع قيد التنفيذ.']);
+            }
+            return $this->updatePromotion($request, $id);
+        });
+    }
+
+    private function updatePromotion(PromotionRequest $request, $id)
     {
         $query = Promotion::findOrFail($id);
         $data = $request->except('feature_image');
@@ -343,14 +355,15 @@ class PromotionsController extends Controller
 
         $couponData = [
             'discount_type' => $request->discount_type,
+            'minimum_booking_amount' => $request->input('minimum_booking_amount', 0),
         ];
 
         // Simple format - Store as [1, 2, 3]
         if ($request->has('services')) {
-            $couponData['services'] = json_encode($request->services);
+            $couponData['services'] = $request->services;
         }
 
-        if ($coupon && $coupon->used_by == null) {
+        if ($coupon) {
             $couponData = array_merge($couponData, [
                 'start_date_time' => $request->start_date_time,
                 'end_date_time' => $request->end_date_time,
@@ -370,7 +383,7 @@ class PromotionsController extends Controller
             $couponData['is_expired'] = 0;
         }
 
-        Coupon::where('promotion_id', $id)->update($couponData);
+        Coupon::where('promotion_id', $id)->get()->each(fn ($item) => $item->update($couponData));
 
         $message = 'Promotions Updated Successfully';
         return response()->json(['message' => $message, 'status' => true], 200);
@@ -384,6 +397,15 @@ class PromotionsController extends Controller
      */
     public function destroy($id)
     {
+        return \Illuminate\Support\Facades\DB::transaction(fn () => $this->destroyPromotion($id));
+    }
+
+    private function destroyPromotion($id)
+    {
+        $codes = Coupon::where('promotion_id', $id)->lockForUpdate()->get()->pluck('coupon_code');
+        if (\App\Models\PaymentAttempt::whereIn('coupon_code', $codes)->whereIn('status', ['initiated', 'redirected'])->exists()) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['coupon' => 'توجد عمليات دفع قيد التنفيذ لهذا الكوبون. يمكن إيقاف العرض لمنع الاستخدامات الجديدة.']);
+        }
         if (env('IS_DEMO')) {
             return response()->json(['message' => __('messages.permission_denied'), 'status' => false], 200);
         }
@@ -401,44 +423,7 @@ class PromotionsController extends Controller
 
     public function couponValidate(Request $request)
     {
-        $now = now();
-        $coupon = Coupon::where('coupon_code', $request->coupon_code)
-            ->where('end_date_time', '>=', $now)
-            ->where('is_expired', '!=', '1')
-            ->whereHas('promotion', function ($query) {
-                $query->where('status', '!=', '0');
-            })
-            ->first();
-
-        if (!$coupon) {
-
-            $message = 'coupon not valid';
-
-            return ['valid' => false, 'message' => $message, 'status' => false];
-        }
-
-        $servicePrice = $request->service_price;
-
-        $discountValue = 0;
-        if ($coupon->discount_type == 'fixed') {
-            $discountValue = $coupon->discount_amount;
-        } elseif ($coupon->discount_type == 'percentage') {
-            $discountValue = ($coupon->discount_percentage / 100) * $servicePrice;
-        }
-
-        // Ensure discount doesn't exceed the service price
-        if ($discountValue > $servicePrice) {
-            return response()->json(['valid' => false, 'message' => 'Discount exceeds the service price', 'status' => false], 400);
-        }
-        $data = [
-            'coupon_code' => $coupon->coupon_code,
-            'discount_type' => $coupon->discount_type,
-            'discount_value' => $coupon->discount_amount,
-            'discount_percentage' => $coupon->discount_percentage,
-        ];
-        $message = 'coupon valid';
-
-        return response()->json(['message' => $message, 'data' => $data, 'status' => true, 'valid' => true], 200);
+        return app(\App\Http\Controllers\Api\CouponValidationController::class)->validateInvoiceCoupon($request);
     }
 
     public function couponsview(Request $request)
@@ -490,7 +475,7 @@ class PromotionsController extends Controller
         $module_name = $this->module_name;
 
         // $query = Coupon::with('userCouponRedeem')->where('promotion_id', $id);
-        $query = Coupon::with('userRedeems')->where('promotion_id', $id);
+        $query = Coupon::with('userRedeems')->withCount('userCouponRedeem')->where('promotion_id', $id);
 
 
         $filter = $request->filter;
@@ -531,7 +516,7 @@ class PromotionsController extends Controller
             })
             ->editColumn('is_expired', function ($data) {
 
-                return $data->is_expired === 1 ? 'Yes' : 'No';
+                return $data->isCurrentlyExpired() || $data->use_limit <= 0 ? 'Yes' : 'No';
             })
             ->rawColumns(['action', 'status', 'check'])
             ->orderColumns(['id'], '-:column $1')

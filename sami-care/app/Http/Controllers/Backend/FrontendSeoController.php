@@ -44,6 +44,7 @@ class FrontendSeoController extends Controller
     public function show(Request $request, FrontendSeo $seo)
     {
         $data = $request->validate(['path'=>['required','string','max:512'], 'lang'=>['required',Rule::in(['ar','en'])]]);
+        if ($seo->normalize($data['path']) === '/home-service') abort_unless(app(\App\Services\HomeService::class)->settings()['enabled'], 404);
         $result = $seo->resolve($data['path'], $data['lang']);
         abort_unless($result, 404);
         return response()->json(['status'=>true,'data'=>$result])->header('Cache-Control', 'no-store');

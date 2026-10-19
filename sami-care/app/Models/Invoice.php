@@ -22,10 +22,12 @@ class Invoice extends Model
         'loyalty_points_discount',
         'final_total',
         'payment_method',
+        'collection_details',
     ];
 
     protected $casts = [
         'cart_ids' => 'array',
+        'collection_details' => 'array',
         'gift_ids' => 'array',
         'product_ids' => 'array',
     ];

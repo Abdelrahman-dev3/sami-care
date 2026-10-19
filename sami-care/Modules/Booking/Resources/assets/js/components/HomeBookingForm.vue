@@ -17,6 +17,13 @@
       <template v-else>
         <div class="row g-3">
           <div class="col-12">
+            <label class="form-label">المدينة ورسوم الزيارة</label>
+            <select v-model="form.city_id" class="form-select"><option value="">اختر المدينة</option><option v-for="city in homeCities" :key="city.id" :value="city.id">{{ parseLocalizedValue(city.name) }} — {{ city.home_service_fee }} ر.س</option></select>
+            <small class="text-danger">{{ errors.city_id }}</small>
+          </div>
+          <div class="col-6"><label>خط العرض<input v-model="form.latitude" type="number" step="any" class="form-control"></label><small class="text-danger">{{ errors.latitude }}</small></div>
+          <div class="col-6"><label>خط الطول<input v-model="form.longitude" type="number" step="any" class="form-control"></label><small class="text-danger">{{ errors.longitude }}</small></div>
+          <div class="col-12">
             <label class="form-label">اسم العميل</label>
             <input v-model="form.customer_name" type="text" class="form-control" placeholder="اسم العميل" />
             <small v-if="errors.customer_name" class="text-danger">{{ errors.customer_name }}</small>
@@ -141,6 +148,7 @@ const isBootstrapping = ref(false)
 const isSubmitted = ref(false)
 const servicesLoading = ref(false)
 const staffLoading = ref(false)
+const homeCities = ref([])
 const serviceGroups = ref([])
 const services = ref([])
 const staff = ref([])
@@ -151,6 +159,9 @@ const errors = reactive({})
 const defaultForm = () => ({
   customer_name: '',
   mobile_no: '',
+  city_id: '',
+  latitude: '',
+  longitude: '',
   address: '',
   notes: '',
   service_group_home_id: '',
@@ -446,6 +457,9 @@ const hideForm = () => {
 }
 
 const openForm = async () => {
+  const homeResponse = await listingRequest({ url: () => ({ path: '/api/home-service-settings', method: 'GET' }) })
+  homeCities.value = homeResponse?.data?.cities || []
+
   if (!serviceGroups.value.length) {
     await loadServiceGroups()
   }

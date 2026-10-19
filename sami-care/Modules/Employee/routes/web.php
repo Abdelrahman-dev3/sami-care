@@ -53,6 +53,8 @@ Route::group(['prefix' => 'app', 'as' => 'backend.', 'middleware' => ['auth']], 
 
 
     Route::group(['prefix' => 'employees', 'as' => 'employees.'], function () {
+        Route::get('{id}/performance', [\Modules\Employee\Http\Controllers\Backend\EmployeePerformanceController::class, 'show'])->name('performance');
+        Route::put('{id}/schedule', [\Modules\Employee\Http\Controllers\Backend\EmployeePerformanceController::class, 'schedule'])->name('schedule');
         Route::get('index_list', [EmployeesController::class, 'index_list'])->name('index_list');
         Route::get('commision_list', [EmployeesController::class, 'commision_list'])->name('commision_list');
 

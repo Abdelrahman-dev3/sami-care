@@ -22,11 +22,18 @@ class HomeServicePageController extends Controller
 
     public function edit()
     {
-        return view('backend.home-service-page.edit', ['page' => $this->page()]);
+        return view('backend.home-service-page.edit', ['page' => $this->page(), 'homeSettings' => app(\App\Services\HomeService::class)->settings()]);
     }
 
     public function update(Request $request)
     {
+        $settings = $request->validate([
+            'enabled' => ['required','boolean'],
+            'latitude' => ['required','numeric','between:-90,90'],
+            'longitude' => ['required','numeric','between:-180,180'],
+            'radius_km' => ['required','numeric','min:0.1','max:20000'],
+        ]);
+        $settings['enabled'] = $request->boolean('enabled');
         $data = $request->validate([
             'title' => ['required', 'string', 'max:150'],
             'subtitle' => ['nullable', 'string', 'max:500'],
@@ -43,6 +50,7 @@ class HomeServicePageController extends Controller
             ]);
         }
         Setting::set('home_service_page', $content);
+        Setting::set('home_service_settings', json_encode($settings));
 
         return redirect()->route('backend.home-service-page.edit')
             ->with('success', 'تم حفظ محتوى صفحة الخدمة المنزلية بنجاح.');
@@ -50,6 +58,7 @@ class HomeServicePageController extends Controller
 
     public function show()
     {
+        abort_unless(app(\App\Services\HomeService::class)->settings()['enabled'], 404);
         return response()->json(['status' => true, 'data' => $this->page()]);
     }
 }

@@ -3,6 +3,7 @@
     <div class="offcanvas offcanvas-end" tabindex="-1" id="form-offcanvas" aria-labelledby="form-offcanvasLabel">
       <FormHeader :currentId="currentId" :editTitle="editTitle" :createTitle="createTitle"></FormHeader>
       <div class="offcanvas-body">
+        <InputField label="رسوم الزيارة المنزلية" type="number" min="0" step="0.01" v-model="home_service_fee" :error-messages="errorMessages.home_service_fee" />
         <InputField class="col-md-12" :placeholder="$t('state.enter_name')" type="text" :is-required="true" :label="$t('messages.name')" placeholder="" v-model="name" :error-message="errors['name']" :error-messages="errorMessages['name']"></InputField>
 
         <div class="col-md-12 form-group">
@@ -79,6 +80,7 @@ const defaultData = () => {
   errorMessages.value = {}
   return {
     name: '',
+    home_service_fee: 0,
     status: true,
     country: '',
     state_id: ''
@@ -90,6 +92,7 @@ const setFormData = (data) => {
   resetForm({
     values: {
       name: data.name,
+      home_service_fee: data.home_service_fee ?? 0,
       status: data.status,
       state_id: data.state_id,
       country: data?.city?.country?.id
@@ -121,6 +124,7 @@ const { handleSubmit, errors, resetForm } = useForm({
   validationSchema
 })
 const { value: country } = useField('country')
+const { value: home_service_fee } = useField('home_service_fee')
 const { value: name } = useField('name')
 const { value: status } = useField('status')
 const { value: state_id } = useField('state_id')

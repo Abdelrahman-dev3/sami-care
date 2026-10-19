@@ -287,6 +287,9 @@
 @endpush
 
 @section('content')
+    @hasPermission('overall_booking_report')
+        <a class="btn btn-outline-primary mb-3" href="{{ route('backend.reports.reviews') }}">تقرير تقييمات الفروع والخدمات والموظفين</a>
+    @endhasPermission
     {{-- Page Header --}}
     <div class="reviews-page-header">
         <h2><i class="fas fa-star" style="margin-left: 8px;"></i> آراء وتقييمات العملاء</h2>
@@ -385,7 +388,7 @@
                             {{-- Detailed booking ratings --}}
                             @if($review->branch_rating)
                                 <td>
-                                    <div>الفرع: {{ $review->branch_rating }} / 5</div>
+                                    <div>الفرع: {{ \App\Services\ReviewReport::name($review->booking?->branch?->name) }} — {{ $review->branch_rating }} / 5</div>
                                     @foreach($review->service_ratings ?? [] as $rating)
                                         @php($ratedService = $review->booking?->services->firstWhere('id', $rating['booking_service_id']))
                                         <div>{{ $ratedService?->service_name ?? ('خدمة #' . $rating['service_id']) }}: {{ $rating['service_rating'] }} / 5</div>
@@ -458,7 +461,7 @@
 @push('after-scripts')
 <script>
     function toggleApproval(id) {
-        fetch(`/app/booking-reviews/${id}/approve`, {
+        fetch(@json(route('booking-reviews.approve', '__ID__')).replace('__ID__', encodeURIComponent(id)), {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -490,7 +493,7 @@
     function deleteReview(id) {
         if (!confirm('هل أنت متأكد من حذف هذا التقييم؟')) return;
 
-        fetch(`/app/booking-reviews/${id}`, {
+        fetch(@json(route('booking-reviews.destroy', '__ID__')).replace('__ID__', encodeURIComponent(id)), {
             method: 'DELETE',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content

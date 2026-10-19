@@ -245,6 +245,10 @@ Route::controller(SettingController::class)->group(function () {
 
 
 Route::get('/terms', [TermsAndConditionsController::class, 'terms_api']);
+Route::get('/home-service-settings', function () {
+    $settings = app(\App\Services\HomeService::class)->settings();
+    return response()->json(['data' => $settings + ['maps_key' => (string) \App\Models\Setting::get('google_maps_key', ''), 'cities' => $settings['enabled'] ? \Modules\World\Models\City::where('status', 1)->get(['id', 'name', 'home_service_fee']) : []]]);
+});
 Route::get('/home-service-page', [\App\Http\Controllers\Backend\HomeServicePageController::class, 'show']);
 Route::get('/cafe-page', [\App\Http\Controllers\Backend\CafePageController::class, 'show']);
 Route::get('/about-page', [\App\Http\Controllers\Backend\AboutPageController::class, 'show']);
@@ -380,3 +384,5 @@ Route::middleware('auth:sanctum')->controller(\App\Http\Controllers\Api\Customer
  Route::get('/bookings/{id}/review', 'review')->whereNumber('id');
  Route::put('/bookings/{id}/review', 'saveReview')->whereNumber('id');
 });
+
+Route::get('/seo-sitemap', \App\Http\Controllers\Api\SitemapController::class);
