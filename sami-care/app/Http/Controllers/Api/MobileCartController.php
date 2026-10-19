@@ -505,10 +505,64 @@ class MobileCartController extends Controller
                 'location.message' => ['nullable', 'string', 'max:1000'],
                 'location.sender_name' => ['nullable', 'string', 'max:255'],
                 'design' => ['nullable', 'string', 'max:50'],
+                'type' => ['nullable', 'in:service,package,value'],
+                'value_amount' => ['required_if:type,value', 'nullable', 'numeric'],
                 'send_channel' => ['nullable', 'in:wa,sms,link,mail,print'],
                 'branch' => ['nullable', 'integer'],
                 'branch_id' => ['nullable', 'integer'],
             ]);
+
+            $design = \App\Models\GiftDesign::active()->where('slug', $validated['design'] ?? '')->exists()
+                ? $validated['design']
+                : 'lux-dark';
+
+            // Value gift card: a stored amount instead of services/packages.
+            if (($validated['type'] ?? null) === GiftCard::TYPE_VALUE) {
+                $giftSettings = app(\App\Services\Gifts\GiftSettings::class);
+                $min = $giftSettings->float('gift_value_min');
+                $max = $giftSettings->float('gift_value_max');
+                $amount = round((float) $validated['value_amount'], 2);
+                if ($amount < $min || $amount > $max) {
+                    return response()->json([
+                        'success' => false,
+                        'status' => false,
+                        'message' => __('gift_system.value_range', ['min' => $min, 'max' => $max]),
+                    ], 422);
+                }
+
+                $giftCard = GiftCard::create([
+                    'user_id' => $request->user()->id,
+                    'type' => GiftCard::TYPE_VALUE,
+                    'source' => 'customer',
+                    'recipient_name' => $validated['location']['recipient_name'],
+                    'recipient_phone' => $validated['location']['recipient_mobile'],
+                    'sender_name' => $validated['location']['sender_name'] ?? null,
+                    'design' => $design,
+                    'requested_services' => [],
+                    'requested_packages' => [],
+                    'message' => $validated['location']['message'] ?? null,
+                    'value_amount' => $amount,
+                    'subtotal' => $amount,
+                    'payment_status' => 0,
+                    'gift_status' => GiftCard::STATUS_PENDING_PAYMENT,
+                    'send_channel' => $validated['send_channel'] ?? 'link',
+                ]);
+                $giftCard->ensureClaimToken();
+                app(\App\Services\Gifts\GiftCardService::class)->record($giftCard, 'created', $request->user()->id);
+
+                return response()->json([
+                    'success' => true,
+                    'status' => true,
+                    'message' => __('messages.gift_added_success'),
+                    'data' => [
+                        'gift_card_id' => $giftCard->id,
+                        'subtotal' => (float) $giftCard->subtotal,
+                        'claim_url' => $giftCard->claim_url,
+                        'share_url' => $giftCard->share_url,
+                        'claim_token' => $giftCard->claim_token,
+                    ],
+                ], 201);
+            }
 
             $serviceIds = [];
 
@@ -549,7 +603,9 @@ class MobileCartController extends Controller
                 'recipient_name' => $validated['location']['recipient_name'],
                 'recipient_phone' => $validated['location']['recipient_mobile'],
                 'sender_name' => $validated['location']['sender_name'] ?? null,
-                'design' => $validated['design'] ?? 'lux-dark',
+                'design' => $design,
+                'type' => $serviceIds === [] ? GiftCard::TYPE_PACKAGE : GiftCard::TYPE_SERVICE,
+                'source' => 'customer',
                 'requested_services' => $serviceIds,
                 'requested_packages' => $packageIds,
                 'message' => $validated['location']['message'] ?? null,
@@ -560,6 +616,7 @@ class MobileCartController extends Controller
         ]);
 
             $giftCard->ensureClaimToken();
+            app(\App\Services\Gifts\GiftCardService::class)->record($giftCard, 'created', $request->user()->id);
 
             return response()->json([
                 'success' => true,

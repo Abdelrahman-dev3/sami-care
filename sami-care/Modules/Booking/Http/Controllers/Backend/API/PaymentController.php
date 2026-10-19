@@ -10,8 +10,9 @@ use Modules\Booking\Trait\PaymentTrait;
 use Modules\Commission\Models\CommissionEarning;
 use Modules\Package\Models\BookingPackages;
 use Modules\Package\Models\UserPackage;
-use Modules\Wallet\Models\Wallet;
-use Modules\Wallet\Models\WalletHistory;
+use App\Services\Wallet\InsufficientWalletBalance;
+use App\Services\Wallet\WalletLedger;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 
@@ -41,62 +42,42 @@ class PaymentController extends Controller
             ], 404); // Not Found
         }
 
-        $payment = BookingTransaction::create($data);
-
-        if ($data['transaction_type'] == 'wallet') {
-            $total_amount = $this->getTotalAmount($data['booking_id'], $data['tax_percentage']);
-            $user_id = Booking::find($data['booking_id'])->user_id;
-
-            if (!$user_id) {
+        if (($data['transaction_type'] ?? null) == 'wallet') {
+            if (!$booking->user_id) {
                 return response()->json([
                     'status' => false,
                     'message' => 'User not found.'
                 ], 404); // Not Found
             }
 
-            $wallet = Wallet::where('user_id', $user_id)->first();
-
-            if (!$wallet) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Wallet not found.'
-                ], 404); // Not Found
+            // Only the booking owner (or staff) may pay it from the owner's wallet.
+            if ((int) $booking->user_id !== (int) auth()->id() && !(auth()->user()?->can('edit_booking') || auth()->user()?->hasAnyRole(['admin', 'manager', 'employee']))) {
+                return response()->json(['status' => false, 'message' => __('wallet_ledger.forbidden')], 403);
             }
 
-            if ($wallet->amount >= $total_amount) {
-                $wallet->amount -= $total_amount;
-                if ($wallet->save()) {
-                    // $activity_message = 'Wallet payment of ' . $total_amount;
-                    $activity_message = __('messages.wallet_paid') . $data['booking_id'];
+            $total_amount = (float) $this->getTotalAmount($data['booking_id'], $data['tax_percentage'] ?? []);
 
-                    $activity_data = [
-                        'title' => $wallet->title,
-                        'amount' => $wallet->amount,
-                        'transaction_id' => $data['external_transaction_id'],
-                        'transaction_type' => 'wallet',
-                        'credit_debit_amount' => (float) $total_amount,
-                        'transaction_type' => 'debit',
-                    ];
-                    $walletHistoryData = [
-                        'user_id' => $wallet->user_id,
-                        'datetime' => now(),
+            try {
+                $payment = DB::transaction(function () use ($booking, $data, $total_amount) {
+                    app(WalletLedger::class)->debit((int) $booking->user_id, $total_amount, 'payment', [
                         'activity_type' => 'debit',
-                        'activity_message' => $activity_message,
-                        'activity_data' => json_encode($activity_data),
-                    ];
-                    WalletHistory::create($walletHistoryData);
-                } else {
-                    return response()->json([
-                        'status' => false,
-                        'message' => 'Failed to update wallet balance.'
-                    ], 500); // Internal Server Error
-                }
-            } else {
+                        'message' => __('messages.wallet_paid') . $booking->id,
+                        'source_type' => 'booking',
+                        'source_id' => $booking->id,
+                        'idempotency_key' => 'payment:booking:' . $booking->id,
+                        'meta' => ['transaction_id' => $data['external_transaction_id'] ?? null],
+                    ]);
+
+                    return BookingTransaction::create($data);
+                });
+            } catch (InsufficientWalletBalance $e) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Insufficient wallet balance.'
                 ], 400); // Bad Request
             }
+        } else {
+            $payment = BookingTransaction::create($data);
         }
 
         $earning_data = $this->commissionData($payment);

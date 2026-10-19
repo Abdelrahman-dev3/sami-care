@@ -27,6 +27,7 @@ import pageCss from '@/assets/styles/pages/gifts.css?raw'
 import SIcon from '@/components/common/SIcon.vue'
 import GiftTypeStep from '@/components/gifts/GiftTypeStep.vue'
 import GiftPickStep from '@/components/gifts/GiftPickStep.vue'
+import GiftValueStep from '@/components/gifts/GiftValueStep.vue'
 import GiftCustomizeStep from '@/components/gifts/GiftCustomizeStep.vue'
 import GiftPayStep from '@/components/gifts/GiftPayStep.vue'
 import GiftSuccess from '@/components/gifts/GiftSuccess.vue'
@@ -68,6 +69,15 @@ function pickType(gt) {
     state.branch = current.value?.id || state.branch
     state.step = 1
     scrollTo({ top: 0, behavior: 'smooth' })
+  }
+  // A value card is not tied to a branch: no location to choose.
+  if (gt === 'val') {
+    state.gtype = gt
+    state.pkg = null
+    state.svcs = []
+    state.step = 1
+    scrollTo({ top: 0, behavior: 'smooth' })
+    return
   }
   openPicker(continueToPicks)
 }
@@ -152,15 +162,16 @@ const WHY = [
         <!-- باقي الخطوات: عمودان مع الملخص -->
         <div v-if="!isIntro" class="g-stage" :class="{ 'g-stage--pick': !state.done && state.step === 1 }">
           <main class="view on">
-            <div v-if="!state.done && state.step > 0" class="gift-location-note"><LocationNotice /></div>
+            <div v-if="!state.done && state.step > 0 && state.gtype !== 'val'" class="gift-location-note"><LocationNotice /></div>
             <GiftSuccess v-if="state.done"
               @recipient="location.href = recipientURL()"
-              @track="toast('حالة الهدية: تم الإرسال — بانتظار فتح المستلم')"
+              @track="$router.push('/account?tab=gifts')"
               @new-gift="reset()"
               @share="toast('تم نسخ رابط الهدية للمشاركة')"
               @home="$router.push('/')"
               @copy-ref="toast('تم نسخ رقم الطلب')" />
             <GiftTypeStep v-else-if="state.step === 0" @pick="pickType" />
+            <GiftValueStep v-else-if="state.step === 1 && state.gtype === 'val'" @nav="go" />
             <GiftPickStep v-else-if="state.step === 1" @nav="go" />
             <GiftCustomizeStep v-else-if="state.step === 2" @nav="go" />
             <GiftPayStep v-else-if="state.step === 3" @nav="go" @pay="doPay" />

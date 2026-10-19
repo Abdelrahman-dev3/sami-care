@@ -90,6 +90,14 @@
                                                     <label>نسبة الخصم (%)</label>
                                                     <input type="number" step="0.01" name="discount_percentage" class="form-control" value="{{ $tier->discount_percentage }}" required>
                                                 </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label>مكافأة رصيد عند الترقية (ر.س)</label>
+                                                    <input type="number" step="0.01" min="0" name="wallet_bonus" class="form-control" value="{{ $tier->benefits['wallet_bonus'] ?? '' }}">
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label>صلاحية المكافأة (أيام، فارغ = بدون انتهاء)</label>
+                                                    <input type="number" min="1" name="wallet_bonus_expiry_days" class="form-control" value="{{ $tier->benefits['wallet_bonus_expiry_days'] ?? '' }}">
+                                                </div>
                                                 <div class="col-md-12 mb-3">
                                                     <label>المزايا (عربي) - كل ميزة في سطر</label>
                                                     <textarea name="benefits_ar" class="form-control" rows="3">{{ implode("\n", $tier->benefits['ar'] ?? []) }}</textarea>
@@ -149,6 +157,14 @@
                     <div class="col-md-12 mb-3">
                         <label>نسبة الخصم (%)</label>
                         <input type="number" step="0.01" name="discount_percentage" class="form-control" value="0" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label>مكافأة رصيد عند الترقية (ر.س)</label>
+                        <input type="number" step="0.01" min="0" name="wallet_bonus" class="form-control">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label>صلاحية المكافأة (أيام، فارغ = بدون انتهاء)</label>
+                        <input type="number" min="1" name="wallet_bonus_expiry_days" class="form-control">
                     </div>
                     <div class="col-md-12 mb-3">
                         <label>المزايا (عربي) - كل ميزة في سطر</label>

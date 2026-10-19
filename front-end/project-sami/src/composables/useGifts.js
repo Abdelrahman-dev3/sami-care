@@ -1,6 +1,6 @@
 import { paymentPolicy } from '@/utils/paymentPolicy'
 import { reactive, computed } from 'vue'
-import { DESIGNS } from '@/data/gifts'
+import { useGiftDesigns } from '@/composables/useGiftDesigns'
 import { useAuth } from '@/composables/useAuth'
 import { createGiftCard } from '@/services/giftsApi'
 import { initPayment } from '@/services/bookingApi'
@@ -11,15 +11,17 @@ import { initPayment } from '@/services/bookingApi'
 
   gtype === 'svc'  → state.svcs مصفوفة خدمات حقيقية {id, categoryId, categoryName, name, dur, price}
   gtype === 'pkg'  → state.pkg الباقة الحقيقية الكاملة (نفس الكائن اللي بترجعه usePackages)
+  gtype === 'val'  → state.value مبلغ بطاقة الهدية (بدون ضريبة عند الشراء؛ تُحتسب عند الاستخدام)
 */
 
 const VAT = 0.15
 
-export const dsgOf = id => DESIGNS.find(d => d.id === id)
+export const dsgOf = id => useGiftDesigns().designOf(id)
 
 const state = reactive({
   step: 0,
-  gtype: null,          // 'svc' | 'pkg'
+  gtype: null,          // 'svc' | 'pkg' | 'val'
+  value: null,           // مبلغ بطاقة الهدية
   branch: null,
   activeCat: null,
   pkg: null,             // الباقة الحقيقية الكاملة، أو null
@@ -61,6 +63,7 @@ export function useGifts() {
   /* ===== الحسابات ===== */
   const giftValue = computed(() => {
     if (state.gtype === 'svc') return state.svcs.reduce((a, s) => a + s.price, 0)
+    if (state.gtype === 'val') return Number(state.value) || 0
     return state.pkg?.price || 0
   })
 
@@ -68,12 +71,13 @@ export function useGifts() {
     if (state.gtype === 'svc') {
       return state.svcs.length ? state.svcs.map(s => s.name).join(' + ') : null
     }
+    if (state.gtype === 'val') return giftValue.value ? `بطاقة هدية بقيمة ${giftValue.value} ر.س` : null
     return state.pkg?.name || null
   })
 
   const priceParts = computed(() => {
     const val = giftValue.value
-    const vat = Math.round(val * VAT)
+    const vat = state.gtype === 'val' ? 0 : Math.round(val * VAT)
     return { val, vat, total: val + vat }
   })
 
@@ -81,7 +85,14 @@ export function useGifts() {
   const canNext = computed(() => {
     switch (state.step) {
       case 0: return !!state.gtype
-      case 1: return state.gtype === 'svc' ? state.svcs.length > 0 : !!state.pkg
+      case 1: {
+        if (state.gtype === 'svc') return state.svcs.length > 0
+        if (state.gtype === 'val') {
+          const { min, max } = useGiftDesigns().designs.valueCard
+          return giftValue.value >= min && giftValue.value <= max
+        }
+        return !!state.pkg
+      }
       case 2: return state.name.trim().length > 1 && state.phone.trim().length >= 9
       case 3: return paymentPolicy.canPay(state, priceParts.value.total) && state.terms && !state.placing
     }
@@ -100,6 +111,7 @@ export function useGifts() {
     state.gtype = null
     state.pkg = null
     state.svcs = []
+    state.value = null
     state.done = false
     state.ref = null
     state.claimUrl = null
@@ -131,7 +143,10 @@ export function useGifts() {
         send_channel: state.method || 'link',
       }
 
-      if (state.gtype === 'svc') {
+      if (state.gtype === 'val') {
+        payload.type = 'value'
+        payload.value_amount = giftValue.value
+      } else if (state.gtype === 'svc') {
         payload.services = [{ subServices: state.svcs.map(s => ({ id: s.id })) }]
       } else {
         payload.packages = [{ id: state.pkg.id }]

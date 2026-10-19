@@ -41,16 +41,45 @@ class TapGateway
             return ['status' => 'failed', 'raw' => ['message' => 'tap_id missing']];
         }
 
+        // The charge must be the one created for this attempt, otherwise any earlier
+        // captured charge id could be replayed against a new attempt.
+        if ($attempt->external_id && $tapId !== $attempt->external_id) {
+            return ['status' => 'failed', 'raw' => ['message' => 'tap_id does not belong to this attempt']];
+        }
+
         $tap = new TapPaymentService();
         $charge = $tap->getCharge($tapId);
 
-        $status = strtoupper((string) ($charge['status'] ?? ''));
+        $status = $this->normalizeStatus(strtoupper((string) ($charge['status'] ?? '')));
+
+        if ($status === 'paid' && ($mismatch = $this->mismatch($attempt, $charge))) {
+            return [
+                'status' => 'failed',
+                'external_id' => $tapId,
+                'raw' => ['message' => $mismatch, 'charge' => $charge],
+            ];
+        }
 
         return [
-            'status' => $this->normalizeStatus($status),
+            'status' => $status,
             'external_id' => $tapId,
+            'amount' => isset($charge['amount']) ? (float) $charge['amount'] : null,
+            'currency' => $charge['currency'] ?? null,
             'raw' => $charge,
         ];
+    }
+
+    /** Compare what Tap captured with what we recorded; the database is the source of truth. */
+    private function mismatch(PaymentAttempt $attempt, array $charge): ?string
+    {
+        if (!isset($charge['amount']) || abs((float) $charge['amount'] - (float) $attempt->amount) > 0.009) {
+            return 'amount mismatch';
+        }
+        if (strtoupper((string) ($charge['currency'] ?? '')) !== strtoupper((string) ($attempt->currency ?: 'SAR'))) {
+            return 'currency mismatch';
+        }
+
+        return null;
     }
 
     private function normalizeStatus(string $status): string

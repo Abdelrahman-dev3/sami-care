@@ -338,6 +338,14 @@ class TaqnyatSmsService
 
         $senderName = trim(($giftCard->user?->first_name ?? '') . ' ' . ($giftCard->user?->last_name ?? ''));
 
+        if ($giftCard->type === GiftCard::TYPE_VALUE) {
+            $serviceNames = 'بطاقة هدية بقيمة '.$this->formatMoney($giftCard->value_amount ?? 0).' ر.س';
+        }
+        $code = (string) $giftCard->redeemCode();
+        $template = (string) setting('taqnyat_recipient');
+        // Templates written before redeem codes existed: append the code so it always reaches the recipient.
+        $fallbackSuffix = $code !== '' && trim($template) !== '' && ! str_contains($template, '[[gift_code]]') ? "\nكود الهدية: [[gift_code]]" : '';
+
         $result = $this->sendMessageFromSetting($giftCard->recipient_phone, 'taqnyat_recipient', [
             'recipient_name' => $giftCard->recipient_name,
             'recipient_phone' => $giftCard->recipient_phone,
@@ -347,8 +355,10 @@ class TaqnyatSmsService
             'gift_services' => $serviceNames,
             'gift_total' => $this->formatMoney($giftCard->subtotal ?? 0),
             'gift_url' => $giftCard->share_url ?? '',
+            'gift_code' => $code,
+            'gift_expires_at' => $giftCard->expires_at?->toDateString() ?? '',
             'app_name' => setting('app_name'),
-        ]);
+        ], null, $fallbackSuffix);
 
         $this->giftSmsLog()->info('Gift card recipient SMS finished', [
             'gift_card_id' => $giftCard->id,
@@ -359,10 +369,10 @@ class TaqnyatSmsService
         return $result;
     }
 
-    public function sendMessageFromSetting($recipients, string $settingKey, array $variables = [], ?string $fallback = null)
+    public function sendMessageFromSetting($recipients, string $settingKey, array $variables = [], ?string $fallback = null, string $suffix = '')
     {
         $message = setting($settingKey, $fallback);
-        $message = $this->replaceVariables((string) $message, $variables);
+        $message = $this->replaceVariables((string) $message.$suffix, $variables);
 
         if (trim($message) === '') {
             $this->fail('empty_template', "SMS template [{$settingKey}] is empty.");

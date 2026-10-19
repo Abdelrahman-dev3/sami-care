@@ -9,11 +9,12 @@ import AccountFavorites from '@/components/account/AccountFavorites.vue'
 import AccountOverview from '@/components/account/AccountOverview.vue'
 import AccountBookings from '@/components/account/AccountBookings.vue'
 import AccountAddresses from '@/components/account/AccountAddresses.vue'
-import AccountGiftCards from '@/components/account/AccountGiftCards.vue'
+import AccountGifts from '@/components/account/AccountGifts.vue'
 import AccountPackages from '@/components/account/AccountPackages.vue'
 import AccountProducts from '@/components/account/AccountProducts.vue'
 import AccountSettings from '@/components/account/AccountSettings.vue'
 import AccountMembership from '@/components/account/AccountMembership.vue'
+import AccountWallet from '@/components/account/AccountWallet.vue'
 import PageSkeleton from '@/components/common/PageSkeleton.vue'
 
 const { isAuthenticated, openAuthModal } = useAuth()
@@ -23,30 +24,33 @@ const receiptUrl = computed(() => route.query.payment === 'success'
 
 const TABS = [
   { id: 'overview', label: 'نظرة عامة' },
+  { id: 'wallet', label: 'محفظتي' },
   { id: 'membership', label: 'عضويتي' },
   { id: 'bookings', label: 'حجوزاتي' },
   { id: 'favorites', label: 'المفضلة' },
   // 'addresses' مخفي مؤقتًا بطلب من المشروع
   { id: 'packages', label: 'باقاتي' },
   { id: 'products', label: 'منتجاتي' },
-  { id: 'gifts', label: 'بطاقات الهدايا' },
+  { id: 'gifts', label: 'هداياي' },
   { id: 'settings', label: 'الإعدادات' },
 ]
 
-const activeTab = ref('overview')
+/* ?tab=wallet بيفتح التبويب مباشرة (مثلاً بعد الرجوع من بوابة الدفع) */
+const activeTab = ref(TABS.some(t => t.id === route.query.tab) ? route.query.tab : 'overview')
 const profile = ref(null)
 const loading = ref(false)
 const error = ref('')
 
 async function loadProfile() {
   if (!isAuthenticated.value) return
-  loading.value = true
+  // Later refreshes (after a wallet move or settings save) stay silent so the open tab keeps its state.
+  if (!profile.value) loading.value = true
   error.value = ''
   try {
     const res = await fetchProfile()
     profile.value = res.data
   } catch (e) {
-    error.value = e.message || 'تعذر تحميل بيانات الحساب'
+    if (!profile.value) error.value = e.message || 'تعذر تحميل بيانات الحساب'
   } finally {
     loading.value = false
   }
@@ -97,12 +101,13 @@ watch(isAuthenticated, (v) => { if (v) loadProfile() })
       <template v-else>
         <AccountOverview v-if="activeTab === 'overview'" :profile="profile" @go="activeTab = $event" />
         <AccountFavorites v-else-if="activeTab === 'favorites'" />
+        <AccountWallet v-else-if="activeTab === 'wallet'" @updated="loadProfile" />
         <AccountMembership v-else-if="activeTab === 'membership'" />
         <AccountBookings v-else-if="activeTab === 'bookings'" :profile="profile" />
         <AccountAddresses v-else-if="activeTab === 'addresses'" />
         <AccountPackages v-else-if="activeTab === 'packages'" :profile="profile" />
         <AccountProducts v-else-if="activeTab === 'products'" :profile="profile" />
-        <AccountGiftCards v-else-if="activeTab === 'gifts'" :profile="profile" />
+        <AccountGifts v-else-if="activeTab === 'gifts'" @updated="loadProfile" />
         <AccountSettings v-else-if="activeTab === 'settings'" :profile="profile" @updated="loadProfile" />
       </template>
     </template>

@@ -45,6 +45,8 @@ class PendingCheckoutService
         $bookingSubtotal = $serviceSubtotal + $packageSubtotal;
         $productSubtotal = $this->productSubtotal($products);
         $giftSubtotal = (float) $gifts->sum(fn ($gift) => (float) ($gift->subtotal ?? 0));
+        // Value gift cards are stored value: VAT is charged when they are spent, not when bought.
+        $taxableGiftSubtotal = (float) $gifts->where('type', '!=', \App\Models\GiftCard::TYPE_VALUE)->sum(fn ($gift) => (float) ($gift->subtotal ?? 0));
 
         $discount = 0.0;
         if (filled($couponCode)) {
@@ -61,7 +63,7 @@ class PendingCheckoutService
             if (isset($quote['error'])) return $quote;
             $discount = $quote['discount'];
         }
-        $tax = $this->taxAmount(max(0, $bookingSubtotal - $discount), $productSubtotal, $giftSubtotal);
+        $tax = $this->taxAmount(max(0, $bookingSubtotal - $discount), $productSubtotal, $taxableGiftSubtotal);
         $subtotal = $bookingSubtotal + $productSubtotal + $giftSubtotal + $tax;
 
         $total = max($subtotal - $discount, 0);

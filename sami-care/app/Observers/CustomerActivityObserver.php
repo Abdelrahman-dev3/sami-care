@@ -53,7 +53,9 @@ class CustomerActivityObserver
             $group = 'wallet';
             $activity = is_array($model->activity_data) ? $model->activity_data : json_decode($model->activity_data ?? '{}', true);
             $amount = abs((float) ($activity['credit_debit_amount'] ?? $activity['reward_value'] ?? $activity['amount'] ?? 0));
-            $debit = in_array($model->activity_type, ['withdraw', 'withdrawal', 'debit']);
+            $debit = $model->direction
+                ? $model->direction === 'debit'
+                : in_array($model->activity_type, ['withdraw', 'withdrawal', 'debit']);
             $title = $debit ? 'خصم من المحفظة' : 'إضافة إلى المحفظة';
             $message = $title.' بقيمة '.number_format($amount, 2).' ر.س';
             $details = ['amount' => $amount, 'activity_type' => $model->activity_type];
@@ -88,7 +90,11 @@ class CustomerActivityObserver
             foreach ($labels as $field => $label) {
                 if (array_key_exists($field, $fields)) {
                     $value = $fields[$field];
-                    $display = $field === 'payment_status' && in_array((string) $value, ['0', '1'], true) ? ((int) $value === 1 ? 'مدفوع' : 'غير مدفوع') : ($states[$value] ?? $value);
+                    // Dates may arrive as Carbon objects; they can't be array keys.
+                    if ($value instanceof \DateTimeInterface) {
+                        $value = $value->format('Y-m-d H:i:s');
+                    }
+                    $display = $field === 'payment_status' && in_array((string) $value, ['0', '1'], true) ? ((int) $value === 1 ? 'مدفوع' : 'غير مدفوع') : (is_scalar($value) ? ($states[$value] ?? $value) : $value);
                     $message .= ' — '.$label.': '.$display;
                     $details[$field] = $value;
                 }

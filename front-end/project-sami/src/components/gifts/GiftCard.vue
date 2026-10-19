@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-import { DESIGNS } from '@/data/gifts'
+import { useGiftDesigns } from '@/composables/useGiftDesigns'
 
 const props = defineProps({
   design: { type: String, default: 'lux-dark' },
@@ -9,11 +9,16 @@ const props = defineProps({
   message: { type: String, default: '' },
 })
 
-const d = computed(() => DESIGNS.find(x => x.id === props.design) || DESIGNS[0])
+const { designOf } = useGiftDesigns()
+const d = computed(() => designOf(props.design))
+/* تصميم بصورة مرفوعة من لوحة التحكم: الصورة فوق التدرّج */
+const bgStyle = computed(() => d.value.image
+  ? `background:${d.value.bg};background-image:url('${encodeURI(d.value.image)}');background-size:cover;background-position:center;color:${d.value.fg}`
+  : `background:${d.value.bg};color:${d.value.fg}`)
 </script>
 
 <template>
-  <div class="gcard royal" :style="`background:${d.bg};color:${d.fg}`">
+  <div class="gcard royal" :style="bgStyle">
     <div class="royal-frame"></div>
     <div class="royal-glow"></div>
     <svg class="bow" viewBox="0 0 64 40" fill="none" stroke="currentColor" stroke-width="2"><path d="M32 30C18 30 10 24 12 15s16-5 20 8c4-13 18-17 20-8s-6 15-20 15z"/><path d="M28 30h8v8h-8z"/></svg>

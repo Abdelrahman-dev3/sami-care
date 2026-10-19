@@ -6,6 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Wallet\Database\factories\WalletFactory;
 
+/**
+ * amount = cash_balance + bonus_balance. Never change these columns directly;
+ * use App\Services\Wallet\WalletLedger so every movement is locked and recorded.
+ */
 class Wallet extends Model
 {
     use HasFactory;
@@ -19,15 +23,19 @@ class Wallet extends Model
         'title',
         'user_id',
         'amount',
+        'cash_balance',
+        'bonus_balance',
         'status'
     ];
-    protected $cast = [
-        'amount' => 'double' 
+    protected $casts = [
+        'amount' => 'double',
+        'cash_balance' => 'double',
+        'bonus_balance' => 'double',
     ];
     public function user()
     {
         return $this->belongsTo(User::class);
     }
-    
-   
+
+
 }

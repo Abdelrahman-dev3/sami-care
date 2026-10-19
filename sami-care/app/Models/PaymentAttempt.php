@@ -12,10 +12,14 @@ class PaymentAttempt extends Model
     public const STATUS_FAILED = 'failed';
     public const STATUS_CANCELLED = 'cancelled';
 
+    public const PURPOSE_CHECKOUT = 'checkout';
+    public const PURPOSE_WALLET_TOPUP = 'wallet_topup';
+
     protected $fillable = [
         'token',
         'user_id',
         'gateway',
+        'purpose',
         'page_type',
         'currency',
         'gross_amount',

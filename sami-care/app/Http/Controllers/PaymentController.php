@@ -67,7 +67,6 @@ class PaymentController extends Controller
 
         $discountTotal = $cartService->sum(fn($item) => $item->services->sum(fn($s) => $s->discount_amount ?? 0));
 
-        $wallet = Wallet::where('user_id', $userId)->where('status', 1)->first();
         $ratePerPoint = Setting::get('point_value') ?? 0.5;
         $loyalty = LoyaltyPoint::where('user_id', $userId)->first();
         $loyaltyBalance = ($loyalty->points ?? 0) * $ratePerPoint;
@@ -81,7 +80,7 @@ class PaymentController extends Controller
         $itemsCount = $serviceCount + $productCount + $giftCount + $packageCount;
         $totalPrice = $cartTotal - $discountTotal;
         $productsAmount = $productPrice;
-        $wallet = $wallet->amount ?? 0;
+        $wallet = app(\App\Services\Wallet\WalletLedger::class)->spendable($userId);
         $loyaltyBalance = $loyaltyBalance ?? 0;
         $codDepositPercent = (float) \App\Models\Setting::get('cod_deposit_percent', 30);
         $codDepositPercent = max(0, min(100, $codDepositPercent));

@@ -86,6 +86,8 @@ class MembershipController extends Controller
                 'points_to_next_tier' => $details['points_to_next_tier'],
                 'progress_percentage' => $details['progress_percentage'],
                 'qr_token'            => $details['qr_token'],
+                // Same figures the Apple/Google Wallet pass shows (section 17); kept in sync via WalletBalanceChanged.
+                'wallet'              => app(\App\Services\Wallet\WalletLedger::class)->summary($user->id),
                 'all_tiers'           => $details['all_tiers']->map(fn($t) => [
                     'level'      => $t->level,
                     'name_ar'    => $t->name_ar,

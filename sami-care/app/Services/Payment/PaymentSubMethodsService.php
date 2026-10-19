@@ -3,18 +3,22 @@
 namespace App\Services\Payment;
 
 use Illuminate\Http\Request;
-use Modules\Wallet\Models\Wallet;
-use Modules\Wallet\Models\WalletHistory;
 use App\Models\LoyaltyPoint;
 use Illuminate\Support\Facades\DB;
 use App\Models\LoyaltyPointTransaction;
+use App\Services\Wallet\InsufficientWalletBalance;
+use App\Services\Wallet\WalletLedger;
 
 class PaymentSubMethodsService
 {
     /**
      * Apply wallet and loyalty payments.
+     *
+     * With $commit the wallet/points are actually deducted. Pass $invoiceId so the
+     * deductions are linked to the invoice (used by refunds and to make a repeated
+     * commit for the same invoice a no-op).
      */
-    public function apply(int $userId, Request $request, float $amount, bool $commit = false): array
+    public function apply(int $userId, Request $request, float $amount, bool $commit = false, ?int $invoiceId = null): array
     {
         $final = $amount;
         $usedWallet = $usedLoyalty = 0;
@@ -24,30 +28,31 @@ class PaymentSubMethodsService
         $isLoyalty = (bool) $request->loyalty;
         $walletAmount = $request->filled('wallet_amount') ? max(0, (float) $request->wallet_amount) : null;
         $loyaltyPoints = $request->filled('loyalty_points') ? max(0, (int) $request->loyalty_points) : null;
+        $ledger = app(WalletLedger::class);
 
-        DB::transaction(function () use (&$final, &$usedWallet, &$usedLoyalty, &$usedLoyaltyAmount, $userId, $isWallet, $isLoyalty, $walletAmount, $loyaltyPoints, $commit) {
+        DB::transaction(function () use (&$final, &$usedWallet, &$usedLoyalty, &$usedLoyaltyAmount, $userId, $isWallet, $isLoyalty, $walletAmount, $loyaltyPoints, $commit, $invoiceId, $ledger) {
             if ($isWallet && $final > 0) {
-                $wallet = Wallet::where('user_id', $userId)->where('status', 1)->lockForUpdate()->first();
-                if ($wallet && $wallet->amount > 0) {
-                    $walletCap = $walletAmount === null ? $final : $walletAmount;
-                    $usedWallet = min((float) $wallet->amount, $final, $walletCap);
-                    if ($usedWallet > 0 && $commit) {
-                        $wallet->amount -= $usedWallet;
-                        $wallet->save();
-
-                        WalletHistory::create([
-                            'datetime' => now(),
-                            'user_id' => $userId,
-                            'activity_type' => 'withdraw',
-                            'activity_message' => 'Wallet balance withdraw',
-                            'activity_data' => json_encode([
-                                'credit_debit_amount' => $usedWallet,
-                            ]),
-                        ]);
+                $walletCap = $walletAmount === null ? $final : $walletAmount;
+                $usedWallet = round(min($ledger->spendable($userId), $final, $walletCap), 2);
+                if ($usedWallet > 0 && $commit) {
+                    $options = [
+                        'activity_type' => 'withdraw',
+                        'source_type' => $invoiceId ? 'invoice' : null,
+                        'source_id' => $invoiceId,
+                        'idempotency_key' => $invoiceId ? 'payment:invoice:'.$invoiceId : null,
+                    ];
+                    try {
+                        $ledger->debit($userId, $usedWallet, 'payment', $options);
+                    } catch (InsufficientWalletBalance $e) {
+                        // Balance moved between the read and the lock: use what is left.
+                        $usedWallet = round(min($e->available, $usedWallet), 2);
+                        if ($usedWallet > 0) {
+                            $ledger->debit($userId, $usedWallet, 'payment', $options);
+                        }
                     }
-                    if ($usedWallet > 0) {
-                        $final -= $usedWallet;
-                    }
+                }
+                if ($usedWallet > 0) {
+                    $final -= $usedWallet;
                 }
             }
 
@@ -74,6 +79,8 @@ class PaymentSubMethodsService
                             'points' => $pointsUsed,
                             'balance_after' => $loyalty->points,
                             'source' => 'Loyalty points payment deduction',
+                            'source_id' => $invoiceId,
+                            'meta' => $invoiceId ? ['invoice_id' => $invoiceId, 'amount' => round($used, 2)] : null,
                         ]);
                     }
                     $usedLoyalty = $pointsUsed;
