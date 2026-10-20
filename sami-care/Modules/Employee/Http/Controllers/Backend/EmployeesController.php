@@ -104,8 +104,9 @@ class EmployeesController extends Controller
             ],
         ];
         $export_url = route('backend.employees.export');
+        $branches = Branch::getAllBranches();
 
-        return view('employee::backend.employees.index', compact('module_action', 'columns', 'customefield', 'export_import', 'export_columns', 'export_url'));
+        return view('employee::backend.employees.index', compact('module_action', 'columns', 'customefield', 'export_import', 'export_columns', 'export_url', 'branches'));
     }
 
     /**
@@ -247,6 +248,12 @@ class EmployeesController extends Controller
         $ratingSummaries = app(\App\Services\EmployeeReviewSummary::class)->summaries((clone $query)->pluck('users.id')->all());
 
         $filter = $request->filter;
+
+        if (!empty($filter['branch_id'])) {
+            $query->whereHas('branches', function ($branchQuery) use ($filter) {
+                $branchQuery->where('branch_id', (int) $filter['branch_id']);
+            });
+        }
 
         if (isset($filter)) {
             if (isset($filter['column_status'])) {

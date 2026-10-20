@@ -23,8 +23,8 @@ const I = {
 
 const thumb = shape => shapeParts(shape, 34)
 
-/* mada/apple/card لسه مش مفعّلة (زي طرق الدفع في باقي الموقع) — cod والمحفظة بس شغالين فعليًا بالباك إند */
-const ENABLED_PAYS = ['cod']
+/* Product checkout supports cash on delivery and wallet payments. */
+const ENABLED_PAYS = ['cod', 'wallet']
 
 const error = ref('')
 

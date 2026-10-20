@@ -89,6 +89,12 @@
                     </div>
                 </div>
                 <x-slot name="toolbar">
+                    <select id="employee-branch-filter" class="form-select" aria-label="{{ __('branch.title') }}">
+                        <option value="">{{ __('messages.all') }} - {{ __('branch.title') }}</option>
+                        @foreach ($branches as $branch)
+                            <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                        @endforeach
+                    </select>
                     <div class="input-group flex-nowrap">
                         <span class="input-group-text" id="addon-wrapping"><i
                                 class="fa-solid fa-magnifying-glass"></i></span>
@@ -267,10 +273,14 @@
             initDatatable({
                 url: '{{ route("backend.$module_name.index_data") }}',
                 finalColumns,
+                advanceFilter: () => ({ branch_id: $('#employee-branch-filter').val() }),
                 orderColumn: [
                     [1, "asc"]
                 ],
             })
+            $('#employee-branch-filter').on('change', function () {
+                $('#datatable').DataTable().ajax.reload();
+            });
         })
 
         function resetQuickAction() {

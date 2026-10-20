@@ -1,7 +1,7 @@
 /* Shared by the Vue checkout and the standalone mobile checkout. */
 (function (root) {
   const checkoutEnabled = true;
-  const enabledGateways = new Set(['cod']);
+  const enabledGateways = new Set(['cod', 'mada', 'card', 'urpay', 'tabby']);
   const money = value => Math.max(Number(value) || 0, 0);
   function rewards(state, total) {
     total = money(total);
@@ -20,10 +20,10 @@
         d: hasRewards ? 'غير متاح مع خصم المحفظة أو النقاط' : balance < deposit
           ? `يتطلب عربون 30% (${deposit} ر.س) في المحفظة — رصيدك: ${balance} ر.س`
           : `عربون 30% (${deposit} ر.س) يُخصم من المحفظة والباقي عند الوصول` },
-      { id: 'mada', n: 'مدى', d: 'قريبًا', logo: 'مدى', enabled: false },
-      { id: 'card', n: 'بطاقات الائتمان والخصم', d: hasRewards ? 'ادفع المتبقي بعد الخصومات' : 'قريبًا — Visa / Mastercard', logo: 'VISA', enabled: hasRewards && payable > 0 },
+      { id: 'mada', n: 'مدى', d: 'ادفع باستخدام بطاقات مدى', logo: 'مدى', enabled: true },
+      { id: 'card', n: 'بطاقات الائتمان والخصم', d: hasRewards ? 'ادفع المتبقي بعد الخصومات' : 'Visa / Mastercard', logo: 'VISA', enabled: true },
       { id: 'urpay', n: 'يورباي', d: hasRewards ? 'ادفع المتبقي بعد الخصومات' : 'الدفع عبر يورباي', logo: 'UrPay', enabled: payable > 0 },
-      { id: 'tabby', n: 'تابي', d: 'قريبًا', logo: 'tabby', enabled: false },
+      { id: 'tabby', n: 'تابي', d: 'قسّم دفعاتك عبر تابي', logo: 'tabby', enabled: payable > 0 },
     ].map(method => checkoutEnabled && enabledGateways.has(method.id) ? method : { ...method, enabled: false, d: 'غير متاح حاليًا' });
   }
   function options(state, total) {
@@ -37,7 +37,7 @@
   function payment(state, total) {
     if (!canPay(state, total)) throw new Error('اختر وسيلة دفع متاحة لإتمام العملية');
     const parts = rewards(state, total);
-    return { gateway: parts.payable <= 0 ? 'card' : state.pay, wallet: parts.wallet > 0, walletAmount: parts.wallet, loyalty: parts.points > 0, loyaltyPoints: parts.points };
+    return { gateway: parts.payable <= 0 || state.pay === 'mada' ? 'card' : state.pay, ...(state.pay === 'mada' ? { paymentSource: 'src_sa.mada' } : {}), wallet: parts.wallet > 0, walletAmount: parts.wallet, loyalty: parts.points > 0, loyaltyPoints: parts.points };
   }
   root.SamiPaymentPolicy = { checkoutEnabled, rewards, methods, options, canPay, payment };
 })(globalThis);

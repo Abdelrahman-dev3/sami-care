@@ -217,7 +217,7 @@ export function useStore() {
     return Object.keys(state.cart).length > 0 &&
       c.name.trim().length > 1 &&
       c.phone.trim().length >= 9 &&
-      !!c.pay &&
+      ['cod', 'wallet'].includes(c.pay) &&
       c.terms &&
       c.addr.trim().length > 4
   })
@@ -302,7 +302,7 @@ export function useStore() {
         items: itemsSnapshot,
         parts: ckParts.value,
         addr: c.addr,
-        pay: 'الدفع عند الاستلام',
+        pay: isWallet ? 'المحفظة' : 'الدفع عند الاستلام',
         name: c.name,
         phone: c.phone,
       }

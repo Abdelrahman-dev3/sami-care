@@ -40,11 +40,12 @@ export async function createPackageBooking(payload) {
   بوابات دفع مستقلة، دي أعلام إضافية (booleans) بتتفعّل فوق أي بوابة عشان تغطي المبلغ كله أو
   جزء منه من رصيد المحفظة/النقاط قبل ما الباقي (لو فيه) يتحصّل بالبوابة المختارة.
 */
-export async function initPayment(gateway, { wallet, walletAmount, loyalty, loyaltyPoints, couponCode } = {}) {
+export async function initPayment(gateway, { wallet, walletAmount, loyalty, loyaltyPoints, couponCode, paymentSource } = {}) {
   return authFetch('/payments/init', {
     method: 'POST',
     body: {
-      gateway,
+      gateway: gateway === 'mada' ? 'card' : gateway,
+      ...(gateway === 'mada' || paymentSource ? { payment_source: paymentSource || 'src_sa.mada' } : {}),
       page_type: 'cart',
       ...(wallet ? { wallet: true } : {}),
       ...(walletAmount ? { wallet_amount: walletAmount } : {}),

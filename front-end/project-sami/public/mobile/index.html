@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <title>عناية سامي | التطبيق</title>
-<script src="/payment-policy.js?v=20261015-cod"></script>
+<script src="/payment-policy.js?v=20261020-options"></script>
 <script src="../site-dictionary.js?v=20260923-language"></script>
 <script src="../data-i18n.js?v=20260923-dynamic"></script>
 <script src="../site-i18n.js?v=20260923-language"></script>
@@ -2457,7 +2457,7 @@ async function attemptRealBookingSubmit(){
  const hasWallet=walletAmount>0,hasLoyalty=loyaltyPoints>0,couponCode=S.bookCouponApplied||'';
  const gateway=bookPayableTotal()<=0?'card':(S.bookPay==='cash'?'cod':S.bookPay);
  const payment=await authPost('/payments/init',{
-  gateway,page_type:'cart',
+  gateway:gateway==='mada'?'card':gateway,...(gateway==='mada'?{payment_source:'src_sa.mada'}:{}),page_type:'cart',
   ...(hasWallet?{wallet:true,wallet_amount:walletAmount}:{}),
   ...(hasLoyalty?{loyalty:true,loyalty_points:loyaltyPoints}:{}),
   ...(couponCode?{coupon_code:couponCode}:{}),
@@ -2491,7 +2491,7 @@ async function attemptRealGiftSubmit(){
     بالظبط زي الديسكتوب (createGiftCard في services/giftsApi.js) عشان يتحقق فعليًا من التوكن. */
  const created=await authPost('/mobile/cart/gift-cards',payload);
  const selected=SamiPaymentPolicy.payment(giftPaymentState(),gParts().total);
- const payment=await authPost('/payments/init',{gateway:selected.gateway,page_type:'cart',...(selected.wallet?{wallet:true,wallet_amount:selected.walletAmount}:{}),...(selected.loyalty?{loyalty:true,loyalty_points:selected.loyaltyPoints}:{})});
+ const payment=await authPost('/payments/init',{gateway:selected.gateway,...(selected.paymentSource?{payment_source:selected.paymentSource}:{}),page_type:'cart',...(selected.wallet?{wallet:true,wallet_amount:selected.walletAmount}:{}),...(selected.loyalty?{loyalty:true,loyalty_points:selected.loyaltyPoints}:{})});
  if(payment?.payment_url){location.href=payment.payment_url;return{created,payment,redirected:true};}
  return{created,payment};
 }
@@ -3765,11 +3765,11 @@ function cartHTML(){
   <div class="r"><span>ضريبة القيمة المضافة (15%)</span><span>+${rs(vat)} ر.س</span></div>
   <div class="r t"><span>الإجمالي</span><b>${rs(sub+vat)} ر.س</b></div>
   <div class="fulfill-row" style="margin-top:10px">
-   <button class="fulfill-opt ${S.ckPay==='cod'?'sel':''}" data-ckpay="cod" disabled>💵 عند الاستلام</button>
-   <button class="fulfill-opt ${S.ckPay==='wallet'?'sel':''}" data-ckpay="wallet" disabled>👛 المحفظة</button>
+   <button class="fulfill-opt ${S.ckPay==='cod'?'sel':''}" data-ckpay="cod">💵 عند الاستلام</button>
+   <button class="fulfill-opt ${S.ckPay==='wallet'?'sel':''}" data-ckpay="wallet">👛 المحفظة</button>
   </div>
   ${S.ckError?`<p style="color:#b42318;font-size:12px;margin:8px 0 0">${escHtml(S.ckError)}</p>`:''}
-  <button class="btn btn-org" id="checkoutBtn" style="width:100%;margin-top:12px" ${S.ckPlacing?'disabled':''} disabled>${svg('<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>',15)} ${S.ckPlacing?'جارٍ إتمام الطلب...':'متابعة الشراء'}</button>
+  <button class="btn btn-org" id="checkoutBtn" style="width:100%;margin-top:12px" ${S.ckPlacing?'disabled':''}>${svg('<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>',15)} ${S.ckPlacing?'جارٍ إتمام الطلب...':'متابعة الشراء'}</button>
  </div>`;
 }
 function bookingsHTML(){
@@ -4596,7 +4596,7 @@ function wizPaymentHTML(){
  <div class="m-stack">${mobileBookMethods().map(m=>{
   const en=m.enabled;
   const label=m.d;
-  return`<button class="m-pay ${S.bookPay===m.id?'sel':''} ${en?'':'disabled'}" data-w-pay="${m.id}" ${en?'':'disabled'} disabled><span class="logo">${m.logo}</span><span><b>${m.n}</b><small>${label}</small></span><span style="margin-inline-start:auto;color:var(--org)">${S.bookPay===m.id?'✓':''}</span></button>`;
+  return`<button class="m-pay ${S.bookPay===m.id?'sel':''} ${en?'':'disabled'}" data-w-pay="${m.id}" ${en?'':'disabled'}><span class="logo">${m.logo}</span><span><b>${m.n}</b><small>${label}</small></span><span style="margin-inline-start:auto;color:var(--org)">${S.bookPay===m.id?'✓':''}</span></button>`;
  }).join('')}</div>
  ${S.bookError?`<p style="color:#b42318;font-size:12.5px;margin:12px 0 0">${escHtml(S.bookError)}</p>`:''}
  <div class="m-summary-mini" style="margin-top:12px"><div class="row"><span>الخدمات</span><b>${rs(p.sub)} ر.س</b></div><div class="row"><span>الضريبة</span><b>${rs(p.vat)} ر.س</b></div>${bookCouponDiscount()?`<div class="row"><span>كوبون الخصم</span><b>- ${rs(Math.round(bookCouponDiscount()))} ر.س</b></div>`:''}${bookWalletApplied()?`<div class="row"><span>المحفظة</span><b>- ${rs(Math.round(bookWalletApplied()))} ر.س</b></div>`:''}${bookLoyaltyAppliedAmount()?`<div class="row"><span>نقاط الولاء</span><b>- ${rs(Math.round(bookLoyaltyAppliedAmount()))} ر.س</b></div>`:''}<div class="row"><span>المتبقي للدفع</span><b>${rs(Math.round(payable))} ر.س</b></div></div><div class="m-secure">🔒 جميع عمليات الدفع آمنة ومشفرة</div>`;
@@ -4904,7 +4904,7 @@ function giftWizCheckoutHTML(){
  return`<div class="m-panel-title"><h1>أكمل الدفع لإرسال هديتك</h1><p>سيتم إرسال الهدية مباشرة بعد إتمام الدفع</p></div>${gMiniSummary()}
  <div class="m-stack">${SamiPaymentPolicy.options(giftPaymentState(),p.total).map(m=>{
   const en=m.enabled;
-  return`<button class="m-pay ${S.giftPay===m.id?'sel':''} ${en?'':'disabled'}" data-g-pay="${m.id}" ${en?'':'disabled'} disabled><span class="logo">${m.logo}</span><span><b>${m.n}</b><small>${m.d}</small></span><span style="margin-inline-start:auto;color:var(--org)">${S.giftPay===m.id?'✓':''}</span></button>`;
+  return`<button class="m-pay ${S.giftPay===m.id?'sel':''} ${en?'':'disabled'}" data-g-pay="${m.id}" ${en?'':'disabled'}><span class="logo">${m.logo}</span><span><b>${m.n}</b><small>${m.d}</small></span><span style="margin-inline-start:auto;color:var(--org)">${S.giftPay===m.id?'✓':''}</span></button>`;
  }).join('')}${giftRewardsHTML()}</div>
  <div class="m-card m-detail" style="margin-top:12px"><h4>الشروط والأحكام</h4><button class="m-pay ${S.giftTerms?'sel':''}" id="gTerms"><span class="logo">✓</span><span><b>أوافق على الشروط والأحكام</b><small>وسياسة الخصوصية والإهداء</small></span></button></div>
  <div class="m-summary-mini" style="margin-top:12px"><div class="row"><span>قيمة الهدية</span><b>${rs(p.val)} ر.س</b></div>${p.fee?`<div class="row"><span>رسوم الخدمة المنزلية</span><b>${rs(p.fee)} ر.س</b></div>`:''}${p.disc?`<div class="row"><span>خصم</span><b>- ${rs(p.disc)} ر.س</b></div>`:''}<div class="row"><span>الضريبة</span><b>${rs(p.vat)} ر.س</b></div><div class="row"><span>الإجمالي</span><b>${rs(p.total)} ر.س</b></div></div><div class="m-secure">🔒 الدفع آمن ومشفّر</div>`;

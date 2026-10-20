@@ -496,7 +496,7 @@ html{--content-direction:rtl}html[dir="ltr"]{--content-direction:ltr}
 <script src="/service-page-content.js"></script>
 <script src="../home-page-content.js"></script>
 <style>.mobile-home-about{padding:20px 16px;line-height:1.8}.mobile-home-about>img{width:100%;height:220px;object-fit:cover;border-radius:16px}.mobile-home-about h2,.mobile-home-about h3{margin-block:12px 6px}.mobile-home-features{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}.mobile-home-features small{display:block}.home-svc .row{background-image:none!important}.home-svc .row>.dynamic-home-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.hin h1{white-space:pre-line}</style>
-<script src="/payment-policy.js?v=20261006-disabled"></script>
+<script src="/payment-policy.js?v=20261020-options"></script>
 <script src="/site-contact.js?v=20261006-1"></script>
 </head>
 <body>
@@ -2270,7 +2270,7 @@ async function attemptRealBookingSubmit(){
  const hasWallet=walletAmount>0,hasLoyalty=loyaltyPoints>0,couponCode=S.bookCouponApplied||'';
  const gateway=(hasWallet||hasLoyalty||S.bookPay==='wallet')?'card':(S.bookPay==='cash'?'cod':(S.bookPay||'card'));
  const payment=await authPost('/payments/init',{
-  gateway,page_type:'cart',
+  gateway:gateway==='mada'?'card':gateway,...(gateway==='mada'?{payment_source:'src_sa.mada'}:{}),page_type:'cart',
   ...(hasWallet?{wallet:true,wallet_amount:walletAmount}:{}),
   ...(hasLoyalty?{loyalty:true,loyalty_points:loyaltyPoints}:{}),
   ...(couponCode?{coupon_code:couponCode}:{}),
@@ -3381,11 +3381,11 @@ function cartHTML(){
   <div class="r"><span>ضريبة القيمة المضافة (15%)</span><span>+${rs(vat)} ر.س</span></div>
   <div class="r t"><span>الإجمالي</span><b>${rs(sub+vat)} ر.س</b></div>
   <div class="fulfill-row" style="margin-top:10px">
-   <button class="fulfill-opt ${S.ckPay==='cod'?'sel':''}" data-ckpay="cod" disabled>💵 عند الاستلام</button>
-   <button class="fulfill-opt ${S.ckPay==='wallet'?'sel':''}" data-ckpay="wallet" disabled>👛 المحفظة</button>
+   <button class="fulfill-opt ${S.ckPay==='cod'?'sel':''}" data-ckpay="cod">💵 عند الاستلام</button>
+   <button class="fulfill-opt ${S.ckPay==='wallet'?'sel':''}" data-ckpay="wallet">👛 المحفظة</button>
   </div>
   ${S.ckError?`<p style="color:#b42318;font-size:12px;margin:8px 0 0">${escHtml(S.ckError)}</p>`:''}
-  <button class="btn btn-org" id="checkoutBtn" style="width:100%;margin-top:12px" ${S.ckPlacing?'disabled':''} disabled>${svg('<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>',15)} ${S.ckPlacing?'جارٍ إتمام الطلب...':'متابعة الشراء'}</button>
+  <button class="btn btn-org" id="checkoutBtn" style="width:100%;margin-top:12px" ${S.ckPlacing?'disabled':''}>${svg('<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>',15)} ${S.ckPlacing?'جارٍ إتمام الطلب...':'متابعة الشراء'}</button>
  </div>`;
 }
 function bookingsHTML(){
@@ -4224,7 +4224,7 @@ function wizPaymentHTML(){
  <div class="m-stack">${B_PAY_METHODS.map(m=>{
   const en=m.id==='cash'?!subRewards:m.id==='wallet'?(walletBal>=payable&&payable>0):m.id==='card'?(subRewards&&payable>0):false;
   const label=m.id==='wallet'?`الرصيد الحالي ${rs(walletBal)} ر.س`:m.id==='card'&&subRewards?'ادفع المتبقي بعد الخصومات':m.id==='cash'&&subRewards?'غير متاح مع المحفظة أو النقاط':(en?m.d:'قريبًا');
-  return`<button class="m-pay ${S.bookPay===m.id?'sel':''} ${en?'':'disabled'}" data-w-pay="${m.id}" ${en?'':'disabled'} disabled><span class="logo">${m.logo}</span><span><b>${m.n}</b><small>${label}</small></span><span style="margin-inline-start:auto;color:var(--org)">${S.bookPay===m.id?'✓':''}</span></button>`;
+  return`<button class="m-pay ${S.bookPay===m.id?'sel':''} ${en?'':'disabled'}" data-w-pay="${m.id}" ${en?'':'disabled'}><span class="logo">${m.logo}</span><span><b>${m.n}</b><small>${label}</small></span><span style="margin-inline-start:auto;color:var(--org)">${S.bookPay===m.id?'✓':''}</span></button>`;
  }).join('')}</div>
  ${S.bookPay==='wallet'&&walletBal<payable?'<p style="color:#b42318;font-size:12px;margin:8px 0 0">رصيد محفظتك لا يكفي لدفع القيمة المتبقية، اختر وسيلة دفع أخرى.</p>':''}
  ${S.bookError?`<p style="color:#b42318;font-size:12.5px;margin:12px 0 0">${escHtml(S.bookError)}</p>`:''}
@@ -4523,7 +4523,7 @@ function giftWizCheckoutHTML(){
  <div class="m-stack">${B_PAY_METHODS.map(m=>{
   const en=ENABLED_GIFT_PAYS.includes(m.id);
   const label=en?(m.id==='wallet'?`الرصيد الحالي ${rs(walletBal)} ر.س`:m.d):'قريبًا';
-  return`<button class="m-pay ${S.giftPay===m.id?'sel':''} ${en?'':'disabled'}" data-g-pay="${m.id}" ${en?'':'disabled'} disabled><span class="logo">${m.logo}</span><span><b>${m.n}</b><small>${label}</small></span><span style="margin-inline-start:auto;color:var(--org)">${S.giftPay===m.id?'✓':''}</span></button>`;
+  return`<button class="m-pay ${S.giftPay===m.id?'sel':''} ${en?'':'disabled'}" data-g-pay="${m.id}" ${en?'':'disabled'}><span class="logo">${m.logo}</span><span><b>${m.n}</b><small>${label}</small></span><span style="margin-inline-start:auto;color:var(--org)">${S.giftPay===m.id?'✓':''}</span></button>`;
  }).join('')}</div>
  ${S.giftPay==='wallet'&&walletBal<p.total?'<p style="color:#b42318;font-size:12px;margin:8px 16px 0">رصيد محفظتك لا يكفي لدفع القيمة كاملة، اختر وسيلة دفع أخرى.</p>':''}
  <div class="m-card m-detail" style="margin-top:12px"><h4>الشروط والأحكام</h4><button class="m-pay ${S.giftTerms?'sel':''}" id="gTerms"><span class="logo">✓</span><span><b>أوافق على الشروط والأحكام</b><small>وسياسة الخصوصية والإهداء</small></span></button></div>
