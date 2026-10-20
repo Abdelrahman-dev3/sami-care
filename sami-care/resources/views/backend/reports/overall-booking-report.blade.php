@@ -24,6 +24,7 @@
               </div>
                 <x-slot name="toolbar">
                     <div class="input-group gap-2 flex-nowrap">
+                        @include('backend.reports.branch-filter')
                         <input type="text" name="booking_date" id="booking_date" placeholder="Select Date" class="booking-date-range form-control ms-2" readonly />
                         <select id="column_employee_id" data-placeholder="{{ __('employee.select_employee') }}" name="column_employee_id"
                             data-filter="select" class="select2 form-control"
@@ -85,6 +86,7 @@
             $('#reset').on('click', function(e) {
             console.log("called")
                 $('#column_employee_id').val('');
+                $('#column_branch_id').val('').trigger('change.select2');
                 $('#booking_date').val('');
                 window.renderedDataTable.ajax.reload(null, false);
                 $(this).tooltip('hide');
@@ -156,6 +158,7 @@
                     return {
                         booking_date: $('#booking_date').val(),
                         employee_id: $('#column_employee_id').val(),
+                        branch_id: $('#column_branch_id').val(),
                     }
                 }
             })
@@ -165,7 +168,7 @@
             window.renderedDataTable.ajax.reload(null, false)
         })
 
-        $('#column_employee_id').on('change', function() {
+        $('#column_employee_id, #column_branch_id').on('change', function() {
             window.renderedDataTable.ajax.reload(null, false)
         })
     </script>

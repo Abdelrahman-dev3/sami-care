@@ -82,23 +82,23 @@ class CityController extends Controller
     public function index_data(Request $request)
     {
         $query = City::query();
-        
+
         $locale = app()->getLocale();
 
-if (! in_array($locale, ['ar', 'en'], true)) {
-    $locale = 'ar';
-}
+        if (! in_array($locale, ['ar', 'en'], true)) {
+            $locale = 'ar';
+        }
 
-$query->select('cities.*')
-    ->selectRaw(
-        "JSON_UNQUOTE(JSON_EXTRACT(name, '$.\"{$locale}\"')) as localized_name"
-    );
+        $query->select('cities.*')
+            ->selectRaw(
+                "JSON_UNQUOTE(JSON_EXTRACT(cities.name, '$.\"{$locale}\"')) as localized_name"
+            );
 
         $filter = $request->filter;
 
         if (isset($filter)) {
             if (isset($filter['column_status'])) {
-                $query->where('status', $filter['column_status']);
+                $query->where('cities.status', $filter['column_status']);
             }
         }
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Models\GiftCard;
+use App\Models\Branch;
 use App\Models\Invoice;
 use App\Models\User;
 use Carbon\Carbon;
@@ -84,7 +85,9 @@ class ReportsController extends Controller
         $module_title = __('report.title_financial_report');
         $module_name = 'financial-report';
 
-        return view('backend.reports.financial-report', compact('module_title', 'module_name'));
+        $branches = Branch::get(['id', 'name']);
+
+        return view('backend.reports.financial-report', compact('module_title', 'module_name', 'branches'));
     }
 
     public function financial_report_index_data(Datatables $datatable, Request $request)
@@ -131,6 +134,16 @@ class ReportsController extends Controller
         }
 
         $giftCardQuery = GiftCard::query()->where('payment_status', 1);
+
+        if (! empty($filter['branch_id'])) {
+            $branchId = $filter['branch_id'];
+            $bookingQuery->whereHas('booking', function ($query) use ($branchId) {
+                $query->where('bookings.branch_id', $branchId);
+            });
+            $giftCardQuery->where('branch_id', $branchId);
+            // Product orders have no branch attribution; exclude them from branch totals.
+            $orderQuery->whereRaw('1 = 0');
+        }
 
         if ($startDate) {
             $giftCardQuery->whereDate('created_at', '>=', $startDate->toDateString());
@@ -690,7 +703,9 @@ class ReportsController extends Controller
         ];
         $export_url = route('backend.reports.overall-booking-report-review');
 
-        return view('backend.reports.overall-booking-report', compact('module_title', 'module_name', 'export_import', 'export_columns', 'export_url'));
+        $branches = Branch::get(['id', 'name']);
+
+        return view('backend.reports.overall-booking-report', compact('module_title', 'module_name', 'export_import', 'export_columns', 'export_url', 'branches'));
     }
 
     public function overall_booking_report_index_data(Datatables $datatable, Request $request)
@@ -711,9 +726,11 @@ class ReportsController extends Controller
             }
         }
 
-        $filter = $request->filter;
+        $filter = $request->filter ?? [];
 
-        $filter = $request->filter;
+        if (! empty($filter['branch_id'])) {
+            $query->where('bookings.branch_id', $filter['branch_id']);
+        }
         if (isset($filter['booking_date'])) {
             $bookingDates = explode(' to ', $filter['booking_date']);
 

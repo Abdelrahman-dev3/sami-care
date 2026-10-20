@@ -8,6 +8,9 @@
             <x-backend.section-header>
                 <div class="row">
                     <div class="col-md-3">
+                        @include('backend.reports.branch-filter')
+                    </div>
+                    <div class="col-md-3">
                         <div class="datatable-filter">
                             <select name="report_type" id="report_type" class="select2 form-control" data-filter="select">
                                 <option value="daily">{{ __('report.lbl_daily') }}</option>
@@ -34,6 +37,7 @@
                     </div>
                 </div>
             </x-backend.section-header>
+            <p id="branch-revenue-note" class="text-muted mt-2" hidden>{{ __('report.branch_revenue_note') }}</p>
         </div>
     </div>
     <div class="card">
@@ -69,6 +73,8 @@
 
     $('#reset').on('click', function(e) {
         $('#date_range').val('');
+        $('#column_branch_id').val('').trigger('change.select2');
+        $('#branch-revenue-note').prop('hidden', true);
         $('#report_type').val('daily').trigger('change');
         window.renderedDataTable.ajax.reload(null, false);
         $('.tooltip').removeClass('show');
@@ -133,6 +139,7 @@
     return {
         report_type: $('[name="report_type"]').val(),
         date_range: dateRange ? dateRange.split(' to ') : [],
+        branch_id: $('#column_branch_id').val(),
     };
 }
         });
@@ -143,6 +150,11 @@
     })
 
     $(document).on('change', '#report_type', function() {
+        window.renderedDataTable.ajax.reload(null, false)
+    })
+
+    $(document).on('change', '#column_branch_id', function() {
+        $('#branch-revenue-note').prop('hidden', !$(this).val());
         window.renderedDataTable.ajax.reload(null, false)
     })
 </script>

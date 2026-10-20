@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'branch_revenue_note' => 'Branch totals include bookings and gift cards only. Product orders have no assigned branch and are excluded.',
 
     /*
     |--------------------------------------------------------------------------
