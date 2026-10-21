@@ -1787,6 +1787,18 @@ function matchCatSlot(name,id){
 }
 /* الخدمات الوهمية المولّدة من MOBILE_SERVICES (صفحة تفاصيل الخدمة الثابتة) لازم تفضل مضافة فوق
    B_SERVICES دايمًا مهما كان مصدر باقي B_SERVICES، عشان صفحة "كل الخدمات" تفضل شغالة. */
+function mobileServicePrice(service){
+ const location=B_BRANCHES.find(branch=>branch.id===(S.bookBranch||S.currentBranch));
+ const row=!location?.home&&location?.realId!=null
+  ? service.branches?.find(branch=>String(branch.branch_id)===String(location.realId)) : null;
+ const value=row?.service_price;
+ return value!==null&&value!==undefined&&value!==''&&Number.isFinite(Number(value))
+  ? Number(value) : Number(service.default_price??service.price??0);
+}
+function mobileVariantPrice(variant){return bSvc(variant.id)?.price??variant[2]}
+function mobileServiceBranchFilterHTML(){
+ return `<label style="display:flex;align-items:center;gap:12px;margin:16px 0">الفرع <select data-service-branch style="flex:1;min-width:0;padding:10px;border:1px solid #c9a76a;border-radius:10px;background:#fff;font:inherit"><option value="" disabled ${!S.currentBranch?'selected':''}>اختر الفرع</option>${B_BRANCHES.map(branch=>`<option value="${escHtml(branch.id)}" ${branch.id===S.currentBranch?'selected':''}>${escHtml(branch.name)}</option>`).join('')}</select></label><p style="margin-bottom:14px;color:var(--mute);font-size:12px">السعر يتغير بحسب الفرع</p>`;
+}
 function syncMobileServiceVariants(){
  MOBILE_SERVICES.forEach(group=>group.variants.forEach((variant,index)=>{
   const id=`d${group.id}-${index}`;
@@ -2043,7 +2055,7 @@ function applyDynamicData(){
      newCats.push(cat);
      (live.services||[]).forEach(s=>{
       if(Number(s.status)===0)return;
-      newServices.push({id:String(s.id),cat:slot,groupId:Number(s.category_id??live.id)||null,name:localizedField(s,'name')||'خدمة',desc:localizedField(s,'description')||'',dur:Number(s.duration_min)||30,price:Number(s.default_price)||0,img:s.feature_image||cat.img,hot:false});
+      newServices.push({id:String(s.id),cat:slot,groupId:Number(s.category_id??live.id)||null,name:localizedField(s,'name')||'خدمة',desc:localizedField(s,'description')||'',dur:Number(s.duration_min)||30,default_price:Number(s.default_price)||0,branches:s.branches||[],get price(){return mobileServicePrice(this)},img:s.feature_image||cat.img,hot:false});
      });
     });
     B_CATS.length=0;B_CATS.push(...newCats);
@@ -3621,7 +3633,7 @@ function allServicesHTML(){
  return`<div class="all-services-page">
   <section class="services-cover"><span class="eyebrow">${svg('<path d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/>',13)} عناية مصممة لك</span><h1>كل خدماتنا<br>في مكان واحد</h1><p>اختر التجربة التي تناسبك، وتعرّف على تفاصيلها وأنواعها وأسعارها قبل الحجز.</p></section>
   <div class="all-services-intro"><h2>اكتشف خدمات عناية سامي</h2><p>${MOBILE_SERVICES.length} خدمات متكاملة بأعلى معايير الجودة والخصوصية.</p></div>
-  <div class="all-services-grid">${MOBILE_SERVICES.map((s,i)=>{const count=s.variants.filter(v=>S.detailSelections.has(v.id)).length,min=s.variants.length?Math.min(...s.variants.map(v=>v[2])):0;return`<button class="all-service-card" data-service-detail="${s.id}" style="animation-delay:${i*.055}s"><span class="all-service-img"><img src="${s.img}" alt="${s.name}" loading="lazy"><span>${count?'✓ '+count+' مختارة':s.icon+' '+s.variants.length+' خيارات'}</span></span><span class="all-service-body"><h3>${s.name}</h3><p>${s.desc}</p><span class="all-service-meta"><span>${count?count+' خدمة محفوظة':s.variants.length?'يبدأ من '+min+' ر.س':'لا توجد خدمات متاحة حاليًا'}</span><i>←</i></span></span></button>`}).join('')}</div>
+  <div class="all-services-grid">${MOBILE_SERVICES.map((s,i)=>{const count=s.variants.filter(v=>S.detailSelections.has(v.id)).length,min=s.variants.length?Math.min(...s.variants.map(mobileVariantPrice)):0;return`<button class="all-service-card" data-service-detail="${s.id}" style="animation-delay:${i*.055}s"><span class="all-service-img"><img src="${s.img}" alt="${s.name}" loading="lazy"><span>${count?'✓ '+count+' مختارة':s.icon+' '+s.variants.length+' خيارات'}</span></span><span class="all-service-body"><h3>${s.name}</h3><p>${s.desc}</p><span class="all-service-meta"><span>${count?count+' خدمة محفوظة':s.variants.length?'يبدأ من '+min+' ر.س':'لا توجد خدمات متاحة حاليًا'}</span><i>←</i></span></span></button>`}).join('')}</div>
  </div>`;
 }
 function mobileServiceDetailHTML(){
@@ -3631,7 +3643,7 @@ function mobileServiceDetailHTML(){
  return`<div class="mobile-sd">
   <section class="mobile-sd-hero"><img src="${s.img}" alt="${s.name}"><div class="mobile-sd-top"><button id="svBack">${svg('<path d="M9 6l6 6-6 6"/>',16)}</button><b>تفاصيل الخدمة</b><button class="share-btn" data-share="${s.name}">${svg('<path d="M18 8a3 3 0 10-2.8-4H15L8.9 9.6M18 16a3 3 0 10-2.9-3.7L9 8.9M6 15a3 3 0 100-6 3 3 0 000 6z"/>',15)}</button></div><div class="mobile-sd-caption"><small>${s.icon} ${s.tag}</small><h1>${s.name}</h1><p>${s.desc}</p></div></section>
   <div class="mobile-sd-summary">${s.features.map((f,i)=>`<span><b>${['✓','✦','♛'][i]}</b>${f}</span>`).join('')}</div>
-  <section class="mobile-sd-section"><div class="mobile-sd-title"><small>اختر تجربتك</small><h2>أنواع ${s.name}</h2></div><div class="mobile-sd-variants">${s.variants.map(v=>`<button type="button" class="mobile-sd-var ${S.detailSelections.has(v.id)?'is-selected':''}" data-detail-variant="${v.id}"><img src="${v[4]||s.img}" alt="${v[0]}" loading="lazy"><span><h3>${v[0]}</h3><p>${v[3]}</p><span class="row"><span>◷ ${v[1]} دقيقة</span><b>${v[2]} ر.س</b></span></span></button>`).join('')}</div></section>
+  <section class="mobile-sd-section"><div class="mobile-sd-title"><small>اختر تجربتك</small><h2>أنواع ${s.name}</h2></div><div class="mobile-service-branch-filter">${mobileServiceBranchFilterHTML()}</div><div class="mobile-sd-variants">${s.variants.map(v=>`<button type="button" class="mobile-sd-var ${S.detailSelections.has(v.id)?'is-selected':''}" data-detail-variant="${v.id}"><img src="${v[4]||s.img}" alt="${v[0]}" loading="lazy"><span><h3>${v[0]}</h3><p>${v[3]}</p><span class="row"><span>◷ ${v[1]} دقيقة</span><b>${mobileVariantPrice(v)} ر.س</b></span></span></button>`).join('')}</div></section>
   ${globalThis.SamiServiceContent.render({...s,id:s.apiId||s.id},getLang(),s.img)}
   <div class="mobile-sd-cta"><div class="selection-total"><small>${selected.length?selected.length+' خدمة مختارة':'اختر خدمة أولًا'}</small><b>${total} ر.س</b></div><button class="btn btn-org book-selected" data-detail-book="${s.key}" ${selected.length?'':'disabled'}>متابعة الحجز ${svg('<path d="M15 6l-6 6 6 6"/>',14)}</button></div>
  </div>`;
@@ -4382,7 +4394,8 @@ function wizBranchHTML(){
 function wizServiceHTML(){
  const active=[...S.bookOpenCats][0]||null;
  const list=active?B_SERVICES.filter(s=>s.cat===active):[];
- return`<div class="m-cat-row">${B_CATS.map(c=>`<button type="button" class="m-cat ${active===c.id?'sel':''}" data-w-cat="${c.id}"><span class="cat-service-image"><img src="${escHtml(c.img||IMG.s1)}" alt="${escHtml(c.name)}"></span><span>${c.name}</span></button>`).join('')}</div>
+ const branch=bBranch();
+ return`<div class="booking-service-branch-row" style="margin:8px 0;font-size:12px;line-height:1.8;color:var(--mute)"><span style="font-size:12px;color:var(--mute)">${branch?'الفرع المختار: <b>'+escHtml(branch.name)+'</b>':'يرجى اختيار الفرع لعرض أسعار الخدمات'} <button type="button" id="wizPickBranch" style="display:inline;margin-inline-start:6px;padding:0;border:0;border-radius:0;background:none;color:var(--org-d);font:inherit;text-decoration:underline;text-underline-offset:3px;cursor:pointer">${branch?'تغيير الفرع':'اختيار الفرع'}</button></span></div><div class="m-cat-row">${B_CATS.map(c=>`<button type="button" class="m-cat ${active===c.id?'sel':''}" data-w-cat="${c.id}"><span class="cat-service-image"><img src="${escHtml(c.img||IMG.s1)}" alt="${escHtml(c.name)}"></span><span>${c.name}</span></button>`).join('')}</div>
 
  ${active?`<div class="booking-services">${list.map(s=>`<button type="button" class="m-service ${S.bookServices.has(s.id)?'sel':''}" data-w-svc="${s.id}">
   ${s.hot?'<span class="service-hot">الأكثر طلبًا</span>':''}<span class="svc-thumb"><img src="${s.img||bCat(s.cat).img}" alt="${s.name}"></span>
@@ -5522,6 +5535,7 @@ function bind(){
    render();scrollTo({top:0,behavior:'smooth'});
    setTimeout(()=>openBranchSheet('gift'),80);
   }));
+  $('[data-service-branch]')?.addEventListener('change',event=>pickBranch(event.target.value,'services'));
   $$('[data-flt]').forEach(el=>el.addEventListener('click',()=>{S.svFlt=el.dataset.flt;render()}));
   $$('[data-service-detail]').forEach(el=>el.addEventListener('click',()=>{S.serviceDetailId=el.dataset.serviceDetail;S.subPage=null;S.svPage=true;render();const selectedGroup=MOBILE_SERVICES.find(g=>String(g.id)===String(S.serviceDetailId));if(selectedGroup?.apiId)navigateParent("/services/"+selectedGroup.apiId);scrollTo({top:0,behavior:'smooth'})}));
   $$('[data-cut]').forEach(el=>el.addEventListener('click',()=>{

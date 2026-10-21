@@ -3,7 +3,7 @@ const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const vm = require('node:vm')
 const path = require('node:path')
-const { reactive, computed, ref } = require('vue')
+const { reactive, computed, ref, watch } = require('vue')
 const read = file => fs.readFileSync(path.join(__dirname, '..', file), 'utf8')
 function helpers() {
   const ctx = vm.createContext({})
@@ -28,7 +28,7 @@ test('cart synchronization keeps quantities and excludes removed products', () =
 })
 test('booking total reacts to cart changes and preserves paid product totals after clearing the cart', () => {
   const total = ref(40), items = ref([{ id: 1, n: 'Product', pr: 20, qty: 2 }])
-  const ctx = vm.createContext({ reactive, computed, useStore: () => ({ cartTotal: total, cartItems: items }),
+  const ctx = vm.createContext({ reactive, computed, watch, servicePrice: (service) => Number(service.default_price ?? service.price), useServiceLocation: () => ({ current: ref({ id: 1 }) }), useStore: () => ({ cartTotal: total, cartItems: items }),
     useLanguage: () => ({ state: { lang: 'ar' } }), paymentPolicy: {} })
   vm.runInContext(read('src/composables/useBooking.js').replace(/^import .*$/gm, '').replace(/export /g, ''), ctx)
   const booking = ctx.useBooking()

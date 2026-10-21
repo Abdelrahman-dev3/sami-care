@@ -1,4 +1,5 @@
 <script setup>
+import { servicePrice } from '@/utils/servicePrice'
 import FavoriteButton from '@/components/common/FavoriteButton.vue'
 import { ref, computed, onMounted } from 'vue'
 import { getCategories } from '@/data/home'
@@ -11,7 +12,7 @@ import { localizeField, localizeRecord, translationSource } from '@/utils/i18nFi
 import Skeleton from '@/components/common/SkeletonLoader.vue'
 
 const { state, hasSvc, toggleSvc } = useBooking()
-const { current } = useServiceLocation()
+const { current, openPicker } = useServiceLocation()
 const { state: lang } = useLanguage()
 const pick = t => localizeField(t, lang.lang)
 
@@ -49,7 +50,9 @@ const list = computed(() =>
     get name() { return localizeRecord(s, 'name', lang.lang) },
     get desc() { return localizeRecord(s, 'description', lang.lang) },
     dur: s.duration_min,
-    price: s.default_price,
+    default_price: s.default_price,
+    branches: s.branches,
+    price: servicePrice(s, current.value),
   }))
 )
 
@@ -62,9 +65,14 @@ const serviceIcon = service => categoryIconPath(service.icon)
 <template>
   <div class="panel-head"><h1>اختر الخدمة التي تناسبك</h1><p>يمكنك اختيار خدمة واحدة أو أكثر من أي قسم</p></div>
 
-  <div v-if="current" class="branch-strip">
-    <img v-if="current.image" :src="current.image" :alt="current.name" />
-    <span class="bi">مكان التنفيذ: <b>{{ current.name }}</b><small>{{ current.address }}</small></span>
+  <div class="branch-strip">
+    <img v-if="current?.image" :src="current.image" :alt="current.name" />
+    <span class="bi">
+      <template v-if="current">مكان التنفيذ: <b>{{ current.name }}</b></template>
+      <template v-else>يرجى اختيار الفرع لعرض أسعار الخدمات وحجز موعدك</template>
+      <button type="button" class="branch-picker-link" @click="openPicker()">{{ current ? 'تغيير الفرع' : 'اختيار الفرع' }}</button>
+      <small v-if="current">{{ current.address }}</small>
+    </span>
   </div>
 
   <div v-if="loading" class="empty-hint" style="display:grid;gap:10px">
@@ -108,3 +116,8 @@ const serviceIcon = service => categoryIconPath(service.icon)
     </div>
   </template>
 </template>
+
+<style scoped>
+.branch-strip { flex-wrap: wrap; gap: 12px; }
+.branch-picker-link { display: inline; margin-inline-start: 8px; padding: 0; border: 0; border-radius: 0; background: none; color: #855911; font: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+</style>

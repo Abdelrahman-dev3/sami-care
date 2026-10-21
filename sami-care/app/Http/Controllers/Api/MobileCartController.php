@@ -360,7 +360,10 @@ class MobileCartController extends Controller
                     $bookingService->service_id = $subService['id'];
                     $bookingService->employee_id = $staffId;
                     $bookingService->start_date_time = $startDateTime;
-                    $bookingService->service_price = (float) ($service->default_price ?? 0) + (float) $booking->home_service_fee;
+                    $branchPrice = $branchId > 0
+                        ? $service->branches()->where('branch_id', $branchId)->value('service_price')
+                        : null;
+                    $bookingService->service_price = (float) ($branchPrice ?? $service->default_price ?? 0) + (float) $booking->home_service_fee;
                     $bookingService->duration_min = $duration;
                     $bookingService->sequance = 1;
                     $bookingService->created_by = $user->id;

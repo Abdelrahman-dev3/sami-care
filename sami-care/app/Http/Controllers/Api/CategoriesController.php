@@ -12,7 +12,7 @@ class CategoriesController extends Controller
         $categories = Category::where('status', 1)
             ->whereNull('parent_id')
             ->with(['services' => function ($query) {
-                $query->where('status', 1);
+                $query->where('status', 1)->with('branches');
             }])
             ->orderBy('sort_order')
             ->orderBy('id')

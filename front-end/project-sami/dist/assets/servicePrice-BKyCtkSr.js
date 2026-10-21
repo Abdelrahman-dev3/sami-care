@@ -1,0 +1,1 @@
+function i(u,e){var s;const d=!(e!=null&&e.home)&&(e==null?void 0:e.id)!=null?(s=u.branches)==null?void 0:s.find(b=>String(b.branch_id)===String(e.id)):null,r=d==null?void 0:d.service_price;return r!=null&&r!==""&&Number.isFinite(Number(r))?Number(r):Number(u.default_price??u.price??0)}export{i as s};

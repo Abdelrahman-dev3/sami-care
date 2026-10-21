@@ -1,5 +1,6 @@
 import { useLanguage } from '@/composables/useLanguage'
-import { reactive, computed } from 'vue'
+import { reactive, computed, watch } from 'vue'
+import { servicePrice } from '@/utils/servicePrice'
 import { useServiceLocation } from '@/composables/useServiceLocation'
 import { homeService } from '@/composables/useHomeService'
 import { useStore } from '@/composables/useStore'
@@ -83,6 +84,19 @@ const state = reactive({
   walletBalance: null,   // يتحمّل فى PayStep.vue من /profile — لازم يكون معروف قبل السماح باختيار "المحفظة"
 })
 
+const { current: bookingLocation } = useServiceLocation()
+watch(() => bookingLocation.value?.id, (id, previous) => {
+  if (String(id) === String(previous) || state.done) return
+  state.emp = {}
+  state.staffOptions = {}
+  state.time = {}
+  state.date = null
+  state.mode = null
+  state.step = 0
+  state.rewards.couponApplied = ''
+  state.rewards.couponDiscount = 0
+})
+
 export function useBooking() {
   const { cartTotal, cartItems } = useStore()
   const selectedProducts = computed(() => state.done ? state.purchasedProducts : cartItems.value)
@@ -100,7 +114,7 @@ export function useBooking() {
     }
   }
 
-  const selSvcs = computed(() => state.services)
+  const selSvcs = computed(() => state.services.map(service => ({ ...service, price: servicePrice(service, current.value) })))
 
   const subTotal = computed(() => selSvcs.value.reduce((a, s) => a + (Number(s.price) || 0), 0))
   const totalDur = computed(() => selSvcs.value.reduce((a, s) => a + s.dur, 0))
@@ -163,7 +177,7 @@ export function useBooking() {
   const canProceed = computed(() => {
     switch (state.step) {
       case 0:
-        return state.services.length > 0
+        return !!current.value && state.services.length > 0
       case 1:
         return !!state.mode && selSvcs.value.every(s => state.emp[s.id])
       case 2:

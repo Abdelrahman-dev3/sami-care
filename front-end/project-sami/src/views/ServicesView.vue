@@ -9,8 +9,11 @@ import { useLanguage } from '@/composables/useLanguage'
 import { serviceDetails } from '@/data/serviceDetails'
 import { getCategories } from '@/data/home'
 import { localizeField, localizeRecord } from '@/utils/i18nField'
+import { useServiceLocation } from '@/composables/useServiceLocation'
+import { servicePrice } from '@/utils/servicePrice'
 
 const { state: lang } = useLanguage()
+const { current } = useServiceLocation()
 const pick = t => localizeField(t, lang.lang)
 
 /*
@@ -113,7 +116,9 @@ const cards = computed(() =>
         detail?.tagline ||
         '',
 
-      from: category.price_from ?? null,
+      from: category.services?.length
+        ? Math.min(...category.services.map(service => servicePrice(service, current.value)))
+        : null,
 
       durMin: category.durMin ?? null,
 

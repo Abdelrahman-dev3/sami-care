@@ -1,9 +1,9 @@
 <script setup>
+import { servicePrice } from '@/utils/servicePrice'
 import FavoriteButton from '@/components/common/FavoriteButton.vue'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import PageSkeleton from '@/components/common/PageSkeleton.vue'
-import LocationNotice from '@/components/common/LocationNotice.vue'
 import SIcon from '@/components/common/SIcon.vue'
 import { useServiceLocation } from '@/composables/useServiceLocation'
 import { useLanguage } from '@/composables/useLanguage'
@@ -20,7 +20,8 @@ const route = useRoute()
 const router = useRouter()
 const id = computed(() => Number(route.params.id))
 
-const { requireLocation } = useServiceLocation()
+const { requireLocation, current, locations, loadServiceLocations, setLocation } = useServiceLocation()
+loadServiceLocations()
 const { state: lang } = useLanguage()
 const { state: bookingState, toggleSvc, reset: resetBooking } = useBooking()
 const pick = t => localizeField(t, lang.lang)
@@ -38,6 +39,8 @@ const goBooking = (service = null) => {
         name: service.name,
         dur: service.dur,
         price: service.price,
+        default_price: service.default_price,
+        branches: service.branches,
       })
       // افتح خطوة اختيار الخدمات نفسها مع إبقاء الخدمة المختارة محددة.
       bookingState.step = 0
@@ -100,7 +103,9 @@ const services = computed(() =>
     id: s.id,
     name: localizeRecord(s, 'name', lang.lang),
     dur: s.duration_min,
-    price: s.default_price,
+    default_price: s.default_price,
+    branches: s.branches,
+    price: servicePrice(s, current.value),
     image: s.feature_image || resolveApiImage(s.image),
   }))
 )
@@ -172,7 +177,14 @@ watch(id, loadCategories)
         <section class="sd-sec container">
           <div class="sd-title"><i></i><h2>اختر الخدمة المناسبة لك</h2><i></i></div>
           <p class="sd-sub">تصفح خدماتنا ضمن هذا القسم واختر ما يناسبك.</p>
-          <div class="sd-loc"><LocationNotice /></div>
+          <div class="sd-branch-filter">
+            <label for="service-branch">الفرع</label>
+            <select id="service-branch" :value="current?.id ?? ''" @change="setLocation($event.target.value)">
+              <option value="" disabled>اختر الفرع</option>
+              <option v-for="branch in locations" :key="branch.id" :value="branch.id">{{ branch.name }}</option>
+            </select>
+          </div>
+          <p class="sd-sub">السعر يتغير بحسب الفرع</p>
 
           <div v-if="!services.length" class="sd-state">
             لا توجد خدمات متاحة حالياً ضمن هذا القسم.
@@ -190,7 +202,7 @@ watch(id, loadCategories)
                   <SIcon inner='<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>' :size="13" />
                   {{ s.dur }} دقيقة
                 </p>
-                <p class="sd-var__price">يبدأ من {{ s.price }} ر.س</p>
+                <p class="sd-var__price">{{ s.price }} ر.س</p>
                 <a href="#" class="sd-var__btn" @click.prevent="goBooking(s)">
                   احجز الآن <i>←</i>
                 </a>
@@ -206,6 +218,11 @@ watch(id, loadCategories)
     </main>
   </div>
 </template>
+
+<style scoped>
+.sd-branch-filter { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin: 18px 0 12px; }
+.sd-branch-filter select { max-width: 100%; min-width: 220px; padding: 10px 14px; border: 1px solid #c9a76a; border-radius: 10px; background: #fff; color: #57442d; font: inherit; }
+</style>
 
 <style scoped>
 .sd main{background:var(--cream)}
