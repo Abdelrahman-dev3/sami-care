@@ -47,7 +47,7 @@ const validationSchema = yup.object({
     .max(12, 'Password can not be more than 12 characters'),
   confirm_password: yup.string()
     .oneOf([yup.ref('new_password'), null], 'Passwords must match')
-    .required('Confirm Password is required field')
+    .required(window.i18n.global.t('admin_validation.confirm_required'))
     .min(8, 'New password must be at least 8 characters')
     .max(12, 'Password can not be more than 12 characters'),
 })

@@ -17,16 +17,16 @@
       <div class="d-flex mt-2">
         <div class="form-check form-check-inline">
           <input class="form-check-input" type="radio" name="gender" v-model="gender" id="male" value="male" />
-          <label class="form-check-label" for="male"> Male </label>
+          <label class="form-check-label" for="male"> {{ $t('admin_ui.male') }} </label>
         </div>
         <div class="form-check form-check-inline">
           <input class="form-check-input" type="radio" name="gender" v-model="gender" id="female" value="female" />
-          <label class="form-check-label" for="female"> Female </label>
+          <label class="form-check-label" for="female"> {{ $t('admin_ui.female') }} </label>
         </div>
 
         <!-- <div class="form-check form-check-inline">
           <input class="form-check-input" type="radio" name="gender" v-model="gender" id="other" value="other" />
-          <label class="form-check-label" for="other"> Other </label>
+          <label class="form-check-label" for="other"> {{ $t('admin_ui.other') }} </label>
         </div> -->
       </div>
     </div>
@@ -36,7 +36,7 @@
     <button :disabled="IS_SUBMITED" class="btn btn-primary iq-text-uppercase" name="submit" v-if="wizardNext" @click="formSubmit">
       <template v-if="IS_SUBMITED">
         <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-        Loading...
+        {{ $t('admin_ui.loading') }}
       </template>
       <template v-else> {{ $t('quick_booking.lbl_submit') }}</template>
     </button>
@@ -79,7 +79,7 @@ let EMAIL_REGX = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
 const validationSchema = yup.object({
   first_name: yup
     .string()
-    .required('First Name is a required field')
+    .required(window.i18n.global.t('admin_validation.first_name_required'))
     .test('is-string', 'Only strings are allowed', (value) => {
       // Regular expressions to disallow special characters and numbers
       const specialCharsRegex = /[!@#$%^&*(),.?":{}|<>\-_;'\/+=\[\]\\]/
@@ -87,7 +87,7 @@ const validationSchema = yup.object({
     }),
   last_name: yup
     .string()
-    .required('Last Name is a required field')
+    .required(window.i18n.global.t('admin_validation.last_name_required'))
     .test('is-string', 'Only strings are allowed', (value) => {
       // Regular expressions to disallow special characters and numbers
       const specialCharsRegex = /[!@#$%^&*(),.?":{}|<>\-_;'\/+=\[\]\\]/
@@ -95,8 +95,8 @@ const validationSchema = yup.object({
     }),
   email: yup
     .string()
-    .required('Email is a required field').matches(EMAIL_REGX, 'Must be a valid email'),
-  mobile: yup.string().required('Phone No is a required field').matches(/^(\+?\d+)?(\s?\d+)*$/, 'Phone Number must contain only digits')
+    .required(window.i18n.global.t('admin_validation.email_required')).matches(EMAIL_REGX, 'Must be a valid email'),
+  mobile: yup.string().required(window.i18n.global.t('admin_validation.phone_required')).matches(/^(\+?\d+)?(\s?\d+)*$/, 'Phone Number must contain only digits')
 })
 
 const { handleSubmit, errors, resetForm } = useForm({

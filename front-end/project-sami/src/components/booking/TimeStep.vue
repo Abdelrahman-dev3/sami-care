@@ -4,6 +4,14 @@ import { useBooking, fmtTimeStr, fmtDur, rs } from '@/composables/useBooking'
 import { fetchAvailableTimes, fetchLoyaltyPointValue } from '@/services/bookingApi'
 import { categoryAccent, categoryIconKey, categoryIconPath } from '@/utils/giftIcons'
 import Skeleton from '@/components/common/SkeletonLoader.vue'
+import { useServiceLocation } from '@/composables/useServiceLocation'
+import { useLanguage } from '@/composables/useLanguage'
+import { useQuietHours } from '@/composables/useQuietHours'
+const { current: quietBranch } = useServiceLocation()
+const { state: quietLanguage } = useLanguage()
+const { bonus: quietPoints } = useQuietHours()
+const quietBonus = time => !quietBranch.value?.home && state.date
+  ? quietPoints(quietBranch.value?.id, toDateKey(state.date), time) : 0
 
 const AR_DAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت']
 const AR_MONTHS = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر']
@@ -11,6 +19,7 @@ const AR_MONTHS = ['يناير', 'فبراير', 'مارس', 'أبريل', 'ما
 const { state, selSvcs, totalDur, priceParts, setEmployee, setTime } = useBooking()
 const pointsPer100 = ref(5)
 const earnedLoyaltyPoints = computed(() => Math.floor(priceParts.value.total / 100) * pointsPer100.value)
+const quietTotal = computed(() => selSvcs.value.reduce((sum, service) => sum + quietBonus(state.time[service.id]), 0))
 
 const TODAY = new Date()
 TODAY.setHours(0, 0, 0, 0)
@@ -58,8 +67,11 @@ const serviceGroups = computed(() => {
   return [...groups.values()]
 })
 
-const orderedServices = computed(() => serviceGroups.value.flatMap(group => group.services))
-const firstService = computed(() => orderedServices.value[0] || null)
+const orderedServices = computed(() => selSvcs.value)
+const firstService = computed(() => {
+  const selected = orderedServices.value.filter(s => state.time[s.id]).sort((a,b) => timeToMinutes(state.time[a.id]) - timeToMinutes(state.time[b.id]))
+  return selected[0] || [...orderedServices.value].sort((a,b) => (timeToMinutes(normalizeSlots(slotsByService[a.id])[0]) ?? Infinity) - (timeToMinutes(normalizeSlots(slotsByService[b.id])[0]) ?? Infinity))[0] || null
+})
 const firstGroup = computed(() => serviceGroups.value[0] || null)
 const firstServiceTime = computed(() => firstService.value ? state.time[firstService.value.id] : '')
 
@@ -97,42 +109,19 @@ function clearTimesFrom(index) {
 }
 
 function buildSequentialSchedule(startTime, { apply = false } = {}) {
-  const cursorStart = timeToMinutes(startTime)
-  const services = orderedServices.value
-  if (!services.length || cursorStart === null) return { complete: false, rows: [], end: '' }
-
-  let cursor = cursorStart
-  const rows = []
-
-  for (let i = 0; i < services.length; i++) {
-    const service = services[i]
-    const slots = normalizeSlots(slotsByService[service.id])
-    const selected = i === 0
-      ? (slots.includes(startTime) ? startTime : slots.find(t => timeToMinutes(t) >= cursor))
-      : slots.find(t => timeToMinutes(t) >= cursor)
-
-    if (!selected) {
-      if (apply) clearTimesFrom(i)
-      const lastRow = rows[rows.length - 1]
-      return { complete: false, rows, missing: service, end: lastRow?.end || '' }
-    }
-
-    const start = timeToMinutes(selected)
-    const end = start + (Number(service.dur) || 0)
-    rows.push({ service, start: selected, end: minutesToTime(end), expected: minutesToTime(cursor), shifted: start > cursor })
-
-    if (apply) setTime(service.id, selected)
-    if (apply && state.mode === 'auto' && staffBySlot[service.id]?.[selected]) {
-      setEmployee(service.id, staffBySlot[service.id][selected])
-    }
-    cursor = end
+  const result = window.SamiBookingJourney.schedule(orderedServices.value, service => normalizeSlots(slotsByService[service.id]), startTime)
+  if (apply) {
+    state.time = {}
+    result.rows.forEach(row => {
+      setTime(row.service.id, row.start)
+      if (state.mode === 'auto' && staffBySlot[row.service.id]?.[row.start]) setEmployee(row.service.id, staffBySlot[row.service.id][row.start])
+    })
   }
-
-  return { complete: true, rows, end: minutesToTime(cursor) }
+  return result
 }
 
 function syncSequentialTimes() {
-  if (!firstServiceTime.value) return
+  if (!firstServiceTime.value || !allScheduleSlotsLoaded.value) return
   buildSequentialSchedule(firstServiceTime.value, { apply: true })
 }
 
@@ -202,6 +191,7 @@ async function loadSlots(service) {
     syncSequentialTimes()
   } finally {
     loadingByService[service.id] = false
+    syncSequentialTimes()
   }
 }
 
@@ -222,8 +212,8 @@ const dateTitle = computed(() => (
   state.date ? `${AR_DAYS[state.date.getDay()]} ${state.date.getDate()} ${AR_MONTHS[state.date.getMonth()]} ${state.date.getFullYear()}` : 'اختر تاريخًا من التقويم'
 ))
 
-const firstServiceLoading = computed(() => firstService.value && loadingByService[firstService.value.id])
-const initialSlots = computed(() => firstService.value ? normalizeSlots(slotsByService[firstService.value.id]) : [])
+const firstServiceLoading = computed(() => orderedServices.value.some(service => loadingByService[service.id] || !Array.isArray(slotsByService[service.id])))
+const initialSlots = computed(() => normalizeSlots(orderedServices.value.flatMap(service => slotsByService[service.id] || [])))
 const visibleInitialSlots = computed(() => initialSlots.value.filter(time => {
   const minutes = timeToMinutes(time)
   if (period.value === 'am') return minutes < 12 * 60
@@ -248,7 +238,7 @@ const sessionPlan = computed(() => {
   const rows = []
   let previousEnd = null
 
-  serviceGroups.value.forEach(group => {
+  window.SamiBookingJourney.groupsByTime(serviceGroups.value, state.time, selSvcs.value).forEach(group => {
     const starts = group.services.map(service => timeToMinutes(state.time[service.id]))
     const complete = starts.every(start => start !== null)
     const firstStart = starts[0]
@@ -256,7 +246,7 @@ const sessionPlan = computed(() => {
     if (!complete) {
       rows.push({
         type: 'group',
-        key: `group-${group.id}`,
+        key: `group-${group.key}`,
         group,
         name: group.name,
         icon: group.icon,
@@ -285,7 +275,7 @@ const sessionPlan = computed(() => {
 
     rows.push({
       type: 'group',
-      key: `group-${group.id}`,
+      key: `group-${group.key}`,
       group,
       name: group.name,
       icon: group.icon,
@@ -327,6 +317,7 @@ const sessionEndTime = computed(() => {
   <div class="loyalty-preview" aria-live="polite">
     <h3><span aria-hidden="true">✨</span> مكافأة نقاط الولاء لهذه الجلسة</h3>
     <p>ستحصل على <b>{{ rs(earnedLoyaltyPoints) }} نقطة ولاء</b> عند إتمام هذا الحجز.</p>
+    <p v-if="quietTotal" data-no-i18n style="color:#26714d">{{ quietLanguage.lang === 'en' ? `Plus ${quietTotal} quiet hours points when the eligible bookings are completed.` : `بالإضافة إلى ${quietTotal} نقطة أوقات هدوء عند اكتمال الحجوزات المؤهلة.` }}</p>
     <strong>يمنحك نظام الولاء {{ rs(pointsPer100) }} نقطة مقابل كل 100 ر.س مدفوعة.</strong>
   </div>
 
@@ -376,6 +367,7 @@ const sessionEndTime = computed(() => {
         <button v-for="t in visibleInitialSlots" :key="t" class="slot" :class="{ sel: firstServiceTime === t }" @click="chooseInitialTime(t)">
           <span v-if="bestInitialSlot === t" class="tag">الأفضل</span>
           {{ fmtTimeStr(t) }}
+          <small v-if="quietBonus(t)" data-no-i18n style="display:block;color:#26714d;font-size:11px;white-space:normal">{{ quietLanguage.lang === 'en' ? `Quiet hours: +${quietBonus(t)} points on completion` : `وقت هدوء: +${quietBonus(t)} نقطة عند إكمال الحجز` }}</small>
         </button>
       </div>
 

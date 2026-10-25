@@ -28,6 +28,8 @@ class Booking extends BaseModel
     protected $table = 'bookings';
 
     protected $casts = [
+        'quiet_hours_points' => 'integer',
+        'quiet_hours_credited_at' => 'datetime',
         'user_id' => 'integer',
         'branch_id' => 'integer',
         'arrived_at' => 'datetime',

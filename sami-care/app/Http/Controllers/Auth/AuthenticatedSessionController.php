@@ -34,6 +34,8 @@ class AuthenticatedSessionController extends Controller
     }
 
     // التعامل مع جلسات الحجز المؤقتة
+    if (\App\Services\EmployeeAccess::limited(auth()->user())) return redirect()->route('backend.employee.bookings');
+
     if ($request->session()->has('package_booking')) {
         return redirect()->route('package.booking.complete');
     }
@@ -56,6 +58,7 @@ class AuthenticatedSessionController extends Controller
             return redirect()->to('/payment?is_buy_now=1')->with('success', 'تم تحويل الحجز بنجاح');
         }
     }
+
 
     // **التوجيه النهائي بعد تسجيل الدخول**
     // شرط لتوجيه الموظفين لصفحاتهم الخاصة

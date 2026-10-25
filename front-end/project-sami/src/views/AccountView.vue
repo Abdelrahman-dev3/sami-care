@@ -13,6 +13,7 @@ import AccountGifts from '@/components/account/AccountGifts.vue'
 import AccountPackages from '@/components/account/AccountPackages.vue'
 import AccountProducts from '@/components/account/AccountProducts.vue'
 import AccountSettings from '@/components/account/AccountSettings.vue'
+import ServiceRepeatRewards from '@/components/common/ServiceRepeatRewards.vue'
 import AccountMembership from '@/components/account/AccountMembership.vue'
 import AccountWallet from '@/components/account/AccountWallet.vue'
 import PageSkeleton from '@/components/common/PageSkeleton.vue'
@@ -99,6 +100,7 @@ watch(isAuthenticated, (v) => { if (v) loadProfile() })
       <PageSkeleton v-if="loading" variant="account" />
       <div v-else-if="error" class="account-state error">{{ error }}</div>
       <template v-else>
+        <ServiceRepeatRewards v-if="activeTab === 'overview'" />
         <AccountOverview v-if="activeTab === 'overview'" :profile="profile" @go="activeTab = $event" />
         <AccountFavorites v-else-if="activeTab === 'favorites'" />
         <AccountWallet v-else-if="activeTab === 'wallet'" @updated="loadProfile" />

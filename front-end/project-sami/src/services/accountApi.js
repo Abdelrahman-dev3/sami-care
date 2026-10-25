@@ -4,6 +4,15 @@ export async function fetchProfile() {
   return authFetch('/profile')
 }
 
+export async function fetchCheckoutBalances() {
+  const res = await authFetch('/wallet', { cache: 'no-store', credentials: 'omit' })
+  const data = res?.data
+  if (data?.balance == null || !Number.isFinite(Number(data.balance))) {
+    throw new Error('تعذر تحميل رصيد المحفظة')
+  }
+  return { wallet: data.active === false ? 0 : Number(data.balance), loyalty_points: Number(data.points_balance) || 0 }
+}
+
 export async function updateProfile(data) {
   return authFetch('/profile/update', { method: 'POST', body: data })
 }

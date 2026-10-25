@@ -38,10 +38,10 @@
         <span class="text-danger">{{ errors.default_currency }}</span>
       </div> -->
     </div>
-    <!-- <p>Time Zone</p>
-      <p>Invoice Prefix</p>
-      <p>Default Language</p>
-      <p>Time Format</p> -->
+    <!-- <p>{{ $t('admin_ui.time_zone') }}</p>
+      <p>{{ $t('admin_ui.invoice_prefix') }}</p>
+      <p>{{ $t('admin_ui.default_language') }}</p>
+      <p>{{ $t('admin_ui.time_format') }}</p> -->
     <div class="row py-4">
       <SubmitButton :IS_SUBMITED="IS_SUBMITED"></SubmitButton>
     </div>

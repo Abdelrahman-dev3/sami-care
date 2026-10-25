@@ -75,15 +75,15 @@
 
                 <div class="form-group" v-if="type === 'select' || type === 'radio' || type === 'checkbox'">
                   <div v-for="(input, index) in inputFields" :key="index" class="mb-3 mt-3">
-                    <label class="form-label" for="label">Value</label>
+                    <label class="form-label" for="label">{{ $t('admin_ui.value') }}</label>
                     <div class="d-flex">
                       <input type="text" class="form-control" v-model="input.value" />
-                      <a v-if="inputFields.length > 1" class="btn btn-primary ml-2" @click="deleteInputField(index)">Delete</a>
+                      <a v-if="inputFields.length > 1" class="btn btn-primary ml-2" @click="deleteInputField(index)">{{ $t('admin_ui.delete') }}</a>
                     </div>
                   </div>
                   <div class="mb-4">
                     <a @click="addInputField" class="text-primary" style="cursor: pointer;">
-                      <h6><i class="fa fa-plus-circle" aria-hidden="true"></i> Add More</h6>
+                      <h6><i class="fa fa-plus-circle" aria-hidden="true"></i> {{ $t('admin_ui.add_more') }}</h6>
                     </a>
                   </div>
                 </div>
@@ -253,7 +253,7 @@ const reset_datatable_close_offcanvas = (res) => {
 const validationSchema = yup.object({
   Module: yup.number().required(),
   label: yup.string().required("Label is a required field"),
-  type: yup.string().required("Type is a required field")
+  type: yup.string().required(window.i18n.global.t('admin_validation.type_required'))
 })
 
 const { handleSubmit, errors, resetForm } = useForm({

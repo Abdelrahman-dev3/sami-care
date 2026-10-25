@@ -90,16 +90,16 @@
                 orderable: false,
                 searchable: false,
             },
-            { data: 'id', name: 'id', title: 'Id' },
+            { data: 'id', name: 'id', title: @json(__('admin_ui.id')) },
             { data: 'type', name: 'type', title: "{{ __('constant.lbl_type') }}" },
             { data: 'name', name: 'name', title: "{{ __('constant.lbl_name') }}" },
             { data: 'value', name: 'value', title: "{{ __('constant.lbl_value') }}" },
-            { data: 'status', name: 'status', orderable: false, searchable: true, title: 'Status' },
-            { data: 'updated_at', name: 'updated_at',  title: 'Updated At' },
+            { data: 'status', name: 'status', orderable: false, searchable: true, title: @json(__('admin_ui.status')) },
+            { data: 'updated_at', name: 'updated_at',  title: @json(__('admin_ui.updated_at')) },
         ]
 
         const actionColumn = [
-            { data: 'action', name: 'action', orderable: false, searchable: false, title: 'Action' }
+            { data: 'action', name: 'action', orderable: false, searchable: false, title: @json(__('admin_ui.action')) }
         ]
 
         const customFieldColumns = JSON.parse(@json($columns))

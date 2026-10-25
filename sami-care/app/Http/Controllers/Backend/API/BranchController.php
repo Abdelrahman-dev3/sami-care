@@ -38,7 +38,6 @@ class BranchController extends Controller
         }
     
         $branches = Branch::query()
-            ->where('status', 1)
             ->whereNull('deleted_by')
             ->when($categoryId > 0, function ($query) use ($categoryId) {
                 $query->whereHas('services', function ($serviceQuery) use ($categoryId) {
@@ -61,7 +60,7 @@ class BranchController extends Controller
     {
         $perPage = $request->input('per_page', 10); // Get the number of items per page from the request (default: 10)
 
-        $branches = Branch::with('businessHours', 'address', 'media')->where('status', 1)->paginate($perPage);
+        $branches = Branch::with('businessHours', 'address', 'media')->paginate($perPage);
 
         if ($branches->isEmpty()) {
             return response()->json(['status' => true, 'message' => __('branch.branch_isempty')]);

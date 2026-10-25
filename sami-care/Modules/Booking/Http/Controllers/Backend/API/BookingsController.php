@@ -39,6 +39,9 @@ class BookingsController extends Controller
     public function store(Request $request)
     {
         $data = $request->all();
+        if ((int) $request->branch_id > 0 && !\App\Models\Branch::whereKey($request->branch_id)->where('status', 1)->exists()) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['branch_id' => 'غير متاح الحجز في الوقت الحالي']);
+        }
         if (filled($request->coupon_code)) {
             return response()->json(['status' => false, 'message' => 'يطبق الكوبون في خطوة الدفع؛ أرسل coupon_code مع طلب الدفع.'], 422);
         }

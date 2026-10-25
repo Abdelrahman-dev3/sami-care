@@ -113,7 +113,7 @@
                 name: 'is_default',
                 orderable: true,
                 searchable: true,
-                title: "Default",
+                title: @json(__('admin_ui.default')),
                 width: '5%'
             },
             {
@@ -121,7 +121,7 @@
                 name: 'status',
                 orderable: true,
                 searchable: true,
-                title: "Published",
+                title: @json(__('admin_ui.published')),
                 width: '5%'
             },
             {

@@ -15,7 +15,7 @@
                 @lang(":module_name Management Dashboard", ['module_name'=>Str::title($module_name)])
             </x-slot>
             <x-slot name="toolbar">
-                <a href="{{ route("backend.$module_name.index") }}" class="btn btn-outline-primary" data-bs-toggle="tooltip" title="{{ __($module_name) }} List"><i class="fas fa-list"></i> List</a>
+                <a href="{{ route("backend.$module_name.index") }}" class="btn btn-outline-primary" data-bs-toggle="tooltip" title="{{ __($module_name) }} List"><i class="fas fa-list"></i> {{ __('admin_ui.list') }}</a>
                 @can('edit_'.$module_name)
                     <button type="button" class="btn btn-primary btn-icon btn-sm" data-bs-toggle="offcanvas" data-bs-target="#form-offcanvas" data-crud-id="{{$$module_name_singular->id}}" title="{{ __('messages.edit') }} " data-bs-toggle="tooltip"> <i class="fa-solid fa-pen-clip"></i></button>
                 @endcan

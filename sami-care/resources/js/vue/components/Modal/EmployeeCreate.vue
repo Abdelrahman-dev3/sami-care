@@ -121,7 +121,7 @@ let EMAIL_REGX = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
 const validationSchema = yup.object({
     first_name: yup.string().required('First Name is required'),
     last_name: yup.string().required('Last Name is required'),
-    email: yup.string().required('Email is required')
+    email: yup.string().required(window.i18n.global.t('admin_validation.email_required'))
     .matches(EMAIL_REGX, 'Must be a valid email')
     .test('unique', 'Email must be unique', async function(value) {
       if (!EMAIL_REGX.test(value)) {
@@ -135,9 +135,9 @@ const validationSchema = yup.object({
               }
           return true;
         }),
-        mobile: yup.string().required('Contact Number is a required field')
+        mobile: yup.string().required(window.i18n.global.t('admin_validation.phone_required'))
         .matches(/^(\+?\d+)?(\s?\d+)*$/, 'Phone Number must contain only digits'),
-    password : yup.string().required('Password is required')
+    password : yup.string().required(window.i18n.global.t('admin_validation.password_required'))
     .min(8, 'Password must be at least 8 characters long')
     .max(12, 'Password must be at most 12 characters long'),
       confirm_password : yup.string().required('Current password is required')

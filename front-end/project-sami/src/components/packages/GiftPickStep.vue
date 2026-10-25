@@ -1,4 +1,5 @@
 <script setup>
+import PackagePrice from '@/components/common/PackagePrice.vue'
 /*
   اختيار الباقة للإهداء — مُرحَّل حرفيًا من gView1() في src/legacy/packages-gifts.html
 */
@@ -43,7 +44,7 @@ const list = computed(() =>
         <h4>{{ p.name }}</h4>
         <div class="dur">🕐 {{ p.dur }} دقيقة</div>
         <div class="desc">{{ p.desc }}</div>
-        <div class="prc">{{ rs(p.price) }} <small>ر.س</small></div>
+        <PackagePrice :price="p.price" :savings="p.savings" :original="p.originalPrice" />
         <button class="pick"><SIcon :inner="I.gift" :size="14" /> {{ state.gpkg === p.id ? 'تم الاختيار ✓' : 'أهدِ هذه الباقة' }}</button>
       </div>
     </div>

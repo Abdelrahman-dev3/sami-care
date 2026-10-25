@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
+<script src="/booking-journey.js?v=20261024"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <title>عناية سامي | التطبيق</title>
 <script src="/payment-policy.js?v=20261020-options"></script>
+<script src="/quiet-hours.js?v=20261022"></script>
 <script src="../site-dictionary.js?v=20260923-language"></script>
 <script src="../data-i18n.js?v=20260923-dynamic"></script>
 <script src="../site-i18n.js?v=20260923-language"></script>
@@ -16,6 +18,8 @@ if(new URLSearchParams(location.search).get('view')==='booking'){
 }
 </script>
 <style>
+.branch-choice:disabled,.booking-launch-branch:disabled{opacity:.6;cursor:not-allowed}
+
 @font-face{font-family:'SamiBrand';src:url('assets/sami-brand.otf') format('opentype');font-display:swap}
 @font-face{font-family:'Lama Sans';src:url('/fonts/lama-sans/LamaSans-Light.ttf') format('truetype');font-weight:300;font-style:normal;font-display:swap}
 @font-face{font-family:'Lama Sans';src:url('/fonts/lama-sans/LamaSans-Medium.ttf') format('truetype');font-weight:500;font-style:normal;font-display:swap}
@@ -497,7 +501,9 @@ html{--content-direction:rtl}html[dir="ltr"]{--content-direction:ltr}
 <script src="/service-page-content.js"></script>
 <script src="../home-page-content.js"></script>
 <script src="../qrcode.min.js"></script>
-<style>.mobile-home-about{padding:20px 16px;line-height:1.8}.mobile-home-about>img{width:100%;height:220px;object-fit:cover;border-radius:16px}.mobile-home-about h2,.mobile-home-about h3{margin-block:12px 6px}.mobile-home-features{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}.mobile-home-features small{display:block}.home-svc .row{background-image:none!important}.home-svc .row>.dynamic-home-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.hin h1{white-space:pre-line}</style>
+<style>
+.branch-choice:disabled,.booking-launch-branch:disabled{opacity:.6;cursor:not-allowed}
+.mobile-home-about{padding:20px 16px;line-height:1.8}.mobile-home-about>img{width:100%;height:220px;object-fit:cover;border-radius:16px}.mobile-home-about h2,.mobile-home-about h3{margin-block:12px 6px}.mobile-home-features{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}.mobile-home-features small{display:block}.home-svc .row{background-image:none!important}.home-svc .row>.dynamic-home-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.hin h1{white-space:pre-line}</style>
 <link rel="stylesheet" href="/notification-bell.css?v=20260929">
 <script src="/branch-location.js?v=20260929"></script>
 <link rel="stylesheet" href="/branch-location.css?v=20260929">
@@ -535,6 +541,8 @@ html{--content-direction:rtl}html[dir="ltr"]{--content-direction:ltr}
 </div>
 <div class="toast" id="toast"></div>
 <style>
+.branch-choice:disabled,.booking-launch-branch:disabled{opacity:.6;cursor:not-allowed}
+
 /* ===== الشاشة 1: الهيرو والكوفي والخدمات ===== */
 .hero-sl{position:relative;padding:0 0 4px;background:linear-gradient(180deg,#0E0A06 0%,#FBFAF6 100%)}
 .hero-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;border-radius:0;
@@ -807,6 +815,8 @@ html{--content-direction:rtl}html[dir="ltr"]{--content-direction:ltr}
 .copy{margin-top:16px;background:#4A3826;color:#EDE3D2;text-align:center;font-size:10.5px;padding:13px}
 </style>
 <style>
+.branch-choice:disabled,.booking-launch-branch:disabled{opacity:.6;cursor:not-allowed}
+
 /* ===== صفحة الخدمة (الحلاقة) ===== */
 .all-services-page{padding-bottom:96px;background:linear-gradient(180deg,#f7f1e7,#fff 260px)}
 .services-cover{position:relative;min-height:230px;padding:68px 20px 30px;overflow:hidden;background:linear-gradient(135deg,#17100a,#4b3218);color:#fff;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center}
@@ -1663,11 +1673,15 @@ async function loadSiteContact(){
 
 function resolveBackendUrl(path){return `${API_ORIGIN}/${String(path).replace(/^\/+/,'')}`}
 async function apiGet(path){
- const res=await fetch(`${API_BASE}${path}`,{headers:{Accept:'application/json','frezka-localization':getLang()}});
+ const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),20000);
+ let res;
+ try{
+  res=await fetch(`${API_BASE}${path}`,{signal:controller.signal,headers:{Accept:'application/json','frezka-localization':getLang()}});
  let payload=null;
  try{payload=await res.json()}catch{payload=null}
  if(!res.ok||payload?.status===false)throw new Error(payload?.message||('تعذر تحميل '+path));
  return payload;
+ }finally{clearTimeout(timer)}
 }
 async function apiPost(path,body){
  const res=await fetch(`${API_BASE}${path}`,{method:'POST',headers:{Accept:'application/json','Content-Type':'application/json','frezka-localization':getLang()},body:JSON.stringify(body)});
@@ -1797,7 +1811,7 @@ function mobileServicePrice(service){
 }
 function mobileVariantPrice(variant){return bSvc(variant.id)?.price??variant[2]}
 function mobileServiceBranchFilterHTML(){
- return `<label style="display:flex;align-items:center;gap:12px;margin:16px 0">الفرع <select data-service-branch style="flex:1;min-width:0;padding:10px;border:1px solid #c9a76a;border-radius:10px;background:#fff;font:inherit"><option value="" disabled ${!S.currentBranch?'selected':''}>اختر الفرع</option>${B_BRANCHES.map(branch=>`<option value="${escHtml(branch.id)}" ${branch.id===S.currentBranch?'selected':''}>${escHtml(branch.name)}</option>`).join('')}</select></label><p style="margin-bottom:14px;color:var(--mute);font-size:12px">السعر يتغير بحسب الفرع</p>`;
+ return `<label style="display:flex;align-items:center;gap:12px;margin:16px 0">الفرع <select data-service-branch style="flex:1;min-width:0;padding:10px;border:1px solid #c9a76a;border-radius:10px;background:#fff;font:inherit"><option value="" disabled ${!S.currentBranch?'selected':''}>اختر الفرع</option>${B_BRANCHES.map(branch=>`<option ${branch.bookable===false?'disabled':''} value="${escHtml(branch.id)}" ${branch.id===S.currentBranch?'selected':''}>${escHtml(branch.name)}${branch.bookable===false?' - '+branchUnavailableText():''}</option>`).join('')}</select></label><p style="margin-bottom:14px;color:var(--mute);font-size:12px">السعر يتغير بحسب الفرع</p>`;
 }
 function syncMobileServiceVariants(){
  MOBILE_SERVICES.forEach(group=>group.variants.forEach((variant,index)=>{
@@ -1818,6 +1832,8 @@ function mapPackage(raw,i){
   cat:'all',
   dur:dur||90,
   price:Number(raw.package_price)||0,
+  savings:Number(raw.savings_amount)||0,
+  originalPrice:Number(raw.services_total_price)||0,
   hex:style.hex,
   hot:!!raw.is_featured,
   desc:localizedField(raw,'description')||'',
@@ -1833,6 +1849,8 @@ function mapHomePkgCard(raw,i){
  return{
   n:localizedField(raw,'name')||'باقة',
   pr:Number(raw.package_price)||0,
+  savings:Number(raw.savings_amount)||0,
+  originalPrice:Number(raw.services_total_price)||0,
   s:localizedField(raw,'description')||'',
   cnt:(services.length||0)+' خدمات',
   img:raw.feature_image||style.img,
@@ -1848,6 +1866,12 @@ function mapOffer(raw,i){
   p:desc||'اكتشف العرض الآن',
   img:raw.feature_image||style.img,
  };
+}
+function packageSavingsHTML(p){
+ const savings=Number(p.savings)||0;
+ if(savings<=0)return '';
+ const en=getLang()==='en';
+ return `<p class="package-savings" data-no-i18n style="color:#26714d;font-weight:700;margin:8px 12px;line-height:1.8">${en?'You save':'ستوفر مبلغ'} ${rs(savings)} ${en?'SAR':'ر.س'}</p>`;
 }
 function productStockHTML(product){
  const value=product.stockQty;
@@ -1894,6 +1918,7 @@ function mapFullBranch(raw,slotId,fallback){
  return{
   id:slotId,
   realId:Number(raw.id)||null,
+  bookable:raw.status===true||Number(raw.status)===1,
   latitude:raw.latitude??raw.address?.latitude??null,
   longitude:raw.longitude??raw.address?.longitude??null,
   name:localizedField(raw,'name')||fallback?.name||'فرع',
@@ -1919,11 +1944,30 @@ function mapWheelPrize(raw,i){
 
 /* بنخزّن نتيجة الـ API الخام هنا عشان لما اللغة تتغيّر نقدر نعيد تجهيز نفس البيانات باللغة
    الجديدة (localized) من غير ما نعيد النداء للباك-إند تاني — راجع applyDynamicData() وزرار تغيير اللغة تحت. */
+let quietHoursSettings=[];
+function quietPointsForTime(time){
+ const branch=B_BRANCHES.find(b=>b.id===(S.bookBranch||S.currentBranch));
+ if(!branch||branch.home||!S.bookDate)return 0;
+ return window.SamiQuietHours?.points(quietHoursSettings,branch.realId,toBackendDate(S.bookDate),time)||0;
+}
+function quietBonusHTML(time){
+ const points=quietPointsForTime(time);
+ if(!points)return '';
+ return `<small data-no-i18n style="display:block;color:#26714d;font-size:10px;white-space:normal">${getLang()==='en'?'Quiet hours: +':'وقت هدوء: +'}${points} ${getLang()==='en'?'points on completion':'نقطة عند إكمال الحجز'}</small>`;
+}
 let _rawApiData=null;
 let dynamicRequest=0;
+let dynamicLoading=true;
+let dynamicError=false;
+let HOME_PRODUCTS=[],HOME_PACKAGES=[],HOME_OFFERS=[],HOME_SERVICES=[];
+function dynamicStateHTML(){
+ const en=getLang()==='en';
+ return `<section class="sec" style="min-height:65vh;padding-top:130px;text-align:center" role="${dynamicError?'alert':'status'}" aria-busy="${dynamicLoading}"><p>${dynamicError?(en?'Unable to load content. Please try again.':'تعذر تحميل المحتوى. يرجى إعادة المحاولة.'):(en?'Loading content…':'جارٍ تحميل المحتوى…')}</p>${dynamicError?`<button class="btn btn-org" id="retryDynamicData">${en?'Retry':'إعادة المحاولة'}</button>`:'<div style="height:180px;margin:24px 0;border-radius:18px;background:linear-gradient(110deg,#eee6d9,#faf7f1,#eee6d9)"></div>'}</section>`;
+}
 async function loadDynamicData(){
  const request=++dynamicRequest,lang=getLang();
- const[homeAll,pkgsRes,offersRes,shopRes,upsellRes,branchListRes,catRes,wheelRes,loyaltyRes]=await Promise.allSettled([
+ dynamicLoading=true;dynamicError=false;render();
+ const[homeAll,pkgsRes,offersRes,shopRes,upsellRes,branchListRes,catRes,wheelRes,loyaltyRes,faqRes]=await Promise.allSettled([
   apiGet('/Home/all'),
   apiGet('/Home/packages?per_page=12'),
   apiGet('/offers?per_page=6'),
@@ -1933,14 +1977,19 @@ async function loadDynamicData(){
   apiGet('/Home/categories'),
   apiGet('/Home/wheel/prizes'),
   apiGet('/loyalty/point-value'),
+  apiGet('/faqs'),
  ]);
  if(request!==dynamicRequest||lang!==getLang())return;
- _rawApiData={homeAll,pkgsRes,offersRes,shopRes,upsellRes,branchListRes,catRes,wheelRes,loyaltyRes};
+ dynamicLoading=false;
+ dynamicError=homeAll.status!=='fulfilled';
+ _rawApiData={homeAll,pkgsRes,offersRes,shopRes,upsellRes,branchListRes,catRes,wheelRes,loyaltyRes,faqRes};
  applyDynamicData();
 }
 function applyDynamicData(){
  if(!_rawApiData)return;
- const{homeAll,pkgsRes,offersRes,shopRes,upsellRes,branchListRes,catRes,wheelRes,loyaltyRes}=_rawApiData;
+ const{homeAll,pkgsRes,offersRes,shopRes,upsellRes,branchListRes,catRes,wheelRes,loyaltyRes,faqRes}=_rawApiData;
+ for(const list of [DPKGS,PKGS,OFFERS,STORE_CATS,PRODUCTS,BRANCHES,TSTS,WHEEL,B_CATS,B_SERVICES,HSVCS])list.length=0;
+ HOME_PRODUCTS=[];HOME_PACKAGES=[];HOME_OFFERS=[];HOME_SERVICES=[];
  if(loyaltyRes?.status==='fulfilled')S.bookPointsPer100=Math.max(Number(loyaltyRes.value?.data?.points_per_100)||5,1);
 
  /* الباقات: صفحة الباقات الكاملة DPKGS + كروت الباقات في الرئيسية PKGS */
@@ -2032,6 +2081,9 @@ function applyDynamicData(){
     const next=[...realSlots,...extra];
     if(homeEntry)next.push(homeEntry);
     B_BRANCHES.length=0;B_BRANCHES.push(...next);
+    if(B_BRANCHES.find(b=>b.id===S.currentBranch)?.bookable===false){S.currentBranch=null;try{localStorage.removeItem('samiSiteBranch')}catch{}}
+    if(B_BRANCHES.find(b=>b.id===S.bookBranch)?.bookable===false){S.bookBranch=null;S.bookWizard=false;S.bookTime={}}
+
     const nearbyContext=document.querySelector('[data-nearby-context]')?.dataset.nearbyContext;
     if(nearbyContext)refreshNearbyPicker(nearbyContext);
    }
@@ -2044,7 +2096,7 @@ function applyDynamicData(){
   try{
    const list=catRes.value.data||[];
    if(list.length){
-    const staticCats=Object.fromEntries(B_CATS.map(c=>[c.id,c]));
+    const staticCats={};
     const newCats=[],newServices=[];
     list.forEach((live,index)=>{
      const matched=matchCatSlot(live.name,live.id);
@@ -2105,6 +2157,17 @@ function applyDynamicData(){
   }catch(e){console.warn('sami: تعذر تجهيز جوائز العجلة',e)}
  }else console.warn('sami: فشل تحميل جوائز العجلة',wheelRes.reason);
 
+ // Home uses exactly the same payload and ordering as the desktop HomeView.
+ const home=homeAll.status==='fulfilled'?(homeAll.value.data||{}):{};
+ HOME_FAQS=faqRes?.status==='fulfilled'&&Array.isArray(faqRes.value.data)?faqRes.value.data:(home.faqs||[]);
+ HOME_PRODUCTS=(home.products||[]).map(p=>({...mapProduct(p,p.category_id),img:p.product_image||p.feature_image||IMG.p2}));
+ HOME_PACKAGES=(home.packages||[]).map(mapHomePkgCard);
+ HOME_OFFERS=(home.offers||[]).map(mapOffer);
+ HOME_SERVICES=(home.categories||[]).map(c=>({id:String(c.id),n:localizedField(c,'name'),img:c.image||c.feature_image||'',ic:'<path d="M4 12h16M12 4v16"/>'}));
+ HSVCS.push(...HOME_SERVICES);
+ if(catRes.status!=='fulfilled'||!catRes.value.data?.length)MOBILE_SERVICES.length=0;
+ // Keep home-only products available to the existing cart and product detail controls.
+ for(const product of HOME_PRODUCTS)if(!PRODUCTS.some(p=>p.id===product.id))PRODUCTS.push(product);
  if(S.bookWizard)syncBookingStepData();
  syncBranchHeader();
  render();
@@ -2134,9 +2197,61 @@ async function loadDynamicEmployees(){
 
 /* ===== بيانات "حسابي" الحقيقية: /profile بيرجّع كل حاجة (المستخدم، الرصيد، النقاط،
    الحجوزات الحالية والمكتملة، بطاقات الهدايا) في نداء واحد بعد تسجيل الدخول. ===== */
+let _repeatData={progress:[],rewards:[]},_repeatKey='',_repeatLoading=false,_repeatError='',_repeatSelected={};
+function repeatSelectedReward(service){return _repeatData.rewards.find(r=>r.usable&&String(r.service_id)===String(service.id)&&String(r.id)===String(_repeatSelected[service.id]))}
+function repeatServicePrice(service){return repeatSelectedReward(service)?0:Number(service.price)||0}
+async function loadRepeatRewards(force=false){
+ const auth=getAuth(),key=auth?.api_token?auth.api_token+':'+getLang():'';
+ if(!key){_repeatKey='';_repeatData={progress:[],rewards:[]};_repeatSelected={};_repeatLoading=false;return}
+ if(!force&&_repeatKey===key)return;
+ if(_repeatKey!==key){_repeatData={progress:[],rewards:[]};_repeatSelected={}}
+ _repeatKey=key;_repeatLoading=true;_repeatError='';
+ try{const result=await authGet('/service-repeat-rewards');if(_repeatKey===key)_repeatData=result.data||{progress:[],rewards:[]}}
+ catch(e){if(_repeatKey===key){_repeatError=e.message;_repeatData={progress:[],rewards:[]}}}
+ finally{if(_repeatKey===key){_repeatLoading=false;render()}}
+}
+function repeatRewardsHTML(booking=false){
+ if(!getAuth()){loadRepeatRewards();return''}
+ loadRepeatRewards();
+ const en=getLang()==='en',services=booking?bSelSvcs():[];
+ const name=r=>typeof r.name==='object'?(r.name[getLang()]||r.name.ar||r.name.en||''):r.name||'';
+ const progress=_repeatData.progress.filter(p=>!booking||services.some(s=>String(s.id)===String(p.service_id)));
+ const details=_repeatLoading?(en?'Loading rewards…':'جارٍ تحميل المكافآت…'):_repeatError
+ ?`<p role="alert">${en?'Could not load rewards.':'تعذّر تحميل المكافآت.'} <button type="button" data-repeat-retry>${en?'Retry':'إعادة المحاولة'}</button></p>`
+ :progress.map(p=>`<p><b>${escHtml(name(p))}</b> · ${p.completed}/${p.required_visits} — ${en?`${Math.max(0,p.required_visits-p.completed)} completed paid bookings left for a free service`:`باقي ${Math.max(0,p.required_visits-p.completed)} حجوزات مدفوعة مكتملة للحصول على حجز مجاني`}</p>`).join('')+
+ (booking?services.map(s=>{
+  const reward=_repeatData.rewards.find(r=>r.usable&&String(r.service_id)===String(s.id));
+  return reward?`<label style="display:flex;gap:10px;padding:12px 0"><input type="checkbox" data-repeat-service="${escHtml(s.id)}" data-repeat-reward="${reward.id}" ${repeatSelectedReward(s)?'checked':''}>${en?'Use a free booking for':'استخدام حجز مجاني لخدمة'} ${escHtml(s.name)}</label>`:'';
+ }).join(''):_repeatData.rewards.map(r=>`<p>${escHtml(name(r))} — ${en?(r.status==='used'?'Used':r.status==='reserved'?'Reserved for a booking':r.usable?'Free booking available':'Reward paused'):(r.status==='used'?'مستخدمة':r.status==='reserved'?'محجوزة لحجز جارٍ':r.usable?'حجز مجاني متاح':'المكافأة موقوفة مؤقتًا')}</p>`).join(''));
+ return`<section data-no-i18n class="m-card m-detail" style="margin:16px 0"><h4>${en?'Repeat service rewards':'مكافآت تكرار الخدمة'}</h4>${details||`<p>${en?'No active rewards yet.':'لا توجد مكافآت مفعّلة حاليًا.'}</p>`}${booking?`<small>${en?'Products and home visit fees are charged separately.':'المنتجات ورسوم الزيارة المنزلية تُحسب بشكل منفصل.'}</small>`:''}</section>`;
+}
+document.addEventListener('change',event=>{
+ const input=event.target.closest('[data-repeat-service]');if(!input)return;
+ if(input.checked)_repeatSelected[input.dataset.repeatService]=Number(input.dataset.repeatReward);else delete _repeatSelected[input.dataset.repeatService];
+ S.bookCouponApplied='';S.bookCouponDiscount=0;render();
+});
+document.addEventListener('click',event=>{if(event.target.closest('[data-repeat-retry]'))loadRepeatRewards(true)});
 let _accountData=null;
 let _accountLoading=false;
 let _bookPointValueLoading=false;
+let _bookBalanceData=null,_bookBalanceKey='',_bookBalanceLoading=false,_bookBalanceError=false,_bookBalanceEntered=false;
+function bookBalancesReady(){return _bookBalanceKey===getAuth()?.api_token&&_bookBalanceData!==null}
+async function loadBookBalances(force=false){
+ if(S.bookWizard&&S.bookStep===6)_bookBalanceEntered=true;
+ const key=getAuth()?.api_token;
+ if(!key)return;
+ if(_bookBalanceKey===key&&(_bookBalanceLoading||(!force&&(_bookBalanceData||_bookBalanceError))))return;
+ _bookBalanceKey=key;_bookBalanceData=null;_bookBalanceLoading=true;_bookBalanceError=false;
+ try{
+  const response=await fetch(`${API_BASE}/wallet`,{cache:'no-store',credentials:'omit',headers:{Accept:'application/json',Authorization:`Bearer ${key}`,'frezka-localization':getLang()}});
+  const result=await response.json();
+  if(!response.ok||result.status===false||result.data?.balance==null||!Number.isFinite(Number(result.data.balance)))throw new Error('تعذر تحميل الرصيد');
+  if(_bookBalanceKey!==key||getAuth()?.api_token!==key)return;
+  _bookBalanceData={wallet:result.data.active===false?0:Number(result.data.balance),loyalty_points:Number(result.data.points_balance)||0};
+ }catch(e){if(_bookBalanceKey===key)_bookBalanceError=true}
+ finally{if(_bookBalanceKey===key){_bookBalanceLoading=false;render()}}
+}
+
 async function loadAccountData(){
  if(!getAuth()||_accountLoading)return;
  _accountLoading=true;
@@ -2292,45 +2407,35 @@ function bookServiceShiftLabel(index){
  if(expected===null||actual===null||actual<=expected)return'';
  return `تم نقله من ${fmtHHMM(bookMinToTime(expected))} إلى أول وقت متاح`;
 }
-function bookOrderedServices(){return bServiceGroups().flatMap(g=>g.services)}
-function bookFirstService(){return bookOrderedServices()[0]||null}
+function bookOrderedServices(){return bSelSvcs()}
+function bookFirstService(){
+ const services=bookOrderedServices(),selected=services.filter(s=>S.bookTime[s.id]).sort((a,b)=>bookTimeToMin(S.bookTime[a.id])-bookTimeToMin(S.bookTime[b.id]));
+ const dateKey=S.bookDate?toBackendDate(S.bookDate):'';
+ return selected[0]||[...services].sort((a,b)=>(bookTimeToMin(bookSortedSlotsFor(a,dateKey)[0])??Infinity)-(bookTimeToMin(bookSortedSlotsFor(b,dateKey)[0])??Infinity))[0]||null;
+}
 function bookFirstGroup(){return bServiceGroups()[0]||null}
 function bookInitialSlots(dateKey){
- const first=bookFirstService();
- return first?bookSortedSlotsFor(first,dateKey):[];
+ return [...new Set(bookOrderedServices().flatMap(s=>bookSortedSlotsFor(s,dateKey)))].sort((a,b)=>bookTimeToMin(a)-bookTimeToMin(b));
 }
 function bookClearTimesFrom(index){
  bookOrderedServices().slice(index).forEach(s=>delete S.bookTime[s.id]);
 }
 function bookBuildSequentialSchedule(time,opt={}){
- const apply=!!opt.apply,svcs=bookOrderedServices(),rows=[];
- let cursor=bookTimeToMin(time);
- if(!svcs.length||cursor===null)return{complete:false,rows,end:''};
  const dateKey=S.bookDate?toBackendDate(S.bookDate):'';
- for(let i=0;i<svcs.length;i++){
-  const s=svcs[i],slots=bookSortedSlotsFor(s,dateKey);
-  const selected=i===0
-   ?(slots.includes(time)?time:slots.find(t=>bookTimeToMin(t)>=cursor))
-   :slots.find(t=>bookTimeToMin(t)>=cursor);
-  if(!selected){
-   if(apply)bookClearTimesFrom(i);
-   const last=rows[rows.length-1];
-   return{complete:false,rows,missing:s,end:last?last.end:''};
-  }
-  const start=bookTimeToMin(selected),end=start+(Number(s.dur)||0);
-  rows.push({service:s,start:selected,end:bookMinToTime(end),expected:bookMinToTime(cursor),shifted:start>cursor});
-  if(apply){
-   S.bookTime[s.id]=selected;
-   if(S.bookMode==='auto'&&S.bookAutoStaffBySlot[s.id]?.[selected])S.bookEmp[s.id]=S.bookAutoStaffBySlot[s.id][selected];
-  }
-  cursor=end;
+ const result=window.SamiBookingJourney.schedule(bookOrderedServices(),s=>bookSortedSlotsFor(s,dateKey),time);
+ if(opt.apply){
+  S.bookTime={};
+  result.rows.forEach(row=>{
+   S.bookTime[row.service.id]=row.start;
+   if(S.bookMode==='auto'&&S.bookAutoStaffBySlot[row.service.id]?.[row.start])S.bookEmp[row.service.id]=S.bookAutoStaffBySlot[row.service.id][row.start];
+  });
  }
- return{complete:true,rows,end:bookMinToTime(cursor)};
+ return result;
 }
 function bookFillSequentialTimes(serviceId,time){bookBuildSequentialSchedule(time,{apply:true})}
 function bookSyncSequentialTimes(){
  const first=bookFirstService();
- if(!first||!S.bookTime[first.id]||!S.bookDate)return;
+ if(!first||!S.bookTime[first.id]||!S.bookDate||!bookScheduleSlotsLoaded())return;
  const emp=S.bookEmp[first.id],dateKey=toBackendDate(S.bookDate);
  if(!emp||!Array.isArray(S.bookSlotsByService[bookSlotsKey(first.id,emp.id,dateKey)]))return;
  bookBuildSequentialSchedule(S.bookTime[first.id],{apply:true});
@@ -2370,19 +2475,19 @@ function bookBestInitialSlot(dateKey){
 function bookGroupPlan(){
  const rows=[];
  let previousEnd=null;
- bServiceGroups().forEach(g=>{
+ window.SamiBookingJourney.groupsByTime(bServiceGroups(),S.bookTime,bSelSvcs()).forEach(g=>{
   const starts=g.services.map(s=>bookTimeToMin(S.bookTime[s.id]));
   const complete=starts.every(v=>v!==null);
   const firstStart=starts[0];
   if(!complete){
-   rows.push({type:'group',key:'group-'+g.id,group:g,pending:true,duration:bookGroupDuration(g)});
+   rows.push({type:'group',key:'group-'+g.key,group:g,pending:true,duration:bookGroupDuration(g)});
    return;
   }
   if(previousEnd!==null&&firstStart>previousEnd){
    rows.push({type:'gap',key:'gap-'+rows.length,start:bookMinToTime(previousEnd),end:bookMinToTime(firstStart),duration:firstStart-previousEnd});
   }
   const last=g.services[g.services.length-1],lastStart=bookTimeToMin(S.bookTime[last.id]),end=lastStart+(Number(last.dur)||0);
-  rows.push({type:'group',key:'group-'+g.id,group:g,start:bookMinToTime(firstStart),end:bookMinToTime(end),duration:bookGroupDuration(g),pending:false});
+  rows.push({type:'group',key:'group-'+g.key,group:g,start:bookMinToTime(firstStart),end:bookMinToTime(end),duration:bookGroupDuration(g),pending:false});
   previousEnd=end;
  });
  return rows;
@@ -2431,6 +2536,8 @@ function syncBookingStepData(){
  if(S.bookStep>=3)ensureBookingEmployees();
  if(S.bookStep>=4)ensureBookingSlots();
  if(S.bookStep>=6)loadBookPointValue();
+ if(S.bookStep<6)_bookBalanceEntered=false;
+ if(S.bookStep>=6&&getAuth()&&(!_bookBalanceEntered||_bookBalanceKey!==getAuth().api_token)){_bookBalanceEntered=true;loadBookBalances(true)}
  if(S.bookStep>=6&&getAuth()&&!_accountData)loadAccountData();
 }
 /* POST /mobile/cart/bookings ثم POST /payments/init — نفس نداءات doPay() في BookingView.vue
@@ -2449,6 +2556,7 @@ async function attemptRealBookingSubmit(){
  const dateKey=toBackendDate(S.bookDate);
  const services=svcs.map(s=>({subServices:[{
   id:Number(s.id),
+  ...(repeatSelectedReward(s)?{repeat_reward_id:repeatSelectedReward(s).id}:{}),
   date:dateKey,
   time:S.bookTime[s.id],
   duration:s.dur,
@@ -2516,7 +2624,6 @@ const S={
  cart:new Map(), favs:new Set(),
  bookings:[], heroI:0, offerI:0, tstI:0,
  spinning:false, wheelDeg:0, wheelEnabled:true, wheelCanSpin:true,
- wheelUser: JSON.parse(localStorage.getItem('samiWheelUser')||'null'),
  fulfillment:'pickup',
  
  // Gifting Wizard states
@@ -2651,6 +2758,7 @@ function restoreBookingSession(){
 }
 restoreBookingSession();
 function resetBookRewards(){
+ _repeatSelected={};
  S.bookUseWallet=false;S.bookWalletAmount=0;S.bookUseLoyalty=false;S.bookLoyaltyPoints=0;
  S.bookCouponCode='';S.bookCouponApplied='';S.bookCouponDiscount=0;S.bookCouponStatus='';S.bookCouponMsg='';
 }
@@ -3019,6 +3127,7 @@ function syncBranchHeader(){
  if(el)el.textContent=branchLabel(S.currentBranch);
 }
 function pickBranch(id,ctx){
+ if(B_BRANCHES.find(b=>b.id===id)?.bookable===false)return;
  S.currentBranch=id;
  S.bookBranch=id;
  if(ctx==='gift'){
@@ -3049,48 +3158,13 @@ function pickBranch(id,ctx){
   toast('تم تغيير الفرع إلى '+branchLabel(id));
  }
 }
-function openWheelRegisterSheet(){
- const ui=ensureBottomSheet();
- document.body.classList.add('booking-dock-open');
- ui.body.innerHTML=`<div class="bs-head" style="text-align:center;margin-bottom:16px">
-   <div style="width:60px;height:60px;margin:0 auto 12px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#b77420,#f0cf89,#be7920);box-shadow:0 10px 22px -10px rgba(190,140,40,.6)">${svg('<path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>',26)}</div>
-   <h3 style="font-family:var(--fd);font-size:19px">سجّل دخولك عشان تلف العجلة</h3>
-   <p style="font-size:11.5px;color:#766e64;margin-top:5px">بيانات بسيطة عشان نقدر نوصلك بجائزتك لو ربحت</p>
-  </div>
-  <div style="display:grid;gap:12px;padding:0 2px">
-   <label style="display:block">
-    <small style="display:block;font-size:11px;color:#766e64;margin-bottom:5px">الاسم</small>
-    <input type="text" id="wheelRegName" placeholder="اكتب اسمك" style="width:100%;height:48px;border:1px solid #ece5db;border-radius:12px;padding:0 14px;font-size:13px;text-align:start">
-   </label>
-   <label style="display:block">
-    <small style="display:block;font-size:11px;color:#766e64;margin-bottom:5px">رقم الجوال</small>
-    <input type="tel" id="wheelRegPhone" placeholder="05xxxxxxxx" style="width:100%;height:48px;border:1px solid #ece5db;border-radius:12px;padding:0 14px;font-size:13px;text-align:start;direction:ltr">
-   </label>
-   <button class="btn btn-org" id="wheelRegSubmit" style="margin-top:6px">تأكيد ولف العجلة</button>
-  </div>`;
- ui.ov.classList.add('on');ui.sheet.classList.add('on');
- $('#wheelRegSubmit').addEventListener('click',()=>{
-  const name=$('#wheelRegName').value.trim();
-  const phone=$('#wheelRegPhone').value.trim();
-  if(!name||!phone){toast('من فضلك أدخل الاسم ورقم الجوال');return}
-  S.wheelUser={name,phone};
-  localStorage.setItem('samiWheelUser',JSON.stringify(S.wheelUser));
-  closeBottomSheet();
-  setTimeout(doSpin,250);
- });
-}
-/* دوران حقيقي عبر POST /Home/wheel/spin (نفس endpoint وسلوك الديسكتوب بالحرف — راجع
-   spinWheel في services/wheelApi.js وLuckyWheelCard.vue). الباك إند (Api\WheelController@spin)
-   فعليًا بيرجّع data.prize.id للجائزة الحقيقية اللي كسبها العميل، فبنستخدمه لتحديد نفس القطعة
-   اللي تقف عليها العجلة بصريًا — مش عشوائي. الاستخدام مرة واحدة بيتفرض بالـ IP من الباك إند
-   (WheelSpinService::hasSpun)، ونعكسه هنا بتعطيل الزرار فورًا بعد أي محاولة (ناجحة أو already_used). */
 async function doSpin(){
  const sp=$('#spinBtn');
  if(S.spinning||!S.wheelEnabled||!S.wheelCanSpin)return;
  S.spinning=true;if(sp)sp.disabled=true;render();
  try{
   const auth=getAuth();
-  const body=auth?{}:{name:S.wheelUser?.name||'',phone:S.wheelUser?.phone||''};
+  const body={};
   const res=auth?await authPost('/Home/wheel/spin',body):await apiPost('/Home/wheel/spin',body);
   const wonId=res?.data?.prize?.id??null;
   let win=wonId!==null?WHEEL.findIndex(w=>w.id===wonId):-1;
@@ -3103,7 +3177,7 @@ async function doSpin(){
   S.wheelCanSpin=false;
   setTimeout(()=>{
    S.spinning=false;render();
-   openWheelResultSheet(res?.message||'شكرًا لمشاركتك',!!res?.won);
+   openWheelResultSheet(res?.data?.prize?.label||res?.message||'شكرًا لمشاركتك',!!res?.won,res?.account_linked===false||!getAuth());
   },3700);
  }catch(e){
   S.spinning=false;
@@ -3112,19 +3186,22 @@ async function doSpin(){
   toast((e.payload?.login_required?'الرقم مسجّل بالفعل — سجّل دخولك عشان تلف العجلة. ':'')+(e.message||'تعذّر تدوير العجلة، حاول مرة أخرى'));
  }
 }
-function openWheelResultSheet(message,won){
+function openWheelResultSheet(message,won,loginRequired=false){
  const ui=ensureBottomSheet();
  document.body.classList.add('booking-dock-open');
  ui.body.innerHTML=`<div style="text-align:center;padding:10px 6px 4px">
    <div style="font-size:56px;line-height:1;animation:wheelPop .6s var(--ease)">${won?'🎉':'🙂'}</div>
-   <h2 style="font-family:var(--fd);font-size:22px;margin:14px 0 6px">${won?'مبروك'+(S.wheelUser?' يا '+S.wheelUser.name:''):'حظ أوفر المرة الجاية'}!</h2>
+   <h2 style="font-family:var(--fd);font-size:22px;margin:14px 0 6px">${won?'مبروك':'حظ أوفر المرة الجاية'}!</h2>
    <p style="font-size:13px;color:#766e64;margin:0 0 18px;line-height:1.7">${escHtml(message)}</p>
+   ${won&&loginRequired?`<p>${getLang()==='en'?'Sign in to enjoy your prize and add it to your account.':'سجّل دخولك علشان تستمتع بجائزتك وتُضاف المكافأة إلى حسابك.'}</p><button class="btn btn-org" id="wheelResultLogin" style="width:100%;margin-top:6px">${getLang()==='en'?'Sign in to claim your prize':'تسجيل الدخول للاستمتاع بالجائزة'}</button>`:''}
    <button class="btn btn-org" id="wheelResultClose" style="width:100%;margin-top:6px">تمام 🎊</button>
   </div>`;
  ui.ov.classList.add('on');ui.sheet.classList.add('on');
  $('#wheelResultClose').addEventListener('click',closeBottomSheet);
+ $('#wheelResultLogin')?.addEventListener('click',()=>{closeBottomSheet();S.authTab='login';go('account');navigateParent('/account')});
 }
 let nearbyPosition=null,nearbyBusy=false,nearbyError=null;
+function branchUnavailableText(){return getLang()==='en'?'Currently unavailable for booking':'غير متاح الحجز في الوقت الحالي'}
 function rankedPickerBranches(){return window.SamiBranchLocation.rank(B_BRANCHES,nearbyPosition)}
 function branchDistanceHTML(branch){
  if(!nearbyPosition||branch.home)return '';
@@ -3160,10 +3237,10 @@ function openBranchSheet(ctx){
  ui.body.innerHTML=`<div class="branch-sheet">
   <div class="branch-sheet-head"><h3>اختر موقع الخدمة</h3><p>حدد الأقرب لك للمتابعة.</p></div>
   ${branchNearbyControls(ctx)}
-  ${rankedPickerBranches().map(b=>`<button class="branch-choice ${S.currentBranch===b.id||S.bookBranch===b.id?'sel':''}" data-bs-branch="${b.id}">
+  ${rankedPickerBranches().map(b=>`<button class="branch-choice ${S.currentBranch===b.id||S.bookBranch===b.id?'sel':''}" data-bs-branch="${b.id}" ${b.bookable===false?'disabled':''}>
    <img src="${b.img}" alt="${b.name}">
    <span><b>${b.home?'خدمة منزلية':b.name}</b><small>${b.addr}</small>${branchDistanceHTML(b)}
-    <span class="meta"><span>⭐ ${b.rate}</span><span>${b.home?'نصل إليك':'متاح الآن'}</span></span>
+    <span class="meta"><span>⭐ ${b.rate}</span><span>${b.bookable===false?branchUnavailableText():(b.home?'نصل إليك':'متاح الآن')}</span></span>
    </span>
    <span class="check">${S.currentBranch===b.id||S.bookBranch===b.id?'✓':'+'}</span>
   </button>`).join('')}
@@ -3183,8 +3260,8 @@ function openBookingLaunchSheet(){
   <span class="booking-launch-grab" aria-hidden="true"></span>
   <div class="booking-launch-head"><h2>اختر الفرع</h2><p>اختر الفرع الأقرب لك لبدء الحجز</p></div>
   ${branchNearbyControls('booking')}
-  <div class="booking-launch-list">${order.map(b=>`<button class="booking-launch-branch ${S.bookBranch===b.id?'sel':''}" data-booking-launch-branch="${b.id}">
-   <i class="booking-launch-arrow">${svg('<path d="M15 6l-6 6 6 6"/>',18)}</i><span class="bl-info"><b>${svg('<path d="M21 10c0 7-9 12-9 12S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>',14)} ${escHtml(b.name)}</b><small>${branchDesc(b)}</small>${branchDistanceHTML(b)}<em class="bl-open">متاح الآن</em></span><img src="${b.img}" alt="${b.name}">
+  <div class="booking-launch-list">${order.map(b=>`<button class="booking-launch-branch ${S.bookBranch===b.id?'sel':''}" data-booking-launch-branch="${b.id}" ${b.bookable===false?'disabled':''}>
+   <i class="booking-launch-arrow">${svg('<path d="M15 6l-6 6 6 6"/>',18)}</i><span class="bl-info"><b>${svg('<path d="M21 10c0 7-9 12-9 12S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>',14)} ${escHtml(b.name)}</b><small>${branchDesc(b)}</small>${branchDistanceHTML(b)}<em class="bl-open">${b.bookable===false?branchUnavailableText():'متاح الآن'}</em></span><img src="${b.img}" alt="${b.name}">
   </button>`).join('')}</div>`;
  document.body.classList.add('booking-dock-open');
  // Commit the starting position before opening the branch sheet.
@@ -3192,6 +3269,7 @@ function openBookingLaunchSheet(){
  ui.ov.classList.add('on');ui.sheet.classList.add('on');
  $('#bookingLaunchClose')?.addEventListener('click',()=>{closeBottomSheet();S.bookWizard=false;S.bookStep=1;S.bookLaunch=false;S.tab='home';render();navigateParent('/')});
  $$('[data-booking-launch-branch]').forEach(el=>el.addEventListener('click',()=>{
+ if(B_BRANCHES.find(b=>b.id===el.dataset.bookingLaunchBranch)?.bookable===false)return;
  S.currentBranch=el.dataset.bookingLaunchBranch;S.bookBranch=el.dataset.bookingLaunchBranch;S.bookWizard=true;S.bookLaunch=false;S.bookOpenCats=new Set(S.preferredBookCategory?[S.preferredBookCategory]:[]);S.preferredBookCategory=null;S.bookMode=null;S.bookEmp={};S.bookStaffByService={};S.bookStaffLoading={};S.bookSlotsByService={};S.bookSlotsLoading={};S.bookDate=null;S.bookTime={};S.bookPay=null;resetBookRewards();
   const _pk=S.bookPkg?DPKGS.find(x=>x.id===S.bookPkg):null;
   if(_pk){
@@ -3256,10 +3334,11 @@ function wheelSVG(){
 }
 function homeFaqHTML(){
  if(!HOME_FAQS.length)return '';
- const title=getLang()==='en'?'Frequently asked questions':'??????? ???????';
+ const title=getLang()==='en'?'Frequently asked questions':'الأسئلة الشائعة';
  return `<section class="sec" data-no-i18n><div class="sec-h"><h2>${title}</h2></div><div class="faq">${HOME_FAQS.map(f=>`<details class="faq-i"><summary style="padding:16px;cursor:pointer;font-weight:600;overflow-wrap:anywhere">${escHtml(localized(f.question))}</summary><p style="padding:0 16px 16px;white-space:pre-line;line-height:1.9;overflow-wrap:anywhere">${escHtml(localized(f.answer))}</p></details>`).join('')}</div></section>`;
 }
 function homeHTML(){
+ const PRODUCTS=HOME_PRODUCTS,PKGS=HOME_PACKAGES,OFFERS=HOME_OFFERS,HSVCS=HOME_SERVICES;
  const contactPhone=footerContactPhone();
  return`
  <!-- الشاشة 1 -->
@@ -3293,6 +3372,7 @@ function homeHTML(){
     <span class="ic-c">${svg(p.ic,19)}</span>
     <span class="ttl"><b>${p.n}</b><small>${p.s}</small></span></div>
    <ul>${p.f.map(f=>`<li>${svg('<path d="M20 6L9 17l-5-5"/>',13)} ${f}</li>`).join('')}</ul>
+   <div style="padding:0 12px;font-weight:700">${rs(p.pr)} ر.س</div>${packageSavingsHTML(p)}
    <button class="btn btn-line pk-cta" data-go="packages">استكشف الباقة</button>
   </div>`).join('')}
  </div>
@@ -3340,12 +3420,13 @@ function homeHTML(){
  <section class="sec product-heading">
   <div class="sec-h"><h2><span class="hi">${svg('<path d="M6 7h12l1.5 14h-15zM8 7a4 4 0 018 0"/>',15)}</span> منتجات مختارة لك</h2><a data-go="store">${svg('<path d="M15 6l-6 6 6 6"/>',12)} عرض الكل</a></div>
  </section>
- <div class="featured-product" data-product="${PRODUCTS[0].id}">
-  <div class="fpic"><img src="assets/products/featured-moisturizer-reference.webp" alt="${PRODUCTS[0].n}" loading="lazy"></div>
+ ${PRODUCTS.length?`<div class="featured-product" data-product="${PRODUCTS[0].id}">
+  <div class="fpic"><img src="${escHtml(PRODUCTS[0].img)}" alt="${PRODUCTS[0].n}" loading="lazy"></div>
   <div class="fcopy"><h3>${PRODUCTS[0].n}</h3><p>${PRODUCTS[0].d}</p>${productStockHTML(PRODUCTS[0])}<i class="gold-line"></i><div class="features"><span>${svg('<path d="M12 2S6 9 6 14a6 6 0 0012 0c0-5-6-12-6-12z"/>',15)}ترطيب عميق</span><span>${svg('<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',15)}حماية البشرة</span><span>${svg('<path d="M20 4c-8 0-14 4-14 11 0 3 2 5 5 5 7 0 9-9 9-16zM6 20c2-5 6-8 11-10"/>',15)}مكونات آمنة</span></div><div class="rating"><small>(126 تقييم)</small><span class="stars">★★★★★</span><b>4.9</b></div><div class="fprice">${rs(PRODUCTS[0].pr)} <small>ر.س</small></div><div class="factions">${homeProductCartControl(PRODUCTS[0].id, 'featured')}<button class="fav-big ${S.favs.has(PRODUCTS[0].id)?'on':''}" data-fav="${PRODUCTS[0].id}">${svg('<path d="M12 21s-7-4.4-9.3-8.5C.8 9 2.6 5.5 6 5.5c2 0 3.4 1.1 4 2.3.6-1.2 2-2.3 4-2.3 3.4 0 5.2 3.5 3.3 7-2.3 4.1-9.3 8.5-9.3 8.5z"/>',16)}</button></div></div>
  </div>
+ `:''}
  <section class="sec related-heading"><div class="sec-h"><h2>منتجات أخرى قد تعجبك</h2><a data-go="store">${svg('<path d="M15 6l-6 6 6 6"/>',12)} عرض الكل</a></div></section>
- <div class="mini-products-wrap"><button class="product-arrow prev" id="miniPrev" aria-label="السابق">${svg('<path d="M15 6l-6 6 6 6"/>',15)}</button><div class="mini-products" id="miniProducts">${PRODUCTS.slice(1,5).reverse().map(p=>`<div class="mini-product" data-product="${p.id}"><div class="pim"><img src="${p.img}" alt="${p.n}" loading="lazy"><button class="mini-fav ${S.favs.has(p.id)?'on':''}" data-fav="${p.id}">${svg('<path d="M12 21s-7-4.4-9.3-8.5C.8 9 2.6 5.5 6 5.5c2 0 3.4 1.1 4 2.3.6-1.2 2-2.3 4-2.3 3.4 0 5.2 3.5 3.3 7-2.3 4.1-9.3 8.5-9.3 8.5z"/>',13)}</button></div><div class="pb"><b>${p.n}</b><p>${p.d}</p>${productStockHTML(p)}<span>${rs(p.pr)} ر.س</span></div>${homeProductCartControl(p.id, 'mini')}</div>`).join('')}</div><button class="product-arrow next" id="miniNext" aria-label="التالي">${svg('<path d="M9 6l6 6-6 6"/>',15)}</button></div>
+ <div class="mini-products-wrap"><button class="product-arrow prev" id="miniPrev" aria-label="السابق">${svg('<path d="M15 6l-6 6 6 6"/>',15)}</button><div class="mini-products" id="miniProducts">${PRODUCTS.slice(1).map(p=>`<div class="mini-product" data-product="${p.id}"><div class="pim"><img src="${p.img}" alt="${p.n}" loading="lazy"><button class="mini-fav ${S.favs.has(p.id)?'on':''}" data-fav="${p.id}">${svg('<path d="M12 21s-7-4.4-9.3-8.5C.8 9 2.6 5.5 6 5.5c2 0 3.4 1.1 4 2.3.6-1.2 2-2.3 4-2.3 3.4 0 5.2 3.5 3.3 7-2.3 4.1-9.3 8.5-9.3 8.5z"/>',13)}</button></div><div class="pb"><b>${p.n}</b><p>${p.d}</p>${productStockHTML(p)}<span>${rs(p.pr)} ر.س</span></div>${homeProductCartControl(p.id, 'mini')}</div>`).join('')}</div><button class="product-arrow next" id="miniNext" aria-label="التالي">${svg('<path d="M9 6l6 6-6 6"/>',15)}</button></div>
  <div class="products-gift" data-go="giftspage"><div class="gtxt"><h3>أهدِ تجربة عناية فاخرة</h3><p>بطاقات هدايا تناسب كل المناسبات</p><button class="btn btn-org" data-go="giftspage">إهداء الآن ${svg('<path d="M20 12v10H4V12M2 7h20v5H2zM12 22V7M12 7s-2-5-5-5-3 5 0 5h5zM12 7s2-5 5-5 3 5 0 5h-5z"/>',12)}</button></div></div>
  <div class="wheel-c">
   <div class="wheel-badge">${svg('<circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M6 6l12 12M18 6L6 18"/>',12)} عجلة الحظ</div>
@@ -3513,9 +3594,9 @@ function packagesHTML(){
     <p>${p.desc}</p>
     <ul class="pk-feats">${p.inc.map(f=>`<li>${svg('<path d="M20 6L9 17l-5-5"/>',11)} ${f}</li>`).join('')}</ul>
     <div class="pk-price">
-     <span class="pk-was">${rs(Math.round(p.price*1.25))} ريال</span>
+     ${p.savings>0?`<del class="pk-was">${rs(p.originalPrice)} ريال</del>`:''}
      <b>${rs(p.price)} <i>ريال</i></b>
-     <span class="pk-save">وفّر 25%</span>
+     ${packageSavingsHTML(p)}
     </div>
     <div class="pk-foot">
      <button class="btn btn-org" data-pkg-book="${p.id}">احجز الآن</button>
@@ -3638,6 +3719,7 @@ function allServicesHTML(){
 }
 function mobileServiceDetailHTML(){
  const s=MOBILE_SERVICES.find(x=>String(x.id)===String(S.serviceDetailId))||MOBILE_SERVICES[0];
+ if(!s)return `<section class="sec" style="padding-top:100px" role="status">${getLang()==='en'?'No services available.':'لا توجد خدمات متاحة حاليًا.'}</section>`;
  const selected=[...S.detailSelections].map(id=>B_SERVICES.find(service=>service.id===id)).filter(Boolean);
  const total=selected.reduce((sum,service)=>sum+service.price,0);
  return`<div class="mobile-sd">
@@ -3724,10 +3806,11 @@ function storeHTML(){
  <section class="sec product-heading store-featured-heading">
   <div class="sec-h"><h2><span class="hi">${svg('<path d="M6 7h12l1.5 14h-15zM8 7a4 4 0 018 0"/>',15)}</span> منتجات مختارة لك</h2><a data-store-cat="all">${svg('<path d="M15 6l-6 6 6 6"/>',12)} عرض الكل</a></div>
  </section>
- <div class="featured-product store-featured-product" data-product="${PRODUCTS[0].id}">
-  <div class="fpic"><img src="assets/products/featured-moisturizer-reference.webp" alt="${PRODUCTS[0].n}" loading="lazy"></div>
+ ${PRODUCTS.length?`<div class="featured-product store-featured-product" data-product="${PRODUCTS[0].id}">
+  <div class="fpic"><img src="${escHtml(PRODUCTS[0].img)}" alt="${PRODUCTS[0].n}" loading="lazy"></div>
   <div class="fcopy"><h3>${PRODUCTS[0].n}</h3><p>${PRODUCTS[0].d}</p>${productStockHTML(PRODUCTS[0])}<i class="gold-line"></i><div class="features"><span>${svg('<path d="M12 2S6 9 6 14a6 6 0 0012 0c0-5-6-12-6-12z"/>',15)}ترطيب عميق</span><span>${svg('<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',15)}حماية البشرة</span><span>${svg('<path d="M20 4c-8 0-14 4-14 11 0 3 2 5 5 5 7 0 9-9 9-16zM6 20c2-5 6-8 11-10"/>',15)}مكونات آمنة</span></div><div class="rating"><small>(126 تقييم)</small><span class="stars">★★★★★</span><b>4.9</b></div><div class="fprice">${rs(PRODUCTS[0].pr)} <small>ر.س</small></div><div class="factions"><button class="buy-big ${S.cart.has(PRODUCTS[0].id)?'added':''}" data-add="${PRODUCTS[0].id}">${S.cart.has(PRODUCTS[0].id)?'✓ مضاف للسلة':'اشتر الآن'} ${svg('<path d="M6 7h12l1.5 14h-15zM8 7a4 4 0 018 0"/>',13)}</button><button class="fav-big ${S.favs.has(PRODUCTS[0].id)?'on':''}" data-fav="${PRODUCTS[0].id}">${svg('<path d="M12 21s-7-4.4-9.3-8.5C.8 9 2.6 5.5 6 5.5c2 0 3.4 1.1 4 2.3.6-1.2 2-2.3 4-2.3 3.4 0 5.2 3.5 3.3 7-2.3 4.1-9.3 8.5-9.3 8.5z"/>',16)}</button></div></div>
  </div>
+ `:''}
  <div class="store-section-head"><h2>تسوق حسب الفئة</h2><a data-store-cat="all">عرض جميع الفئات ${svg('<path d="M15 6l-6 6 6 6"/>',11)}</a></div>
  <div class="store-cats">${STORE_CATS.map(c=>`
   <button class="store-cat ${S.storeCat===c.id?'sel':''}" data-store-cat="${c.id}">
@@ -3842,7 +3925,7 @@ function accountHTML(){
  const wallet=d?.balances?.wallet??0;
  const points=d?.balances?.loyalty_points??0;
  const giftCards=d?.gift_cards||[];
- return`<div class="pg-head acc-head"><h1>${svg('<path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>',21)} ملفاتي</h1><p>إدارة عضويتك و نقاطك ومزاياك</p></div>
+ return repeatRewardsHTML(false)+`<div class="pg-head acc-head"><h1>${svg('<path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>',21)} ملفاتي</h1><p>إدارة عضويتك و نقاطك ومزاياك</p></div>
  <div class="acc-hero">
   <span class="av2">${initials(name||'؟')}</span>
   <span><b>${escHtml(name||'مستخدم سامي')}</b><small>${escHtml(u?.mobile||'')}</small></span>
@@ -4297,14 +4380,14 @@ function bApplyEmployeeToGroup(g,e,clearTimes=true){
  g.services.forEach(s=>{S.bookEmp[s.id]={id:String(e.id),name:e.name}});
  if(clearTimes)bClearTimesFromGroup(g);
 }
-function bSubTotal(){return bSelSvcs().reduce((a,s)=>a+s.price,0)}
+function bSubTotal(){return bSelSvcs().reduce((a,s)=>a+repeatServicePrice(s),0)}
 function bTotalDur(){return bSelSvcs().reduce((a,s)=>a+s.dur,0)}
 function bFmtDur(min){const h=Math.floor(min/60),m=min%60;if(getLang()==='en')return[h?h+' h':'',m||!h?m+' min':''].filter(Boolean).join(' ');if(!h)return m+' دقيقة';return (h===1?'ساعة':h===2?'ساعتان':h+' ساعات')+(m?' و '+m+' د':'')}
 function bPriceParts(){const products=S.bookDone?(S.bookProductTotal||0):cartTotal(),sub=bSubTotal()+products,vat=Math.round(sub*.15*100)/100;return{sub,products,vat,total:sub+vat}}
 function bookEarnedLoyaltyPoints(){return Math.floor(bPriceParts().total/100)*Math.max(Number(S.bookPointsPer100)||5,1)}
-function bookLoyaltyPreviewHTML(){return`<div class="m-loyalty-preview"><h3>✨ مكافأة نقاط الولاء لهذه الجلسة</h3><p>ستحصل على <b>${rs(bookEarnedLoyaltyPoints())} نقطة ولاء</b> عند إتمام هذا الحجز.</p><strong>يمنحك نظام الولاء ${rs(Math.max(Number(S.bookPointsPer100)||5,1))} نقطة مقابل كل 100 ر.س مدفوعة.</strong></div>`}
-function bookWalletBalance(){return Math.max(Number(_accountData?.balances?.wallet)||0,0)}
-function bookLoyaltyBalance(){return Math.max(parseInt(_accountData?.balances?.loyalty_points,10)||0,0)}
+function bookLoyaltyPreviewHTML(){const extra=bSelSvcs().reduce((sum,s)=>sum+quietPointsForTime(S.bookTime[s.id]),0);return`<div class="m-loyalty-preview"><h3>✨ مكافأة نقاط الولاء لهذه الجلسة</h3><p>ستحصل على <b>${rs(bookEarnedLoyaltyPoints())} نقطة ولاء</b> عند إتمام هذا الحجز.</p>${extra?`<p data-no-i18n style="color:#26714d">${getLang()==='en'?`Plus ${extra} quiet hours points when the eligible bookings are completed.`:`بالإضافة إلى ${extra} نقطة أوقات هدوء عند اكتمال الحجوزات المؤهلة.`}</p>`:''}<strong>يمنحك نظام الولاء ${rs(Math.max(Number(S.bookPointsPer100)||5,1))} نقطة مقابل كل 100 ر.س مدفوعة.</strong></div>`}
+function bookWalletBalance(){return Math.max(Number(S.bookWizard&&S.bookStep===6?(bookBalancesReady()?_bookBalanceData.wallet:0):_accountData?.balances?.wallet)||0,0)}
+function bookLoyaltyBalance(){return Math.max(parseInt(S.bookWizard&&S.bookStep===6?(bookBalancesReady()?_bookBalanceData.loyalty_points:0):_accountData?.balances?.loyalty_points,10)||0,0)}
 function bookPointValue(){return Math.max(Number(S.bookPointValue)||.5,.01)}
 function bookCouponDiscount(){return S.bookCouponApplied?Math.min(Math.max(Number(S.bookCouponDiscount)||0,0),bPriceParts().total):0}
 function bookWalletMax(){return Math.max(bPriceParts().total-bookCouponDiscount(),0)}
@@ -4534,20 +4617,20 @@ function wizDateTimeHTML(){
    if(!emp){
     body='<div class="m-card m-detail" style="margin-top:10px"><h4>وقت بداية الجلسة</h4><div style="text-align:center;color:var(--mute);font-size:12px;padding:14px 0">حدد موظفًا مناسبًا أولًا في خطوة الموظف.</div></div>';
    }else{
-    const key=bookSlotsKey(first.id,emp.id,dateKey),loading=S.bookSlotsLoading[key]||S.bookSlotsByService[key]===undefined;
+    const key=bookSlotsKey(first.id,emp.id,dateKey),loading=!bookScheduleSlotsLoaded();
     const list=S.bookSlotsByService[key],allSlots=bookInitialSlots(dateKey),slots=allSlots.filter(t=>{const minutes=bookTimeToMin(t);return S.bookPeriod==='am'?minutes<720:S.bookPeriod==='pm'?minutes>=720:true}),best=bookBestInitialSlot(dateKey),selected=S.bookTime[first.id];
     /* بطاقة الخدمة المختارة مخفية مؤقتًا من جزء وقت بداية الجلسة. */
     const intro='';
     const periodBar=`<div class="booking-time-picker"><div class="m-periods"><button class="m-period ${S.bookPeriod==='all'?'sel':''}" data-book-period="all">🗓️ كل اليوم</button><button class="m-period ${S.bookPeriod==='am'?'sel':''}" data-book-period="am">☀️ صباحًا</button><button class="m-period ${S.bookPeriod==='pm'?'sel':''}" data-book-period="pm">🌇 مساءً</button></div><small class="m-available-times-title">الأوقات المتاحة</small></div>`;
     const slotBody=loading
      ?'<div style="text-align:center;color:var(--mute);font-size:12px;padding:14px 0">جاري تحميل الأوقات المتاحة...</div>'
-     :!list.length
+     :!allSlots.length
      ?'<div style="text-align:center;color:var(--mute);font-size:12px;padding:14px 0">لا توجد أوقات متاحة لهذا اليوم</div>'
      :!allSlots.length
      ?'<div style="text-align:center;color:var(--mute);font-size:12px;padding:14px 0">لا توجد بداية مناسبة لهذا اليوم</div>'
      :!slots.length
      ?'<div style="text-align:center;color:var(--mute);font-size:12px;padding:14px 0">لا توجد أوقات في هذه الفترة</div>'
-     :`<div class="booking-time-picker"><div class="m-slots">${slots.map(t=>`<button class="m-slot ${selected===t?'sel':''}" data-w-slot-svc="${first.id}" data-w-slot-time="${t}"><span class="slot-badge ${best===t?'':'slot-badge-empty'}">${best===t?'الأفضل':''}</span><span>${fmtHHMM(t)}</span></button>`).join('')}</div></div>`;
+     :`<div class="booking-time-picker"><div class="m-slots">${slots.map(t=>`<button class="m-slot ${selected===t?'sel':''}" data-w-slot-svc="${first.id}" data-w-slot-time="${t}"><span class="slot-badge ${best===t?'':'slot-badge-empty'}">${best===t?'الأفضل':''}</span><span>${fmtHHMM(t)}</span>${quietBonusHTML(t)}</button>`).join('')}</div></div>`;
     const bestCta=best&&selected!==best?`<div class="m-best-start"><span>أفضل بداية متاحة اليوم: <b>${fmtHHMM(best)}</b></span><button data-w-slot-svc="${first.id}" data-w-slot-time="${best}">اختيار</button></div>`:'';
     body=`<div class="m-card m-detail" style="margin-top:10px"><h4>📅 ${W_DAYS[S.bookDate.getDay()]} ${S.bookDate.getDate()} ${W_MONTHS[S.bookDate.getMonth()]} ${S.bookDate.getFullYear()}</h4>${intro}${!loading&&list?.length&&allSlots.length?periodBar:''}${slotBody}${bestCta}</div>${selected?bookPlanHTML():''}`;
    }
@@ -4570,13 +4653,13 @@ function wizSummaryHTML(){
  }
  const br=bBranch(),p=bPriceParts(),svcs=bSelSvcs();
  const sessionGroups=bookGroupPlan().filter(row=>row.type==='group').sort((a,b)=>(bookTimeToMin(a.start)??Number.MAX_SAFE_INTEGER)-(bookTimeToMin(b.start)??Number.MAX_SAFE_INTEGER));
- return`<div class="m-panel-title"><h1>تأكيد الحجز</h1><p>راجع تفاصيل جلستك قبل تأكيد الحجز والدفع</p></div>
+ return repeatRewardsHTML(true)+`<div class="m-panel-title"><h1>تأكيد الحجز</h1><p>راجع تفاصيل جلستك قبل تأكيد الحجز والدفع</p></div>
  <div class="m-stack">
   <div class="m-card m-detail"><h4>تفاصيل الموعد</h4>
    <div class="m-detail-row"><span>📍 الفرع</span><b>${br?.name||''}</b></div><div class="m-detail-row"><span>📅 التاريخ</span><b>${S.bookDate?`${W_DAYS[S.bookDate.getDay()]} ${S.bookDate.getDate()} ${W_MONTHS[S.bookDate.getMonth()]} ${S.bookDate.getFullYear()}`:''}</b></div>
    <div class="m-detail-row"><span>⏱️ المدة الإجمالية</span><b>${bFmtDur(bTotalDur())}</b></div><div class="m-detail-row"><span>✂️ عدد الخدمات</span><b>${svcs.length}</b></div>
   </div>
-  <div class="m-card m-detail"><h4>تفاصيل الجلسة</h4>${sessionGroups.map(row=>{const g=row.group,emp=bookGroupEmployee(g),price=g.services.reduce((sum,s)=>sum+(Number(s.price)||0),0);return`<div class="m-plan-item"><b>${escHtml(g.name)}</b><small>مع ${escHtml(emp?.name||'—')}</small><span class="t">${row.pending?'بانتظار وقت متاح':fmtHHMM(row.start)}</span><small>${bFmtDur(row.duration)} · ${rs(price)} ر.س</small></div>`}).join('')}</div>
+  <div class="m-card m-detail"><h4>تفاصيل الجلسة</h4>${sessionGroups.map(row=>{const g=row.group,emp=bookGroupEmployee(g),price=g.services.reduce((sum,s)=>sum+repeatServicePrice(s),0);return`<div class="m-plan-item"><b>${escHtml(g.name)}</b><small>مع ${escHtml(emp?.name||'—')}</small><span class="t">${row.pending?'بانتظار وقت متاح':fmtHHMM(row.start)}</span><small>${bFmtDur(row.duration)} · ${rs(price)} ر.س</small></div>`}).join('')}</div>
   ${B_UPSELL.length?`<div class="m-card m-detail booking-upsell"><h4>منتجات مناسبة لجلستك</h4>${B_UPSELL.map(u=>{const cartId=bUpsellCartId(u),added=!!(cartId&&S.cart.has(cartId));return`<div class="m-up ${added?'added':''}"><img src="${u.img}" alt="${u.name}" loading="lazy"><span class="inf"><b>${u.name}</b><small>${u.desc}</small><span class="p">${rs(u.price)} ر.س</span></span><button data-w-up="${u.id}" ${cartId?'':'disabled'}>${added?'✓ أضيف':'إضافة'}</button></div>`}).join('')}</div>`: ''}
   <!-- بيانات العميل مخفية مؤقتًا. الكارت محفوظ في سجل Git ويمكن إعادته عند الحاجة. -->
   <div class="m-summary-mini"><div class="row"><span>المبلغ قبل الضريبة</span><b>${rs(p.sub)} ر.س</b></div><div class="row"><span>الضريبة</span><b>${rs(p.vat)} ر.س</b></div><div class="row"><span>الإجمالي</span><b>${rs(p.total)} ر.س</b></div></div>
@@ -4590,14 +4673,15 @@ function wizPaymentHTML(){
  const couponIcon=svg('<path d="M4 7a2 2 0 012-2h12a2 2 0 012 2v3a2 2 0 000 4v3a2 2 0 01-2 2H6a2 2 0 01-2-2v-3a2 2 0 000-4z"/><path d="M9 9h.01M15 15h.01M16 8l-8 8"/>',18);
  return`<div class="m-panel-title"><h1>الدفع</h1><p>اختر طريقة الدفع المناسبة وأكمل حجزك بأمان</p></div>
  <div class="m-card m-detail m-rewards-card"><h4><span class="m-step-dot">2</span> استخدام العروض و المكافآت</h4>
+  ${!bookBalancesReady()?`<p role="${_bookBalanceError?'alert':'status'}">${_bookBalanceError?'تعذر تحميل الرصيد. <button type="button" data-book-balances-retry>إعادة المحاولة</button>':'جارٍ تحميل رصيد المحفظة ونقاط الولاء...'}</p>`:''}
   <div class="m-rewards-grid">
    <div class="m-reward ${S.bookUseWallet?'on':''}">
-    <div class="m-reward-head"><span class="m-reward-ic">${walletIcon}</span><span class="m-reward-title"><b>استخدام من المحفظة</b><small>الرصيد الحالي: ${rs(walletBal)} ر.س</small></span><button type="button" class="m-switch ${S.bookUseWallet?'on':''}" data-book-wallet-toggle aria-label="استخدام المحفظة"></button></div>
+    <div class="m-reward-head"><span class="m-reward-ic">${walletIcon}</span><span class="m-reward-title"><b>استخدام من المحفظة</b><small>الرصيد الحالي: ${bookBalancesReady()?rs(walletBal)+" ر.س":"—"}</small></span><button type="button" class="m-switch ${S.bookUseWallet?'on':''}" ${bookBalancesReady()?'':'disabled'} data-book-wallet-toggle aria-label="استخدام المحفظة"></button></div>
     <input id="bookWalletAmount" type="number" min="0" max="${Math.min(walletBal,bookWalletMax())}" step="1" value="${S.bookWalletAmount||0}" ${S.bookUseWallet?'':'disabled'}>
     <span class="hint">المبلغ المتاح حتى ${rs(Math.round(Math.min(walletBal,bookWalletMax())))} ر.س</span>
    </div>
    <div class="m-reward ${S.bookUseLoyalty?'on':''}">
-    <div class="m-reward-head"><span class="m-reward-ic">${giftIcon}</span><span class="m-reward-title"><b>استخدام نقاط الولاء</b><small>لديك ${rs(loyaltyBal)} نقطة</small></span><button type="button" class="m-switch ${S.bookUseLoyalty?'on':''}" data-book-loyalty-toggle aria-label="استخدام نقاط الولاء"></button></div>
+    <div class="m-reward-head"><span class="m-reward-ic">${giftIcon}</span><span class="m-reward-title"><b>استخدام نقاط الولاء</b><small>لديك ${bookBalancesReady()?rs(loyaltyBal):"—"} نقطة</small></span><button type="button" class="m-switch ${S.bookUseLoyalty?'on':''}" ${bookBalancesReady()?'':'disabled'} data-book-loyalty-toggle aria-label="استخدام نقاط الولاء"></button></div>
     <input id="bookLoyaltyPoints" type="number" min="0" max="${bookLoyaltyMaxPoints()}" step="1" value="${S.bookLoyaltyPoints||0}" ${S.bookUseLoyalty?'':'disabled'}>
     <span class="hint">تساوي خصم ${rs(Math.round(bookLoyaltyAppliedAmount()))} ر.س</span>
    </div>
@@ -4874,7 +4958,7 @@ function giftWizBranchHTML(){
 }
 function giftWizContentHTML(){
  if(S.giftType==='pkg'){
-  return`<div class="m-panel-title"><h1>اختر الباقة التي ترغب بإهدائها</h1><p>باقات مميزة تمنح تجربة متكاملة من العناية والراحة</p></div>${gMiniSummary()}<div class="m-stack">${gPkgList().map(p=>`<article class="m-card ${S.giftPkg===p.id?'sel':''}" data-g-pkg="${p.id}"><div class="m-branch-img"><img src="${p.img}" alt="${p.name}"><span class="flag">${p.dur} دقيقة</span></div><div class="m-card-body"><h3>${p.name}</h3><div class="addr">${p.desc}</div><div class="m-meta"><span>${rs(p.price)} ر.س</span><span>هدية رقمية</span><span>صالحة 6 أشهر</span></div><button class="m-pick">${S.giftPkg===p.id?'✓ تم الاختيار':'اختيار الباقة'}</button></div></article>`).join('')}</div>`;
+  return`<div class="m-panel-title"><h1>اختر الباقة التي ترغب بإهدائها</h1><p>باقات مميزة تمنح تجربة متكاملة من العناية والراحة</p></div>${gMiniSummary()}<div class="m-stack">${gPkgList().map(p=>`<article class="m-card ${S.giftPkg===p.id?'sel':''}" data-g-pkg="${p.id}"><div class="m-branch-img"><img src="${p.img}" alt="${p.name}"><span class="flag">${p.dur} دقيقة</span></div><div class="m-card-body"><h3>${p.name}</h3><div class="addr">${p.desc}</div>${packageSavingsHTML(p)}<div class="m-meta"><span>${rs(p.price)} ر.س</span><span>هدية رقمية</span><span>صالحة 6 أشهر</span></div><button class="m-pick">${S.giftPkg===p.id?'✓ تم الاختيار':'اختيار الباقة'}</button></div></article>`).join('')}</div>`;
  }
  /*
    نفس واجهة اختيار الخدمات المستخدمة في مسار الحجز (m-cat-row + m-service)
@@ -4983,6 +5067,7 @@ function syncMobileSeo(){
 }
 
 function render(){
+ for(const timer of [S._heroT,S._offT,S._tstT])clearInterval(timer);
  refreshBookingSummary();
  syncMobileSeo();
  document.documentElement.classList.toggle('booking-active',!!(S.bookWizard||S.bookLaunch));
@@ -4992,7 +5077,8 @@ function render(){
  const appShell=document.querySelector('.app');
  const serviceSheet=isBookingServiceSheet();
  let html='';
- if(S.giftWizard)html=giftWizardHTML();
+ if(dynamicLoading||dynamicError)html=dynamicStateHTML();
+ else if(S.giftWizard)html=giftWizardHTML();
  else if(S.bookWizard)html=serviceSheet?'<div class="booking-underlay" aria-hidden="true"></div>'+wizardHTML():wizardHTML();
 
  else if(S.tab==='home')html=S.subPage==='services'?allServicesHTML():S.subPage==='pkg'?packagesHTML():S.subPage==='hsv'?homeSvcHTML():S.subPage==='gift'?giftsPageHTML():S.subPage==='cafe'?cafePageHTML():S.subPage==='home-service'?homeServicePageHTML():S.subPage==='terms'?termsPageHTML():S.subPage==='privacy'?privacyPageHTML():S.subPage==='contact'?contactPageHTML():S.svPage?serviceHTML():homeHTML();
@@ -5019,8 +5105,13 @@ function render(){
  document.body.classList.toggle('booking-service-sheet-open',serviceSheet);
  document.querySelector('.hd')?.classList.toggle('scrolled',window.scrollY>36);
  // Set native lazy-loading before insertion so offscreen images do not fetch eagerly.
- html=html.replace(/<img\b[^>]*>/gi,tag=> /\bloading\s*=/.test(tag)?tag:tag.replace('<img','<img loading="lazy" decoding="async"'));
+ html=html.replace(/<img\b[^>]*>/gi,tag=>{
+  if(!/\bloading\s*=/i.test(tag))tag=tag.replace(/<img/i,'<img loading="lazy"');
+  if(!/\bdecoding\s*=/i.test(tag))tag=tag.replace(/<img/i,'<img decoding="async"');
+  return tag;
+ });
  scr.innerHTML=`<div class="screen on">${html}</div>`;
+ scr.querySelector('#retryDynamicData')?.addEventListener('click',()=>loadDynamicData().catch(console.warn));
  scr.querySelectorAll('[data-arrival-qr]').forEach(host=>{
   try { new QRCode(host,{text:host.dataset.arrivalQr,width:200,height:200,correctLevel:QRCode.CorrectLevel.M}); }
   catch { host.textContent='تعذر عرض الرمز، يرجى مراجعة موظف الاستقبال.'; }
@@ -5046,7 +5137,7 @@ function render(){
  bind();
  if(serviceSheet)bindBookingServiceSheet();
 }
-function go(tab){S.tab=tab;S.svPage=false;S.subPage=null;S.accSub=null;render();scrollTo({top:0,behavior:'smooth'});if(tab==='account'&&getAuth()&&!_accountData)loadAccountData();if(tab==='bookings'&&getAuth()&&!_accountData)loadAccountData()}
+function go(tab){if(tab==='account'&&getAuth())loadRepeatRewards(true);S.tab=tab;S.svPage=false;S.subPage=null;S.accSub=null;render();scrollTo({top:0,behavior:'smooth'});if(tab==='account'&&getAuth()&&!_accountData)loadAccountData();if(tab==='bookings'&&getAuth()&&!_accountData)loadAccountData()}
 function bind(){
  document.querySelectorAll('[data-category-book]').forEach(button=>button.addEventListener('click',()=>{
   const group=MOBILE_SERVICES.find(g=>String(g.apiId||g.id)===button.dataset.categoryBook);
@@ -5230,7 +5321,7 @@ function bind(){
        const leavingServices=S.bookStep===2;
        transitionBooking(()=>{
         if(leavingServices&&!S.bookMode)S.bookMode='auto';
-        S.bookStep++;
+        S.bookStep++;if(S.bookStep===5&&getAuth())loadRepeatRewards(true);
        },{direction:'forward',expandService:leavingServices,resetTop:true});
      }
    });
@@ -5304,6 +5395,8 @@ function bind(){
      if(el.disabled)return;
      transitionBooking(()=>{S.bookPay = el.dataset.wPay});
    }));
+   const balancesRetry=$('[data-book-balances-retry]');
+   if(balancesRetry)balancesRetry.addEventListener('click',()=>{loadBookBalances(true);render()});
    const walletToggle=$('[data-book-wallet-toggle]');
    if(walletToggle)walletToggle.addEventListener('click',()=>transitionBooking(()=>{
     if(S.bookUseWallet){S.bookUseWallet=false;S.bookWalletAmount=0}
@@ -5454,19 +5547,19 @@ function bind(){
   }
   /* العروض: تشغيل تلقائي */
   const ot=$('#offerTrack');
-  if(ot){
+  if(ot&&HOME_OFFERS.length){
    const w=()=>ot.querySelector('.offer').offsetWidth+12;
    ot.addEventListener('scroll',()=>{S.offerI=Math.round(Math.abs(ot.scrollLeft)/w())},{passive:true});
    clearInterval(S._offT);
    S._offT=setInterval(()=>{
     if(S.tab!=='home'||S.svPage)return;
-    S.offerI=(S.offerI+1)%OFFERS.length;
+    S.offerI=(S.offerI+1)%HOME_OFFERS.length;
     ot.scrollTo({left:-S.offerI*w(),behavior:'smooth'});
    },2800);
   }
   /* الآراء: مزامنة النقاط */
   const tt=$('#tstTrack'),td=$$('#tstDots i');
-  if(tt){
+  if(tt&&TSTS.length){
    const tw=()=>tt.querySelector('.tst').offsetWidth+12;
    tt.addEventListener('scroll',()=>{const i=Math.min(TSTS.length-1,Math.round(Math.abs(tt.scrollLeft)/tw()));if(i!==S.tstI){S.tstI=i;td.forEach((d,j)=>d.classList.toggle('on',j===i))}},{passive:true});
    td.forEach((d,i)=>d.addEventListener('click',()=>tt.scrollTo({left:-i*tw(),behavior:'smooth'})));
@@ -5475,7 +5568,7 @@ function bind(){
   /* بطاقات الخدمات ← تفاصيل الخدمة */
   $$('.svc-card').forEach(el=>el.addEventListener('click',()=>{
    const map={skin:4,cut:3,msg:5,care:3};
-   S.serviceDetailId=map[el.dataset.svc]||3;S.subPage=null;S.svPage=true;render();scrollTo({top:0,behavior:'smooth'});
+   S.serviceDetailId=MOBILE_SERVICES.find(g=>String(g.apiId)===el.dataset.svc)?.id||map[el.dataset.svc]||3;S.subPage=null;S.svPage=true;render();scrollTo({top:0,behavior:'smooth'});
   }));
   /* المشاركة والعجلة — بانر المقهى يفتح الصفحة التعريفية عبر data-go */
   const mp=$('#miniProducts'),mpPrev=$('#miniPrev'),mpNext=$('#miniNext');
@@ -5488,7 +5581,6 @@ function bind(){
   const sp=$('#spinBtn');
   if(sp)sp.addEventListener('click',()=>{
    if(S.spinning||!S.wheelEnabled||!S.wheelCanSpin)return;
-   if(!getAuth()&&!S.wheelUser){openWheelRegisterSheet();return}
    doSpin();
   });
  }
@@ -5769,9 +5861,9 @@ document.addEventListener('click',e=>{
 },true);
 syncBranchHeader();
 render();
-/* تحسين تدريجي: نرسم فورًا بالبيانات الثابتة أعلاه، وبعدها نحاول تحميل بيانات حقيقية من الباك-إند
-   ونعيد الرسم لو نجحت. لو الباك-إند مش شغال أو فشل أي جزء، الشاشة تفضل بنفس البيانات الافتراضية. */
-loadDynamicData().catch(e=>console.warn('sami: تعذر تحميل البيانات الحية من الباك-إند بالكامل، سيتم الاستمرار بالبيانات الافتراضية',e));
+// Wait for live content before rendering catalog images or records.
+loadDynamicData().catch(e=>console.warn('sami: تعذر تحميل البيانات الحية',e));
+window.SamiQuietHours?.load(API_BASE).then(rows=>{quietHoursSettings=rows;render()}).catch(()=>{});
 loadDynamicEmployees();
 if(getAuth()){loadAccountData();loadAddresses();loadNotificationsCount()}
 const syncStickyHeader=()=>document.querySelector('.hd')?.classList.toggle('scrolled',window.scrollY>36);
@@ -5856,7 +5948,7 @@ document.addEventListener('click', function(e){
 
 loadSiteContact();
 </script>
-<script src="/customer-notifications.js?v=20261015-3"></script>
+<script src="/customer-notifications.js?v=20261024-pusher-1"></script>
 <script>
 function updateLiveNotificationCount(count){
  const previousCount=S.notifCount;

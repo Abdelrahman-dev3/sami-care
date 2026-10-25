@@ -19,6 +19,10 @@ class CartCountComposer
 {
     public function compose(View $view): void
     {
+        if (\App\Services\EmployeeAccess::limited(auth()->user())) {
+            $view->with('cartCount',0);
+            return;
+        }
         $count = 0;
 
         if (auth()->check()) {

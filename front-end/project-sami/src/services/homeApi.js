@@ -29,6 +29,11 @@ export async function fetchHomeData() {
   return payload.data || {}
 }
 
+export async function fetchFaqs() {
+  const payload = await request('/faqs')
+  return Array.isArray(payload.data) ? payload.data : []
+}
+
 export async function fetchBranches() {
   try {
     const payload = await request('/branch-list')

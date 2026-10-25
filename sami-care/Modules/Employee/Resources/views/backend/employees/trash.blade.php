@@ -20,7 +20,7 @@
                 <x-slot name="toolbar">
                     <x-backend.buttons.return-back />
                     <a href='{{ route("backend.$module_name.index") }}' class="btn btn-secondary" data-bs-toggle="tooltip"
-                        title="{{ __($module_name) }} List"><i class="fas fa-list"></i> List</a>
+                        title="{{ __($module_name) }} List"><i class="fas fa-list"></i> {{ __('admin_ui.list') }}</a>
                 </x-slot>
             </x-backend.section-header>
 
@@ -33,7 +33,7 @@
                                     #
                                 </th>
                                 <th>
-                                    Name
+                                    {{ __('admin_ui.name') }}
                                 </th>
                                 <th>
                                     Updated At
@@ -42,7 +42,7 @@
                                     Created By
                                 </th>
                                 <th class="text-end">
-                                    Action
+                                    {{ __('admin_ui.action') }}
                                 </th>
                             </tr>
                         </thead>

@@ -48,6 +48,8 @@ use App\Http\Controllers\Backend\TermsAndConditionsController;
 */
 
 Route::get('/public-contact', \App\Http\Controllers\Api\PublicContactController::class);
+Route::get('/faqs', \App\Http\Controllers\Api\FaqController::class);
+Route::get('/quiet-hours', \App\Http\Controllers\Api\QuietHoursController::class);
 
 Route::prefix('Home')->group(function () {
     Route::get('/all', [\App\Http\Controllers\Api\HomeController::class, 'index']);
@@ -202,6 +204,8 @@ Route::controller(BranchController::class)->group(function () {
 });
 
 Route::group(['middleware' => 'auth:sanctum'], function () {
+    Route::get('notifications/realtime-config', [\App\Http\Controllers\RealtimeNotificationsController::class, 'config']);
+    Route::post('broadcasting/auth', [\App\Http\Controllers\RealtimeNotificationsController::class, 'auth'])->middleware('throttle:120,1')->name('api.realtime.auth');
     Route::get('webpush/config', [\App\Http\Controllers\BrowserPushController::class, 'config']);
     Route::post('webpush/subscription', [\App\Http\Controllers\BrowserPushController::class, 'store'])->middleware('throttle:20,1');
     Route::delete('webpush/subscription', [\App\Http\Controllers\BrowserPushController::class, 'destroy'])->middleware('throttle:20,1');
@@ -210,6 +214,9 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
         Route::post('/profile/update', 'update');
     });
 
+    Route::get('/employee/bookings', [\App\Http\Controllers\Backend\EmployeePortalController::class, 'bookings'])->name('api.employee.bookings');
+    Route::get('/employee/reports', [\App\Http\Controllers\Backend\EmployeePortalController::class, 'reports'])->name('api.employee.reports');
+    Route::get('/service-repeat-rewards', \App\Http\Controllers\Api\ServiceRepeatController::class);
     Route::controller(MobileCartController::class)->group(function () {
         Route::get('/mobile/cart', 'index');
         Route::put('/mobile/cart/products', 'syncProducts');

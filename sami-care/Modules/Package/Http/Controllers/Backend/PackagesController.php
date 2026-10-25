@@ -20,6 +20,33 @@ use Illuminate\Support\Facades\DB;
 
 class PackagesController extends Controller
 {
+    private function validatePackagePricing(Request $request): void
+    {
+        $rows = is_string($request->services) ? json_decode($request->services, true) : $request->services;
+        $request->merge(['services' => $rows]);
+        $request->validate([
+            'branch_id' => ['required', 'integer', 'exists:branches,id'],
+            'services' => ['required', 'array', 'min:1'],
+            'services.*.service_id' => ['required', 'integer', 'distinct'],
+            'services.*.qty' => ['required', 'integer', 'min:1'],
+            'services.*.totalPrice' => ['required', 'numeric', 'gt:0'],
+        ]);
+        $catalog = Service::with(['branches' => fn ($q) => $q->where('branch_id', $request->branch_id)])
+            ->whereIn('id', array_column($rows, 'service_id'))->where('status', 1)->get()
+            ->filter(fn ($service) => $service->branches->isNotEmpty())
+            ->mapWithKeys(fn ($service) => [$service->id => [
+                'price' => $service->branches->first()->service_price,
+                'name' => $service->name,
+            ]])->all();
+        try {
+            $pricing = app(\App\Services\PackagePricing::class)->calculate($rows, $catalog);
+        } catch (\InvalidArgumentException $e) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'services' => [__('package.'.$e->getMessage())],
+            ]);
+        }
+        $request->merge(['services' => $pricing['services']]);
+    }
     // use Authorizable;
     protected string $exportClass = '\App\Exports\PackageExport';
     public function __construct()
@@ -52,7 +79,7 @@ class PackagesController extends Controller
             'status' => $request->status,
         ];
 
-        $module_action = 'List';
+        $module_action = __('admin_ui.list');
         $columns = CustomFieldGroup::columnJsonValues(new Package());
         $customefield = CustomField::exportCustomFields(new Package());
 
@@ -60,24 +87,24 @@ class PackagesController extends Controller
         $export_columns = [
             [
                 'value' => 'name',
-                'text' => ' Name',
+                'text' => __('admin_ui.name'),
             ],
             [
                 'value' => 'Service',
-                'text' => ' Service',
+                'text' => __('admin_ui.service'),
             ],
             [
                 'value' => 'Status',
-                'text' => ' Status',
+                'text' => __('admin_ui.status'),
 
             ],
             [
                 'value' => 'start_date',
-                'text' => ' Start Date',
+                'text' => __('admin_ui.start_date'),
             ],
             [
                 'value' => 'end_date',
-                'text' => 'Expiry Date',
+                'text' => __('admin_ui.expiry_date'),
             ],
         ];
         $export_url = route('backend.package.export');
@@ -299,6 +326,7 @@ class PackagesController extends Controller
      */
     public function store(Request $request)
     {
+        $this->validatePackagePricing($request);
         $type = $request->input('type', Package::TYPE_PACKAGE);
         $request['type'] = $type;
 
@@ -320,7 +348,7 @@ class PackagesController extends Controller
                 'en' => $request->description,
             ];
         }
-        $request['services'] = is_string($request->services) && !empty(is_string($request->services)) ? json_decode($request->services) : [];
+        // Services were validated and priced against the branch catalog above.
         $request['employee_id'] = is_string($request->employee_id) && !empty($request->employee_id) ? explode(',', $request->employee_id) : [];
         $request['category_id'] = is_string($request->category_id) && !empty($request->category_id) ? explode(',', $request->category_id) : [];
 
@@ -340,7 +368,7 @@ class PackagesController extends Controller
             $service[] = $filteredService;
         }
     
-        $request['package_price'] = $totalprice;
+        $request['package_price'] = round($totalprice, 2);
     
         DB::transaction(function () use ($request, $service) {
             $data = Package::create($request->all());
@@ -394,6 +422,7 @@ class PackagesController extends Controller
      */
     public function update(Request $request, $id)
     {
+        $this->validatePackagePricing($request);
         $type = $request->input('type', Package::TYPE_PACKAGE);
         $request['type'] = $type;
 
@@ -415,7 +444,7 @@ class PackagesController extends Controller
                 'en' => $request->description,
             ];
         }
-        $request['services'] = is_string($request->services) && !empty(is_string($request->services)) ? json_decode($request->services) : [];
+        // Validate before changing employees or existing package services.
         $request['employee_id'] = is_string($request->employee_id) && !empty($request->employee_id) ? explode(',', $request->employee_id) : [];
         $request['category_id'] = is_string($request->category_id) && !empty($request->category_id) ? explode(',', $request->category_id) : [];
 
@@ -457,7 +486,7 @@ class PackagesController extends Controller
 
 
 
-        $request['package_price'] = $totalprice;
+        $request['package_price'] = round($totalprice, 2);
         $data->update($request->all());
 
         if ($request->package_image == null) {
@@ -468,7 +497,7 @@ class PackagesController extends Controller
             storeMediaFile($data, $request->file('package_image'), 'package_image');
         }
         
-        $message = 'Packages Updated Successfully';
+        $message = __('messages.update_form', ['form' => __('package.singular_title')]);
 
         return response()->json(['message' => $message, 'status' => true], 200);
     }
@@ -558,7 +587,7 @@ class PackagesController extends Controller
             'status' => $request->status,
         ];
 
-        $module_action = 'List';
+        $module_action = __('admin_ui.list');
         $columns = CustomFieldGroup::columnJsonValues(new Package());
         $customefield = CustomField::exportCustomFields(new Package());
 
@@ -566,7 +595,7 @@ class PackagesController extends Controller
         $export_columns = [
             [
                 'value' => 'name',
-                'text' => ' Name',
+                'text' => __('admin_ui.name'),
             ],
         ];
         $export_url = route('backend.package.clientPackageData');

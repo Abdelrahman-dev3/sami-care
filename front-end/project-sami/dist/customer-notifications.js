@@ -14,6 +14,7 @@ window.mountSamiNotifications = function ({ apiBase, onCount = () => {}, hideBut
   const el = selector => root.querySelector(selector)
   const shell = el('.sn-root'), panel = el('.sn-panel'), bell = el('.sn-bell')
   bell.hidden = hideButton
+  let realtime, realtimeModule;
   let token = null, generation = 0, streamController, timer, toastTimer, ringTimer, watchdog, disposed = false
   let items = [], seen = new Set(), initialized = false, page = 1, lastPage = 1, failures = 0
   const base = apiBase.replace(/\/$/, '')
@@ -34,6 +35,19 @@ window.mountSamiNotifications = function ({ apiBase, onCount = () => {}, hideBut
   })
   const readToken = () => { try { return localStorage.getItem('samiAuthToken') } catch { return null } }
   const headers = () => ({ Accept: 'application/json', Authorization: `Bearer ${token}` })
+  const soundButton = document.createElement('button')
+  soundButton.type = 'button'; soundButton.disabled = true
+  const updateSoundLabel = () => {
+    const off = realtimeModule?.notificationSound.muted()
+    soundButton.textContent = off ? '\u062a\u0641\u0639\u064a\u0644 \u0635\u0648\u062a \u0627\u0644\u0625\u0634\u0639\u0627\u0631\u0627\u062a' : '\u0643\u062a\u0645 \u0635\u0648\u062a \u0627\u0644\u0625\u0634\u0639\u0627\u0631\u0627\u062a'
+    soundButton.setAttribute('aria-pressed', String(!off))
+  }
+  el('.sn-tools').append(soundButton)
+  const realtimePromise = import('/realtime-notifications.js?v=20261024-1').then(module => {
+    realtimeModule = module; soundButton.disabled = false; updateSoundLabel(); return module
+  }).catch(() => null)
+  soundButton.onclick = () => { realtimeModule?.notificationSound.toggle(); updateSoundLabel() }
+
   const message = item => {
     const raw = item.data?.data?.message || item.data?.message || ''
     // Render legacy HTML templates as text, never insert server content as markup.
@@ -60,6 +74,7 @@ window.mountSamiNotifications = function ({ apiBase, onCount = () => {}, hideBut
     const incoming = payload.notification_data || []
     const fresh = incoming.filter(item => !seen.has(item.id) && !item.read_at)
     if (initialized && fresh.length) {
+      realtimeModule?.notificationSound.play(fresh[0].id)
       bell.setAttribute('data-arriving', 'true')
       clearTimeout(ringTimer)
       ringTimer = setTimeout(() => bell.setAttribute('data-arriving', 'false'), 900)
@@ -109,46 +124,24 @@ window.mountSamiNotifications = function ({ apiBase, onCount = () => {}, hideBut
     } catch { el('.sn-status').textContent = 'تعذر تحديث حالة القراءة. حاول مجددًا.' }
   }
   async function connect(current) {
-    if (disposed || !token || document.hidden || current !== generation) return
-    streamController = new AbortController()
-    const controller = streamController
-    let reader
-    const timeout = setTimeout(() => controller.abort(), 30000)
-    watchdog = timeout
-    try {
-      const response = await fetch(base + '/notifications/stream', { headers: { ...headers(), Accept: 'text/event-stream' }, signal: controller.signal, cache: 'no-store' })
-      if (!response.ok || !response.body || !response.headers.get('content-type')?.includes('text/event-stream')) throw new Error('stream unavailable')
-      reader = response.body.getReader()
-      const decoder = new TextDecoder()
-      let buffer = ''
-      while (true) {
-        const { value, done } = await reader.read()
-        if (done) break
-        if (current !== generation || disposed) return
-        buffer += decoder.decode(value, { stream: true })
-        const events = buffer.split('\n\n')
-        buffer = events.pop()
-        for (const event of events) {
-          const line = event.split('\n').find(line => line.startsWith('data: '))
-          if (line) { accept(JSON.parse(line.slice(6))); failures = 0 }
-        }
-      }
-    } catch {
-      if (current === generation && !disposed && !document.hidden) {
-        failures++
-        await refresh()
-      }
-    } finally {
-      reader?.releaseLock()
-      clearTimeout(timeout)
-      if (current === generation && !disposed && !document.hidden) timer = setTimeout(() => connect(current), Math.min(30000, failures ? 3000 * failures : 1000))
-    }
+    const module = await realtimePromise
+    if (disposed || !token || current !== generation) return
+    realtime?.destroy()
+    if (!module) { timer = setTimeout(async () => { await refresh(); connect(current) }, 30000); return }
+    realtime = module.mountRealtime({ configUrl: base + '/notifications/realtime-config', headers,
+      onEvent: id => {
+        if (disposed || current !== generation) return
+        if (id && !seen.has(id)) module.notificationSound.play(id)
+        refresh()
+      },
+    })
   }
+
   function sync() {
     const next = readToken()
     if (next === token) return false
     generation++
-    streamController?.abort()
+    realtime?.destroy()
     clearTimeout(timer)
     clearTimeout(toastTimer)
     clearTimeout(ringTimer)
@@ -170,9 +163,9 @@ window.mountSamiNotifications = function ({ apiBase, onCount = () => {}, hideBut
   }
   function close() { panel.hidden = true; bell.setAttribute('aria-expanded', 'false'); if (!bell.hidden) bell.focus() }
   function visibility() {
-    generation++; streamController?.abort(); clearTimeout(timer)
-    if (!document.hidden && !sync() && token) { refresh(); connect(generation) }
+    if (!document.hidden && !sync() && token) refresh()
   }
+
   const keydown = event => { if (event.key === 'Escape' && !panel.hidden) close() }
   bell.onclick = () => panel.hidden ? open() : close()
   el('.sn-close').onclick = close
@@ -201,7 +194,7 @@ window.mountSamiNotifications = function ({ apiBase, onCount = () => {}, hideBut
     setHideButton(value) { bell.hidden = value },
     destroy() {
       browserPush?.destroy()
-      disposed = true; generation++; streamController?.abort()
+      disposed = true; generation++; realtime?.destroy()
       clearInterval(authTimer); clearTimeout(timer); clearTimeout(watchdog); clearTimeout(toastTimer); clearTimeout(ringTimer)
       window.removeEventListener('storage', sync)
       document.removeEventListener('visibilitychange', visibility)

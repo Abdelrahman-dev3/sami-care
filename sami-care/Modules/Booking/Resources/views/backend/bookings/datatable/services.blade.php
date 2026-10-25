@@ -16,7 +16,7 @@
                 <tr>
                   <th>No.</th>
                   <th>Service Name</th>
-                  <th>Price</th>
+                  <th>{{ __('admin_ui.price') }}</th>
                   <th>Duration (Min)</th>
                 </tr>
               </thead>

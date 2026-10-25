@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
+import ServiceRepeatRewards from '@/components/common/ServiceRepeatRewards.vue'
 import HomeVisitLocation from '@/components/booking/HomeVisitLocation.vue'
 import { useServiceLocation } from '@/composables/useServiceLocation'
 import { useAuth } from '@/composables/useAuth'
@@ -37,7 +38,7 @@ const sessionCategories = computed(() => {
     const [hours, minutes] = String(value).split(':').map(Number)
     return Number.isFinite(hours) && Number.isFinite(minutes) ? hours * 60 + minutes : Number.MAX_SAFE_INTEGER
   }
-  return [...groups.values()].map(group => {
+  return window.SamiBookingJourney.groupsByTime([...groups.values()], state.time, selSvcs.value).map(group => {
     const services = [...group.services].sort((a, b) => toMinutes(state.time[a.id]) - toMinutes(state.time[b.id]))
     const employees = [...new Set(services.map(service => state.emp[service.id]?.name).filter(Boolean))]
     return {
@@ -71,6 +72,7 @@ function toggleSuggestedProduct(product) {
 </script>
 
 <template>
+  <ServiceRepeatRewards booking />
   <HomeVisitLocation v-if="current?.home" />
   <div class="panel-head"><h1>تأكيد الحجز</h1><p>راجع تفاصيل جلستك قبل تأكيد الحجز والدفع</p></div>
 
@@ -87,7 +89,7 @@ function toggleSuggestedProduct(product) {
   <div class="card detail-card">
     <h4><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg> تفاصيل الجلسة</h4>
     <div class="timeline-cards">
-      <div v-for="group in sessionCategories" :key="group.id" class="tl">
+      <div v-for="group in sessionCategories" :key="group.key" class="tl">
         <div class="tl-main">
           <b>{{ group.name }}</b>
           <div class="with">مع {{ group.employees.join('، ') || '—' }}</div>

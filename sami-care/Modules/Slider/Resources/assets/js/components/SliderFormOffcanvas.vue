@@ -198,7 +198,7 @@ const numberRegex = /^\d+$/
 const validationSchema = yup.object({
   name: yup
     .string()
-    .required('Name is a required field')
+    .required(window.i18n.global.t('admin_validation.name_required'))
     .test('is-string', 'Only strings are allowed', (value) => !numberRegex.test(value)) 
     .test('unique', 'Name must be unique', async function(value) {
       const sliderId = currentId.value; 
@@ -211,7 +211,7 @@ const validationSchema = yup.object({
       }
       return true;
     }),
-  type: yup.string().required('Type is a required field'),
+  type: yup.string().required(window.i18n.global.t('admin_validation.type_required')),
   link_id: yup.string().required("Link Id is a required field")
 })
 

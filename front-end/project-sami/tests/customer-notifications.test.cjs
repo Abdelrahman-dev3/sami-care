@@ -9,15 +9,18 @@ function harness(initialToken = 'customer-one') {
     hidden: true, children: [], textContent: '',
     append(...children) { this.children.push(...children) },
     replaceChildren() { this.children = [] },
+    insertBefore(child) { this.children.push(child) },
     setAttribute() {}, focus() {}, remove() {},
     querySelector(selector) { if (!elements.has(selector)) elements.set(selector, makeElement()); return elements.get(selector) },
   })
-  let token = initialToken, stream
+  let token = initialToken, stream, liveOptions
   let snapshot = { notification_data: [], all_unread_count: 0, current_page: 1, last_page: 1 }
   const window = {
     addEventListener(name, fn) { listeners.set(name, fn) }, removeEventListener() {}, dispatchEvent() {},
   }
   const context = vm.createContext({
+    testRealtime: { notificationSound: { muted: () => false, toggle() {}, play() {} }, mountRealtime(options) { liveOptions = options; return { destroy() {} } } },
+    testBrowserPush: { mountBrowserPush: () => ({ sync() {}, destroy() {} }) },
     window, document: { hidden: false, createElement: makeElement, body: makeElement(), addEventListener() {}, removeEventListener() {} },
     localStorage: { getItem: () => token },
     DOMParser: class { parseFromString(text) { return { body: { textContent: text } } } },
@@ -33,7 +36,8 @@ function harness(initialToken = 'customer-one') {
       return { ok: true, json: async () => structuredClone(snapshot) }
     },
   })
-  vm.runInContext(fs.readFileSync(require.resolve('../public/customer-notifications.js'), 'utf8'), context)
+  const source = fs.readFileSync(require.resolve('../public/customer-notifications.js'), 'utf8').replace(/import\('\/realtime-notifications[^']*'\)/g, 'Promise.resolve(testRealtime)').replace(/import\('\/browser-push[^']*'\)/g, 'Promise.resolve(testBrowserPush)')
+  vm.runInContext(source, context)
   const counts = []
   const inbox = window.mountSamiNotifications({ apiBase: '/api', onCount: count => counts.push(count) })
   const settle = () => new Promise(resolve => setImmediate(resolve))
@@ -41,7 +45,7 @@ function harness(initialToken = 'customer-one') {
     inbox, requests, counts, elements, settle,
     setToken(value) { token = value; intervals[0]() },
     setSnapshot(value) { snapshot = value },
-    emit(value) { stream.enqueue(new TextEncoder().encode(`data: ${JSON.stringify(value)}\n\n`)) },
+    emit(value) { snapshot = value; liveOptions.onEvent(value.notification_data[0]?.id || null) },
     chunk(value) { stream.enqueue(new TextEncoder().encode(value)) },
   }
 }
@@ -63,10 +67,9 @@ test('guest makes no requests; login starts authenticated feed and logout clears
   h.inbox.destroy()
 })
 
-test('fragmented live events update unread count and duplicate reconnect events do not add rows', async () => {
+test('Pusher invalidation updates unread count and duplicate events do not add rows', async () => {
   const h = harness(); await h.settle()
-  const frame = `data: ${JSON.stringify(payload([entry('a')]))}\n\n`
-  h.chunk(frame.slice(0, 25)); h.chunk(frame.slice(25)); await h.settle()
+  h.emit(payload([entry('a')])); await h.settle()
   assert.equal(h.counts.at(-1), 1)
   assert.equal(h.elements.get('.sn-toast').textContent, 'Activity a')
   h.emit(payload([entry('a')])); await h.settle()

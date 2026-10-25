@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { fetchFaqs } from '@/services/homeApi'
 import { useLanguage } from '@/composables/useLanguage'
 
 const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
@@ -44,7 +45,8 @@ export const promos=[
 * Get normalized Home content
 */
 export const getHomeContent = async () => {
-  const response = await getHomeData()
+  const [response, faqs] = await Promise.all([getHomeData(), fetchFaqs().catch(() => null)])
+  if (response?.data && faqs !== null) response.data.faqs = faqs
 
   return response?.data ?? {
       categories: [],

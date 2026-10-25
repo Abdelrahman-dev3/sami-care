@@ -697,6 +697,14 @@ Route::middleware(['auth'])->group(function () use ($dashboardRedirect) {
         Route::get('/invoices/{id}', 'destroy')->name('invoices.destroy');
     });
 
+    Route::post('/app/service-repeat/toggle', [\App\Http\Controllers\Backend\ServiceRepeatController::class, 'toggle'])->name('backend.service-repeat.toggle');
+    Route::get('/app/employee/bookings', [\App\Http\Controllers\Backend\EmployeePortalController::class, 'bookings'])->name('backend.employee.bookings');
+    Route::get('/app/employee/reports', [\App\Http\Controllers\Backend\EmployeePortalController::class, 'reports'])->name('backend.employee.reports');
+    Route::get('/app/notifications/realtime-config', [\App\Http\Controllers\RealtimeNotificationsController::class, 'config'])->name('backend.realtime.config');
+    Route::get('/app/service-repeat', [\App\Http\Controllers\Backend\ServiceRepeatController::class, 'index'])->name('backend.service-repeat.index');
+    Route::post('/app/service-repeat', [\App\Http\Controllers\Backend\ServiceRepeatController::class, 'store'])->name('backend.service-repeat.store');
+    Route::get('/app/quiet-hours', [\App\Http\Controllers\Backend\QuietHoursController::class, 'index'])->name('backend.quiet-hours.index');
+    Route::post('/app/quiet-hours', [\App\Http\Controllers\Backend\QuietHoursController::class, 'store'])->name('backend.quiet-hours.store');
     Route::controller(LoyaltyController::class)->group(function () {
         Route::get('/app/loyalty', 'index')->name('app.loyalty');
         Route::post('/app/loyalty/store', 'store')->name('loyalty.store');

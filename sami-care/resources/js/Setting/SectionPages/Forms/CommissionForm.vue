@@ -151,7 +151,7 @@ const numberRegex = /^\d+$/;
 // Validations
 const validationSchema = yup.object({
   title: yup.string()
-    .required("Title is a required field")
+    .required(window.i18n.global.t('admin_validation.title_required'))
     .test('is-string', 'Only strings are allowed', (value) => !numberRegex.test(value)),
   commission_value: yup.string()
     .required("Commission Value is a required field")

@@ -19,8 +19,8 @@
             </div>
 
             <div class="col-md-8">
-              <!-- <InputField class="" type="text" :is-required="true" :label="$t('package.lbl_name')+' '+ $t('settings.translate.ar')" placeholder="Enter Package Name" v-model="name['ar']" :error-message="errorMessages['name'] && errorMessages['name']['ar']"></InputField>
-              <InputField class="" type="text" :is-required="true" :label="$t('package.lbl_name')+' '+ $t('settings.translate.en')" placeholder="Enter Package Name" v-model="name['en']" :error-message="errorMessages['name'] && errorMessages['name']['en']"></InputField> -->
+              <!-- <InputField class="" type="text" :is-required="true" :label="$t('package.lbl_name')+' '+ $t('settings.translate.ar')" :placeholder="$t('admin_ui.enter_package_name')" v-model="name['ar']" :error-message="errorMessages['name'] && errorMessages['name']['ar']"></InputField>
+              <InputField class="" type="text" :is-required="true" :label="$t('package.lbl_name')+' '+ $t('settings.translate.en')" :placeholder="$t('admin_ui.enter_package_name')" v-model="name['en']" :error-message="errorMessages['name'] && errorMessages['name']['en']"></InputField> -->
               <InputField
                 :is-required="true"
                 :label="$t('package.lbl_name') + ' ' + $t('settings.translate.ar')"
@@ -58,7 +58,7 @@
                 <div class="form-group col-md-4">
                   <label class="form-label" for="branch">{{ $t('employee.lbl_select_branch') }}</label
                   ><span class="text-danger">*</span>
-                  <Multiselect id="branch_id" v-model="branch_id" :value="branch_id" placeholder="Select Branch" v-bind="singleSelectOption" :options="branch.options" @select="branchSelect" class="form-group"> </Multiselect>
+                  <Multiselect id="branch_id" v-model="branch_id" :value="branch_id" :placeholder="$t('package.select_branch')" v-bind="singleSelectOption" :options="branch.options" @select="branchSelect" class="form-group"> </Multiselect>
                   <span class="text-danger">{{ errors.branch_id }}</span>
                 </div>
                 <div class="form-group col-md-4">
@@ -110,11 +110,11 @@
               <table class="table table-striped border table-responsive dataTable no-footer">
                 <thead>
                   <tr>
-                    <th>Service</th>
-                    <th>Discounted Price</th>
-                    <th>Quantity</th>
-                    <th>Total Price</th>
-                    <th>Action</th>
+                    <th>{{ $t('package.service') }}</th>
+                    <th>{{ $t('package.discounted_price') }}</th>
+                    <th>{{ $t('package.quantity') }}</th>
+                    <th>{{ $t('package.total_price') }}</th>
+                    <th>{{ $t('package.action') }}</th>
                   </tr>
                 </thead>
                   <tr v-if="selectedServices.length === 0">
@@ -122,7 +122,7 @@
                   </tr>
                 <tr v-for="(service, index) in selectedServices" :key="index">
                   <td class="w-50">
-                    <div><Multiselect  v-model="service.service_id" :value="service.service_id" v-bind="singleSelectOption" @select="selectService(index)" :options="serviceList.options.filter(d => !service_id.includes(d.value))" placeholder="Select Service" id="type" autocomplete="off"></Multiselect></div>
+                    <div><Multiselect  v-model="service.service_id" :value="service.service_id" v-bind="singleSelectOption" @select="selectService(index)" :options="serviceList.options.filter(d => !service_id.includes(d.value))" :placeholder="$t('package.lbl_select_service')" id="type" autocomplete="off"></Multiselect></div>
                   </td>
                   <td>
                     <div><input class="form-control" type="number" min="0" placeholder="0" v-model="service.discounted_price"  disabled /></div>
@@ -141,8 +141,8 @@
                 </tr>
               </table>
 
-              <button @click="addMore" type="button" class="btn btn-info">Add More</button>
-              <div class="text-danger">{{ errors.services || servicesError }}</div>
+              <button @click="addMore" type="button" class="btn btn-info">{{ $t('package.add_more') }}</button>
+              <div class="text-danger">{{ errors.services || (errorMessages.services || []).join(' ') }}</div>
             </div>
           </div>
         </fieldset>
@@ -151,6 +151,8 @@
       <div class="form-group m-0 p-3 d-flex justify-content-end border-top gap-3">
           <label for=""><strong>{{ $t('package.lbl_service_price') }} </strong> </label>
           <span>{{ formatCurrencyVue(SUB_TOTAL_SERVICE_AMOUNT) }}</span>
+          <span>{{ $t('package.original_total') }}: {{ formatCurrencyVue(ORIGINAL_SERVICE_AMOUNT) }}</span>
+          <span v-if="ORIGINAL_SERVICE_AMOUNT > SUB_TOTAL_SERVICE_AMOUNT" class="text-success">{{ $t('package.savings') }} {{ formatCurrencyVue(ORIGINAL_SERVICE_AMOUNT - SUB_TOTAL_SERVICE_AMOUNT) }}</span>
         </div>
       <FormFooter :IS_SUBMITED="IS_SUBMITED"></FormFooter>
     </div>
@@ -158,6 +160,7 @@
 </template>
 
 <script setup>
+import { useI18n } from 'vue-i18n'
 import { ref, onMounted, computed ,watch, watchEffect} from 'vue'
 import { EDIT_URL, STORE_URL, UPDATE_URL, BRANCH_LIST, SERVICE_LIST, EMPLOYEE_LIST } from '../constant'
 import { useField, useForm } from 'vee-validate'
@@ -173,6 +176,7 @@ import FormElement from '@/helpers/custom-field/FormElement.vue'
 import FlatPickr from 'vue-flatpickr-component'
 import QtyButton from '@/vue/components/form-elements/QtyButton.vue'
 
+const { t } = useI18n()
 const selectedServices = ref([])
 
 const formatCurrencyVue = (value) => {
@@ -295,7 +299,7 @@ const fileUpload = async (e) => {
 
   if (file) {
     if (file.size > maxSizeInBytes) {
-      validationMessage.value = `File size exceeds ${maxSizeInMB} MB. Please upload a smaller file.`;
+      validationMessage.value = t('package.image_too_large');
       packageInputRef.value.value = ''; // Clear the input
       return;
     }
@@ -412,7 +416,7 @@ const reset_datatable_close_offcanvas = (res) => {
   IS_SUBMITED.value = false
    // image required bug solved
    if (!ImageViewer.value || ImageViewer.value === props.defaultImage) {
-    validationMessage.value = 'Package image is required.';
+    validationMessage.value = t('package.image_required');
     return; // Stop form submission
   }
   if (res.status) {
@@ -423,28 +427,28 @@ const reset_datatable_close_offcanvas = (res) => {
     removePackageImage();
   } else {
     window.errorSnackbar(res.message)
-    errorMessages.value = res.all_message
+    errorMessages.value = res.errors || res.all_message || {}
   }
 }
 
 // Validations
 const validationSchema = yup.object({
   name: yup.object({
-      ar: yup.string().required('Arabic name is required'),
-      en: yup.string().required('English name is required')
+      ar: yup.string().required(t('package.name_ar_required')),
+      en: yup.string().required(t('package.name_en_required'))
     }),
-  branch_id: yup.string().required('Branch is a required field'),
-  type: yup.string().required('Type is required'),
+  branch_id: yup.string().required(t('package.branch_required')),
+  type: yup.string().required(t('package.type_required')),
   start_date: yup.string().nullable().when('type', {
     is: 'offer',
-    then: (schema) => schema.required('Start Date  is required'),
+    then: (schema) => schema.required(t('package.start_required')),
     otherwise: (schema) => schema.nullable()
   }),
   end_date: yup.string().nullable().when('type', {
     is: 'offer',
     then: (schema) => schema
-      .required('End Date is required')
-      .test('is-greater', 'End Date must be greater than Start Date', function (value) {
+      .required(t('package.end_required'))
+      .test('is-greater', t('package.end_after_start'), function (value) {
         const { start_date } = this.parent;
         return new Date(value) > new Date(start_date);
       }),
@@ -452,33 +456,39 @@ const validationSchema = yup.object({
   }),
   services: yup.array().of(
     yup.object().shape({
-      service_id: yup.number().required('Service selection is required'),
-      qty: yup.number().required('Quantity is required'),
+      service_id: yup.number().required(t('package.service_required')),
+      qty: yup.number().integer(t('package.qty_required')).min(1,t('package.qty_required')).required(t('package.qty_required')),
       discounted_price: yup.number()
-        .required('Discounted price is required')
+        .required(t('package.discount_required'))
         .test(
           'is-valid-discounted-price',
-          'Discounted price must be less than or equal to service price',
+          t('package.invalid_discount'),
           function (value) {
             return value <= this.parent.service_price;
           }
         ),
       totalPrice: yup.number()
-        .required('Service selection is required')
-        .typeError('Total price must be a number')
-        .min(1, 'Total price must be greater than or equal to 1')
+        .required(t('package.service_required'))
+        .typeError(t('package.number_required'))
+        .moreThan(0, t('package.positive_total'))
     })
     )
   .test(
     'unique-service-id',
-    'Please do not select the same service more than once',
+    t('package.unique_services'),
     (services) => {
       const ids = services.map(service => service.service_id);
       return new Set(ids).size === ids.length;
     }
   )
-  .min(1, 'Please select at least one service')
-  .required('Services are required')
+  .min(1, t('package.services_required'))
+  .required(t('package.services_required'))
+  .test('package-discount', t('package.price_must_be_lower'), rows => {
+    if (!rows?.length) return false
+    const original=rows.reduce((sum,s)=>sum+Math.round(Number(s.service_price)*100)*Number(s.qty),0)
+    const price=rows.reduce((sum,s)=>sum+Math.round(Number(s.totalPrice)*100),0)
+    return price>0 && price<original
+  })
 });
 
 const { handleSubmit, errors, resetForm } = useForm({
@@ -538,12 +548,13 @@ const branchSelect = () => {
 
 // Form Submit
 const IS_SUBMITED = ref(false)
+const ORIGINAL_SERVICE_AMOUNT = computed(() => selectedServices.value.reduce((sum,s)=>sum + Number(s.service_price)*Number(s.qty),0))
 const SUB_TOTAL_SERVICE_AMOUNT = computed(() => selectedServices.value.reduce((total, service) => total + (service.discounted_price * service.qty) , 0))
 
 const formSubmit = handleSubmit((values) => {
   if (IS_SUBMITED.value) return false
   if (!ImageViewer.value || ImageViewer.value === props.defaultImage) {
-    validationMessage.value = 'Package image is required.';
+    validationMessage.value = t('package.image_required');
     return; // Stop form submission
   }
    IS_SUBMITED.value = true

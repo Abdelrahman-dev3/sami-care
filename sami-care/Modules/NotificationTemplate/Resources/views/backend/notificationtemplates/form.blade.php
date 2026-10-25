@@ -128,7 +128,7 @@
                     </span>
                     <span id="loader" class="d-none">
                         <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                        Loading...
+                        {{ __('admin_ui.loading') }}
                     </span>
                 </button>
                 

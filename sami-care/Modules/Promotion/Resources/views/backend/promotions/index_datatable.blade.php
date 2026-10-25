@@ -102,7 +102,7 @@
         const columns = [{
                 data: 'id',
                 name: 'id',
-                title: "ID",
+                title: @json(__('admin_ui.id')),
                 orderable: true,
                 visible: false,
             }, {

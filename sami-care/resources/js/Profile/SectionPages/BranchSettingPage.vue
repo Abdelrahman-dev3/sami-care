@@ -162,17 +162,17 @@ const validationSchema = yup.object({
     }),
   contact_number: yup
     .string()
-    .required('Contact Number is a required field')
+    .required(window.i18n.global.t('admin_validation.phone_required'))
     .matches(/^(\+?\d+)?(\s?\d+)*$/, 'Phone Number must contain only digits'),
-  contact_email: yup.string().required('Email is a required field').matches(EMAIL_REGX, 'Must be a valid email'),
+  contact_email: yup.string().required(window.i18n.global.t('admin_validation.email_required')).matches(EMAIL_REGX, 'Must be a valid email'),
   address: yup.object({
-    address_line_1: yup.string().required('Address is a required field'),
-    postal_code: yup.string().required('Postal Code is a required field'),
-    city: yup.string().required('City is a required field'),
-    latitude: yup.string().required('Latitude is a required field'),
-    longitude: yup.string().required('Longitude is a required field'),
-    state: yup.string().required('State is a required field'),
-    country: yup.string().required('Country is a required field')
+    address_line_1: yup.string().required(window.i18n.global.t('admin_validation.address_required')),
+    postal_code: yup.string().required(window.i18n.global.t('admin_validation.postal_required')),
+    city: yup.string().required(window.i18n.global.t('admin_validation.city_required')),
+    latitude: yup.string().required(window.i18n.global.t('admin_validation.latitude_required')),
+    longitude: yup.string().required(window.i18n.global.t('admin_validation.longitude_required')),
+    state: yup.string().required(window.i18n.global.t('admin_validation.state_required')),
+    country: yup.string().required(window.i18n.global.t('admin_validation.country_required'))
   })
 })
 

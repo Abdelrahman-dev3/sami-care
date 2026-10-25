@@ -8,14 +8,14 @@
         <div class="offcanvas-body">
           <div class="d-flex flex-column">
         <!-- <p>Description: {{ packages.description }}</p> -->
-            <h4>Services</h4>
+            <h4>{{ $t('package.lbl_services') }}</h4>
           <!-- Displaying services for the current package -->
           <table class="table table-striped border table-responsive dataTable no-footer">
                 <thead>
                   <tr>
-                    <th>Name</th>
-                    <th>Price</th>
-                    <th>Discounted Price</th>
+                    <th>{{ $t('package.lbl_name') }}</th>
+                    <th>{{ $t('package.lbl_price') }}</th>
+                    <th>{{ $t('package.discounted_price') }}</th>
                   </tr>
                 </thead>
                 <tr v-for="serviceItem in packages.service">
@@ -32,7 +32,7 @@
               </table>
           <!-- <div v-for="serviceItem in packages.service" :key="serviceItem.id">
             <div class="d-flex align-items-center gap-2 mb-1"><p class="mb-0">Name:</p><h6 class="mb-0">{{ serviceItem.service_name }}</h6></div>
-            <p class="mb-1">Price: <span class="text-danger">{{ formatCurrencyVue(serviceItem.service_price) }}</span></p>
+            <p class="mb-1">{{ $t('admin_ui.price') }} <span class="text-danger">{{ formatCurrencyVue(serviceItem.service_price) }}</span></p>
             <p class="mb-3">Discounted price: <span class="text-success">{{ formatCurrencyVue(serviceItem.discounted_price) }}</span></p>
           </div> -->
         </div>

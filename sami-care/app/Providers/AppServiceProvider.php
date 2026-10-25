@@ -19,6 +19,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
+        $this->app->scoped(\App\Services\QuietHoursRewardService::class);
         if ($this->app->environment('local')) {
             if ((bool) env('TELESCOPE_ENABLED', false) && PHP_VERSION_ID < 80400 && class_exists(\Laravel\Telescope\TelescopeServiceProvider::class)) {
                 $this->app->register(\Laravel\Telescope\TelescopeServiceProvider::class);
@@ -38,6 +39,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        \Illuminate\Notifications\DatabaseNotification::observe(\App\Observers\RealtimeNotificationObserver::class);
         \Illuminate\Notifications\DatabaseNotification::observe(\App\Observers\BrowserPushObserver::class);
         foreach ([
             \Modules\Booking\Models\Booking::class,
@@ -51,6 +53,8 @@ class AppServiceProvider extends ServiceProvider
         }
 
         // Membership: award points when a booking is completed
+        \Modules\Booking\Models\Booking::observe(\App\Observers\ServiceRepeatBookingObserver::class);
+        \Modules\Booking\Models\Booking::observe(\App\Observers\QuietHoursBookingObserver::class);
         \Modules\Booking\Models\Booking::observe(\App\Observers\MembershipPointsObserver::class);
 
         // Wallet: refund cancelled paid bookings / orders according to the wallet policy

@@ -31,15 +31,15 @@
                   </div>
                 </div>
 
-                <h6><b>Currency Format Settings</b></h6>
+                <h6><b>{{ $t('admin_ui.currency_format_settings') }}</b></h6>
 
                 <div class="form-group">
                   <label class="form-label" for="label">{{ $t('currency.lbl_currency_position') }}</label>
                   <select class="form-select" v-model="currency_position">
-                    <option value="left">Left</option>
-                    <option value="right">Right</option>
-                    <option value="left_with_space">Left With Space</option>
-                    <option value="right_with_space">Right With Space</option>
+                    <option value="left">{{ $t('admin_ui.left') }}</option>
+                    <option value="right">{{ $t('admin_ui.right') }}</option>
+                    <option value="left_with_space">{{ $t('admin_ui.left_with_space') }}</option>
+                    <option value="right_with_space">{{ $t('admin_ui.right_with_space') }}</option>
                   </select>
                 </div>
 

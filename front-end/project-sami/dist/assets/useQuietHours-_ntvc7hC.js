@@ -1,0 +1,1 @@
+import{g as s,x as n}from"./index-BHOMaz1u.js";function r(){const t=s([]);return n(async()=>{try{t.value=await window.SamiQuietHours.load("http://127.0.0.1:8000/api")}catch{}}),{bonus:(u,a,i)=>{var o;return((o=window.SamiQuietHours)==null?void 0:o.points(t.value,u,a,i))||0}}}export{r as u};

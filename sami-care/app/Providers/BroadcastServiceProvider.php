@@ -14,7 +14,7 @@ class BroadcastServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        Broadcast::routes();
+        \Illuminate\Support\Facades\Route::post('/broadcasting/auth', [\App\Http\Controllers\RealtimeNotificationsController::class, 'auth'])->middleware(['web','auth','throttle:120,1'])->name('broadcasting.auth');
 
         require base_path('routes/channels.php');
     }

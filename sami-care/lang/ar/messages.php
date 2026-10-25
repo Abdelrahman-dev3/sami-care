@@ -400,7 +400,7 @@ return [
     'total_paid_commission' => 'إجمالي العمولات المدفوعة حسب تصفية البيانات',
     'total_revenue' => 'إجمالي الإيرادات حسب تصفية البيانات',
     'total_appointment_count' => 'إجمالي عدد المواعيد حسب تصفية البيانات',
-    'data_not_available' => 'Data is not available in this Table',
+    'data_not_available' => 'لا توجد بيانات متاحة في هذا الجدول',
     'coupon_view' => 'عرض القسيمة',
     'data_not_found' => 'لم يتم العثور على بيانات',
     "processing" => "جاري المعالجة...",

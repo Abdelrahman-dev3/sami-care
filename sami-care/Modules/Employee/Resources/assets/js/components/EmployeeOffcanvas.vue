@@ -54,18 +54,18 @@
               <div class="form-check form-check-inline">
                 <input class="form-check-input" type="radio" name="gender" v-model="gender" id="male" value="male"
                   :checked="gender == 'male'" />
-                <label class="form-check-label" for="male"> Male </label>
+                <label class="form-check-label" for="male"> {{ $t('admin_ui.male') }} </label>
               </div>
               <div class="form-check form-check-inline">
                 <input class="form-check-input" type="radio" name="gender" v-model="gender" id="female" value="female"
                   :checked="gender == 'female'" />
-                <label class="form-check-label" for="female"> Female </label>
+                <label class="form-check-label" for="female"> {{ $t('admin_ui.female') }} </label>
               </div>
 
              <!-- <div class="form-check form-check-inline">
                 <input class="form-check-input" type="radio" name="gender" v-model="gender" id="other" value="other"
                   :checked="gender == 'other'" />
-                <label class="form-check-label" for="other"> Intersex </label>
+                <label class="form-check-label" for="other"> {{ $t('admin_ui.intersex') }} </label>
               </div> -->
               <p class="mb-0 text-danger">{{ errors.gender }}</p>
             </div>
@@ -91,7 +91,7 @@
             </div>
             <div class="form-group col-md-12" v-if="branch.options.length > 1 && selectedSessionBranchId == ''">
               <label class="form-label" for="branch">{{ $t('employee.lbl_select_branch') }}</label><span class="text-danger">*</span>
-              <Multiselect id="branch_id" v-model="branch_id" :value="branch_id" placeholder="Select Branch"
+              <Multiselect id="branch_id" v-model="branch_id" :value="branch_id" :placeholder="$t('admin_ui.select_branch')"
                 v-bind="singleSelectOption" :options="branch.options" @select="branchSelect" class="form-group">
               </Multiselect>
               <span v-if="errorMessages['branch_id']">
@@ -104,7 +104,7 @@
 
             <div class="form-group col-md-12" >
               <label class="form-label" for="shift">{{ $t('employee.lbl_select_shift') }}</label><span class="text-danger">*</span>
-              <Multiselect id="shift_id" v-model="shift_id" :value="shift_id" placeholder="Select shift"
+              <Multiselect id="shift_id" v-model="shift_id" :value="shift_id" :placeholder="$t('admin_ui.select_shift')"
                 v-bind="singleSelectOption" :options="shift.options" @select="shiftSelect" class="form-group">
               </Multiselect>
               <span v-if="errorMessages['shift_id']">
@@ -120,7 +120,7 @@
                 id="category_id"
                 v-model="category_id"
                 :value="category_id"
-                placeholder="Select Category"
+                :placeholder="$t('admin_ui.select_category')"
                 v-bind="categorySelectOption"
                 :options="categories.options"
                 @select="categorySelect"
@@ -139,7 +139,7 @@
             <div class="form-group">
               <label class="form-label" for="service">{{ $t('employee.lbl_select_service') }}</label>
               <Multiselect id="service_id" v-model="service_id" :multiple="true" :value="service_id"
-                placeholder="Select Service" v-bind="multiSelectOption" :options="services.options" class="form-group">
+                :placeholder="$t('admin_ui.select_service')" v-bind="multiSelectOption" :options="services.options" class="form-group">
               </Multiselect>
               <span v-if="errorMessages['service_id']">
                 <ul class="text-danger">
@@ -152,7 +152,7 @@
             <div class="form-group col-md-12">
               <label class="form-label" for="commission_id"> {{ $t('employee.lbl_select_commission') }} <span class="text-danger">*</span> </label>
               <Multiselect id="commission_id" v-model="commission_id" :value="commission_id"
-                placeholder="Select Commission" v-bind="singleSelectOption" :options="commissions.options"
+                :placeholder="$t('admin_ui.select_commission')" v-bind="singleSelectOption" :options="commissions.options"
                 class="form-group"></Multiselect>
               <span v-if="errorMessages['commission_id']">
                 <ul class="text-danger">
@@ -497,7 +497,7 @@ const validationSchema = yup.object({
         const specialCharsRegex = /[!@#$%^&*(),.?":{}|<>\-_;'\/+=\[\]\\]/;
         return !specialCharsRegex.test(value) && !numberRegex.test(value);
       }),
-    email: yup.string().required('Email is a required field')
+    email: yup.string().required(window.i18n.global.t('admin_validation.email_required'))
     .test('is-string', 'First strings are allowed', (value) => !numberRegex
     .test(value))
     .test('unique', 'Email must be unique', async function(value) {
@@ -514,8 +514,8 @@ const validationSchema = yup.object({
         })
     .matches(EMAIL_REGX, 'Must be a valid email'),
     mobile: yup.string()
-      .required('Phone Number is a required field').matches(/^(\+?\d+)?(\s?\d+)*$/, 'Phone Number must contain only digits'),
-    password : yup.string().test('password','Password is required' , function(value) {
+      .required(window.i18n.global.t('admin_validation.phone_required')).matches(/^(\+?\d+)?(\s?\d+)*$/, 'Phone Number must contain only digits'),
+    password : yup.string().test('password',window.i18n.global.t('admin_validation.password_required') , function(value) {
       if(currentId === 0 && !value){
         return false;
       }

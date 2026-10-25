@@ -23,7 +23,7 @@
             <th>{{ currency.currency_symbol }}</th>
             <th>{{ currency.currency_code }}</th>
             <th>
-              <span v-if="currency.is_primary" class="badge bg-success">Default</span>
+              <span v-if="currency.is_primary" class="badge bg-success">{{ $t('admin_ui.default') }}</span>
               <span v-else class="badge bg-danger">-</span>
             </th>
             <th>
@@ -36,7 +36,7 @@
       <template v-else>
         <!-- Render message when tableList is null or empty -->
         <tr class="text-center">
-          <td colspan="9" class="py-3">Data is not available in this Table</td>
+          <td colspan="9" class="py-3">{{ $t('admin_ui.data_is_not_available_in_this_table') }}</td>
         </tr>
       </template>
     </table>

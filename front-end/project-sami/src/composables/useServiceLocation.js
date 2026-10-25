@@ -25,6 +25,7 @@ const HOME_SERVICE = {
 function normalizeBranch(branch) {
   return {
     ...branch,
+    bookable: branch.status === true || Number(branch.status) === 1,
     image: branch.image || branch.branch_image || null,
     address: branch.address || branch.address_line_1 || '',
   }
@@ -112,7 +113,7 @@ async function loadServiceLocations() {
 
     if (
       storedId &&
-      serviceLocations.value.some(location => String(location.id) === String(storedId))
+      serviceLocations.value.some(location => String(location.id) === String(storedId) && location.bookable !== false)
     ) {
       currentId.value = storedId
     } else {
@@ -223,7 +224,7 @@ export function useServiceLocation() {
 
 
   const hasLocation = computed(
-    () => !!currentId.value
+    () => !!current.value && current.value.bookable !== false
   )
 
 
@@ -235,7 +236,7 @@ export function useServiceLocation() {
 
     if (
       !serviceLocations.value.some(
-        b => String(b.id) === String(id)
+        b => String(b.id) === String(id) && b.bookable !== false
       )
     ) {
       return
@@ -305,6 +306,7 @@ export function useServiceLocation() {
 
   function confirmLocation(id) {
 
+    if (!serviceLocations.value.some(b => String(b.id) === String(id) && b.bookable !== false)) return
     setLocation(id)
 
     pickerOpen.value = false

@@ -10,7 +10,7 @@
       <strong class="text-danger"> -{{ formatCurrencyVue(check_coupon ? check_coupon.discount : coupondiscount) }} </strong>
     </div>
     <div v-if="check_coupon || coupondiscount> 0" class="form-group d-flex align-items-center justify-content-between">
-      <label for="">Subtotal: </label>
+      <label for="">{{ $t('admin_ui.subtotal') }} </label>
       <strong>{{ formatCurrencyVue(finalsubtotal || 0) }}</strong>
       <!-- <strong class="text-success">{{ formatCurrencyVue(check_coupon ? subtotal - check_coupon.discount : subtotal - coupondiscount || 0) }}</strong> -->
 
@@ -26,13 +26,13 @@
       </template>
     </div>
     <div class="form-group d-flex align-items-center justify-content-between">
-      <label for="">Final Total: </label>
+      <label for="">{{ $t('admin_ui.final_total') }} </label>
       <strong class="text-success">{{ formatCurrencyVue(finalAmount) }}</strong>
     </div>
     
 
     <!-- <div v-if="check_coupon || coupondiscount > 0" class="form-group d-flex align-items-center justify-content-between border-top">
-      <label for="">Final Total: </label>
+      <label for="">{{ $t('admin_ui.final_total') }} </label>
       <strong class="text-success">{{ formatCurrencyVue(check_coupon ? finalAmount - check_coupon.discount : finalAmount - coupondiscount) }}</strong>
     </div> -->
 
@@ -53,7 +53,7 @@
             </div>
             <div class="col-md-4">
               <button v-if="!isCouponApplied" type="button" class="btn btn-primary btn-apply mt-5" @click="couponValidate">Apply</button>
-              <button v-if="isCouponApplied" type="button" class="btn btn-danger btn-remove mt-5" @click="removeCoupon">Remove</button>
+              <button v-if="isCouponApplied" type="button" class="btn btn-danger btn-remove mt-5" @click="removeCoupon">{{ $t('admin_ui.remove') }}</button>
               <span></span>
             </div>
           </div>

@@ -28,9 +28,9 @@
             <td>{{ item.label }}</td>
             <td>{{ item.type }}</td>
             <td>{{ item.values || '-' }}</td> <!-- Display dash if values is empty or null -->
-            <td><span v-if="item.required == 1">Yes</span><span v-else>No</span></td>
-            <td><span v-if="item.is_export == 1">Yes</span><span v-else>No</span></td>
-            <td><span v-if="item.is_view == 1">Yes</span><span v-else>No</span></td>
+            <td><span v-if="item.required == 1">{{ $t('admin_ui.yes') }}</span><span v-else>{{ $t('admin_ui.no') }}</span></td>
+            <td><span v-if="item.is_export == 1">{{ $t('admin_ui.yes') }}</span><span v-else>{{ $t('admin_ui.no') }}</span></td>
+            <td><span v-if="item.is_view == 1">{{ $t('admin_ui.yes') }}</span><span v-else>{{ $t('admin_ui.no') }}</span></td>
 
             <th>
               <button type="button" v-if="hasPermissions('edit_custom_field')" class="btn btn-soft-primary btn-sm" data-bs-toggle="modal"  :title="$t('messages.edit')"  data-bs-target="#exampleModal" @click="changeId(item.id)" aria-controls="exampleModal"><i class="fa-solid fa-pen-clip"></i></button>

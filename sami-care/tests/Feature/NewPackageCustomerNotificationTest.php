@@ -43,6 +43,16 @@ class NewPackageCustomerNotificationTest extends TestCase
             $table->integer('qty'); $table->decimal('service_price'); $table->string('service_name');
             $table->decimal('discounted_price'); $table->timestamps();
         });
+        Schema::create('branches', fn (Blueprint $table) => $table->id());
+        Schema::create('services', function (Blueprint $table) {
+            $table->id(); $table->text('name'); $table->boolean('status')->default(1); $table->softDeletes();
+        });
+        Schema::create('service_branches', function (Blueprint $table) {
+            $table->id(); $table->unsignedBigInteger('service_id'); $table->unsignedBigInteger('branch_id'); $table->decimal('service_price');
+        });
+        DB::table('branches')->insert(['id' => 1]);
+        DB::table('services')->insert(['id' => 9, 'name' => json_encode(['ar' => 'خدمة', 'en' => 'Service']), 'status' => 1]);
+        DB::table('service_branches')->insert(['service_id' => 9, 'branch_id' => 1, 'service_price' => 100]);
         DB::table('roles')->insert([['id'=>1, 'name'=>'user', 'guard_name'=>'web'], ['id'=>2, 'name'=>'admin', 'guard_name'=>'web']]);
         foreach ([1,2,3,4,5] as $id) {
             DB::table('users')->insert(['id'=>$id, 'status'=>$id === 3 ? 0 : 1,
@@ -74,8 +84,8 @@ class NewPackageCustomerNotificationTest extends TestCase
         $request = Request::create('/app/package', 'POST', [
             'name'=>json_encode(['ar'=>'باقة العناية', 'en'=>'Care package']), 'description'=>'عناية متكاملة',
             'branch_id'=>1, 'status'=>1, 'services'=>json_encode([[
-                'service_id'=>9, 'qty'=>1, 'service_price'=>100, 'discounted_price'=>100,
-                'service_name'=>'خدمة', 'totalPrice'=>100,
+                'service_id'=>9, 'qty'=>1, 'service_price'=>100, 'discounted_price'=>80,
+                'service_name'=>'خدمة', 'totalPrice'=>80,
             ]]),
         ]);
         $response = (new PackagesController)->store($request);
@@ -93,6 +103,25 @@ class NewPackageCustomerNotificationTest extends TestCase
         $this->assertSame(1, DB::table('notifications')->count());
         DB::rollBack();
         $this->assertSame(0, Package::count());
+        $this->assertSame(0, DB::table('notifications')->count());
+    }
+
+    public function test_undiscounted_package_is_rejected_before_any_records_are_written(): void
+    {
+        $request = Request::create('/app/package', 'POST', [
+            'branch_id' => 1, 'services' => json_encode([[
+                'service_id' => 9, 'qty' => 1, 'totalPrice' => 100,
+                'service_price' => 9999,
+            ]]),
+        ]);
+        try {
+            (new PackagesController)->store($request);
+            $this->fail('An undiscounted package was accepted');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->assertArrayHasKey('services', $e->errors());
+        }
+        $this->assertSame(0, Package::count());
+        $this->assertSame(0, DB::table('package_services')->count());
         $this->assertSame(0, DB::table('notifications')->count());
     }
 }

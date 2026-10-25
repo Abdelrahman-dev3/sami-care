@@ -8,7 +8,7 @@
           <!-- <div class="form-group">
             <div class="d-flex justify-content-between align-items-center">
               <label class="form-label" for="feature_image">{{ $t('service.lbl_feature_image') }} </label>
-              <a href="javascript:void(0)" v-if="feature_image" class="text-danger" @click="removeImage">Remove</a>
+              <a href="javascript:void(0)" v-if="feature_image" class="text-danger" @click="removeImage">{{ $t('admin_ui.remove') }}</a>
             </div>
             <input type="file" class="form-control" id="feature_image" ref="refInput" @change="fileUpload" accept=".jpeg, .jpg, .png, .gif" />
             <span v-if="errorMessages['feature_image']">
@@ -131,7 +131,7 @@
 
   // Validations
   const validationSchema = yup.object({
-    name: yup.string().required('Name is a required field'),
+    name: yup.string().required(window.i18n.global.t('admin_validation.name_required')),
   })
 
 

@@ -141,7 +141,7 @@
         //    {
         //         data: 'location',
         //         name: 'location',
-        //         title: "Location",
+        //         title: @json(__('admin_ui.location')),
         //         orderable: false,
         //         searchable: false,
         //     },

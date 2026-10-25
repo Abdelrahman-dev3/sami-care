@@ -162,7 +162,7 @@ use App\Models\GiftCard;
             <tr>
                 <th>Item</th>
                 <th>Type</th>
-                <th>Price</th>
+                <th>{{ __('admin_ui.price') }}</th>
             </tr>
         </thead>
         <tbody>
@@ -171,7 +171,7 @@ use App\Models\GiftCard;
             @foreach($booking->services as $service)
                 <tr>
                     <td>{{ $service->service_name }}</td>
-                    <td>Service</td>
+                    <td>{{ __('admin_ui.service') }}</td>
                     <td>{{ $service->service_price - ($service->discount_amount ?? 0) }} SR</td>
                 </tr>
             @endforeach

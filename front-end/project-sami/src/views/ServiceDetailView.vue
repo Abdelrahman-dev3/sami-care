@@ -181,7 +181,7 @@ watch(id, loadCategories)
             <label for="service-branch">الفرع</label>
             <select id="service-branch" :value="current?.id ?? ''" @change="setLocation($event.target.value)">
               <option value="" disabled>اختر الفرع</option>
-              <option v-for="branch in locations" :key="branch.id" :value="branch.id">{{ branch.name }}</option>
+              <option v-for="branch in locations" :key="branch.id" :value="branch.id">{{ branch.name }}{{ branch.bookable === false ? " - غير متاح الحجز في الوقت الحالي" : "" }}</option>
             </select>
           </div>
           <p class="sd-sub">السعر يتغير بحسب الفرع</p>

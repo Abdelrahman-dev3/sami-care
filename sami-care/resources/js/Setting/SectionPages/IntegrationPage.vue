@@ -113,12 +113,12 @@
           <label for="json_file" class="form-control-label">
             {{ $t('setting_integration_page.firebase_json_file') }}
             <span class="ml-3">
-              <a class="text-primary" href="https://console.firebase.google.com/">Download JSON File</a>
+              <a class="text-primary" href="https://console.firebase.google.com/">{{ $t('admin_ui.download_json_file') }}</a>
             </span>
           </label>
           <div class="custom-file">
             <input type="file" class="form-control" id="json_file" name="json_file" ref="refInput" accept=".json" @change="fileUpload" />
-            <label id="additionalFileHelp" class="custom-file-label upload-label border-0">Upload Firebase JSON files only Once.</label>
+            <label id="additionalFileHelp" class="custom-file-label upload-label border-0">{{ $t('admin_ui.upload_firebase_json_files_only_once') }}</label>
             <small class="help-block with-errors text-danger"></small>
           </div>
         </div>

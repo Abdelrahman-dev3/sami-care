@@ -103,7 +103,7 @@ const columns = [
         ]
 
         const actionColumn = [
-            { data: 'action', name: 'action', orderable: false, searchable: false, title: 'Action' }
+            { data: 'action', name: 'action', orderable: false, searchable: false, title: @json(__('admin_ui.action')) }
         ]
     const customFieldColumns = JSON.parse(@json($columns))
 

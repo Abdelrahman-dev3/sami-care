@@ -157,7 +157,7 @@
 
   // Validations
   const validationSchema = yup.object({
-    name: yup.string().required('Name is a required field')
+    name: yup.string().required(window.i18n.global.t('admin_validation.name_required'))
   })
 
 

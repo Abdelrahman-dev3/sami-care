@@ -270,22 +270,22 @@ const validationSchema = yup.object({
       }),
   }),
   manager_id:  yup.string().required('Assign Manager is a required field').matches(/^(\+?\d+)?(\s?\d+)*$/, 'Phone Number must contain only digits'),
-  contact_number: yup.string().required('Contact Number is a required field').matches(/^(\+?\d+)?(\s?\d+)*$/, 'Phone Number must contain only digits'),
-  contact_email: yup.string().required('Email is a required field').matches(EMAIL_REGX, 'Must be a valid email'),
+  contact_number: yup.string().required(window.i18n.global.t('admin_validation.phone_required')).matches(/^(\+?\d+)?(\s?\d+)*$/, 'Phone Number must contain only digits'),
+  contact_email: yup.string().required(window.i18n.global.t('admin_validation.email_required')).matches(EMAIL_REGX, 'Must be a valid email'),
   address: yup.object({
-    address_line_1: yup.string().required('Address is a required field'),
-    postal_code: yup.string().required('Postal Code is a required field'),
+    address_line_1: yup.string().required(window.i18n.global.t('admin_validation.address_required')),
+    postal_code: yup.string().required(window.i18n.global.t('admin_validation.postal_required')),
     city: yup.string()
       .test('state-selected', 'Select state first', function (value) {
         const { state } = this.parent;
         return !value || !!state; // Pass if city is empty or state is selected
       })
-      .required('City is a required field'),
+      .required(window.i18n.global.t('admin_validation.city_required')),
     latitude: yup.string()
-    .required('Latitude is a required field')
+    .required(window.i18n.global.t('admin_validation.latitude_required'))
     .matches(/^(-?\d+(\.\d+)?)$/, 'Latitude must be a valid number'),
     longitude: yup.string()
-    .required('Longitude is a required field')
+    .required(window.i18n.global.t('admin_validation.longitude_required'))
     .matches(/^(-?\d+(\.\d+)?)$/, 'Longitude must be a valid number'),
     state: yup.string()
       .test('country-selected', 'Select country first', function (value) {
@@ -293,8 +293,8 @@ const validationSchema = yup.object({
         // Check if country is not selected, show 'Select country first'
         return !value || (country && country !== '');  // If state is selected, country must be selected too
       })
-      .required('State is a required field'),
-    country: yup.string().required('Country is a required field'),
+      .required(window.i18n.global.t('admin_validation.state_required')),
+    country: yup.string().required(window.i18n.global.t('admin_validation.country_required')),
     // manager_id: yup.string().required('Manager is a required field'),
   })
 })

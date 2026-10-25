@@ -153,7 +153,7 @@ const reset_datatable_close_offcanvas = (res) => {
 
 const validationSchema = yup.object({
   name: yup.string()
-    .required('Title is a required field') ,
+    .required(window.i18n.global.t('admin_validation.title_required')) ,
 
 })
 

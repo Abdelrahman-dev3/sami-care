@@ -195,7 +195,7 @@ const getCity = (value) => useSelect({ url: CITY_LIST, data: {state_id: value}},
 
   // Validations
   const validationSchema = yup.object({
-    name: yup.string().required('Name is a required field'),
+    name: yup.string().required(window.i18n.global.t('admin_validation.name_required')),
   })
 
 

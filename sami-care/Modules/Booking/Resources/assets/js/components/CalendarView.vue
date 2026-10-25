@@ -136,12 +136,7 @@
 import { computed, reactive, ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { createRequest } from '@/helpers/utilities'
 
-import Calendar from '@event-calendar/core'
-import DayGrid from '@event-calendar/day-grid'
-import List from '@event-calendar/list'
-import TimeGrid from '@event-calendar/time-grid'
-import ResourceTimeGrid from '@event-calendar/resource-time-grid'
-import Interaction from '@event-calendar/interaction'
+import { createCalendar, destroyCalendar, DayGrid, List, TimeGrid, ResourceTimeGrid, Interaction } from '@event-calendar/core'
 import FlatPickr from 'vue-flatpickr-component'
 import { Arabic } from 'flatpickr/dist/l10n/ar.js'
 
@@ -1131,6 +1126,10 @@ const attachResizeHandlers = () => {
 }
 
 onUnmounted(() => {
+  if (calenderInit.value) {
+    destroyCalendar(calenderInit.value)
+    calenderInit.value = null
+  }
   window.removeEventListener('booking:create', createBooking)
   if (calendarFetchController) {
     calendarFetchController.abort()
@@ -1174,11 +1173,10 @@ onMounted(() => {
     }
   }
   if (calenderRef !== null) {
-    calenderInit.value = new Calendar({
-      target: calenderRef.value,
-      props: {
-        plugins: [DayGrid, List, TimeGrid, ResourceTimeGrid, Interaction],
-        options: {
+    calenderInit.value = createCalendar(
+      calenderRef.value,
+      [DayGrid, List, TimeGrid, ResourceTimeGrid, Interaction],
+      {
           date: selectedCalendarDate.value,
           locale: 'ar',
           slotEventOverlap: false,
@@ -1277,9 +1275,8 @@ onMounted(() => {
           dayMaxEvents: true,
           nowIndicator: true,
           selectable: false
-        }
       }
-    })
+    )
     attachCalendarColorObserver()
     refreshResourceSizing()
   }

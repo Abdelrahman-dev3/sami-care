@@ -55,6 +55,7 @@ class PackageResource extends JsonResource
     ? (json_decode($this->branch->name, true)['ar'] ?? '')
     : '',
             'package_price' => $this->package_price,
+            ...$this->resource->pricingSummary(),
             'status' => $this->status,
             'start_date'=>$this->start_date??'',
             'end_date'=>$this->end_date??'',

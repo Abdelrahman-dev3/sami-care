@@ -8,6 +8,7 @@
 @endpush
 
 @section('content')
+<a class="btn btn-outline-primary mb-3" href="{{ route('backend.quiet-hours.index') }}">{{ __('quiet_hours.title') }}</a>
 <a class="btn btn-outline-primary mb-3" href="{{ route('backend.reports.loyalty') }}">تقرير استخدام نقاط الولاء</a>
 <style>
    body {

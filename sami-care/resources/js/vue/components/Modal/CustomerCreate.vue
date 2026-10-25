@@ -5,54 +5,54 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h1 class="modal-title fs-5" id="exampleModalLabel">Create Customer</h1>
+                        <h1 class="modal-title fs-5" id="exampleModalLabel">{{ $t('admin_ui.create_customer') }}</h1>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <div class="row" id="form-offcanvas">
                             <div class="form-group col-md-6">
-                                <label for="first_name">First Name</label>
+                                <label for="first_name">{{ $t('admin_ui.first_name') }}</label>
                                 <input type="text" class="form-control" :placeholder="$t('employee.first_name')" v-model="first_name" />
                             </div>
                             <div class="form-group col-md-6">
-                                <label for="last_name">Last Name</label>
+                                <label for="last_name">{{ $t('admin_ui.last_name') }}</label>
                                 <input type="text" class="form-control" :placeholder="$t('employee.last_name')" v-model="last_name" />
                             </div>
                             <div class="form-group col-md-12">
-                                <label for="e-mail">E-mail</label>
+                                <label for="e-mail">{{ $t('admin_ui.e_mail') }}</label>
                                 <input type="text" class="form-control" :placeholder="$t('customer.email_address')" v-model="email" />
                             </div>
                             <div class="form-group col-md-12">
-                                <label for="e-mail">Phone Number</label>
+                                <label for="e-mail">{{ $t('admin_ui.phone_number') }}</label>
                                 <input type="text" :placeholder="$t('messages.placeholder_phone')" class="form-control" v-model="mobile" />
                             </div>
                             <div class="form-group col-md-12">
-                              <label for="" class="w-100">Gender</label>
+                              <label for="" class="w-100">{{ $t('admin_ui.gender') }}</label>
                                 <div class="form-check form-check-inline">
                                   <input class="form-check-input" type="radio" name="gender" v-model="gender" id="male" value="male">
                                   <label class="form-check-label" for="male">
-                                    Male
+                                    {{ $t('admin_ui.male') }}
                                   </label>
                                 </div>
                                 <div class="form-check form-check-inline">
                                   <input class="form-check-input" type="radio" name="gender" v-model="gender" id="female" value="female">
                                   <label class="form-check-label" for="female">
-                                    Female
+                                    {{ $t('admin_ui.female') }}
                                   </label>
                                 </div>
 
                                 <!-- <div class="form-check form-check-inline">
                                   <input class="form-check-input" type="radio" name="gender" v-model="gender" id="other" value="other">
                                   <label class="form-check-label" for="other">
-                                    Intersex
+                                    {{ $t('admin_ui.intersex') }}
                                   </label>
                                 </div> -->
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer">
-                      <button type="submit" class="btn btn-primary">Save changes</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                      <button type="submit" class="btn btn-primary">{{ $t('admin_ui.save_changes') }}</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ $t('admin_ui.close') }}</button>
                     </div>
                 </div>
             </div>

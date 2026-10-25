@@ -1,5 +1,6 @@
 import { useLanguage } from '@/composables/useLanguage'
 import { reactive, computed, watch } from 'vue'
+import { selectedServiceReward } from '@/composables/useServiceRepeatRewards'
 import { servicePrice } from '@/utils/servicePrice'
 import { useServiceLocation } from '@/composables/useServiceLocation'
 import { homeService } from '@/composables/useHomeService'
@@ -53,6 +54,7 @@ const state = reactive({
   services: [],      // [{id, categoryId, categoryName, name, dur, price}]
   activeCat: null,    // القسم المفتوح حاليًا في خطوة اختيار الخدمات
 
+  repeatRewardIds: {},
   mode: null,         // 'auto' | 'manual'
   emp: {},            // serviceId -> { id, name }
   staffOptions: {},   // serviceId -> available employees; used by automatic assignment at time selection
@@ -114,7 +116,10 @@ export function useBooking() {
     }
   }
 
-  const selSvcs = computed(() => state.services.map(service => ({ ...service, price: servicePrice(service, current.value) })))
+  const selSvcs = computed(() => state.services.map(service => {
+    const reward = selectedServiceReward(service.id, state.repeatRewardIds[service.id])
+    return { ...service, repeatRewardId: reward?.id || null, price: reward ? 0 : servicePrice(service, current.value) }
+  }))
 
   const subTotal = computed(() => selSvcs.value.reduce((a, s) => a + (Number(s.price) || 0), 0))
   const totalDur = computed(() => selSvcs.value.reduce((a, s) => a + s.dur, 0))
@@ -189,7 +194,7 @@ export function useBooking() {
         if (!homeCovered.value) return false
         if (!paymentPolicy.checkoutEnabled) return false
         if (payableTotal.value <= 0) {
-          return !!(state.rewards.useWallet || state.rewards.useLoyalty || state.rewards.couponApplied || state.pay)
+          return !!(selSvcs.value.some(s => s.repeatRewardId) || state.rewards.useWallet || state.rewards.useLoyalty || state.rewards.couponApplied || state.pay)
         }
         return paymentPolicy.methods({ total: priceParts.value.total, walletBalance: state.walletBalance,
           payable: payableTotal.value, hasRewards: walletDiscount.value > 0 || loyaltyPointsUsed.value > 0,
@@ -214,6 +219,7 @@ export function useBooking() {
     state.homeCityId = ''
     state.homeLatitude = ''
     state.homeLongitude = ''
+    state.repeatRewardIds = {}
     state.step = 0
     state.services = []
     state.activeCat = null

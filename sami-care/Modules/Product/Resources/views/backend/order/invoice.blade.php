@@ -192,7 +192,7 @@
                     <thead>
                         <tr>
                             <th class="text-center" >S/L</th>
-                            <th>Products</th>
+                            <th>{{ __('admin_ui.products') }}</th>
                             <th class="text-end">Unit Price</th>
                             <th class="text-end">QTY</th>
                             <th class="text-end">Total Price</th>

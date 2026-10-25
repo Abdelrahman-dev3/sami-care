@@ -4,7 +4,7 @@
       <FormHeader :currentId="currentId" :editTitle="editTitle" :createTitle="createTitle"></FormHeader>
       <div class="offcanvas-body">
         <InputField class="col-md-12" type="text" :is-required="true" :label="$t('logistic_zone.lbl_name')" :placeholder="$t('logistic_zone.name')" v-model="name" :error-message="errors['name']"></InputField>
-        <InputField class="col-md-12" type="textarea" :is-required="true" :label="$t('promotion.address')" placeholder="Enter address..." v-model="description" :error-message="errors['description']" :error-messages="errorMessages['description']"></InputField>
+        <InputField class="col-md-12" type="textarea" :is-required="true" :label="$t('promotion.address')" :placeholder="$t('admin_ui.enter_address')" v-model="description" :error-message="errors['description']" :error-messages="errorMessages['description']"></InputField>
 
         <div class="form-group col-md-12">
                   <label class="form-label">{{ $t('employee.lbl_phone_number') }}<span class="text-danger">*</span>
@@ -147,19 +147,19 @@ const reset_datatable_close_offcanvas = (res) => {
 
 // Validations
 const validationSchema = yup.object({
-  name: yup.string().required('Name is a required field'),
-  description: yup.string().required('Address is a required field'),
+  name: yup.string().required(window.i18n.global.t('admin_validation.name_required')),
+  description: yup.string().required(window.i18n.global.t('admin_validation.address_required')),
   logistic_id: yup.string().required('Logitic is a required field'),
-  country_id: yup.string().required('Country is a required field'),
-  state_id: yup.string().required('State is a required field'),
-  city_id: yup.array().test('city_id', 'City is a required field', function (value) {
+  country_id: yup.string().required(window.i18n.global.t('admin_validation.country_required')),
+  state_id: yup.string().required(window.i18n.global.t('admin_validation.state_required')),
+  city_id: yup.array().test('city_id', window.i18n.global.t('admin_validation.city_required'), function (value) {
     if (value.length == 0) {
       return false
     }
     return true
   }),
   standard_delivery_charge: yup.number().typeError('Standard delivery charge must be a number').min(0, 'Standard delivery charge must be greater than or equal to 0'),
-  mobile: yup.string().required('Phone No is a required field').matches(/^(\+?\d+)?(\s?\d+)*$/, 'Phone Number must contain only digits')
+  mobile: yup.string().required(window.i18n.global.t('admin_validation.phone_required')).matches(/^(\+?\d+)?(\s?\d+)*$/, 'Phone Number must contain only digits')
 
 })
 

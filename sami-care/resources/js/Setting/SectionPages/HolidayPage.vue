@@ -10,7 +10,7 @@
       <div class="col-12">
         <div class="form-group" v-if="branch.options.length > 1">
           <label class="form-label">{{ $t('branch.select_branch') }}<span class="text-danger">*</span> </label>
-          <Multiselect id="branch_id" v-model="branch_id" placeholder="Select Branch" v-bind="singleSelectOption" :options="branch.options" @select="branchSelect" class="form-group"></Multiselect>
+          <Multiselect id="branch_id" v-model="branch_id" :placeholder="$t('admin_ui.select_branch')" v-bind="singleSelectOption" :options="branch.options" @select="branchSelect" class="form-group"></Multiselect>
           <span class="text-danger">{{ errors.branch_id }}</span>
         </div>
       </div>
@@ -73,7 +73,7 @@ const handleDateClick = (e) => {
 const { getRequest, storeRequest, listingRequest } = useRequest()
 
 const validationSchema = yup.object({
-  branch_id: yup.string().required('Branch is required'),
+  branch_id: yup.string().required(window.i18n.global.t('admin_validation.branch_required')),
 })
 const { handleSubmit, errors } = useForm({ validationSchema })
 

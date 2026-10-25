@@ -174,6 +174,9 @@ class MobileCartController extends Controller
 
         $employeeId = (int) ($validated['employee_id'] ?? $validated['employye_id'] ?? 0);
         $branchId = (int) ($validated['branch_id'] ?? $package->branch_id ?? 0);
+        if ($branchId > 0 && !\App\Models\Branch::whereKey($branchId)->where('status', 1)->exists()) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['branch_id' => 'غير متاح الحجز في الوقت الحالي']);
+        }
 
         if ($branchId <= 0) {
             return response()->json([
@@ -258,6 +261,7 @@ class MobileCartController extends Controller
             'services' => ['required', 'array', 'min:1'],
             'services.*.subServices' => ['required', 'array', 'min:1'],
             'services.*.subServices.*.id' => ['required', 'integer', 'exists:services,id'],
+            'services.*.subServices.*.repeat_reward_id' => ['nullable', 'integer', 'min:1'],
             'services.*.subServices.*.date' => ['required', 'date_format:Y-m-d'],
             'services.*.subServices.*.time' => ['required', 'date_format:H:i'],
             'services.*.subServices.*.duration' => ['nullable', 'integer', 'min:1'],
@@ -269,6 +273,9 @@ class MobileCartController extends Controller
 
         $user = $request->user();
         $branchId = (int) $validated['branch'];
+        if ($branchId > 0 && !\App\Models\Branch::whereKey($branchId)->where('status', 1)->exists()) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['branch' => 'غير متاح الحجز في الوقت الحالي']);
+        }
         $homeCity = $branchId === 0 ? app(\App\Services\HomeService::class)->quote($validated) : null;
         $createdBookingIds = [];
 
@@ -363,7 +370,9 @@ class MobileCartController extends Controller
                     $branchPrice = $branchId > 0
                         ? $service->branches()->where('branch_id', $branchId)->value('service_price')
                         : null;
-                    $bookingService->service_price = (float) ($branchPrice ?? $service->default_price ?? 0) + (float) $booking->home_service_fee;
+                    $freeRewardId = (int) ($subService['repeat_reward_id'] ?? 0);
+                    if ($freeRewardId) app(\App\Services\ServiceRepeatRewards::class)->reserve((int)$user->id, (int)$service->id, $freeRewardId, $booking);
+                    $bookingService->service_price = ($freeRewardId ? 0 : (float) ($branchPrice ?? $service->default_price ?? 0)) + (float) $booking->home_service_fee;
                     $bookingService->duration_min = $duration;
                     $bookingService->sequance = 1;
                     $bookingService->created_by = $user->id;
@@ -391,6 +400,7 @@ class MobileCartController extends Controller
                 'services' => ['nullable', 'array'],
                 'services.*.subServices' => ['required_with:services', 'array', 'min:1'],
                 'services.*.subServices.*.id' => ['required', 'integer', 'exists:services,id'],
+            'services.*.subServices.*.repeat_reward_id' => ['nullable', 'integer', 'min:1'],
                 'packages' => ['nullable', 'array'],
                 'packages.*.id' => ['required', 'integer', 'exists:packages,id'],
                 'location' => ['required', 'array'],
@@ -500,6 +510,7 @@ class MobileCartController extends Controller
                 'services' => ['nullable', 'array'],
                 'services.*.subServices' => ['required_with:services', 'array', 'min:1'],
                 'services.*.subServices.*.id' => ['required', 'integer', 'exists:services,id'],
+            'services.*.subServices.*.repeat_reward_id' => ['nullable', 'integer', 'min:1'],
                 'packages' => ['nullable', 'array'],
                 'packages.*.id' => ['required', 'integer', 'exists:packages,id'],
                 'location' => ['required', 'array'],

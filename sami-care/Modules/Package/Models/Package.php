@@ -76,6 +76,13 @@ class Package extends BaseModel
         return $this->hasMany(PackageService::class, 'package_id');
     }
 
+    public function pricingSummary(): array
+    {
+        $total = $this->service->sum(fn ($row) => (int) round((float) $row->service_price * 100) * max(0, (int) $row->qty));
+        $price = (int) round((float) $this->package_price * 100);
+        return ['services_total_price' => $total / 100, 'savings_amount' => max(0, $total - $price) / 100];
+    }
+
     public function userPackage(){
         return $this->hasMany(UserPackage::class, 'package_id');
     }

@@ -73,6 +73,7 @@ class PermissionRoleTableSeeder extends Seeder
             'delete_commission',
         ]);
 
+        \App\Services\EmployeeAccess::syncPermissions();
         Schema::enableForeignKeyConstraints();
     }
 }

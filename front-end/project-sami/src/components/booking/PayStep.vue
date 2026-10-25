@@ -1,10 +1,11 @@
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { paymentPolicy } from '@/utils/paymentPolicy'
 import PaymentMethodList from '@/components/common/PaymentMethodList.vue'
 import GiftCodeRedeem from '@/components/gifts/GiftCodeRedeem.vue'
 import { useBooking, rs } from '@/composables/useBooking'
-import { fetchProfile } from '@/services/accountApi'
+import { fetchCheckoutBalances } from '@/services/accountApi'
+import { useAuth } from '@/composables/useAuth'
 import { fetchLoyaltyPointValue, validateInvoiceCoupon } from '@/services/bookingApi'
 
 const {
@@ -22,14 +23,30 @@ const {
 const couponLoading = ref(false)
 let couponRequest = 0
 
+const { token } = useAuth()
+const balancesLoading = ref(false)
+const balancesError = ref(false)
+let balancesRequest = 0
 async function loadBalances() {
+  const request = ++balancesRequest
+  state.walletBalance = null
+  state.loyaltyPoints = null
+  balancesError.value = false
+  balancesLoading.value = !!token.value
+  if (!token.value) return
   try {
-    const res = await fetchProfile()
-    const balances = res?.data?.balances || {}
-    state.walletBalance = Number(balances.wallet ?? 0)
-    state.loyaltyPoints = Number(balances.loyalty_points ?? 0)
-  } catch { /* يفضل بدون رصيد معروض لو فشل التحميل */ }
+    const balances = await fetchCheckoutBalances()
+    if (request !== balancesRequest) return
+    state.walletBalance = balances.wallet
+    state.loyaltyPoints = balances.loyalty_points
+  } catch {
+    if (request === balancesRequest) balancesError.value = true
+  } finally {
+    if (request === balancesRequest) balancesLoading.value = false
+  }
 }
+watch(token, loadBalances, { immediate: true })
+onBeforeUnmount(() => { balancesRequest++ })
 
 /* كود بطاقة هدية بقيمة: يضاف للمحفظة، فنحدّث الرصيد ونفعّل "استخدام المحفظة" مباشرة */
 async function onGiftRedeemed(gift) {
@@ -38,7 +55,6 @@ async function onGiftRedeemed(gift) {
 }
 
 onMounted(async () => {
-  await loadBalances()
 
   try {
     const res = await fetchLoyaltyPointValue()
@@ -95,6 +111,7 @@ function clampMoney(value, max) {
 }
 
 function toggleWallet() {
+  if (state.walletBalance === null) return
   state.rewards.useWallet = !state.rewards.useWallet
   if (state.rewards.useWallet) {
     state.rewards.walletAmount = clampMoney(state.rewards.walletAmount || walletMax.value, Math.min(walletBalance.value, walletMax.value))
@@ -109,6 +126,7 @@ function setWalletAmount(value) {
 }
 
 function toggleLoyalty() {
+  if (state.loyaltyPoints === null) return
   state.rewards.useLoyalty = !state.rewards.useLoyalty
   if (state.rewards.useLoyalty) {
     state.rewards.loyaltyPoints = Math.min(
@@ -187,7 +205,7 @@ watch(loyaltyMaxPoints, () => {
   <div class="card detail-card">
     <h4>اختر طريقة الدفع</h4>
     <PaymentMethodList v-model="state.pay" :methods="PAY_METHODS" />
-    <div v-if="!hasCodDeposit && !hasSubRewards" class="cod-deposit-alert">
+    <div v-if="state.walletBalance !== null && !hasCodDeposit && !hasSubRewards" class="cod-deposit-alert">
       💡 <b>ملاحظة الدفع عند الوصول:</b> يتطلب توفر عربون بنسبة 30% ({{ rs(codRequiredDeposit) }} ر.س) في رصيد محفظتك لتأكيد الحجز. رصيدك الحالي: {{ rs(walletBalance) }} ر.س.
     </div>
     <div class="secure-line">🔒 جميع عمليات الدفع آمنة ومشفرة</div>
@@ -195,6 +213,8 @@ watch(loyaltyMaxPoints, () => {
 
   <div class="card detail-card payment-rewards-card">
     <h4><span class="step-dot">2</span> استخدام العروض و المكافآت</h4>
+    <p v-if="balancesLoading" role="status">جارٍ تحميل رصيد المحفظة ونقاط الولاء...</p>
+    <p v-else-if="balancesError" role="alert">تعذر تحميل الرصيد. <button type="button" @click="loadBalances">إعادة المحاولة</button></p>
 
     <div class="rewards">
       <div class="gift-code-box"><GiftCodeRedeem compact @redeemed="onGiftRedeemed" /></div>
@@ -203,7 +223,7 @@ watch(loyaltyMaxPoints, () => {
           <span class="ri"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" v-html="ICONS.wallet"></svg></span>
           <span>
             <b>استخدام من المحفظة</b>
-            <small>الرصيد الحالي: {{ rs(walletBalance) }} ر.س</small>
+            <small>الرصيد الحالي: {{ state.walletBalance === null ? '—' : rs(walletBalance) + ' ر.س' }}</small>
           </span>
           <span class="switch" :class="{ on: state.rewards.useWallet }" @click="toggleWallet"></span>
         </div>
@@ -216,7 +236,7 @@ watch(loyaltyMaxPoints, () => {
           :disabled="!state.rewards.useWallet"
           @input="setWalletAmount($event.target.value)"
         />
-        <span class="hint">المبلغ المتاح حتى {{ rs(Math.round(Math.min(walletBalance, walletMax))) }} ر.س</span>
+        <span v-if="state.walletBalance !== null" class="hint">المبلغ المتاح حتى {{ rs(Math.round(Math.min(walletBalance, walletMax))) }} ر.س</span>
       </div>
 
       <div class="rw" :class="{ on: state.rewards.useLoyalty }">
@@ -224,7 +244,7 @@ watch(loyaltyMaxPoints, () => {
           <span class="ri"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" v-html="ICONS.gift"></svg></span>
           <span>
             <b>استخدام نقاط الولاء</b>
-            <small>لديك {{ rs(loyaltyBalance) }} نقطة</small>
+            <small>لديك {{ state.loyaltyPoints === null ? '—' : rs(loyaltyBalance) }} نقطة</small>
           </span>
           <span class="switch" :class="{ on: state.rewards.useLoyalty }" @click="toggleLoyalty"></span>
         </div>

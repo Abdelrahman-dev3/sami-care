@@ -3,6 +3,7 @@ import { ref, onMounted, watch } from 'vue'
 import { useLanguage } from '@/composables/useLanguage'
 const { state: language } = useLanguage()
 let homeRequest = 0
+import PageSkeleton from '@/components/common/PageSkeleton.vue'
 import HeroSection from '@/components/home/HeroSection.vue'
 import AboutSection from '@/components/home/AboutSection.vue'
 import ServicesSection from '@/components/home/ServicesSection.vue'
@@ -62,7 +63,12 @@ watch(() => language.lang, loadHomeData)
 
 <template>
   <div class="home-page desktop-home" :dir="language.lang === 'en' ? 'ltr' : 'rtl'">
-    <main>
+    <PageSkeleton v-if="loading" variant="detail" />
+    <div v-else-if="error" role="alert" style="padding:100px 24px;text-align:center">
+      <p>{{ language.lang === 'en' ? 'Unable to load content.' : 'تعذر تحميل المحتوى.' }}</p>
+      <button type="button" @click="loadHomeData">{{ language.lang === 'en' ? 'Retry' : 'إعادة المحاولة' }}</button>
+    </div>
+    <main v-else>
       <HeroSection :content="homeData.home_content" />
       <div class="home-light">
         <AboutSection :content="homeData.home_content" />

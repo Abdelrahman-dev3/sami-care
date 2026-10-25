@@ -96,7 +96,7 @@ const reset_datatable_close_offcanvas = (res) => {
 }
 
 const validationSchema = yup.object({
-  title: yup.string().required('Name is a required field')
+  title: yup.string().required(window.i18n.global.t('admin_validation.name_required'))
 })
 
 const { handleSubmit, errors, resetForm } = useForm({

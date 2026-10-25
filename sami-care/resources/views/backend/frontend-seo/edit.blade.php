@@ -23,13 +23,13 @@
         @foreach(['ar'=>'العربية', 'en'=>'English'] as $lang => $label)
         <fieldset dir="{{ $lang === 'en' ? 'ltr' : 'rtl' }}" class="mb-4">
             <legend class="h6">{{ $label }}</legend>
-            <label for="seo-title-{{ $lang }}">Title</label>
+            <label for="seo-title-{{ $lang }}">{{ __('admin_ui.title') }}</label>
             <input id="seo-title-{{ $lang }}" class="form-control" name="{{ $lang }}[title]" maxlength="160" value="{{ old($lang.'.title', $values[$lang]['title'] ?? '') }}" aria-describedby="seo-title-default-{{ $lang }}">
             <small id="seo-title-default-{{ $lang }}" class="d-block text-muted mb-3">{{ $defaults[$lang]['title'] }}</small>
-            <label for="seo-description-{{ $lang }}">Meta Description</label>
+            <label for="seo-description-{{ $lang }}">{{ __('admin_ui.meta_description') }}</label>
             <textarea id="seo-description-{{ $lang }}" class="form-control" name="{{ $lang }}[description]" maxlength="320" rows="3" aria-describedby="seo-description-default-{{ $lang }}">{{ old($lang.'.description', $values[$lang]['description'] ?? '') }}</textarea>
             <small id="seo-description-default-{{ $lang }}" class="d-block text-muted">{{ $defaults[$lang]['description'] }}</small>
-            <label class="mt-3" for="seo-keywords-{{ $lang }}">Meta Keywords</label>
+            <label class="mt-3" for="seo-keywords-{{ $lang }}">{{ __('admin_ui.meta_keywords') }}</label>
             <input id="seo-keywords-{{ $lang }}" class="form-control" name="{{ $lang }}[keywords]" maxlength="1000" value="{{ old($lang.'.keywords', $values[$lang]['keywords'] ?? '') }}" aria-describedby="seo-keywords-help-{{ $lang }}">
             <small id="seo-keywords-help-{{ $lang }}" class="d-block text-muted">{{ $lang === 'en' ? 'Separate keywords with commas. Leave empty to omit this tag.' : 'افصل الكلمات بفواصل. اترك الحقل فارغًا لعدم إضافة الوسم.' }}</small>
         </fieldset>

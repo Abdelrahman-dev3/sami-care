@@ -1,6 +1,6 @@
 @extends('backend.layouts.app', ['isBanner' => false])
 
-@section('title') {{ 'Dashboard' }} @endsection
+@section('title') {{ __('admin_ui.dashboard') }} @endsection
 
 @section('content')
 <div class="row">

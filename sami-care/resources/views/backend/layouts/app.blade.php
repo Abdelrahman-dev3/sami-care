@@ -73,6 +73,7 @@
         $filePaths = \File::files($langFolderPath);
     @endphp
 
+    @include('backend.includes.js-json-translations')
     @foreach ($filePaths as $filePath)
         @php
             $fileName = pathinfo($filePath, PATHINFO_FILENAME);
@@ -240,6 +241,7 @@
     @endif
 
     @stack('after-scripts')
+    @include('backend.includes.realtime-notifications')
     <!-- / Scripts -->
     <script>
         $('.notification_list').on('click', function() {
@@ -280,29 +282,7 @@
             Notification.requestPermission();
         }
 
-        function playNotificationChime() {
-            try {
-                const Ctx = window.AudioContext || window.webkitAudioContext;
-                const ctx = new Ctx();
-                const now = ctx.currentTime;
-                [880, 1320].forEach(function(freq, i) {
-                    const osc = ctx.createOscillator();
-                    const gain = ctx.createGain();
-                    osc.type = 'sine';
-                    osc.frequency.value = freq;
-                    const start = now + i * 0.14;
-                    gain.gain.setValueAtTime(0, start);
-                    gain.gain.linearRampToValueAtTime(0.18, start + 0.02);
-                    gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.3);
-                    osc.connect(gain).connect(ctx.destination);
-                    osc.start(start);
-                    osc.stop(start + 0.32);
-                });
-                setTimeout(function() {
-                    ctx.close();
-                }, 700);
-            } catch (e) {}
-        }
+        function playNotificationChime(id) { window.SamiRealtimeSound?.play(id); }
 
         function showDesktopNotification(title, body, url) {
             if (!('Notification' in window) || Notification.permission !== 'granted') return;
@@ -311,6 +291,7 @@
                 body: body || '',
                 icon: "{{ asset('images/samilogo.png') }}",
                 tag: 'sami-care-notification',
+                silent: true,
             });
 
             n.onclick = function() {
@@ -329,6 +310,13 @@
                 type: 'get',
                 url: url,
                 success: function(res) {
+                    const total = Number(res.unread_total_count) || 0;
+                    let badge = document.querySelector('.notification_list .notification-alert');
+                    if (!badge && total > 0) {
+                        badge = document.createElement('span'); badge.className = 'notification-alert';
+                        document.querySelector('.notification_list')?.append(badge);
+                    }
+                    if (badge) { badge.textContent = total > 99 ? '99+' : String(total); badge.hidden = total === 0; }
                     if (res.counts > 0) {
                         $('.notify_count').addClass('notification_tag').text(res.counts);
                         setNotification(res.counts);
@@ -346,7 +334,7 @@
                     }
 
                     if (lastKnownUnreadTotal !== null && res.unread_total_count > lastKnownUnreadTotal) {
-                        playNotificationChime();
+                        playNotificationChime(res.latest?.id);
                         showDesktopNotification(
                             res.latest ? res.latest.title : null,
                             res.latest ? res.latest.text : null,
@@ -359,14 +347,14 @@
         }
 
         getNotificationCounts();
-        setInterval(getNotificationCounts, 10000);
+        // Realtime transport and fallback polling are managed by the shared connector.
     </script>
 
     <script>
         {!! setting('custom_js_block') !!}
         @if (\Session::get('error'))
             Swal.fire({
-                title: 'Error',
+                title: @json(__('admin_ui.error')),
                 text: '{{ session()->get('error') }}',
                 icon: "error",
                 showClass: {

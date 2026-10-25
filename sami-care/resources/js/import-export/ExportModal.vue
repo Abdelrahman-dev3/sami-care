@@ -5,7 +5,7 @@
         <button @click="onSubmit" :disabled="IS_SUBMITED || !columns || !columns.length" class="btn btn-primary"  name="submit">
           <template v-if="IS_SUBMITED">
             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-            Loading...
+            {{ $t('admin_ui.loading') }}
           </template>
           <template v-else> <i class="fa-solid fa-file-arrow-down"></i> {{ $t('export.download') }}</template>
         </button>
@@ -69,7 +69,7 @@ const config = ref({
 // Validations
 const validationSchema = yup.object({
   file_type: yup.string()
-  .required('File Type is a required field'),
+  .required(window.i18n.global.t('admin_validation.file_type_required')),
   date_range: yup.string()
   .required('Date Range is a required field'),
   columns: yup.array()

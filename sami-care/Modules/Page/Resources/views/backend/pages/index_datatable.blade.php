@@ -17,8 +17,8 @@
               <!-- <x-backend.quick-action url='{{ route("backend.$module_name.bulk_action") }}'>
                     <div class="">
                         <select name="action_type" class="form-control select2 col-12" id="quick-action-type" style="width:100%">
-                            <option value="change-status">Status</option>
-                            <option value="delete">Delete</option>
+                            <option value="change-status">{{ __('admin_ui.status') }}</option>
+                            <option value="delete">{{ __('admin_ui.delete') }}</option>
                         </select>
                     </div>
                     <div class="select-status d-none quick-action-field" id="change-status-action">

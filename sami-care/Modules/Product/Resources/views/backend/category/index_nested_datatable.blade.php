@@ -18,7 +18,7 @@
                     <select name="action_type" class="form-control select2 col-12" id="quick-action-type" style="width:100%">
                         <option value="">{{ __('messages.no_action') }}</option>
                         <option value="change-status">{{ __('messages.status') }}</option>
-                        <option value="delete">Delete</option>
+                        <option value="delete">{{ __('admin_ui.delete') }}</option>
                     </select>
                   </div>
                   <div class="select-status d-none quick-action-field" id="change-status-action">

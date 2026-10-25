@@ -67,6 +67,7 @@ class CartExpirationService
                     $result['user_packages'] = UserPackage::whereIn('id', $userPackageIds)->delete();
                 }
 
+                app(\App\Services\ServiceRepeatRewards::class)->release($bookingIds->all());
                 BookingPackageService::whereIn('booking_id', $bookingIds)->delete();
                 BookingPackages::whereIn('booking_id', $bookingIds)->delete();
                 BookingService::whereIn('booking_id', $bookingIds)->delete();

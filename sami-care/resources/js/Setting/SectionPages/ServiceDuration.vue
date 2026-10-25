@@ -26,7 +26,7 @@
       </div>
 
       <div v-if="isProcessing" class="spinner-border spinner-border-sm text-primary mt-2" role="status">
-        <span class="visually-hidden">Loading...</span>
+        <span class="visually-hidden">{{ $t('admin_ui.loading') }}</span>
       </div>
     </div>
   </div>

@@ -41,18 +41,18 @@
               <div class="form-check form-check-inline">
                 <input class="form-check-input" type="radio" name="gender" v-model="gender" id="male" value="male"
                   :checked="gender == 'male'" />
-                <label class="form-check-label" for="male"> Male </label>
+                <label class="form-check-label" for="male"> {{ $t('admin_ui.male') }} </label>
               </div>
               <div class="form-check form-check-inline">
                 <input class="form-check-input" type="radio" name="gender" v-model="gender" id="female" value="female"
                   :checked="gender == 'female'" />
-                <label class="form-check-label" for="female"> Female </label>
+                <label class="form-check-label" for="female"> {{ $t('admin_ui.female') }} </label>
               </div>
 
                <!-- <div class="form-check form-check-inline">
                 <input class="form-check-input" type="radio" name="gender" v-model="gender" id="other" value="other"
                   :checked="gender == 'other'" />
-                <label class="form-check-label" for="other"> Intersex </label>
+                <label class="form-check-label" for="other"> {{ $t('admin_ui.intersex') }} </label>
               </div> -->
               <p class="mb-0 text-danger">{{ errors.gender }}</p>
             </div>
@@ -198,7 +198,7 @@ const reset_datatable_close_offcanvas = (res) => {
   // Validations
   const validationSchema = yup.object({
     first_name: yup.string()
-    .required('First Name is a required field')
+    .required(window.i18n.global.t('admin_validation.first_name_required'))
     .test('is-string', 'Only strings are allowed', (value) => {
       // Regular expressions to disallow special characters and numbers
       const specialCharsRegex = /[!@#$%^&*(),.?":{}|<>\-_;'\/+=\[\]\\]/
@@ -206,13 +206,13 @@ const reset_datatable_close_offcanvas = (res) => {
     }),
 
     last_name: yup.string()
-    .required('Last Name is a required field')
+    .required(window.i18n.global.t('admin_validation.last_name_required'))
     .test('is-string', 'Only strings are allowed', (value) => {
       // Regular expressions to disallow special characters and numbers
       const specialCharsRegex = /[!@#$%^&*(),.?":{}|<>\-_;'\/+=\[\]\\]/
       return !specialCharsRegex.test(value) && !numberRegex.test(value)
     }),
-    email: yup.string().required('Email is a required field')
+    email: yup.string().required(window.i18n.global.t('admin_validation.email_required'))
     .matches(EMAIL_REGX, 'Must be a valid email')
     .test('unique', 'Email must be unique', async function(value) {
       if (!EMAIL_REGX.test(value)) {
@@ -226,12 +226,12 @@ const reset_datatable_close_offcanvas = (res) => {
           return true;
         }),
         mobile: yup.string()
-        .required('Phone Number is a required field').matches(/^(\+?\d+)?(\s?\d+)*$/, 'Phone Number must contain only digits'),
+        .required(window.i18n.global.t('admin_validation.phone_required')).matches(/^(\+?\d+)?(\s?\d+)*$/, 'Phone Number must contain only digits'),
         password: yup.string()
         .min(8, 'Password must be at least 8 characters long')
         .when('currentId', {
           is: 0,
-          then: yup.string().required('Password is required'),
+          then: yup.string().required(window.i18n.global.t('admin_validation.password_required')),
         }),
       confirm_password: yup.string()
         .required('Confirm password is required')

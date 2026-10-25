@@ -4,7 +4,7 @@
       <FormHeader :currentId="0" :editTitle="$t(editTitle)" :createTitle="$t(createTitle)"></FormHeader>
       <div class="offcanvas-body">
         <!-- <div class="form-group">
-          <label class="form-label">Location</label>
+          <label class="form-label">{{ $t('admin_ui.location') }}</label>
           <Multiselect id="location_id-list" v-model="location_id" :value="location_id" v-bind="singleSelectOption" :options="LOCATIONS_OPTIONS" class="form-group" @select="getProductVariationsData"></Multiselect>
           <span class="text-danger">{{ errors['location_id'] }}</span>
           <ul class="m-0">
@@ -13,7 +13,7 @@
         </div> -->
         <div class="form-group">
           <label class="form-label">{{ $t('product.brand') }} <span class="text-danger">*</span></label>
-          <Multiselect id="brand-list" v-model="brand_id" :value="brand_id" placeholder="Select Brand" v-bind="singleSelectOption" :options="brands.options" @select="selectBrand" class="form-group"></Multiselect>
+          <Multiselect id="brand-list" v-model="brand_id" :value="brand_id" :placeholder="$t('admin_ui.select_brand')" v-bind="singleSelectOption" :options="brands.options" @select="selectBrand" class="form-group"></Multiselect>
           <span class="text-danger">{{ errors['brand_id'] }}</span>
           <ul class="m-0">
             <li class="text-danger" v-for="msg in errorMessages['brand_id']" :key="msg">{{ msg }}</li>
@@ -21,7 +21,7 @@
         </div>
         <div class="form-group col-md-12">
           <label class="form-label" for="categories">{{ $t('product.categories') }} <span class="text-danger">*</span></label>
-          <Multiselect id="categories" v-model="category_id" :value="category_id" placeholder="Select Category" v-bind="multiselectOption" :options="category.options" @select="selectCategory" class="form-group"></Multiselect>
+          <Multiselect id="categories" v-model="category_id" :value="category_id" :placeholder="$t('admin_ui.select_category')" v-bind="multiselectOption" :options="category.options" @select="selectCategory" class="form-group"></Multiselect>
           <span class="text-danger">{{ errors['category_ids'] }}</span>
           <ul class="m-0">
             <li class="text-danger" v-for="msg in errorMessages['category_ids']" :key="msg">{{ msg }}</li>
@@ -29,7 +29,7 @@
         </div>
         <div class="form-group">
           <label class="form-label">{{ $t('product.title') }}</label>
-          <Multiselect id="product_id-list" v-model="product_id" :value="product_id" v-bind="singleSelectOption" placeholder="Select Product" :options="products.options" class="form-group" @select="getProductVariationsData"></Multiselect>
+          <Multiselect id="product_id-list" v-model="product_id" :value="product_id" v-bind="singleSelectOption" :placeholder="$t('admin_ui.select_product')" :options="products.options" class="form-group" @select="getProductVariationsData"></Multiselect>
           <span class="text-danger">{{ errors['product_id'] }}</span>
           <ul class="m-0">
             <li class="text-danger" v-for="msg in errorMessages['product_id']" :key="msg">{{ msg }}</li>

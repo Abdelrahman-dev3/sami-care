@@ -1,4 +1,5 @@
 <script setup>
+import PackagePrice from '@/components/common/PackagePrice.vue'
 import FavoriteButton from '@/components/common/FavoriteButton.vue'
 /*
   كتالوج الباقات — مُرحَّل حرفيًا من viewPackages() في src/legacy/packages-gifts.html
@@ -74,7 +75,7 @@ const PERKS = [
         <div class="dur"><SIcon :inner="I.clock" :size="13" /> {{ p.dur }} دقيقة</div>
         <div class="desc">{{ p.desc }}</div>
         <div class="inc"><b>تشمل الباقة</b><ul><li v-for="(x, xi) in p.inc" :key="xi"><i>✓</i>{{ x }}</li></ul></div>
-        <div class="price">{{ rs(p.price) }} <small>ر.س</small></div>
+        <PackagePrice :price="p.price" :savings="p.savings" :original="p.originalPrice" />
         <div class="acts">
           <button class="book" :data-book="p.id" @click="emit('book', p.id)">احجز الباقة</button>
           <button class="gift-mini" :data-gift="p.id" @click="emit('gift', p.id)"><SIcon :inner="I.gift" :size="14" /> أهدِ هذه الباقة</button>

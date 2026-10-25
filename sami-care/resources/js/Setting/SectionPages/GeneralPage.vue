@@ -252,7 +252,7 @@ const validationSchema = yup.object({
     .email('must be a valid email'),
   site_description: yup.string()
   ,
-  cod_deposit_percent: yup.number().typeError('COD deposit percent must be a number').min(0).max(100).nullable()
+  cod_deposit_percent: yup.number().typeError(window.i18n.global.t('admin_validation.deposit_number')).min(0).max(100).nullable()
 })
 
 const { handleSubmit, errors, resetForm } = useForm({ validationSchema })

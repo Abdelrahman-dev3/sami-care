@@ -20,9 +20,9 @@
           </div>
         </div>
         <InputField class="col-md-12" type="text" :is-required="true" :label="$t('promotion.lbl_name')"
-          placeholder="Enter Name" v-model="name" :error-message="errors['name']"></InputField>
+          :placeholder="$t('admin_ui.enter_name')" v-model="name" :error-message="errors['name']"></InputField>
         <InputField class="col-md-12" type="textarea" :is-required="true" :label="$t('promotion.description')"
-          placeholder="Enter a brief description..." v-model="description" :error-message="errors['description']"
+          :placeholder="$t('admin_ui.enter_description')" v-model="description" :error-message="errors['description']"
           :error-messages="errorMessages['description']"></InputField>
         <!-- <InputField class="col-md-12" type="datetime-local" :is-required="true" :label="$t('promotion.start_datetime')" placeholder="" v-model="start_date_time" :error-message="errors['start_date_time']" :error-messages="errorMessages['start_date_time']"></InputField>
         <InputField class="col-md-12" type="datetime-local" :is-required="true" :label="$t('promotion.end_datetime')" placeholder="" v-model="end_date_time" :error-message="errors['end_date_time']" :error-messages="errorMessages['end_date_time']"></InputField> -->
@@ -102,7 +102,7 @@
         <div class="form-group col-md-12" v-if="coupon_type">
           <div v-if="coupon_type == 'custom'">
             <InputField class="col-md-12" type="text" :is-required="true" :label="$t('promotion.coupon_code')"
-              placeholder="Enter a coupon code" v-model="coupon_code" :error-message="errors['coupon_code']"
+              :placeholder="$t('admin_ui.enter_coupon')" v-model="coupon_code" :error-message="errors['coupon_code']"
               :error-messages="errorMessages['coupon_code']" :is-read-only="ISREADONLY"></InputField>
           </div>
           <div v-else-if="coupon_type == 'bulk'">
@@ -122,12 +122,12 @@
         <div class="col-md-12" v-if="discount_type">
           <div v-if="discount_type == 'percent'">
             <InputField type="number" step="any" :is-required="true" :label="$t('promotion.discount_percentage')"
-              placeholder="Enter Discount Percentage" v-model="discount_percentage"
+              :placeholder="$t('admin_ui.enter_discount_percentage')" v-model="discount_percentage"
               :error-message="errors['discount_percentage']"></InputField>
           </div>
           <div v-else-if="discount_type == 'fixed'">
             <InputField type="number" :is-required="true" :label="$t('promotion.discount_amount')"
-              placeholder="Enter Discount Amount" v-model="discount_amount" :error-message="errors['discount_amount']">
+              :placeholder="$t('admin_ui.enter_discount_amount')" v-model="discount_amount" :error-message="errors['discount_amount']">
             </InputField>
           </div>
         </div>
@@ -363,7 +363,7 @@ const reset_datatable_close_offcanvas = (res) => {
 
 // Validations
 const validationSchema = yup.object({
-  name: yup.string().required('Name is a required field'),
+  name: yup.string().required(window.i18n.global.t('admin_validation.name_required')),
   services: yup
     .array()
     .of(
@@ -409,7 +409,7 @@ const validationSchema = yup.object({
     then: () =>
       yup
         .number()
-        .required('value is a required field')
+        .required(window.i18n.global.t('admin_validation.value_required'))
         .test('is-less-than-100', 'Percent Value must be less than 100', (value) => {
           const numValue = parseFloat(value)
           return !isNaN(numValue) && numValue <= 100

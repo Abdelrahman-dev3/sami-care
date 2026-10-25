@@ -33,7 +33,7 @@ const { storeRequest } = useRequest()
 const validationSchema = yup.object({
   cod_deposit_percent: yup
     .number()
-    .typeError('COD deposit percent must be a number')
+    .typeError(window.i18n.global.t('admin_validation.deposit_number'))
     .min(0)
     .max(100)
     .required('COD deposit percent is required')

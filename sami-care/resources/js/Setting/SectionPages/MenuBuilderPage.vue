@@ -6,7 +6,7 @@
         <button :disabled="IS_SUBMITED" class="btn btn-primary" name="submit" @click="submitMenuSequance">
           <template v-if="IS_SUBMITED">
             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-            Loading...
+            {{ $t('admin_ui.loading') }}
           </template>
           <template v-else> <i class="fa-solid fa-floppy-disk"></i> {{$t('dashboard.lbl_submit')}}</template>
         </button>
@@ -25,7 +25,7 @@
   <button :disabled="IS_SUBMITED" class="btn btn-primary" name="submit" @click="submitMenuSequance">
     <template v-if="IS_SUBMITED">
       <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-      Loading...
+      {{ $t('admin_ui.loading') }}
     </template>
     <template v-else> <i class="fa-solid fa-floppy-disk"></i> {{$t('dashboard.lbl_submit')}}</template>
   </button>

@@ -38,6 +38,7 @@ onMounted(loadServiceLocations)
             v-for="b in locations"
             :key="b.id"
             class="loc-item"
+            :disabled="b.bookable === false"
             :class="{ on: current && current.id === b.id }"
             @click="confirmLocation(b.id)"
           >
@@ -57,7 +58,7 @@ onMounted(loadServiceLocations)
                 {{ b.address }}
               </small>
               <span class="loc-meta">
-                <em>متاح الآن</em>
+                <em>{{ b.bookable === false ? (language.lang === 'en' ? 'Currently unavailable for booking' : 'غير متاح الحجز في الوقت الحالي') : (language.lang === 'en' ? 'Available now' : 'متاح الآن') }}</em>
                 <small>{{ b.home ? 'نصل إلى موقعك' : 'مواعيد يومية' }}</small>
               </span>
             </span>
@@ -76,6 +77,8 @@ onMounted(loadServiceLocations)
 </template>
 
 <style>
+.loc-item:disabled{opacity:.6;cursor:not-allowed}
+
 .loc-nearby{margin:0 0 18px}.loc-detect{padding:11px 18px;border:1px solid #c6a367;border-radius:12px;background:#f8efdf;color:#61451d;font:inherit;cursor:pointer}.loc-detect:disabled{opacity:.65;cursor:wait}.loc-nearby p{font-size:12px;line-height:1.7;margin:8px 0;color:#706353}.loc-distance{display:block;font-size:12px;color:#795719;margin:6px 0}.loc-distance strong{font-weight:800}
 .loc-ov{position:fixed;inset:0;z-index:5000;background:rgba(18,12,5,.58);backdrop-filter:blur(4px);
   display:flex;align-items:flex-start;justify-content:center;padding:104px 20px 20px}

@@ -9,6 +9,11 @@ import { AR_DAYS, AR_MONTHS } from '@/data/packages'
 import { usePackages, fmtTime, fmtDate } from '@/composables/usePackages'
 import { fetchStaff, fetchAvailableTimes } from '@/services/bookingApi'
 import Skeleton from '@/components/common/SkeletonLoader.vue'
+import { useQuietHours } from '@/composables/useQuietHours'
+import { useLanguage } from '@/composables/useLanguage'
+const { bonus: quietPoints } = useQuietHours()
+const { state: quietLanguage } = useLanguage()
+const quietBonus = time => quietPoints(B.branch, B.dayIdx == null ? '' : toDateKey(days[B.dayIdx]), time)
 
 const { state, pkgOf, bkDays } = usePackages()
 
@@ -100,7 +105,7 @@ const H4B = 'font-family:var(--font-d);font-size:15px;color:var(--ink);margin-bo
       <template v-if="filteredSlots.length">
         <button v-for="(t, i) in filteredSlots" :key="t" class="slot" :class="{ sel: B.time === t }" :data-bt="t"
                 :style="`animation-delay:${Math.min(i * 0.03, 0.4)}s`" @click="B.time = t"
-        ><span v-if="slotTag(i)" class="tag">{{ slotTag(i) }}</span><template v-else>&#32;</template>{{ fmtTime(t) }}</button>
+        ><span v-if="slotTag(i)" class="tag">{{ slotTag(i) }}</span><template v-else>&#32;</template>{{ fmtTime(t) }}<small v-if="quietBonus(t)" data-no-i18n style="display:block;color:#26714d;font-size:11px;white-space:normal">{{ quietLanguage.lang === 'en' ? `Quiet hours: +${quietBonus(t)} points on completion` : `وقت هدوء: +${quietBonus(t)} نقطة عند إكمال الحجز` }}</small></button>
       </template>
       <div v-else :style="EMPTY_STYLE">لا توجد أوقات متاحة في هذه الفترة</div>
     </div>

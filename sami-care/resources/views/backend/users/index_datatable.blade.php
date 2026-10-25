@@ -100,17 +100,17 @@
             {
                 data: 'status',
                 name: 'status',
-                title: 'Status'
+                title: @json(__('admin_ui.status'))
             },
             {
                 data: 'user_roles',
                 name: 'user_roles',
-                title: 'Roles'
+                title: @json(__('admin_ui.roles'))
             },
             {
                 data: 'action',
                 name: 'action',
-                title: 'Actions',
+                title: @json(__('admin_ui.actions')),
                 class: 'text-end',
                 orderable: false,
                 searchable: false

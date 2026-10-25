@@ -331,7 +331,7 @@
             </div>
           </div>
           <div v-if="selectedService.length > 0" :class="selectedPackage.length > 0 ? 'border-bottom' : ''">
-            <h5 class="mt-3">Services</h5>
+            <h5 class="mt-3">{{ $t('admin_ui.services') }}</h5>
             <ul class="form-group list-group list-group-flush">
               <li v-for="(service, index) in selectedService" :key="index" class="list-group-item py-3 px-1">
                 <div class="d-flex flex-column gap-2">
@@ -379,7 +379,7 @@
                   </div>
                   <div class="d-flex align-items-center justify-content-between ms-3">
                     <div class="d-flex align-items-center gap-3">
-                      <p class="mb-0">Quantity:</p>
+                      <p class="mb-0">{{ $t('admin_ui.quantity') }}</p>
                       <h6 class="mb-0">{{ selectedPackageService.qty }}</h6>
                     </div>
                     <div>
@@ -412,7 +412,7 @@
                         <h6 class="mb-0">60 mins</h6>
                       </div>
                       <div class="d-flex align-items-center gap-2 ms-3">
-                        <p class="mb-0">Quantity:</p>
+                        <p class="mb-0">{{ $t('admin_ui.quantity') }}</p>
                         <h6 class="mb-0">{{ packageServices.quantity ?? packageServices.qty ?? packageServices.remaining_qty }}</h6>
                       </div>
                     </div>
@@ -423,7 +423,7 @@
           </div>
 
           <div v-if="selectedProduct.length > 0">
-            <h5 class="mt-3">Products</h5>
+            <h5 class="mt-3">{{ $t('admin_ui.products') }}</h5>
             <ul class="form-group list-group list-group-flush">
               <li v-for="(product, index) in selectedProduct" :key="index" class="list-group-item py-3 px-1">
                 <div class="d-flex flex-column gap-2">
@@ -433,7 +433,7 @@
                   </div>
                   <div>
                     <div class="d-flex">
-                      <label>Price:</label>
+                      <label>{{ $t('admin_ui.price') }}</label>
                       <template v-if="product.discounted_price">
                         <h5 class="ms-2">
                           <b>{{ formatCurrencyVue(product.discounted_price) }}</b>
@@ -451,7 +451,7 @@
                         </h5>
                       </template>
                     </div>
-                    <label>Quantity: </label> <QtyButton v-model="product.product_qty" :max="product.max_qty"></QtyButton>
+                    <label>{{ $t('admin_ui.quantity') }} </label> <QtyButton v-model="product.product_qty" :max="product.max_qty"></QtyButton>
                   </div>
                   <p class="m-0">
                     <label><i>Sold By: </i></label> <strong>{{ product.employee?.full_name || selectedEmployee?.name || '' }}</strong>
@@ -462,7 +462,7 @@
           </div>
           <div class="d-flex gap-3 justify-content-between flex-column">
             <div v-if="services_id.length < service.options.length" class="text-center">
-              <Multiselect v-if="newService" :canClear="false" placeholder="Select Service" ref="serviceInput" class="" v-model="services_id" :value="services_id" v-bind="multipleSelectOption" :options="service.options" @select="serviceSelect" id="service_ids">
+              <Multiselect v-if="newService" :canClear="false" :placeholder="$t('admin_ui.select_service')" ref="serviceInput" class="" v-model="services_id" :value="services_id" v-bind="multipleSelectOption" :options="service.options" @select="serviceSelect" id="service_ids">
                 <template v-slot:multiplelabel="{ values }">
                   <div class="multiselect-multiple-label">Select Service</div>
                 </template>
@@ -472,7 +472,7 @@
               </template>
             </div>
             <div v-if="product_variation_id.length < products.options.length" class="text-center">
-              <Multiselect v-if="newProduct" :canClear="false" placeholder="Select Product" ref="productInput" class="" v-model="product_variation_id" :value="product_variation_id" v-bind="multipleSelectOption" :options="products.options" @select="selectProduct" id="product_variation_ids">
+              <Multiselect v-if="newProduct" :canClear="false" :placeholder="$t('admin_ui.select_product')" ref="productInput" class="" v-model="product_variation_id" :value="product_variation_id" v-bind="multipleSelectOption" :options="products.options" @select="selectProduct" id="product_variation_ids">
                 <template v-slot:multiplelabel="{ values }">
                   <div class="multiselect-multiple-label">Select Product</div>
                 </template>
@@ -498,7 +498,7 @@
             <button type="button" :disabled="IS_SUBMITED" v-if="selectPurchasePackages.length > 0 || selectedService.length > 0" class="btn btn-primary btn-lg rounded-0 d-block" @click="formSubmitCheckout">
               <template v-if="IS_SUBMITED">
                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                Loading...
+                {{ $t('admin_ui.loading') }}
               </template>
               <template v-else>
                 <template v-if="is_paid"> <i class="fa-solid fa-floppy-disk mx-2"></i>{{ $t('booking.lbl_complete_now') }} </template>
@@ -524,7 +524,7 @@
             <button type="button" :disabled="IS_SUBMITED" class="btn btn-primary btn-lg rounded-0 d-block" @click="formSubmitPaynow">
               <template v-if="IS_SUBMITED">
                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                Loading...
+                {{ $t('admin_ui.loading') }}
               </template>
               <template v-else><i class="fa-solid fa-floppy-disk"></i> {{ $t('booking.lbl_pay_now') }}</template>
             </button>
@@ -553,7 +553,7 @@
                     - <label :for="'service-' + packageServices.id" class="fw-semibold text-dark">{{ packageServices.duration_min }} Mins</label>
                   </div>
                   <div class="d-flex align-items-center gap-3">
-                    <label :for="'qtybutton-' + packageServices.id">Quantity: </label>
+                    <label :for="'qtybutton-' + packageServices.id">{{ $t('admin_ui.quantity') }} </label>
                     <QtyButton :id="'qtybutton-' + packageServices.id" v-model="packageServices.qty" :max="packageServices.remaining_qty" @input="updateServiceQty(index, packageServices, $event)"></QtyButton>
                     <p class="mb-0">
                       Left -<span class="text-danger me-2">{{ packageServices.remaining_qty }}</span>
@@ -568,8 +568,8 @@
           </div>
           <div class="modal-footer position-sticky fixed-bottom bg-white">
             <div class="d-flex justify-content-end gap-2">
-              <button type="button" class="btn btn-secondary" @click="cancelSelectedPackageService()">Cancel</button>
-              <button type="button" class="btn btn-primary" @click="saveSelectedPackageService()">Save</button>
+              <button type="button" class="btn btn-secondary" @click="cancelSelectedPackageService()">{{ $t('admin_ui.cancel') }}</button>
+              <button type="button" class="btn btn-primary" @click="saveSelectedPackageService()">{{ $t('admin_ui.save') }}</button>
             </div>
           </div>
         </div>
@@ -611,7 +611,7 @@
                               <h6 class="mb-0">{{ packageServices.duration_min }} mins</h6>
                             </div>
                             <div class="d-flex align-items-center gap-2 ms-3">
-                              <p class="mb-0">Quantity:</p>
+                              <p class="mb-0">{{ $t('admin_ui.quantity') }}</p>
                               <h6 class="mb-0">{{ packageServices.remaining_qty }}</h6>
                             </div>
                           </div>
@@ -622,7 +622,7 @@
                   <div class="card-footer pt-0">
                     <div>
                       <div v-if="isPackagePurchased(packages.id)">
-                        <div class="btn btn-secondary d-block" @click="removePurchasePackageId(packages.id)">Purchased</div>
+                        <div class="btn btn-secondary d-block" @click="removePurchasePackageId(packages.id)">{{ $t('admin_ui.purchased') }}</div>
                       </div>
                       <div v-else>
                         <div class="btn btn-outline-secondary d-block" @click="redeemPackage(packages.package_id)">Use</div>
@@ -671,7 +671,7 @@
                             <h6 class="mb-0">{{ packageServices.duration_min }} mins</h6>
                           </div>
                           <div class="d-flex align-items-center gap-2 ms-3">
-                            <p class="mb-0">Quantity:</p>
+                            <p class="mb-0">{{ $t('admin_ui.quantity') }}</p>
                             <h6 class="mb-0">{{ packageServices.quantity }}</h6>
                           </div>
                         </div>
@@ -680,7 +680,7 @@
                   </div>
                   <div class="card-footer p-2">
                     <div v-if="isPackagePurchased(packages.id)">
-                      <div class="btn btn-secondary d-block" @click="removePurchasePackageId(packages.id)">Purchased</div>
+                      <div class="btn btn-secondary d-block" @click="removePurchasePackageId(packages.id)">{{ $t('admin_ui.purchased') }}</div>
                     </div>
                     <div v-else>
                       <div class="btn btn-secondary d-block" @click="purchasePackage(packages.id)">Purchase Now</div>
@@ -694,8 +694,8 @@
             </div>
           </div>
           <div class="modal-footer position-sticky fixed-bottom bg-white">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" aria-label="Close" @click="closeModel()">Cancel</button>
-            <button type="button" class="btn btn-primary" @click="savePurchasePackage()">Save</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" aria-label="Close" @click="closeModel()">{{ $t('admin_ui.cancel') }}</button>
+            <button type="button" class="btn btn-primary" @click="savePurchasePackage()">{{ $t('admin_ui.save') }}</button>
           </div>
         </div>
       </div>
@@ -883,7 +883,7 @@ watch(
 
 const validationSchema = yup.object({
   start_date_time: yup.string().required('Start Date Time is required'),
-  branch_id: yup.string().required('Branch is required').notOneOf(['0', 0], 'Branch is required'),
+  branch_id: yup.string().required(window.i18n.global.t('admin_validation.branch_required')).notOneOf(['0', 0], window.i18n.global.t('admin_validation.branch_required')),
   employee_id: yup.string().required('Employee is required'),
   services_id: yup.array().required('Services is required'),
   user_id: yup.string().required('User is required')

@@ -27,8 +27,12 @@
     <div class="sidebar-body pt-0 data-scrollbar">
         <div class="sidebar-list" id="sidebar">
             <ul class="navbar-nav iq-main-menu" id="sidebar-menu">
+                @can('view_loyalty')
+                <li class="nav-item"><a href="{{ route('backend.service-repeat.index') }}" class="nav-link {{ request()->routeIs('backend.service-repeat.*') ? 'active' : '' }}"><i class="fa-solid fa-gift"></i><span class="item-name">{{ __('service_repeat.title') }}</span></a></li>
+                <li class="nav-item"><a href="{{ route('backend.quiet-hours.index') }}" class="nav-link {{ request()->routeIs('backend.quiet-hours.*') ? 'active' : '' }}"><i class="fa-solid fa-clock"></i><span class="item-name">{{ __('quiet_hours.title') }}</span></a></li>
+                @endcan
                 @role('admin')
-                <li class="nav-item"><a href="{{ route('backend.access.index') }}" class="nav-link {{ request()->routeIs('backend.access.*') ? 'active' : '' }}"><i class="fa-solid fa-user-shield"></i><span class="item-name">العضويات والصلاحيات</span></a></li>
+                <li class="nav-item"><a href="{{ route('backend.access.index') }}" class="nav-link {{ request()->routeIs('backend.access.*') ? 'active' : '' }}"><i class="fa-solid fa-user-shield"></i><span class="item-name">الأدوار والصلاحيات</span></a></li>
                 @endrole
 @php
     $menu = new \App\Http\Middleware\GenerateMenus();
@@ -96,6 +100,12 @@
 @endphp
 
 @include(config('laravel-menu.views.bootstrap-items'), ['items' => $filteredItems])
+                <li class="nav-item static-item mt-3 pt-3 border-top">
+                    <div class="nav-link static-item" role="heading" aria-level="2" style="cursor:default">
+                        <span class="default-icon fw-bold" style="letter-spacing:normal;white-space:normal">{{ app()->getLocale() === 'ar' ? 'صفحات وخدمات الموقع' : 'Website pages and services' }}</span>
+                        <span class="mini-icon" aria-hidden="true">•••</span>
+                    </div>
+                </li>
                 
                 <li class="nav-item">
     <a

@@ -1,8 +1,10 @@
 <script setup>
 import { ref, watch, nextTick, onBeforeUnmount } from 'vue'
+import { useLanguage } from '@/composables/useLanguage'
+const { state: language } = useLanguage()
 
-const props = defineProps({ message: { type: String, default: '' }, error: Boolean })
-const emit = defineEmits(['close'])
+const props = defineProps({ message: { type: String, default: '' }, error: Boolean, loginRequired: Boolean })
+const emit = defineEmits(['close', 'login'])
 const dialog = ref(null)
 
 watch(() => props.message, async message => {
@@ -25,6 +27,8 @@ onBeforeUnmount(() => dialog.value?.close())
         <span class="wheel-result-dialog__icon" aria-hidden="true">{{ error ? 'ⓘ' : '🎁' }}</span>
         <h2>{{ error ? 'تنبيه عجلة الحظ' : 'نتيجة عجلة الحظ' }}</h2>
         <p>{{ message }}</p>
+        <p v-if="loginRequired">{{ language.lang === 'en' ? 'Sign in to enjoy your prize. Your reward will be added to your account after signing in.' : 'سجّل دخولك علشان تستمتع بجائزتك، وتُضاف المكافأة إلى حسابك بعد تسجيل الدخول.' }}</p>
+        <button v-if="loginRequired" type="button" @click="emit('login')" style="margin-bottom:20px">{{ language.lang === 'en' ? 'Sign in to claim your prize' : 'تسجيل الدخول للاستمتاع بالجائزة' }}</button>
         <button type="button" autofocus @click="close">تمام</button>
       </div>
     </dialog>

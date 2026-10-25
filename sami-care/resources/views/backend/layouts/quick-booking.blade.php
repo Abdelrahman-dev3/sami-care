@@ -286,6 +286,7 @@
         $filePaths = \File::files($langFolderPath);
       @endphp
 
+    @include('backend.includes.js-json-translations')
     @foreach ($filePaths as $filePath)
       @php
         $fileName = pathinfo($filePath, PATHINFO_FILENAME);

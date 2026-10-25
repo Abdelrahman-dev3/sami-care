@@ -141,20 +141,20 @@ const numberRegex = /^\d+$/;
 // Validations
 const validationSchema = yup.object({
   title: yup.string()
-    .required('Title is a required field')
+    .required(window.i18n.global.t('admin_validation.title_required'))
     .test('is-string', 'Only strings are allowed', (value) => !numberRegex.test(value)),
     value: yup.string()
-    .required('Value is a required field')
+    .required(window.i18n.global.t('admin_validation.value_required'))
     .matches(/^\d+(\.\d+)?$/, 'Only numbers are allowed')
     .when('type', {
       is: 'percent',
-      then:() => yup.string().required('value is a required field')
+      then:() => yup.string().required(window.i18n.global.t('admin_validation.value_required'))
       .test('is-less-than-100', 'Percent Value must be less than 100', (value) => {
         const numValue = parseFloat(value);
         return !isNaN(numValue) && numValue <= 100;
       }),
     }),
-   type: yup.string().required('Type is a required field'),
+   type: yup.string().required(window.i18n.global.t('admin_validation.type_required')),
 })
 
 const { handleSubmit, errors, resetForm } = useForm({

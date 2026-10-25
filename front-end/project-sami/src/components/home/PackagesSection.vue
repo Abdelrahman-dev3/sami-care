@@ -1,4 +1,5 @@
 <script setup>
+import PackagePrice from '@/components/common/PackagePrice.vue'
 import { localizeRecord } from '@/utils/i18nField'
 import SectionTitle from '@/components/common/SectionTitle.vue'
 import AppImage from '@/components/common/AppImage.vue'
@@ -64,6 +65,7 @@ const go = path => {
                 />
 
                 <h3>{{ nameOf(item) }}</h3>
+                <PackagePrice :price="item.package_price" :savings="item.savings_amount" :original="item.services_total_price" />
 
                 <p v-if="item.description">
                     {{ localizeRecord(item, 'description', lang.lang) }}

@@ -6,7 +6,7 @@ const { state: language } = useLanguage()
 </script>
 <template>
   <section v-if="items.length" class="sami-faq-section" :dir="language.lang === 'en' ? 'ltr' : 'rtl'">
-    <h2>{{ language.lang === 'en' ? 'Frequently asked questions' : '??????? ???????' }}</h2>
+    <h2>{{ language.lang === 'en' ? 'Frequently asked questions' : 'الأسئلة الشائعة' }}</h2>
     <details v-for="(item, index) in items" :key="index">
       <summary>{{ localizeField(item.question, language.lang) }}</summary>
       <p>{{ localizeField(item.answer, language.lang) }}</p>

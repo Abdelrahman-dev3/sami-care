@@ -2,6 +2,10 @@
 import WheelResultDialog from '@/components/common/WheelResultDialog.vue'
 import { ref, computed, onMounted } from 'vue'
 import { fetchWheelInfo, spinWheel } from '@/services/wheelApi'
+import { useAuth } from '@/composables/useAuth'
+const { isAuthenticated, openAuthModal } = useAuth()
+const loginRequired = ref(false)
+function claimPrize() { result.value = null; openAuthModal() }
 
 const props = defineProps({
   prizes: {
@@ -91,6 +95,7 @@ async function spin() {
 
   spinning.value = true
   result.value = null
+  loginRequired.value = false
   errorMessage.value = ''
 
   let response
@@ -133,7 +138,8 @@ async function spin() {
   setTimeout(() => {
     spinning.value = false
     canSpin.value = false
-    result.value = response.message
+    loginRequired.value = response.account_linked === false || !isAuthenticated.value
+    result.value = response.data?.prize?.label || response.message
   }, 4200)
 }
 </script>
@@ -180,7 +186,7 @@ async function spin() {
           <span>{{ spinning ? 'جاري التدوير...' : (!wheelEnabled ? 'العجلة غير متاحة حاليًا' : (!canSpin ? 'لقد استخدمت العجلة من قبل' : 'دوّس العجلة الآن')) }}</span>
           <i>←</i>
         </button>
-        <WheelResultDialog :message="result || errorMessage" :error="!!errorMessage && !result" @close="result = null; errorMessage = ''" />
+        <WheelResultDialog :message="result || errorMessage" :login-required="!!result && loginRequired" :error="!!errorMessage && !result" @login="claimPrize" @close="result = null; errorMessage = ''" />
       </div>
     </div>
   </section>

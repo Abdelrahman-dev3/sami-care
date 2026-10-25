@@ -20,7 +20,7 @@
                   <label for="">{{ $t('menu_builder.lbl_title') }} <span class="text-danger">*</span></label>
                   <Multiselect v-model="title" :value="title" :placeholder="$t('menu_builder.lbl_title')"
                     v-bind="singleSelectCreateOption" :options="titleLang.options" class="form-group"></Multiselect>
-                    <span class="mt-3"><strong>Note: </strong>Type and press enter to create new title</span>
+                    <span class="mt-3"><strong>{{ $t('admin_ui.note') }} </strong>{{ $t('admin_ui.type_and_press_enter_to_create_new_title') }}</span>
                   <span v-if="errorMessages['title']">
                     <ul class="text-danger">
                       <li v-for="err in errorMessages['title']" :key="err">{{ err }}</li>
@@ -30,7 +30,7 @@
                 </div>
                 <InputField class="col-md-12" :is-required="false" :label="$t('menu_builder.lbl_icon')" placeholder=""
                   v-model="start_icon" :error-message="errors.start_icon" @input="updateIcon">
-                  <span class="mt-3"><strong>Note: </strong>You can add Icon from library. <a href="https://fontawesome.com/search" target="_blank">Click here</a></span>
+                  <span class="mt-3"><strong>{{ $t('admin_ui.note') }} </strong>{{ $t('admin_ui.you_can_add_icon_from_library') }} <a href="https://fontawesome.com/search" target="_blank">{{ $t('admin_ui.click_here') }}</a></span>
                 </InputField>
                 <div class="form-group">
                   <label class="form-label" for="menu_item_type">{{ $t('menu_builder.lbl_menu_type') }}<span
@@ -56,8 +56,8 @@
               </div>
 
               <div class="form-group" v-if="is_route && isLinkMenuType">
-                <label for="menu-route" class="form-label">Route List <span class="text-danger">*</span></label>
-                <Multiselect v-model="route" placeholder="Select Route" v-bind="singleSelectOption"
+                <label for="menu-route" class="form-label">{{ $t('admin_ui.route_list') }} <span class="text-danger">*</span></label>
+                <Multiselect v-model="route" :placeholder="$t('admin_ui.select_route')" v-bind="singleSelectOption"
                   :options="routes.options" id="menu-route" class="form-group"></Multiselect>
                 <span v-if="errorMessages['route']">
                   <ul class="text-danger">
@@ -272,9 +272,9 @@ const reset_datatable_close_offcanvas = (res) => {
 // const numberRegex = /^\d+$/;
 // Validations
 const validationSchema = yup.object({
-  title: yup.string().required('Title is a required field'),
-  menu_item_type: yup.string().required('Menu Type is a required field'),
-  target_type: yup.string().required('Menu Type is a required field'),
+  title: yup.string().required(window.i18n.global.t('admin_validation.title_required')),
+  menu_item_type: yup.string().required(window.i18n.global.t('admin_validation.menu_required')),
+  target_type: yup.string().required(window.i18n.global.t('admin_validation.menu_required')),
   url: yup.string().test('required', 'URL is a required field', function (value) {
     if (menu_item_type.value == 'link' && is_route.value === 0 && !value) {
       return false;

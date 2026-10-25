@@ -30,7 +30,7 @@
 
             <!-- <div class="form-group">
               <div class="d-flex justify-content-between align-items-center">
-                <label class="form-label" for="constant-status">Status</label>
+                <label class="form-label" for="constant-status">{{ $t('admin_ui.status') }}</label>
                 <div class="form-check form-switch">
                   <input class="form-check-input" :value="1" name="status" id="constant-status" type="checkbox" v-model="status" />
                 </div>
@@ -102,12 +102,12 @@ const numberRegex = /^\d+$/;
 // Vee-Validation Validations
 const validationSchema = yup.object({
   name: yup.string()
-    .required('Name is a required field')
+    .required(window.i18n.global.t('admin_validation.name_required'))
     .test('is-string', 'Only strings are allowed', (value) => !numberRegex.test(value)),
   type: yup.string()
-    .required('Type is a required field')
+    .required(window.i18n.global.t('admin_validation.type_required'))
     .test('is-string', 'Only strings are allowed', (value) => !numberRegex.test(value)),
-  value: yup.string().required('Value is a required field'),
+  value: yup.string().required(window.i18n.global.t('admin_validation.value_required')),
   status: yup.boolean()
 })
 

@@ -17,7 +17,7 @@
       <button type="button" class="btn btn-primary" :disabled="IS_VERIFY_SUBMITED" @click="verifyEmail">
         <template v-if="IS_VERIFY_SUBMITED">
           <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>    
-          Verifing...
+          {{ $t('admin_ui.verifing') }}
         </template>
         <template v-else>
           {{$t('messages.verify_email')}}
@@ -69,7 +69,7 @@ const EMAIL_REGX = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/
 const validationSchema = yup.object({
   email: yup
     .string()
-    .required('Email is required')
+    .required(window.i18n.global.t('admin_validation.email_required'))
     .test('is-string', 'First strings are allowed', (value) => !numberRegex.test(value))
     .matches(EMAIL_REGX, 'Must be a valid email'),
   mail_driver: yup.string().required('mail driver is required'),
@@ -80,7 +80,7 @@ const validationSchema = yup.object({
     .string()
     .required('mail username is required')
     .test('is-string', 'First strings are allowed', (value) => !numberRegex.test(value)),
-  mail_password: yup.string().required('Password is required'),
+  mail_password: yup.string().required(window.i18n.global.t('admin_validation.password_required')),
   mail_from: yup
     .string()
     .required('mail from is required')

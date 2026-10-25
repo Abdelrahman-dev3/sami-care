@@ -28,7 +28,7 @@ const viewByRoute = { account:'account', home:'home', services:'services', 'serv
   Ù„Ø£Ù†Ù‡ Ù‡Ùˆ Ø§Ù„Ù„ÙŠ Ø¨ÙŠÙƒØ³Ø± ÙƒØ§Ø´ Ø§Ù„Ù…ØªØµÙØ­ Ù„Ù„Ø¥Ø·Ø§Ø±. Ù…Ù† ØºÙŠØ±Ù‡ Ø§Ù„Ù…ØªØµÙØ­ Ø¨ÙŠÙØ¶Ù„ ÙŠØ¹Ø±Ø¶
   Ø§Ù„Ù†Ø³Ø®Ø© Ø§Ù„Ù‚Ø¯ÙŠÙ…Ø© Ù…Ù‡Ù…Ø§ Ø§ØªØºÙŠÙ‘Ø± Ø§Ù„Ù…Ù„Ù.
 */
-const mobileVersion = '20261021-booking-branch-link-v104'
+const mobileVersion = '20261025-wallet-v114'
 let mobileNavigationPath = null
 const mobileApiBase = (import.meta.env.VITE_API_BASE_URL || `${window.location.origin}/api`).replace(/\/$/, '')
 let notificationInbox
@@ -96,7 +96,7 @@ const stopAfter = router.afterEach(() => { navTimer = setTimeout(() => { navigat
 
 onMounted(() => {
   notificationScript = document.createElement('script')
-  notificationScript.src = '/customer-notifications.js?v=20261015-3'
+  notificationScript.src = '/customer-notifications.js?v=20261024-pusher-1'
   notificationScript.onload = () => {
     notificationInbox = window.mountSamiNotifications({ apiBase: mobileApiBase, hideButton: useMobileFrame.value, onCount: count => {
       notificationCount.value = count

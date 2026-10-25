@@ -24,8 +24,8 @@
         </div>
         <div class="d-flex align-items-center justify-content-center" v-else>
           <p>
-            <template v-if="!date"> Please Select Date </template>
-            <template v-else-if="timeSlotList[0].value == '' || (filteredTimeSlotList.length == 0 && !IS_LOADER)">No Slots Available! Please Select Diffrent Date. </template>
+            <template v-if="!date"> {{ $t('admin_ui.please_select_date') }} </template>
+            <template v-else-if="timeSlotList[0].value == '' || (filteredTimeSlotList.length == 0 && !IS_LOADER)">{{ $t('admin_ui.no_slots_available_please_select_diffrent_date') }} </template>
           </p>
         </div>
       </div>

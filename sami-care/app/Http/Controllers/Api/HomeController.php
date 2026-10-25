@@ -47,7 +47,7 @@ class HomeController extends Controller
 
         // 4. Packages
         $packages = Package::query()
-            ->with('media')
+            ->with(['media', 'service'])
             ->where('status', 1)
             ->activeBasePackages()
             ->latest('id')
@@ -140,6 +140,7 @@ class HomeController extends Controller
             'description' => $package->getTranslations('description'),
             'feature_image' => $package->image ?: $package->feature_image,
             'package_price' => (float) $package->package_price,
+            ...$package->pricingSummary(),
         ];
     }
 

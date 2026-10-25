@@ -134,6 +134,7 @@ class PackageCatalogController extends Controller
             'description' => $this->localizedValue($package->description),
             'description_translations' => is_array($package->description) ? $package->description : null,
             'package_price' => (float) $package->package_price,
+            ...$package->pricingSummary(),
             'status' => (int) $package->status,
             'start_date' => $package->start_date,
             'end_date' => $package->end_date,

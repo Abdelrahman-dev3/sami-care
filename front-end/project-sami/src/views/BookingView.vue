@@ -143,6 +143,7 @@ async function doPay() {
     const services = selSvcs.value.map(s => ({
       subServices: [{
         id: s.id,
+        ...(s.repeatRewardId ? { repeat_reward_id: s.repeatRewardId } : {}),
         date: toDateKey(state.date),
         time: state.time[s.id],
         duration: s.dur,

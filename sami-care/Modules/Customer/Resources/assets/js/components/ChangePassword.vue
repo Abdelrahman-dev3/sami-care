@@ -28,7 +28,7 @@
     <button :disabled="IS_SUBMITED" class="btn btn-primary" name="submit">
       <template v-if="IS_SUBMITED">
         <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-        Loading...
+        {{ $t('admin_ui.loading') }}
       </template>
       <template v-else>
         <i class="fa-solid fa-floppy-disk"></i>
@@ -98,7 +98,7 @@ const validationSchema = yup.object({
     .min(6, 'Password must be at least 8 characters'),
     confirm_password: yup.string()
     .oneOf([yup.ref('password'), null], 'Passwords must match')
-    .required('Confirm Password is required field'),
+    .required(window.i18n.global.t('admin_validation.confirm_required')),
 })
 
 const defaultData = () => {

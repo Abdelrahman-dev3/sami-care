@@ -64,7 +64,7 @@
         </div>
     </div>
     <div class="card-footer">
-        <button type="button" class="btn btn-secondary iq-text-uppercase" v-if="wizardPrev" @click="prevTabChange(wizardPrev)">Back</button>
+        <button type="button" class="btn btn-secondary iq-text-uppercase" v-if="wizardPrev" @click="prevTabChange(wizardPrev)">{{ $t('admin_ui.back') }}</button>
       <button type="button" class="btn btn-primary iq-text-uppercase" :disabled="branch_id !== null ? false : true" v-if="wizardNext" @click="nextTabChange(wizardNext)">{{ $t('quick_booking.lbl_next') }}</button>
     </div>
 </template>

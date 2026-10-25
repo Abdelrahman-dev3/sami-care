@@ -17,7 +17,7 @@ class BranchListCheck
     public function handle(Request $request, Closure $next)
     {
         if (auth()->check()) {
-            if (auth()->user()->hasRole('user')) {
+            if (auth()->user()->hasRole('user') && !auth()->user()->hasAnyRole(['employee','manager','admin'])) {
                 \Auth::logout();
                 abort(403, 'Unauthorized action.');
             }

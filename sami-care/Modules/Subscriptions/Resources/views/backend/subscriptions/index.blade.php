@@ -89,32 +89,32 @@
                 columns: [{
                         data: 'id',
                         name: 'id',
-                        title: 'ID'
+                        title: @json(__('admin_ui.id'))
                     },
                     {
                         data: 'user_id',
                         name: 'name',
-                        title: 'Name'
+                        title: @json(__('admin_ui.name'))
                     },
                     {
                         data: 'name',
                         name: 'name',
-                        title: 'Plan Title'
+                        title: @json(__('admin_ui.plan_title'))
                     },
                     {
                         data: 'type',
                         name: 'type',
-                        title: 'Type'
+                        title: @json(__('admin_ui.type'))
                     },
                     {
                         data: 'plan_type',
                         name: 'plan_type',
-                        title: 'Plan Type'
+                        title: @json(__('admin_ui.plan_type'))
                     },
                     {
                         data: 'amount',
                         name: 'amount',
-                        title: 'Amount'
+                        title: @json(__('admin_ui.amount'))
                     },
 
                     {
@@ -122,7 +122,7 @@
                         name: 'status',
                         orderable: false,
                         searchable: false,
-                        title: 'Status'
+                        title: @json(__('admin_ui.status'))
                     },
 
                 ]
