@@ -1,6 +1,10 @@
 <?php
 
 return [
+    'navigation' => 'Dashboard navigation',
+    'main_section' => 'Main menu',
+    'tools_section' => 'Tools & marketing',
+    'content_section' => 'Website content',
     'contact' => 'Contact',
     'main' => 'Main',
     'dashboard' => 'Dashboard',

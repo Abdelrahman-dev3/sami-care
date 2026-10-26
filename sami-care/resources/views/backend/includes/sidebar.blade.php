@@ -5,8 +5,8 @@
             {{ getCustomizationSetting('sidebar_color') }}
             {{ !empty(getCustomizationSetting('sidebar_type')) ? implode(' ',getCustomizationSetting('sidebar_type')) : '' }}
             "
-            data-toggle="main-sidebar" id="sidebar" data-sidebar="responsive">
-    <div class="d-flex align-items-center justify-content-start">
+            data-toggle="main-sidebar" id="sidebar" data-sidebar="responsive" aria-label="{{ __('sidebar.navigation') }}">
+    <div class="sidebar-brand-row d-flex align-items-center justify-content-start">
         <div class="logo-main">
             <a href="{{route('backend.dashboard')}}" class="navbar-brand" >
                 <img class="logo-normal img-fluid" src="{{ asset('images/samilogo.png') }}" height="30" alt="{{ app_name() }}">
@@ -25,8 +25,9 @@
         </div>
     </div>
     <div class="sidebar-body pt-0 data-scrollbar">
-        <div class="sidebar-list" id="sidebar">
+        <div class="sidebar-list">
             <ul class="navbar-nav iq-main-menu" id="sidebar-menu">
+                <li class="sidebar-section-label"><span>{{ __('sidebar.main_section') }}</span></li>
                 @role('admin')
                 <li class="nav-item"><a href="{{ route('backend.access.index') }}" class="nav-link {{ request()->routeIs('backend.access.*') ? 'active' : '' }}"><i class="fa-solid fa-user-shield"></i><span class="item-name">العضويات والصلاحيات</span></a></li>
                 @endrole
@@ -97,6 +98,7 @@
 
 @include(config('laravel-menu.views.bootstrap-items'), ['items' => $filteredItems])
                 
+                <li class="sidebar-section-label"><span>{{ __('sidebar.tools_section') }}</span></li>
                 <li class="nav-item">
     <a
         href="{{ route('backend.page-qr.index') }}"
@@ -180,10 +182,10 @@
                 @endhasPermission
 
                 @hasPermission('edit_booking')
-                <li class="nav-item"><a href="{{ route('backend.booking-arrival.index') }}" class="nav-link"><i class="fas fa-qrcode"></i><span class="item-name">تأكيد وصول العملاء</span></a></li>
+                <li class="nav-item"><a href="{{ route('backend.booking-arrival.index') }}" class="nav-link {{ request()->routeIs('backend.booking-arrival.*') ? 'active' : '' }}"><i class="fas fa-qrcode"></i><span class="item-name">تأكيد وصول العملاء</span></a></li>
                 @endhasPermission
                 @role('admin')
-                <li class="nav-item"><a href="{{ route('backend.customer-messages.index') }}" class="nav-link"><i class="fab fa-whatsapp"></i><span class="item-name">رسائل العملاء والمناسبات</span></a></li>
+                <li class="nav-item"><a href="{{ route('backend.customer-messages.index') }}" class="nav-link {{ request()->routeIs('backend.customer-messages.*') ? 'active' : '' }}"><i class="fab fa-whatsapp"></i><span class="item-name">رسائل العملاء والمناسبات</span></a></li>
                 @endrole
                 <li class="nav-item {{ request()->routeIs('app.offer-banners') ? 'active' : '' }}">
                     <a href="{{ route('app.offer-banners') }}" class="nav-link {{ request()->routeIs('app.offer-banners') ? 'active' : '' }}">
@@ -209,7 +211,8 @@
                 @endhasPermission
 
                 @hasPermission('view_terms_and_conditions')
-                <li class="nav-item"><a href="{{ route('backend.home-page-content.edit') }}" class="nav-link"><i class="fas fa-home"></i><span class="item-name">محتوى الرئيسية</span></a></li>
+                <li class="sidebar-section-label"><span>{{ __('sidebar.content_section') }}</span></li>
+                <li class="nav-item"><a href="{{ route('backend.home-page-content.edit') }}" class="nav-link {{ request()->routeIs('backend.home-page-content.*') ? 'active' : '' }}"><i class="fas fa-home"></i><span class="item-name">محتوى الرئيسية</span></a></li>
                 <li class="nav-item"><a href="{{ route('backend.faq.edit') }}" class="nav-link {{ request()->routeIs('backend.faq.*') ? 'active' : '' }}"><i class="fas fa-circle-question"></i><span class="item-name">{{ __('faq.title') }}</span></a></li>
                 <li class="nav-item {{ request()->routeIs('backend.frontend-seo.*') ? 'active' : '' }}">
                     <a href="{{ route('backend.frontend-seo.edit') }}" class="nav-link"><i class="fas fa-search"></i><span class="item-name">إعدادات SEO</span></a>

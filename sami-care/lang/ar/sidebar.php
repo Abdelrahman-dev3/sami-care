@@ -1,6 +1,10 @@
 <?php
 
 return [
+    'navigation' => 'القائمة الجانبية',
+    'main_section' => 'القائمة الرئيسية',
+    'tools_section' => 'الأدوات والتسويق',
+    'content_section' => 'محتوى الموقع',
     'contact' => 'اتصل بنا',
     'main' => 'الرئيسية',
     'dashboard' => 'لوحة التحكم',
