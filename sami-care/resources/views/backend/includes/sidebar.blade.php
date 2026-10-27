@@ -38,7 +38,7 @@
         $customerReportItem = $menu->add('<span class="item-name">'.e(__('customer_activity.title')).'</span>', [
             'route' => 'backend.reports.customer-activity',
             'class' => 'nav-item',
-        ])->data('order', 19)->prepend('<i class="fa-solid fa-users"></i> ');
+        ])->data('order', 59)->prepend('<i class="fa-solid fa-users"></i> ');
         $customerReportItem->link->attr(['class' => 'nav-link']);
         if (request()->routeIs('backend.reports.customer-activity')) {
             $customerReportItem->active();
@@ -46,7 +46,7 @@
         }
         $referralReportItem = $menu->add('<span class="item-name">تقرير إحالات التسجيل</span>', [
             'route' => 'backend.reports.referrals', 'class' => 'nav-item',
-        ])->data('order', 19)->prepend('<i class="fa-solid fa-user-plus"></i> ');
+        ])->data('order', 59)->prepend('<i class="fa-solid fa-user-plus"></i> ');
         $referralReportItem->link->attr(['class' => 'nav-link']);
         if (request()->routeIs('backend.reports.referrals')) {
             $referralReportItem->active();
@@ -54,7 +54,7 @@
         }
         $reviewReportItem = $menu->add('<span class="item-name">تقرير التقييمات</span>', [
             'route' => 'backend.reports.reviews', 'class' => 'nav-item',
-        ])->data('order', 19)->data('keep_visible', true)->prepend('<i class="fa-solid fa-star"></i> ');
+        ])->data('order', 59)->data('keep_visible', true)->prepend('<i class="fa-solid fa-star"></i> ');
         $reviewReportItem->link->attr(['class' => 'nav-link']);
         if (request()->routeIs('backend.reports.reviews')) {
             $reviewReportItem->active();
@@ -65,7 +65,7 @@
     
     if (auth()->user()->hasRole('admin') || auth()->user()->can('view_loyalty')) {
         $loyaltyReportItem = $menu->add('<span class="item-name">تقرير نقاط الولاء</span>', ['route'=>'backend.reports.loyalty','class'=>'nav-item'])
-            ->data('order',19)->prepend('<i class="fa-solid fa-coins"></i> ');
+            ->data('order',59)->prepend('<i class="fa-solid fa-coins"></i> ');
         $loyaltyReportItem->link->attr(['class'=>'nav-link']);
         if(request()->routeIs('backend.reports.loyalty')) { $loyaltyReportItem->active(); $loyaltyReportItem->link->active(); }
         $menu=$menu->sortBy('order');
@@ -73,7 +73,7 @@
     if (auth()->user()->hasRole('admin') || auth()->user()->can('view_financial_report')) {
         $hasRevenueLink = collect($menu->all())->contains(fn($item) => $item->link && $item->link->href === route('backend.reports.financial-report'));
         if (!$hasRevenueLink) {
-            $revenueItem=$menu->add('<span class="item-name">تقرير الإيرادات</span>', ['route'=>'backend.reports.financial-report','class'=>'nav-item'])->data('order',19)->prepend('<i class="fa-solid fa-chart-line"></i> ');
+            $revenueItem=$menu->add('<span class="item-name">تقرير الإيرادات</span>', ['route'=>'backend.reports.financial-report','class'=>'nav-item'])->data('order',59)->prepend('<i class="fa-solid fa-chart-line"></i> ');
             $revenueItem->link->attr(['class'=>'nav-link']);
             if(request()->routeIs('backend.reports.financial-report')) { $revenueItem->active(); $revenueItem->link->active(); }
             $menu=$menu->sortBy('order');

@@ -33,44 +33,6 @@ class AuthenticatedSessionController extends Controller
         return redirect()->route('signin')->with('info', 'تسجيل الدخول متاح عبر رمز التحقق (OTP) فقط.');
     }
 
-    // التعامل مع جلسات الحجز المؤقتة
-    if ($request->session()->has('package_booking')) {
-        return redirect()->route('package.booking.complete');
-    }
-
-    if ($request->session()->has('temp_booking')) {
-        $temp = $request->session()->get('temp_booking');
-        $data = $temp['data'];
-        $btn_value = $temp['btn_value'];
-
-        // إكمال الحجز المؤقت
-        if (method_exists($this, 'complateTempBookings')) {
-            $this->complateTempBookings($data, $btn_value);
-        }
-
-        session()->forget('temp_booking');
-
-        if ($btn_value === 'cart') {
-            return redirect()->to('/cart')->with('success', 'تم تحويل الحجز بنجاح');
-        } elseif ($btn_value === 'payment') {
-            return redirect()->to('/payment?is_buy_now=1')->with('success', 'تم تحويل الحجز بنجاح');
-        }
-    }
-
-    // **التوجيه النهائي بعد تسجيل الدخول**
-    // شرط لتوجيه الموظفين لصفحاتهم الخاصة
-    if (auth()->user()->is_employee ?? false) {
-        return redirect()->to('/app/bookings')->with('success', 'تم تسجيل الدخول بنجاح');
-    }
-
-    // المستخدم العادي يذهب لأي صفحة عامة (لا تظهر له 403)
-    return redirect()->to(
-        $request->get('redirect') === 'gift'
-            ? route('gift.page')
-            : route('frontend.home')
-    )->with('success', 'تم تسجيل الدخول بنجاح');
-}
-
     /**
      * تسجيل الخروج
      */
